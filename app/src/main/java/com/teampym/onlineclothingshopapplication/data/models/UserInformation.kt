@@ -14,8 +14,8 @@ data class UserInformation(
     val avatarUrl: String = "",
     val contactInformation: String,
     val userType: String = UserType.CUSTOMER.toString(),
-    val notificationTokens: List<NotificationToken> = listOf(),
-    val cart: List<Cart> = listOf()
+    val notificationTokens: List<NotificationToken> = emptyList(),
+    val cart: List<Cart> = emptyList()
 ) : Parcelable {
     constructor() : this("failed", "failed", "failed", "failed", "failed", "failed", "failed",)
 }

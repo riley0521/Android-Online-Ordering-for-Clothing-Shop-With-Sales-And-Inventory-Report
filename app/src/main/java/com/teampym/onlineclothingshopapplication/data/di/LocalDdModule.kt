@@ -7,6 +7,8 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -16,9 +18,27 @@ object LocalDbModule {
     @Provides
     @Singleton
     fun provideDatabase(
-        app: Application
+        app: Application,
+        callback: MyDatabase.Callback
     ) = Room.databaseBuilder(app, MyDatabase::class.java, "my_database")
         .fallbackToDestructiveMigration()
+        .addCallback(callback)
         .build()
+
+    @Provides
+    @Singleton
+    fun provideRegionDao(db: MyDatabase) = db.regionDao()
+
+    @Provides
+    @Singleton
+    fun provideProvinceDao(db: MyDatabase) = db.provinceDao()
+
+    @Provides
+    @Singleton
+    fun provideCityDao(db: MyDatabase) = db.cityDao()
+
+    @Provides
+    @Singleton
+    fun provideApplicationScope() = CoroutineScope(SupervisorJob())
 
 }
