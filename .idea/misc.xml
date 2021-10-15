@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/drawable-v24/ic_news.xml" value="0.3651041666666667" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/drawable-v24/tv_border.xml" value="0.35104166666666664" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/activity_main.xml" value="0.19166666666666668" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/cart_item.xml" value="0.3489583333333333" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/category_item.xml" value="0.3489583333333333" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_admin_category.xml" value="0.1" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_cart.xml" value="0.3489583333333333" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_category.xml" value="0.33489583333333334" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_check_out.xml" value="0.33489583333333334" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_inventory_modal.xml" value="0.3489583333333333" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_product.xml" value="0.3489583333333333" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_product_detail.xml" value="0.19114583333333332" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_profile.xml" value="0.25" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_registration.xml" value="0.33489583333333334" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_splash.xml" value="0.19166666666666668" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/inventory_item.xml" value="0.19114583333333332" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/product_item.xml" value="0.3489583333333333" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/review_item.xml" value="0.19166666666666668" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/menu/home_bottom_nav.xml" value="0.19166666666666668" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/menu/product_action_menu.xml" value="0.19166666666666668" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>

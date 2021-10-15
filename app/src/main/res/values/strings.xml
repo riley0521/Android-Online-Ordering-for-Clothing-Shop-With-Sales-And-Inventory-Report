@@ -1,0 +1,62 @@
+<resources>
+    <string name="app_name">Online Clothing Shop</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="facebook_application_id" translatable="false">492431628473103</string>
+    <string name="fb_login_protocol_scheme" translatable="false">fb492431628473103</string>
+
+    <!--  UI Labels  -->
+    <string name="home_nav_title" translatable="false">Home</string>
+    <string name="news_nav_title" translatable="false">News Feed</string>
+    <string name="orders_nav_title" translatable="false">Orders</string>
+    <string name="button_label_login" translatable="false">Login</string>
+    <string name="button_label_register" translatable="false">Register</string>
+    <string name="view_label_or" translatable="false">OR</string>
+    <string name="image_category_description" translatable="false">Image for Category</string>
+    <string name="label_category" translatable="false">Category</string>
+    <string name="label_browse_products" translatable="false">Browse Products</string>
+    <string name="action_menu_profile" translatable="false">Profile</string>
+    <string name="btn_sign_out" translatable="false">Sign out</string>
+    <string name="label_address" translatable="false">Addresses</string>
+    <string name="label_favorites" translatable="false">Favorites</string>
+    <string name="label_change_profile" translatable="false">Change Profile</string>
+    <string name="label_change_password" translatable="false">Change Password</string>
+    <string name="image_product_description" translatable="false">Product Image</string>
+    <string name="button_add_to_cart" translatable="false">Add To Cart</string>
+    <string name="button_share" translatable="false">Share</string>
+    <string name="label_description" translatable="false">Description</string>
+    <string name="label_rate" translatable="false">Rating</string>
+    <string name="label_reviews" translatable="false">Reviews</string>
+    <string name="label_no_reviews_yet" translatable="false">No Reviews Yet.</string>
+    <string name="label_uncrowned_guest" translatable="false">Uncrowned Guest</string>
+    <string name="action_menu_cart" translatable="false">Cart</string>
+    <string name="action_sort" translatable="false">Sort</string>
+    <string name="action_search" translatable="false">Search</string>
+    <string name="action_no_sort" translatable="false">No Sort</string>
+    <string name="sort_best_seller" translatable="false">Sort By Best Seller</string>
+    <string name="action_sort_new" translatable="false">Sort By New</string>
+    <string name="label_merchandise_total" translatable="false">Merchandise Total</string>
+    <string name="label_shipping_total" translatable="false">Shipping Total</string>
+    <string name="label_total_payment" translatable="false">Total Payment</string>
+    <string name="button_check_out" translatable="false">Check Out</string>
+    <string name="label_no_items_yet" translatable="false">No items yet.</string>
+    <string name="button_place_order" translatable="false">Place Order</string>
+    <string name="label_delivery_address" translatable="false">Delivery Address</string>
+    <string name="button_change_address" translatable="false">Change Address</string>
+    <string name="label_payment_method" translatable="false">Payment Method</string>
+    <string name="rb_credit_debit" translatable="false">Credit/Debit</string>
+    <string name="rb_cod" translatable="false">COD (Cash On Delivery)</string>
+    <string name="label_email_verification" translatable="false">Verification link has been sent to your email. Please click the link to verify your account and remove this message.</string>
+    <string name="label_unverified_warning" translatable="false">Warning: You cannot place order if you are an unverified user.</string>
+    <string name="button_send_verification" translatable="false">Send verification</string>
+    <string name="hint_first_name" translatable="false">First Name</string>
+    <string name="hint_last_name" translatable="false">Last Name</string>
+    <string name="button_continue_to_app" translatable="false">Continue To App</string>
+    <string name="label_registration_instruction" translatable="false">Please enter your information below.</string>
+    <string name="label_sizes" translatable="false">Sizes</string>
+    <string name="chip_option_1" translatable="false">Option 1</string>
+    <string name="txt_selected_birth_date" translatable="false">Selected Date is:</string>
+    <string name="txt_date_picker" translatable="false">Date Picker</string>
+
+</resources>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/adminCategoryFragment">
+
+    <fragment
+        android:id="@+id/adminCategoryFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.categories.AdminCategoryFragment"
+        android:label="fragment_admin_category"
+        tools:layout="@layout/fragment_admin_category" />
+    <fragment
+        android:id="@+id/splashFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.splash.SplashFragment"
+        android:label="fragment_splash"
+        tools:layout="@layout/fragment_splash" >
+        <action
+            android:id="@+id/action_splashFragment_to_categoryFragment"
+            app:destination="@id/categoryFragment"
+            app:popUpToInclusive="true"/>
+        <action
+            android:id="@+id/action_splashFragment_to_registrationFragment"
+            app:destination="@id/registrationFragment"
+            app:popUpToInclusive="true"/>
+    </fragment>
+    <fragment
+        android:id="@+id/categoryFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.categories.CategoryFragment"
+        android:label="fragment_category"
+        tools:layout="@layout/fragment_category" >
+        <action
+            android:id="@+id/action_categoryFragment_to_productFragment"
+            app:destination="@id/productFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/registrationFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.registration.RegistrationFragment"
+        android:label="fragment_registration"
+        tools:layout="@layout/fragment_registration" >
+        <argument
+            android:name="editMode"
+            app:argType="boolean"
+            android:defaultValue="false" />
+        <action
+            android:id="@+id/action_registrationFragment_to_categoryFragment"
+            app:destination="@id/categoryFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/cartFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.cart.CartFragment"
+        android:label="fragment_cart"
+        tools:layout="@layout/fragment_cart" />
+    <fragment
+        android:id="@+id/newsFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.news.NewsFragment"
+        android:label="fragment_news"
+        tools:layout="@layout/fragment_news" />
+    <fragment
+        android:id="@+id/orderFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.orders.OrderFragment"
+        android:label="fragment_order"
+        tools:layout="@layout/fragment_order" />
+    <fragment
+        android:id="@+id/productFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.products.ProductFragment"
+        android:label="fragment_product"
+        tools:layout="@layout/fragment_product" >
+        <argument
+            android:name="category"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_productFragment_to_productDetailFragment"
+            app:destination="@id/productDetailFragment" />
+        <action
+            android:id="@+id/action_productFragment_to_inventoryModalFragment"
+            app:destination="@id/inventoryModalFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.profile.ProfileFragment"
+        android:label="fragment_profile"
+        tools:layout="@layout/fragment_profile" >
+        <action
+            android:id="@+id/action_profileFragment_to_registrationFragment"
+            app:destination="@id/registrationFragment" />
+    </fragment>
+    <action android:id="@+id/action_global_profileFragment" app:destination="@id/profileFragment" />
+    <action android:id="@+id/action_global_cartFragment" app:destination="@id/cartFragment" />
+    <fragment
+        android:id="@+id/productDetailFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.productdetail.ProductDetailFragment"
+        android:label="fragment_product_detail"
+        tools:layout="@layout/fragment_product_detail" >
+        <argument
+            android:name="product"
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.Product" />
+        <argument
+            android:name="name"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_productDetailFragment_to_inventoryModalFragment"
+            app:destination="@id/inventoryModalFragment" />
+    </fragment>
+    <dialog
+        android:id="@+id/inventoryModalFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.inventories.InventoryModalFragment"
+        android:label="fragment_inventory_modal"
+        tools:layout="@layout/fragment_inventory_modal" >
+        <argument
+            android:name="product"
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.Product" />
+    </dialog>
+</navigation>
