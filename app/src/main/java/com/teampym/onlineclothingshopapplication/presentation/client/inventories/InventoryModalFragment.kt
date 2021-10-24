@@ -23,16 +23,13 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 
 @AndroidEntryPoint
-class InventoryModalFragment : BottomSheetDialogFragment(),
-    InventoryChipAdapter.OnItemSizeClickListener {
+class InventoryModalFragment : BottomSheetDialogFragment() {
 
     private lateinit var binding: FragmentInventoryModalBinding
 
     private val viewModel: InventoryViewModel by viewModels()
 
     private val args by navArgs<InventoryModalFragmentArgs>()
-
-    private lateinit var adapter: InventoryChipAdapter
 
     private lateinit var product: Product
 
@@ -51,8 +48,6 @@ class InventoryModalFragment : BottomSheetDialogFragment(),
 
         product = args.product
 
-        adapter = InventoryChipAdapter(this)
-
         binding.apply {
             Glide.with(requireView())
                 .load(product.imageUrl)
@@ -66,13 +61,13 @@ class InventoryModalFragment : BottomSheetDialogFragment(),
 
         if (product.inventories.size == 1) {
             // TODO("Directly Add to Cart")
+            Toast.makeText(requireContext(), "Added ${product.inventories[0].size} Size to your cart", Toast.LENGTH_LONG).show()
+            findNavController().popBackStack()
         }
 
-        // TODO("Find out why chip id is not responding to onClick method")
-        adapter.submitList(product.inventories)
         for (inventory in product.inventories) {
-            val chip = Chip(requireContext())
-            chip.id = ViewCompat.generateViewId()
+            val chip = LayoutInflater.from(requireContext()).inflate(R.layout.inventory_item, null, false) as Chip
+            chip.id = View.generateViewId()
             chip.text = inventory.size
             chip.isCheckable = true
             chip.setOnCheckedChangeListener { buttonView, isChecked ->
@@ -82,6 +77,8 @@ class InventoryModalFragment : BottomSheetDialogFragment(),
 
             binding.chipSizeGroup.addView(chip)
         }
+
+        binding.chipSizeGroup.isSingleSelection = true
 
         lifecycleScope.launchWhenStarted {
             viewModel.productEvent.collect { event ->
@@ -109,9 +106,4 @@ class InventoryModalFragment : BottomSheetDialogFragment(),
             )
         }
     }
-
-    override fun onItemClicked(inventory: Inventory) {
-        Toast.makeText(requireContext(), inventory.size, Toast.LENGTH_LONG).show()
-    }
-
 }
