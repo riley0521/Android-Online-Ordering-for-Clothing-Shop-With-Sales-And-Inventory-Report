@@ -40,13 +40,21 @@ class InventoryChipAdapter(
         private val binding: InventoryItemBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
+        init {
+            binding.apply {
+                chipSize.setOnClickListener {
+                    val position = bindingAdapterPosition
+                    if(position != RecyclerView.NO_POSITION) {
+                        val inv = getItem(position)
+                        listener.onItemClicked(inv)
+                    }
+                }
+            }
+        }
+
         fun bind(inventory: Inventory) {
             binding.apply {
                 chipSize.text = inventory.size
-
-                chipSize.setOnClickListener {
-                    listener.onItemClicked(inventory)
-                }
             }
         }
     }

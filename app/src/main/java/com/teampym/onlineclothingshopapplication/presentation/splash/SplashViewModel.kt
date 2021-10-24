@@ -3,6 +3,7 @@ package com.teampym.onlineclothingshopapplication.presentation.splash
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
+import com.teampym.onlineclothingshopapplication.data.repository.AccountDeliveryInformationAndCartRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -12,20 +13,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
-    private val db: FirebaseFirestore
+    private val accountRepository: AccountDeliveryInformationAndCartRepositoryImpl
 ) : ViewModel() {
 
     private val splashEventChannel = Channel<SplashEvent>()
     val splashEvent = splashEventChannel.receiveAsFlow()
 
     fun checkIfUserIsInDb(userId: String) = viewModelScope.launch {
-        val isExisting = db.collection("Users")
-            .whereEqualTo("userId", userId)
-            .limit(1)
-            .get()
-            .await()
+        val isUserExisting = accountRepository.getUser(userId)
 
-        if (isExisting.size() == 1) {
+        if (isUserExisting) {
             splashEventChannel.send(SplashEvent.Registered)
         } else {
             splashEventChannel.send(SplashEvent.NotRegistered)

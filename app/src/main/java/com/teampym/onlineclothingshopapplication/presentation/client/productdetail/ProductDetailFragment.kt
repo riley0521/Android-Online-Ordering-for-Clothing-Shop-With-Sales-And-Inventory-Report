@@ -1,6 +1,7 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.productdetail
 
 import android.os.Bundle
+import android.text.Layout
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -73,15 +74,17 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
 
             val productImages = mutableListOf<ProductImage>()
             if (queryProductImages.size() > 0)
-                for (image in queryProductImages.documents) {
+                for (document in queryProductImages.documents) {
                     productImages.add(
                         ProductImage(
-                            image.getString("imageUrl")!!
+                            id = document["id"].toString(),
+                            productId = document["productId"].toString(),
+                            imageUrl = document["imageUrl"].toString()
                         )
                     )
                 }
 
-            var rate: Double = 0.0
+            var rate = 0.0
 
             if (queryReviews.size() > 0)
                 for (review in queryReviews.documents) {
@@ -106,11 +109,9 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                 }
 
                 if (rate == 0.0) {
-                    labelRate.isVisible = false
-                    tvRate.text = "No ratings yet."
+                    tvRate.text = rate.toString()
 
                     tvNoReview.isVisible = true
-                    recyclerViewReviews.isVisible = false
                 } else {
                     tvRate.text = rate.toString()
 

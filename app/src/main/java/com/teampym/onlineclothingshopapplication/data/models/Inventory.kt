@@ -7,6 +7,8 @@ import java.math.BigDecimal
 
 @Parcelize
 data class Inventory(
+    val id: String,
+    val productId: String,
     val size: String,
     val stock: Long,
     val committed: Long,

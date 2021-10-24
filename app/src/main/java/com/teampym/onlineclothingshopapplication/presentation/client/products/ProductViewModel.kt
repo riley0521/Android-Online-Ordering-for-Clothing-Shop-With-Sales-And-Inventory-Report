@@ -9,6 +9,7 @@ import com.google.firebase.firestore.Query
 import com.teampym.onlineclothingshopapplication.data.models.Utils
 import com.teampym.onlineclothingshopapplication.data.repository.ProductRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,14 +21,21 @@ class ProductViewModel @Inject constructor(
 ) : ViewModel() {
 
     val searchQuery = MutableLiveData("")
+    val flagQuery = MutableLiveData(Utils.productFlag)
 
-    var productsFlow = searchQuery.asFlow().flatMapLatest { query ->
+
+    var productsFlow = combine(
+        searchQuery.asFlow(),
+        flagQuery.asFlow()
+    ) { search, flag ->
+        Pair(search, flag)
+    }.flatMapLatest { (search, flag) ->
 
         lateinit var queryProducts: Query
         val categoryId = Utils.categoryId
-        val productFlag = Utils.productFlag
+        val productFlag = flag
         if (productFlag.isEmpty()) {
-            queryProducts = if (query.isEmpty()) {
+            queryProducts = if (search.isEmpty()) {
                 db.collection("Products")
                     .whereEqualTo("categoryId", categoryId)
                     .orderBy("name", Query.Direction.ASCENDING)
@@ -36,8 +44,8 @@ class ProductViewModel @Inject constructor(
                 db.collection("Products")
                     .whereEqualTo("categoryId", categoryId)
                     .orderBy("name", Query.Direction.ASCENDING)
-                    .startAt(query)
-                    .endAt(query + '\uf8ff')
+                    .startAt(search)
+                    .endAt(search + '\uf8ff')
                     .limit(30)
             }
         } else {
@@ -52,8 +60,6 @@ class ProductViewModel @Inject constructor(
 
     fun updateFlag(flag: String) = viewModelScope.launch {
         Utils.productFlag = flag
+        flagQuery.value = flag
     }
-
-
-
 }

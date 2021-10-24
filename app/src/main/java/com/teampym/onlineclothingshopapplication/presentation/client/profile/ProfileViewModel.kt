@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.models.Utils
+import com.teampym.onlineclothingshopapplication.data.repository.AccountDeliveryInformationAndCartRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -17,7 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val db: FirebaseFirestore,
+    private val accountRepository: AccountDeliveryInformationAndCartRepositoryImpl,
     private val state: SavedStateHandle
 ) : ViewModel() {
 
@@ -28,41 +29,16 @@ class ProfileViewModel @Inject constructor(
 
     fun signOut(user: FirebaseAuth) = viewModelScope.launch {
         user.signOut()
-    }
-
-    private fun checkIfUserIsInDb(user: FirebaseUser) = viewModelScope.launch {
-        val isExisting = db.collection("Users")
-            .whereEqualTo("userId", user.uid)
-            .limit(1)
-            .get()
-            .await()
-
-        if (isExisting.size() == 1) {
-
-            val selectedUser = isExisting.documents[0]
-
-            Utils.currentUser = UserInformation(
-                selectedUser.id,
-                selectedUser.getString("userId")!!,
-                selectedUser.getString("firstName")!!,
-                selectedUser.getString("lastName")!!,
-                selectedUser.getString("avatarUrl")!!,
-                selectedUser.getString("contactInformation")!!,
-                selectedUser.getString("userType")!!
-            )
-
-        } else {
-            profileEventChannel.send(ProfileEvent.NotRegistered)
-        }
+        Utils.currentUser = null
     }
 
     fun checkIfUserIsVerified(user: FirebaseUser) = viewModelScope.launch {
 
         if (user.isEmailVerified) {
-            checkIfUserIsInDb(user)
+            accountRepository.getUser(user.uid)
         } else {
             profileEventChannel.send(ProfileEvent.NotVerified)
-            checkIfUserIsInDb(user)
+            accountRepository.getUser(user.uid)
         }
 
     }

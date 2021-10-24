@@ -23,14 +23,14 @@
         android:title="@string/orders_nav_title" />
 
     <item
-        android:id="@+id/action_cart"
+        android:id="@+id/cartFragment"
         android:enabled="true"
         android:icon="@drawable/ic_cart"
         android:orderInCategory="4"
         android:title="@string/action_menu_cart" />
 
     <item
-        android:id="@+id/action_profile"
+        android:id="@+id/profileFragment"
         android:enabled="true"
         android:icon="@drawable/ic_user"
         android:orderInCategory="4"

@@ -14,7 +14,7 @@
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/tv1"
+            android:id="@+id/tvInstruction"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:maxLines="2"
@@ -71,9 +71,10 @@
             android:layout_marginTop="16dp">
 
             <TextView
-                android:id="@+id/txtBirthdate"
+                android:id="@+id/tvBirthdate"
                 android:text="@string/txt_selected_birth_date"
                 android:layout_marginStart="8dp"
+                android:textAppearance="?attr/textAppearanceHeadline6"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
 

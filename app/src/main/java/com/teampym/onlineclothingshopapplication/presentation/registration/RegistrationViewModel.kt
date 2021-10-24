@@ -6,7 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseUser
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
-import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.models.Utils
+import com.teampym.onlineclothingshopapplication.data.repository.AccountDeliveryInformationAndCartRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -15,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RegistrationViewModel @Inject constructor(
-    private val accountRepository: AccountRepositoryImpl
+    private val accountDeliveryInformationAndCartRepository: AccountDeliveryInformationAndCartRepositoryImpl
 ) : ViewModel() {
 
     private val registrationEventChannel = Channel<RegistrationEvent>()
@@ -26,17 +27,16 @@ class RegistrationViewModel @Inject constructor(
 
     fun registerUser(firstName: String, lastName: String, birthDate: String, user: FirebaseUser) =
         viewModelScope.launch {
-            _createdUser.value = accountRepository.createUser(
-                user.uid,
+            _createdUser.value = accountDeliveryInformationAndCartRepository.createUser(
                 firstName,
                 lastName,
                 birthDate,
-                user.photoUrl?.userInfo ?: "",
-                user.email ?: user.phoneNumber
+                user.photoUrl?.userInfo ?: ""
             )
         }
 
-    fun saveInfoToProto(user: UserInformation) = viewModelScope.launch {
+    fun saveInfoToUtils(user: UserInformation) = viewModelScope.launch {
+        Utils.currentUser = user
         registrationEventChannel.send(RegistrationEvent.SuccessfulEvent("Registered user successfully!"))
     }
 

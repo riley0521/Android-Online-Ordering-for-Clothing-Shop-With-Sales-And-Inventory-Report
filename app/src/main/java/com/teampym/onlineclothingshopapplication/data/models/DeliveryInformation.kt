@@ -1,16 +1,16 @@
 package com.teampym.onlineclothingshopapplication.data.models
 
 import android.os.Parcelable
-import com.google.gson.annotations.SerializedName
 import kotlinx.android.parcel.Parcelize
-import java.util.*
 
 @Parcelize
-data class LogEntity(
+data class DeliveryInformation(
     val id: String,
     val userId: String,
-    val position: String,
-    val type: String,
-    val description: String,
-    val dateLog: Date
+    val contactNo: String,
+    val region: String,
+    val province: String,
+    val city: String,
+    val streetNumber: String,
+    val postalCode: String
 ): Parcelable

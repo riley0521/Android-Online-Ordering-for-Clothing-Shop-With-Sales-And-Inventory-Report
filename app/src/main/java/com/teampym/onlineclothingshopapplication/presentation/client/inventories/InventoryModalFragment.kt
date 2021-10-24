@@ -53,8 +53,6 @@ class InventoryModalFragment : BottomSheetDialogFragment(),
 
         adapter = InventoryChipAdapter(this)
 
-        viewModel.loadInventories(product.id)
-
         binding.apply {
             Glide.with(requireView())
                 .load(product.imageUrl)
@@ -64,24 +62,25 @@ class InventoryModalFragment : BottomSheetDialogFragment(),
                 .into(imgProductInventory)
 
             tvProductName.text = product.name
-
-
         }
 
-        viewModel.inventories.observe(viewLifecycleOwner) { inventories ->
-            adapter.submitList(inventories)
-            for (inventory in inventories) {
-                val chip = Chip(requireContext())
-                chip.id = ViewCompat.generateViewId()
-                chip.text = inventory.size
-                chip.isCheckable = true
-                chip.setOnCheckedChangeListener { buttonView, isChecked ->
-                    buttonView.isChecked = isChecked
-                    checkIfValid(inventory)
-                }
+        if (product.inventories.size == 1) {
+            // TODO("Directly Add to Cart")
+        }
 
-                binding.chipSizeGroup.addView(chip)
+        // TODO("Find out why chip id is not responding to onClick method")
+        adapter.submitList(product.inventories)
+        for (inventory in product.inventories) {
+            val chip = Chip(requireContext())
+            chip.id = ViewCompat.generateViewId()
+            chip.text = inventory.size
+            chip.isCheckable = true
+            chip.setOnCheckedChangeListener { buttonView, isChecked ->
+                buttonView.isChecked = isChecked
+                checkIfValid(inventory)
             }
+
+            binding.chipSizeGroup.addView(chip)
         }
 
         lifecycleScope.launchWhenStarted {
@@ -103,22 +102,11 @@ class InventoryModalFragment : BottomSheetDialogFragment(),
     private fun checkIfValid(inventory: Inventory) {
         binding.btnAddToCart.isEnabled = binding.chipSizeGroup.checkedChipIds.count() == 1
 
-        val user = FirebaseAuth.getInstance().currentUser
         binding.btnAddToCart.setOnClickListener {
-
-            if (user == null) {
-                viewModel.addToCart(
-                    product,
-                    inventory,
-                    ""
-                )
-            } else {
-                viewModel.addToCart(
-                    product,
-                    inventory,
-                    user.uid
-                )
-            }
+            viewModel.addToCart(
+                product,
+                inventory
+            )
         }
     }
 

@@ -5,7 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
-import com.teampym.onlineclothingshopapplication.data.models.Cart
 import com.teampym.onlineclothingshopapplication.data.models.Inventory
 import com.teampym.onlineclothingshopapplication.data.models.Product
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,33 +25,9 @@ class InventoryViewModel @Inject constructor(
     private val productEventChannel = Channel<ProductEvent>()
     val productEvent = productEventChannel.receiveAsFlow()
 
-    fun loadInventories(productId: String) = viewModelScope.launch {
-        val inventoryDb = db.collection("Products")
-            .document(productId)
-            .collection("Inventories")
-            .limit(10)
-            .get()
-            .await()
-
-        val inventoryList = mutableListOf<Inventory>()
-        for (inventory in inventoryDb.documents) {
-            inventoryList.add(
-                Inventory(
-                    inventory.getString("size")!!,
-                    inventory.getLong("stock")!!,
-                    inventory.getLong("committed")!!,
-                    inventory.getLong("sold")!!,
-                    inventory.getLong("returned")!!,
-                    inventory.getLong("restockLevel")!!,
-                )
-            )
-        }
-
-        _inventoriesLiveData.value = inventoryList
-    }
-
-    fun addToCart(product: Product, inventory: Inventory, userId: String) = viewModelScope.launch {
-        // Create CartRepository and use online database instead of Room
+    fun addToCart(product: Product, inventory: Inventory) = viewModelScope.launch {
+        // Use online database instead of Room
+        // Check if the user is logged in
     }
 
     sealed class ProductEvent {

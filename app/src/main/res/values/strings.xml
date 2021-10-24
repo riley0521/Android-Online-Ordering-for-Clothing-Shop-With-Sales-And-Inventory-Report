@@ -26,7 +26,7 @@
     <string name="button_add_to_cart" translatable="false">Add To Cart</string>
     <string name="button_share" translatable="false">Share</string>
     <string name="label_description" translatable="false">Description</string>
-    <string name="label_rate" translatable="false">Rating</string>
+    <string name="label_rate" translatable="false">Rating -</string>
     <string name="label_reviews" translatable="false">Reviews</string>
     <string name="label_no_reviews_yet" translatable="false">No Reviews Yet.</string>
     <string name="label_uncrowned_guest" translatable="false">Uncrowned Guest</string>
@@ -47,6 +47,8 @@
     <string name="label_payment_method" translatable="false">Payment Method</string>
     <string name="rb_credit_debit" translatable="false">Credit/Debit</string>
     <string name="rb_cod" translatable="false">COD (Cash On Delivery)</string>
+    <string name="rb_gcash" translatable="false">G-Cash</string>
+    <string name="rb_paymaya" translatable="false">Paymaya</string>
     <string name="label_email_verification" translatable="false">Verification link has been sent to your email. Please click the link to verify your account and remove this message.</string>
     <string name="label_unverified_warning" translatable="false">Warning: You cannot place order if you are an unverified user.</string>
     <string name="button_send_verification" translatable="false">Send verification</string>
@@ -56,7 +58,8 @@
     <string name="label_registration_instruction" translatable="false">Please enter your information below.</string>
     <string name="label_sizes" translatable="false">Sizes</string>
     <string name="chip_option_1" translatable="false">Option 1</string>
-    <string name="txt_selected_birth_date" translatable="false">Selected Date is:</string>
+    <string name="txt_selected_birth_date" translatable="false">No Selected Date</string>
     <string name="txt_date_picker" translatable="false">Date Picker</string>
+    <string name="btn_change_payment_method">Change</string>
 
 </resources>
