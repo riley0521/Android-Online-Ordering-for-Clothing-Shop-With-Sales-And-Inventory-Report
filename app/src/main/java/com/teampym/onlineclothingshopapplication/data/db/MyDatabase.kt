@@ -3,17 +3,29 @@ package com.teampym.onlineclothingshopapplication.data.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.teampym.onlineclothingshopapplication.data.models.Cart
+import com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation
+import com.teampym.onlineclothingshopapplication.data.models.NotificationToken
+import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Provider
 
-@Database(entities = [Region::class, Province::class, City::class], version = 1)
+@Database(
+    entities = [Region::class, Province::class, City::class, UserInformation::class, DeliveryInformation::class, NotificationToken::class, Cart::class],
+    version = 1
+)
 abstract class MyDatabase : RoomDatabase() {
 
     abstract fun regionDao(): RegionDao
     abstract fun provinceDao(): ProvinceDao
     abstract fun cityDao(): CityDao
+
+    abstract fun userInformationDao(): UserInformationDao
+    abstract fun deliveryInformationDao(): DeliveryInformationDao
+    abstract fun notificationTokenDao(): NotificationTokenDao
+    abstract fun cartDao(): CartDao
 
     class Callback @Inject constructor(
         private val database: Provider<MyDatabase>,

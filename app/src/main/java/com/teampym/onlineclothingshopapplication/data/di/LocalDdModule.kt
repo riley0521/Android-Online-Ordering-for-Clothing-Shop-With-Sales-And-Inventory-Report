@@ -39,6 +39,22 @@ object LocalDbModule {
 
     @Provides
     @Singleton
+    fun provideUserInformationDao(db: MyDatabase) = db.userInformationDao()
+
+    @Provides
+    @Singleton
+    fun provideDeliveryInformationDao(db: MyDatabase) = db.deliveryInformationDao()
+
+    @Provides
+    @Singleton
+    fun provideNotificationTokenDao(db: MyDatabase) = db.notificationTokenDao()
+
+    @Provides
+    @Singleton
+    fun provideCartDao(db: MyDatabase) = db.cartDao()
+
+    @Provides
+    @Singleton
     fun provideApplicationScope() = CoroutineScope(SupervisorJob())
 
 }

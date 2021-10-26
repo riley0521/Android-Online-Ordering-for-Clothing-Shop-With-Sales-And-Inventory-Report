@@ -15,5 +15,5 @@ data class Review(
     val username: String,
     val rate: Double,
     val description: String,
-    val dateReview: CharSequence
+    val dateReview: Date
 ): Parcelable

@@ -75,15 +75,15 @@
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.products.ProductFragment"
         android:label="{category}"
         tools:layout="@layout/fragment_product">
-        <argument
-            android:name="category"
-            app:argType="string" />
         <action
             android:id="@+id/action_productFragment_to_productDetailFragment"
             app:destination="@id/productDetailFragment" />
         <action
             android:id="@+id/action_productFragment_to_inventoryModalFragment"
             app:destination="@id/inventoryModalFragment" />
+        <argument
+            android:name="category"
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.Category" />
     </fragment>
     <fragment
         android:id="@+id/profileFragment"

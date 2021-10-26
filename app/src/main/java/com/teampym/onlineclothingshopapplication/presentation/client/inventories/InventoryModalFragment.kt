@@ -59,13 +59,13 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
             tvProductName.text = product.name
         }
 
-        if (product.inventories.size == 1) {
+        if (product.inventories!!.size == 1) {
             // TODO("Directly Add to Cart")
-            Toast.makeText(requireContext(), "Added ${product.inventories[0].size} Size to your cart", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), "Added ${product.inventories!![0].size} Size to your cart", Toast.LENGTH_LONG).show()
             findNavController().popBackStack()
         }
 
-        for (inventory in product.inventories) {
+        for (inventory in product.inventories!!) {
             // TODO("Compare if getLayoutInflater() is same as creating a new instance of LayoutInflater object.")
             val chip = layoutInflater.inflate(R.layout.inventory_item, null, false) as Chip
             chip.id = View.generateViewId()

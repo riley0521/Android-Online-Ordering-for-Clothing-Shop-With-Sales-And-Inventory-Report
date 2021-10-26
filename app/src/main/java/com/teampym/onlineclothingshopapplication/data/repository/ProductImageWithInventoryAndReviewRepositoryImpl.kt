@@ -13,7 +13,7 @@ import com.teampym.onlineclothingshopapplication.presentation.client.products.Pr
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class ProductWithInventoryAndImagesRepositoryImpl @Inject constructor(
+class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
     private val db: FirebaseFirestore
 ) {
 

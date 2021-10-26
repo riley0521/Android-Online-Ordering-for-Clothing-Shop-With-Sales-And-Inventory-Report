@@ -18,7 +18,7 @@ class CartViewModel @Inject constructor(): ViewModel() {
     // TODO("I think I should not get the cart in startup of the application, get the cart instead in the cart fragment to reduce memory/network usage")
 
     fun getCart(userId: String) {
-        cartFlow = flowOf(Utils.currentUser!!.cart)
+        cartFlow = flowOf(Utils.currentUser!!.cart!!)
     }
 
     fun updateCartItemQty(cart: Cart, qty: Long) = viewModelScope.launch {

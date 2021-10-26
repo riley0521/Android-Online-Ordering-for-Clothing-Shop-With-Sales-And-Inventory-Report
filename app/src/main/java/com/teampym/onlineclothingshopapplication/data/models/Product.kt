@@ -14,5 +14,6 @@ data class Product(
     val price: BigDecimal,
     val flag: String,
     val inventories: List<Inventory>? = null,
-    val productImages: List<ProductImage>? = null
+    val productImages: List<ProductImage>? = null,
+    val reviews: List<Review>? = null
 ): Parcelable

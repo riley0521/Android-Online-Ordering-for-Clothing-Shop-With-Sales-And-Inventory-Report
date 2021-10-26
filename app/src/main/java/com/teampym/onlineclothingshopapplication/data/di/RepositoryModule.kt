@@ -36,12 +36,15 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideOrderRepository(db: FirebaseFirestore) =
-        OrderRepositoryImpl(db)
+    fun provideOrderRepository(
+        db: FirebaseFirestore,
+        cartRepository: CartRepositoryImpl,
+        productRepository: ProductImageWithInventoryAndReviewRepositoryImpl
+    ) = OrderRepositoryImpl(db, cartRepository, productRepository)
 
     @Provides
     @Singleton
     fun provideProductRepository(db: FirebaseFirestore) =
-        ProductWithInventoryAndImagesRepositoryImpl(db)
+        ProductImageWithInventoryAndReviewRepositoryImpl(db)
 
 }
