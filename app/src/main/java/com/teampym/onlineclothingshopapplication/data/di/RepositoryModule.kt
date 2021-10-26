@@ -42,6 +42,6 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideProductRepository(db: FirebaseFirestore) =
-        ProductRepositoryImpl(db)
+        ProductWithInventoryAndImagesRepositoryImpl(db)
 
 }

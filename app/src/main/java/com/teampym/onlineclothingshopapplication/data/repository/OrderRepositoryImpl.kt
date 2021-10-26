@@ -12,7 +12,7 @@ import javax.inject.Inject
 class OrderRepositoryImpl @Inject constructor(
     private val db: FirebaseFirestore,
     private val cartRepository: CartRepositoryImpl,
-    private val productRepository: ProductRepositoryImpl
+    private val productRepository: ProductWithInventoryAndImagesRepositoryImpl
 ) {
 
     private val orderCollectionRef = db.collection("Orders")

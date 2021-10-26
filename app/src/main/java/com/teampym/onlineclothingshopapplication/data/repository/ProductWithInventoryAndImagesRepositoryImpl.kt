@@ -2,7 +2,6 @@ package com.teampym.onlineclothingshopapplication.data.repository
 
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
-import com.facebook.internal.BoltsMeasurementEventListener
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
@@ -14,7 +13,7 @@ import com.teampym.onlineclothingshopapplication.presentation.client.products.Pr
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class ProductRepositoryImpl @Inject constructor(
+class ProductWithInventoryAndImagesRepositoryImpl @Inject constructor(
     private val db: FirebaseFirestore
 ) {
 
@@ -31,8 +30,8 @@ class ProductRepositoryImpl @Inject constructor(
         }
 
     // TODO("CRUD Operations for Product Collection")
+    // I don't know if this is necessary but just in case!
     suspend fun getOneProductWithImagesAndInventories(productId: String): Product? {
-
         val productsQuery = productCollectionRef.document(productId).get().await()
         if(productsQuery != null) {
             // get all inventories
@@ -67,13 +66,13 @@ class ProductRepositoryImpl @Inject constructor(
             }
 
             return Product(
-                id = "",
-                categoryId = "",
-                name = "",
-                description = "",
-                imageUrl = "",
-                price = "0".toBigDecimal(),
-                flag = "",
+                id = productsQuery["id"].toString(),
+                categoryId = productsQuery["categoryId"].toString(),
+                name = productsQuery["name"].toString(),
+                description = productsQuery["description"].toString(),
+                imageUrl = productsQuery["imageUrl"].toString(),
+                price = productsQuery["price"].toString().toBigDecimal(),
+                flag = productsQuery["flag"].toString(),
                 inventories = inventoryList,
                 productImages = productImageList
             )
@@ -111,13 +110,46 @@ class ProductRepositoryImpl @Inject constructor(
         return result != null
     }
 
-    // TODO("Inventory Collection operation - Add Stock, Add New Inventory(size), Delete Inventory")
+    // TODO("Inventory Collection operation - Add Stock, Create Inventory(size), Delete Inventory")
+    suspend fun createInventory(inventory: Inventory): Inventory? {
+        val result = productCollectionRef.document(inventory.productId).collection("inventories").add(inventory).await()
+        if(result != null)
+            return inventory.copy(id = result.id)
+        return null
+    }
+
+    suspend fun addStockToInventory(productId: String, inventoryId: String, stockToAdd: Long): Boolean {
+        val inventoryQuery = productCollectionRef.document(productId).collection("inventories").document(inventoryId).get().await()
+        if(inventoryQuery != null) {
+            val updateStockMap = mapOf<String, Any>(
+                "stock" to inventoryQuery["stock"].toString().toLong() + stockToAdd
+            )
+
+            val result = productCollectionRef.document(productId).collection("inventories").document(inventoryId).set(updateStockMap, SetOptions.merge()).await()
+            return result != null
+        }
+        return false
+    }
+
     suspend fun deleteInventory(productId: String, inventoryId: String): Boolean {
         val result = productCollectionRef
             .document(productId)
             .collection("inventories")
             .document(inventoryId)
             .delete().await()
+        return result != null
+    }
+
+    // TODO("ProductImages Collection operation - Add and Delete")
+    suspend fun createProductImage(productImage: ProductImage): ProductImage? {
+        val result = productCollectionRef.document(productImage.productId).collection("productImages").add(productImage).await()
+        if(result != null)
+            return productImage.copy(id = result.id)
+        return null
+    }
+
+    suspend fun deleteProductImage(productImage: ProductImage): Boolean {
+        val result = productCollectionRef.document(productImage.productId).collection("productImages").document(productImage.id).delete().await()
         return result != null
     }
 
