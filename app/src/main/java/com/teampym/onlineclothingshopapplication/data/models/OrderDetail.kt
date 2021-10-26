@@ -10,10 +10,10 @@ import java.util.*
 data class OrderDetail(
     val id: String,
     val orderId: String,
-    val productId: String,
+    val product: Product,
     val size: String,
-    val unitCost: BigDecimal,
-    val quantity: Int,
-    val totalCost: BigDecimal,
+    val price: BigDecimal,
+    val quantity: Long,
+    val subTotal: BigDecimal,
     val dateSold: Date?
 ): Parcelable

@@ -12,5 +12,6 @@ data class DeliveryInformation(
     val province: String,
     val city: String,
     val streetNumber: String,
-    val postalCode: String
+    val postalCode: String,
+    val default: Boolean = false
 ): Parcelable

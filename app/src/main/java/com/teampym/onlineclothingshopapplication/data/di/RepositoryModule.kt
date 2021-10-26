@@ -3,10 +3,7 @@ package com.teampym.onlineclothingshopapplication.data.di
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.teampym.onlineclothingshopapplication.data.repository.AccountDeliveryInformationAndCartRepositoryImpl
-import com.teampym.onlineclothingshopapplication.data.repository.CategoryRepositoryImpl
-import com.teampym.onlineclothingshopapplication.data.repository.OrderRepositoryImpl
-import com.teampym.onlineclothingshopapplication.data.repository.ProductRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,13 +21,18 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideCategoryRepository(db: FirebaseFirestore) =
-        CategoryRepositoryImpl(db)
+    fun provideAccountAndDeliveryInformationRepository(db: FirebaseFirestore) =
+        AccountAndDeliveryInformationImpl(db)
 
     @Provides
     @Singleton
-    fun provideProductRepository(db: FirebaseFirestore) =
-        ProductRepositoryImpl(db)
+    fun provideCartRepository(db: FirebaseFirestore) =
+        CartRepositoryImpl(db)
+
+    @Provides
+    @Singleton
+    fun provideCategoryRepository(db: FirebaseFirestore) =
+        CategoryRepositoryImpl(db)
 
     @Provides
     @Singleton
@@ -39,6 +41,7 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideAccountRepository(db: FirebaseFirestore) =
-        AccountDeliveryInformationAndCartRepositoryImpl(db)
+    fun provideProductRepository(db: FirebaseFirestore) =
+        ProductRepositoryImpl(db)
+
 }

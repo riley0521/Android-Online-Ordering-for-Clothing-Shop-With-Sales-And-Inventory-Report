@@ -5,20 +5,28 @@ enum class Status {
     SHIPPED,
     DELIVERY,
     COMPLETED,
-
-    // Status for Rider when the user wants to return
-    RETURNING,
-    RETURNED_TO_RIDER,
-    RETURNED_TO_WAREHOUSE,
-
+    // When the item have defect
+    RETURNED,
     // When the user canceled the order within 24 hours
     CANCELED
+}
+
+enum class PaymentMethod {
+    GCASH,
+    PAYMAYA,
+    BPI,
+    COD
 }
 
 enum class ProductFlag {
     NORMAL,
     NEW,
     BEST_SELLER
+}
+
+enum class CartFlag {
+    ADDING,
+    REMOVING
 }
 
 enum class UserType {

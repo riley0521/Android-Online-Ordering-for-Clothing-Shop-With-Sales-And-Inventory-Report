@@ -66,7 +66,8 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
         }
 
         for (inventory in product.inventories) {
-            val chip = LayoutInflater.from(requireContext()).inflate(R.layout.inventory_item, null, false) as Chip
+            // TODO("Compare if getLayoutInflater() is same as creating a new instance of LayoutInflater object.")
+            val chip = layoutInflater.inflate(R.layout.inventory_item, null, false) as Chip
             chip.id = View.generateViewId()
             chip.text = inventory.size
             chip.isCheckable = true

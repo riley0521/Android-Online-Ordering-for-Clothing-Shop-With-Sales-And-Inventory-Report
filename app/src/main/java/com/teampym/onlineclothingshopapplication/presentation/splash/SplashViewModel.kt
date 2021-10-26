@@ -2,18 +2,16 @@ package com.teampym.onlineclothingshopapplication.presentation.splash
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.FirebaseFirestore
-import com.teampym.onlineclothingshopapplication.data.repository.AccountDeliveryInformationAndCartRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.AccountAndDeliveryInformationImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
-    private val accountRepository: AccountDeliveryInformationAndCartRepositoryImpl
+    private val accountRepository: AccountAndDeliveryInformationImpl
 ) : ViewModel() {
 
     private val splashEventChannel = Channel<SplashEvent>()

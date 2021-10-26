@@ -12,16 +12,14 @@ data class UserInformation(
     val userId: String = "",
     val firstName: String,
     val lastName: String,
-    val deliveryInformation: List<DeliveryInformation> = emptyList(),
+    val deliveryInformation: List<DeliveryInformation>? = null,
     val birthDate: String,
     val avatarUrl: String,
     val userType: String = UserType.CUSTOMER.toString(),
-    val notificationTokens: List<NotificationToken> = emptyList(),
-    val cart: List<Cart> = emptyList(),
+    val notificationTokens: List<NotificationToken>? = null,
+    val cart: List<Cart>? = null,
     val totalOfCart: BigDecimal = "0".toBigDecimal()
-) : Parcelable {
-    constructor() : this("failed", "failed", "failed", emptyList(), Calendar.getInstance().time.toString("MM/dd/yyyy"), "failed", "failed", emptyList(), emptyList(), "0".toBigDecimal())
-}
+) : Parcelable
 
 fun Date.toString(format: String, locale: Locale = Locale.getDefault()): String {
     val formatter = SimpleDateFormat(format, locale)

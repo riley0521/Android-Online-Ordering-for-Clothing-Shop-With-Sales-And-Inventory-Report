@@ -5,20 +5,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.firestore.FirebaseFirestore
-import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.models.Utils
-import com.teampym.onlineclothingshopapplication.data.repository.AccountDeliveryInformationAndCartRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.AccountAndDeliveryInformationImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val accountRepository: AccountDeliveryInformationAndCartRepositoryImpl,
+    private val accountRepository: AccountAndDeliveryInformationImpl,
     private val state: SavedStateHandle
 ) : ViewModel() {
 

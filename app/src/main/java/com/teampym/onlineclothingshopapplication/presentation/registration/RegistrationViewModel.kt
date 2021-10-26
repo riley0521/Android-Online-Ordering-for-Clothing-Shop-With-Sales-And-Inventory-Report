@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseUser
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.models.Utils
-import com.teampym.onlineclothingshopapplication.data.repository.AccountDeliveryInformationAndCartRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.AccountAndDeliveryInformationImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RegistrationViewModel @Inject constructor(
-    private val accountDeliveryInformationAndCartRepository: AccountDeliveryInformationAndCartRepositoryImpl
+    private val accountDeliveryInformationAndCartRepository: AccountAndDeliveryInformationImpl
 ) : ViewModel() {
 
     private val registrationEventChannel = Channel<RegistrationEvent>()

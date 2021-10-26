@@ -13,6 +13,6 @@ data class Product(
     val imageUrl: String,
     val price: BigDecimal,
     val flag: String,
-    val inventories: List<Inventory> = emptyList(),
-    val productImages: List<ProductImage> = emptyList()
+    val inventories: List<Inventory>? = null,
+    val productImages: List<ProductImage>? = null
 ): Parcelable

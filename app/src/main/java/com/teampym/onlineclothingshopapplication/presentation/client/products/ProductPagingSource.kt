@@ -44,7 +44,7 @@ class ProductPagingSource(
                 val productCollectionRef = FirebaseFirestore.getInstance().collection("Products")
 
                 // get all inventories
-                val inventoryQuery = productCollectionRef.document(product.id).collection("Inventories").get().await()
+                val inventoryQuery = productCollectionRef.document(product.id).collection("inventories").get().await()
                 val inventoryList = mutableListOf<Inventory>()
                 for(inventory in inventoryQuery) {
                     inventoryList.add(
@@ -52,7 +52,7 @@ class ProductPagingSource(
                             id = inventory.id,
                             productId = inventory["productId"].toString(),
                             size = inventory["size"].toString(),
-                            stock = inventory["stock"].toString().toLong(),
+                            stock = inventory["stock"].toString().toLong() - inventory["committed"].toString().toLong(),
                             committed = inventory["committed"].toString().toLong(),
                             sold = inventory["sold"].toString().toLong(),
                             returned = inventory["returned"].toString().toLong(),
@@ -62,7 +62,7 @@ class ProductPagingSource(
                 }
 
                 // get all productImages
-                val productImagesQuery = productCollectionRef.document(product.id).collection("ProductImages").get().await()
+                val productImagesQuery = productCollectionRef.document(product.id).collection("productImages").get().await()
                 val productImageList = mutableListOf<ProductImage>()
                 for(productImage in productImagesQuery) {
                     productImageList.add(

@@ -9,10 +9,10 @@ import java.util.*
 data class Order(
     val id: String,
     val userId: String,
-    val fullName: String,
-    val address: String,
+    val deliveryInformation: DeliveryInformation,
     val orderDate: Date,
     val totalCost: BigDecimal,
     val status: String,
-    val paymentMethod: Boolean
+    val paymentMethod: String,
+    val orderDetails: List<OrderDetail>? = null
 ): Parcelable

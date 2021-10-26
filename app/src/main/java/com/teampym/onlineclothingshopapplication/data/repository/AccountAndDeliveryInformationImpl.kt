@@ -9,7 +9,7 @@ import java.util.*
 import javax.inject.Inject
 
 
-class AccountDeliveryInformationAndCartRepositoryImpl @Inject constructor(
+class AccountAndDeliveryInformationImpl @Inject constructor(
     private val db: FirebaseFirestore
 ) {
 
@@ -63,41 +63,6 @@ class AccountDeliveryInformationAndCartRepositoryImpl @Inject constructor(
                 }
             }
 
-            // get all cart items
-            val cartQuery = userCollectionRef.document(userId).collection("cart").get().await()
-            val cartList = mutableListOf<Cart>()
-            if(cartQuery.documents.isNotEmpty()) {
-                for(document in cartQuery) {
-                    cartList.add(
-                        Cart(
-                            id = document.id,
-                            userId = document["userId"].toString(),
-                            product = Product(
-                                id = document["product.id"].toString(),
-                                categoryId = document["product.categoryId"].toString(),
-                                name = document["product.name"].toString(),
-                                description = document["product.description"].toString(),
-                                imageUrl = document["product.imageUrl"].toString(),
-                                price = document["product.price"].toString().toBigDecimal(),
-                                flag = document["product.flag"].toString()
-                            ),
-                            selectedSizeFromInventory = Inventory(
-                                id = document["selectedSizeFromInventory.id"].toString(),
-                                productId = document["selectedSizeFromInventory.productId"].toString(),
-                                size = document["selectedSizeFromInventory.size"].toString(),
-                                stock = document["selectedSizeFromInventory.stock"].toString().toLong(),
-                                committed = document["selectedSizeFromInventory.committed"].toString().toLong(),
-                                sold = document["selectedSizeFromInventory.sold"].toString().toLong(),
-                                returned = document["selectedSizeFromInventory.returned"].toString().toLong(),
-                                restockLevel = document["selectedSizeFromInventory.restockLevel"].toString().toLong()
-                            ),
-                            quantity = document["quantity"].toString().toLong(),
-                            subTotal = document["subTotal"].toString().toBigDecimal()
-                        )
-                    )
-                }
-            }
-
             Utils.currentUser = UserInformation(
                 userId = userId,
                 firstName = userQuery["firstName"].toString(),
@@ -107,7 +72,7 @@ class AccountDeliveryInformationAndCartRepositoryImpl @Inject constructor(
                 avatarUrl = userQuery["avatarUrl"].toString(),
                 userType = userQuery["userType"].toString(),
                 notificationTokens = notificationTokenList,
-                cart = cartList,
+                cart = null,
                 totalOfCart = userQuery["totalOfCart"].toString().toBigDecimal()
             )
             return true
@@ -120,7 +85,7 @@ class AccountDeliveryInformationAndCartRepositoryImpl @Inject constructor(
         lastName: String,
         birthDate: String,
         avatarUrl: String
-    ): UserInformation {
+    ): UserInformation? {
         val newUser = UserInformation(
             firstName = firstName,
             lastName = lastName,
@@ -141,11 +106,12 @@ class AccountDeliveryInformationAndCartRepositoryImpl @Inject constructor(
         return if(result != null) {
             newUser.copy(userId = result.id)
         } else {
-            UserInformation()
+            null
         }
     }
 
-    // TODO("Create different methods per variable of user like updateUserBasicInformation, updateCart, updateUserAvatar, updateUserAddress, updateUserPassword (if applicable)")
+    // TODO("updateUserAvatar() is for extra features soon.")
+    // TODO("Create different methods per variable of user like updateUserBasicInformation, updateCart, updateUserAddress, updateUserPassword (if applicable)")
     suspend fun updateUserBasicInformation(
         userId: String,
         firstName: String,
