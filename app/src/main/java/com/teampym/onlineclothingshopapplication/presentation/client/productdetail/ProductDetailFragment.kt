@@ -111,13 +111,13 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                 if (rate == 0.0) {
                     tvRate.text = rate.toString()
 
-                    tvNoReview.isVisible = true
+                    labelNoReviews.isVisible = true
                 } else {
                     tvRate.text = rate.toString()
 
                     // Load Reviews here.
-                    recyclerViewReviews.setHasFixedSize(true)
-                    recyclerViewReviews.adapter = adapter
+                    recyclerReviews.setHasFixedSize(true)
+                    recyclerReviews.adapter = adapter
                 }
             }
         }

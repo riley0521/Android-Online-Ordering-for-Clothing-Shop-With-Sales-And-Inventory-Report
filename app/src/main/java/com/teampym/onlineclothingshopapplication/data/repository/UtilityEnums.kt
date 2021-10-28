@@ -38,3 +38,10 @@ enum class ProductType {
     SHIRT,
     HOODY
 }
+
+enum class LogType {
+    CATEGORY,
+    PRODUCT,
+    INVENTORY,
+    ORDER
+}

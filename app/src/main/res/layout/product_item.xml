@@ -5,82 +5,117 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardCornerRadius="8dp">
+    app:cardCornerRadius="16dp">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Media -->
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="150dp">
+
+            <ImageView
+                android:id="@+id/imgProduct"
+                android:layout_width="match_parent"
+                android:layout_height="194dp"
+                android:contentDescription="@string/image_product_description"
+                android:src="@drawable/ic_food" />
+
+            <TextView
+                android:id="@+id/tvFlag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:background="#FF0"
+                android:padding="8dp"
+                android:paddingTop="8dp"
+                android:shadowColor="@color/black"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                tools:text="BEST SELLER" />
+
+        </FrameLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="8dp">
 
-            <!-- Media -->
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="150dp">
-
-                <ImageView
-                    android:id="@+id/imgProduct"
-                    android:layout_width="match_parent"
-                    android:layout_height="194dp"
-                    android:contentDescription="@string/image_product_description"
-                    android:src="@drawable/ic_food" />
-
-                <TextView
-                    android:id="@+id/tvFlag"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:background="#FF0"
-                    android:padding="8dp"
-                    android:paddingTop="8dp"
-                    android:shadowColor="@color/black"
-                    android:textColor="@color/black"
-                    android:textSize="14sp"
-                    tools:text="BEST SELLER" />
-
-            </FrameLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
+            <!-- Title, secondary and supporting text -->
+            <TextView
+                android:id="@+id/tvName"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                tools:text="Product Name" />
 
-                <!-- Title, secondary and supporting text -->
-                <TextView
-                    android:id="@+id/tvName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?attr/textAppearanceHeadline6"
-                    tools:text="Product Name" />
+            <TextView
+                android:id="@+id/tvPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textAppearance="?attr/textAppearanceBody2"
+                android:textColor="@color/black"
+                tools:text="$14.99" />
+
+            <TextView
+                android:id="@+id/labelOutOfStock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textAppearance="?attr/textAppearanceBody2"
+                android:textColor="@color/black"
+                android:textStyle="bold"
+                tools:text="Out Of Stock" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
                 <TextView
-                    android:id="@+id/tvPrice"
+                    android:id="@+id/labelRate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:textAppearance="?attr/textAppearanceBody2"
                     android:textColor="@color/black"
-                    tools:text="$14.99" />
+                    android:textStyle="bold"
+                    tools:text="3.5" />
 
-            </LinearLayout>
+                <TextView
+                    android:id="@+id/labelNumberOfSold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_alignParentEnd="true"
+                    android:textAppearance="?attr/textAppearanceBody2"
+                    android:textColor="@color/black"
+                    android:textStyle="bold"
+                    tools:text="Sold 10,000" />
+
+            </RelativeLayout>
+
+
 
             <!-- Buttons -->
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="16dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="8dp"
                 android:orientation="horizontal">
 
                 <ImageView
                     android:id="@+id/btnShare"
-                    android:layout_width="24dp"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
                     android:layout_height="24dp"
                     android:layout_marginEnd="18dp"
                     android:contentDescription="@string/button_share"
@@ -88,15 +123,17 @@
 
                 <ImageView
                     android:id="@+id/btnAddToCart"
-                    android:layout_width="24dp"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
                     android:layout_height="24dp"
                     android:layout_marginEnd="8dp"
                     android:contentDescription="@string/button_add_to_cart"
                     android:src="@drawable/ic_add_to_cart" />
+
             </LinearLayout>
 
         </LinearLayout>
 
-    </RelativeLayout>
+    </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

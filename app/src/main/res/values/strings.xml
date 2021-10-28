@@ -61,5 +61,7 @@
     <string name="txt_selected_birth_date" translatable="false">No Selected Date</string>
     <string name="txt_date_picker" translatable="false">Date Picker</string>
     <string name="btn_change_payment_method">Change</string>
+    <string name="product_name">Product Name</string>
+    <string name="long_sentence">Hmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm</string>
 
 </resources>

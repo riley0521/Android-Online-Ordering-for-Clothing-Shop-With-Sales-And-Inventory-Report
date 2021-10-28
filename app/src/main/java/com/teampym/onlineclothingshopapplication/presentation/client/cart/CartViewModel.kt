@@ -1,27 +1,27 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.cart
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.teampym.onlineclothingshopapplication.data.models.Cart
-import com.teampym.onlineclothingshopapplication.data.models.Utils
+import com.teampym.onlineclothingshopapplication.data.repository.CartRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class CartViewModel @Inject constructor(): ViewModel() {
+class CartViewModel @Inject constructor(
+    private val cartRepository: CartRepositoryImpl
+): ViewModel() {
 
-    var cartFlow = emptyFlow<List<Cart>>()
+    private val _cart = MutableLiveData<List<Cart>>()
+    val cart: LiveData<List<Cart>> = _cart
 
     // TODO("I think I should not get the cart in startup of the application, get the cart instead in the cart fragment to reduce memory/network usage")
-
     fun getCart(userId: String) {
-        cartFlow = flowOf(Utils.currentUser!!.cart!!)
+        _cart.value = cartRepository.getCartByUserId(userId).asLiveData(Dispatchers.IO, 10000).value
     }
 
-    fun updateCartItemQty(cart: Cart, qty: Long) = viewModelScope.launch {
-//        cartDao.update(cart.copy(quantity = qty))
+    fun updateCartItemQty(userId: String, cartId: String, flag: String) = viewModelScope.launch {
+        cartRepository.updateCartQuantity(userId, cartId, flag)
     }
 }

@@ -1,12 +1,16 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.Cart
 import com.teampym.onlineclothingshopapplication.data.models.Inventory
 import com.teampym.onlineclothingshopapplication.data.models.Product
-import com.teampym.onlineclothingshopapplication.data.models.UserInformation
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -21,36 +25,80 @@ class CartRepositoryImpl @Inject constructor(
 
 
     // TODO("Use a flow to get updates in cart collection instantly")
-    suspend fun getCartByUserId(userId: String): List<Cart>? {
-        // get specific cart by userId
-        val cartQuery = userCartCollectionRef.document(userId).collection("cart").get().await()
-        val cartList = mutableListOf<Cart>()
-        if (cartQuery != null) {
-            for (document in cartQuery.documents) {
+    fun getCartByUserId(userId: String): Flow<List<Cart>> {
 
-                val cartItem = document.toObject(Cart::class.java)
-
-                cartItem?.let {
-                    // check if price of a single product has been changed and update the cart instantly.
-                    val productId = it.productId
-                    val productQuery =
-                        updatedProductsCollectionRef.document(productId).get().await()
-                    if (productQuery.exists()) {
-                        val updatePriceOfProductInCart = mapOf<String, Any>(
-                            "price" to productQuery["price"].toString().toBigDecimal()
-                        )
-
-                        userCartCollectionRef.document(userId).collection("cart")
-                            .document(document.id)
-                            .set(updatePriceOfProductInCart, SetOptions.merge()).await()
+        return callbackFlow {
+            val cartListener = userCartCollectionRef.document(userId)
+                .collection("cart")
+                .addSnapshotListener { querySnapshot, firebaseException ->
+                    if (firebaseException != null) {
+                        cancel(message = "Error fetching cart", firebaseException)
+                        return@addSnapshotListener
                     }
-                    cartList.add(it)
+
+                    val cartList = mutableListOf<Cart>()
+                    querySnapshot!!.documents.mapNotNull { document ->
+                        val cartItem = document.toObject(Cart::class.java)
+                        cartItem?.let {
+
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val productId = it.productId
+                                val productQuery =
+                                    updatedProductsCollectionRef.document(productId).get().await()
+                                if (productQuery.exists()) {
+                                    val updatePriceOfProductInCart = mapOf<String, Any>(
+                                        "price" to productQuery["price"].toString().toBigDecimal()
+                                    )
+
+                                    userCartCollectionRef.document(userId).collection("cart")
+                                        .document(document.id)
+                                        .set(updatePriceOfProductInCart, SetOptions.merge()).await()
+                                }
+                            }
+                            cartList.add(it)
+                        }
+                    }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        updateTotalOfCart(userId)
+                    }
+                    offer(cartList)
                 }
+
+            awaitClose {
+                Log.d("CART LISTENER", "Removing cart listener")
+                cartListener.remove()
             }
-            updateTotalOfCart(userId)
-            return cartList
         }
-        return null
+
+//        // get specific cart by userId
+//        val cartQuery = userCartCollectionRef.document(userId).collection("cart").get().await()
+//        val cartList = mutableListOf<Cart>()
+//        if (cartQuery != null) {
+//            for (document in cartQuery.documents) {
+//
+//                val cartItem = document.toObject(Cart::class.java)
+//
+//                cartItem?.let {
+//                    // check if price of a single product has been changed and update the cart instantly.
+//                    val productId = it.productId
+//                    val productQuery =
+//                        updatedProductsCollectionRef.document(productId).get().await()
+//                    if (productQuery.exists()) {
+//                        val updatePriceOfProductInCart = mapOf<String, Any>(
+//                            "price" to productQuery["price"].toString().toBigDecimal()
+//                        )
+//
+//                        userCartCollectionRef.document(userId).collection("cart")
+//                            .document(document.id)
+//                            .set(updatePriceOfProductInCart, SetOptions.merge()).await()
+//                    }
+//                    cartList.add(it)
+//                }
+//            }
+//            updateTotalOfCart(userId)
+//            return cartList
+//        }
+//        return null
     }
 
     suspend fun updateTotalOfCart(userId: String): BigDecimal {

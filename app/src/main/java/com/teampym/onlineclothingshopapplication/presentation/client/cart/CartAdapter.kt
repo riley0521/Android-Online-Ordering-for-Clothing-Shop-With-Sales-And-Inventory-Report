@@ -52,7 +52,7 @@ class CartAdapter(
                             listener.onFailure("You have reached the maximum stocks available for this item.")
                         }
                         else {
-                            listener.onAddMinusQuantity(item, item.quantity + 1)
+                            listener.onAddQuantity(item.id)
                         }
                     }
                 }
@@ -66,7 +66,7 @@ class CartAdapter(
                             listener.onFailure("1 is the minimum quantity.")
                         }
                         else {
-                            listener.onAddMinusQuantity(item, item.quantity - 1)
+                            listener.onRemoveQuantity(item.id)
                         }
                     }
                 }
@@ -98,7 +98,8 @@ class CartAdapter(
     }
 
     interface OnItemCartListener {
-        fun onAddMinusQuantity(cart: Cart, qty: Long)
+        fun onAddQuantity(cartId: String)
+        fun onRemoveQuantity(cartId: String)
         fun onFailure(msg: String)
     }
 }

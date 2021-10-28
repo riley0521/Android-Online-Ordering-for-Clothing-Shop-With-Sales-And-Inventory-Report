@@ -10,12 +10,17 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.ktx.Firebase
 import com.teampym.onlineclothingshopapplication.R
+import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.Cart
 import com.teampym.onlineclothingshopapplication.data.models.Utils
+import com.teampym.onlineclothingshopapplication.data.repository.CartFlag
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCartBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartListener {
@@ -26,12 +31,13 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
     private lateinit var adapter: CartAdapter
 
+    private val user = FirebaseAuth.getInstance().currentUser
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentCartBinding.bind(view)
 
-        val user = FirebaseAuth.getInstance().currentUser
         adapter = CartAdapter(this)
 
         if(user != null) {
@@ -42,11 +48,11 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
         }
 
         lifecycleScope.launchWhenStarted {
-            viewModel.cartFlow.collect {
+            viewModel.cart.observe(viewLifecycleOwner) {
                 if (it.isNotEmpty()) {
                     adapter.submitList(it)
 
-                    binding.tvMerchandiseTotal.text = "$" + "%.2f".format(Utils.currentUser!!.totalOfCart)
+                    // TODO("Display totalOfCart")
                 } else {
                     binding.recyclerViewCart.isVisible = false
                     binding.tvNoItems.isVisible = true
@@ -61,9 +67,12 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
     }
 
-    override fun onAddMinusQuantity(cart: Cart, qty: Long) {
-        // Add Item's quantity in the cart
-        viewModel.updateCartItemQty(cart, qty)
+    override fun onAddQuantity(cartId: String) {
+        viewModel.updateCartItemQty(user!!.uid, cartId, CartFlag.ADDING.toString())
+    }
+
+    override fun onRemoveQuantity(cartId: String) {
+        viewModel.updateCartItemQty(user!!.uid, cartId, CartFlag.REMOVING.toString())
     }
 
     override fun onFailure(msg: String) {

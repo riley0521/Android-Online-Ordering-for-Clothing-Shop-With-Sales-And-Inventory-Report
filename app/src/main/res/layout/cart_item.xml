@@ -3,12 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_marginTop="16dp"
+    app:cardCornerRadius="16dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:padding="8dp">
 
 
         <ImageView
@@ -51,38 +53,39 @@
             android:id="@+id/tvSize"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp"
             android:ellipsize="end"
             android:maxLines="1"
             android:textAllCaps="true"
-            android:textAppearance="?attr/textAppearanceBody2"
+            android:textAppearance="?attr/textAppearanceBody1"
             android:textColor="@color/black"
             android:textStyle="italic"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/tvTotal"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toEndOf="@+id/tvName"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.123"
+            app:layout_constraintVertical_bias="0.68"
             tools:text="(XL)" />
 
         <TextView
             android:id="@+id/tvTotal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
             android:ellipsize="end"
             android:maxLines="1"
             android:textAllCaps="true"
-            android:textAppearance="?attr/textAppearanceBody2"
+            android:textAppearance="?attr/textAppearanceBody1"
             android:textColor="@color/black"
             android:textStyle="italic"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toEndOf="@+id/btnAdd"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.835"
+            app:layout_constraintVertical_bias="1.0"
             tools:text="$29.98" />
 
         <TextView
@@ -109,7 +112,6 @@
             android:id="@+id/tvCount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             android:ellipsize="end"
             android:maxLines="1"
@@ -118,11 +120,11 @@
             android:textColor="@color/black"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintEnd_toStartOf="@+id/btnAdd"
+            app:layout_constraintHorizontal_bias="0.242"
             app:layout_constraintStart_toEndOf="@+id/btnRemove"
             app:layout_constraintTop_toBottomOf="@+id/tvName"
-            app:layout_constraintVertical_bias="0.678"
+            app:layout_constraintVertical_bias="0.686"
             tools:text="1" />
 
         <ImageView
@@ -141,11 +143,10 @@
             android:id="@+id/btnAdd"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginEnd="32dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toEndOf="@+id/tvCount"
+            app:layout_constraintStart_toEndOf="@id/tvCount"
             app:layout_constraintTop_toBottomOf="@+id/tvPrice"
             app:srcCompat="@drawable/ic_add" />
 
