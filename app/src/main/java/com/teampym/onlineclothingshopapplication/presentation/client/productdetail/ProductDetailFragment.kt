@@ -60,29 +60,11 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
         }
 
         lifecycleScope.launchWhenStarted {
-            val queryReviews = db.collection("Products")
+            val queryReviews = db.collection("Product")
                 .document(product.id)
-                .collection("Reviews")
+                .collection("reviews")
                 .get()
                 .await()
-
-            val queryProductImages = db.collection("Products")
-                .document(product.id)
-                .collection("ProductImages")
-                .get()
-                .await()
-
-            val productImages = mutableListOf<ProductImage>()
-            if (queryProductImages.size() > 0)
-                for (document in queryProductImages.documents) {
-                    productImages.add(
-                        ProductImage(
-                            id = document["id"].toString(),
-                            productId = document["productId"].toString(),
-                            imageUrl = document["imageUrl"].toString()
-                        )
-                    )
-                }
 
             var rate = 0.0
 
@@ -100,7 +82,7 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                     .error(R.drawable.ic_food)
                     .into(imgProduct)
 
-                tvName.text = product.name
+                tvProductName.text = product.name
                 tvPrice.text = "$${product.price}"
                 tvDescription.text = product.description
                 btnAddToCart.setOnClickListener {

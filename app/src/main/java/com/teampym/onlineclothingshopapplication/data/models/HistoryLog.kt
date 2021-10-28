@@ -11,4 +11,6 @@ data class HistoryLog(
     val description: String,
     val type: String,
     val date: Date
-): Parcelable
+): Parcelable {
+    constructor(): this("", "", "", "", Date())
+}

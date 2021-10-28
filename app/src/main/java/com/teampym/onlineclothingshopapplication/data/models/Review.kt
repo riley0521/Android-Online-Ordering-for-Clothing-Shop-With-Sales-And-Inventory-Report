@@ -9,11 +9,13 @@ import java.util.*
 @Parcelize
 data class Review(
     val id: String,
-    val productId: String,
     val userId: String,
+    val productId: String,
     val userAvatar: String,
     val username: String,
     val rate: Double,
     val description: String,
     val dateReview: Date
-): Parcelable
+): Parcelable {
+    constructor(): this("", "", "", "", "", 0.0, "", Date())
+}

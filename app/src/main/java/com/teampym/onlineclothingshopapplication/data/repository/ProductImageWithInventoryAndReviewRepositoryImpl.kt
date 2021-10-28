@@ -5,10 +5,7 @@ import androidx.paging.PagingConfig
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
-import com.teampym.onlineclothingshopapplication.data.models.Cart
-import com.teampym.onlineclothingshopapplication.data.models.Inventory
-import com.teampym.onlineclothingshopapplication.data.models.Product
-import com.teampym.onlineclothingshopapplication.data.models.ProductImage
+import com.teampym.onlineclothingshopapplication.data.models.*
 import com.teampym.onlineclothingshopapplication.presentation.client.products.ProductPagingSource
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -19,7 +16,7 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
 ) {
 
     // READ Operation
-    private val productCollectionRef = db.collection("Products")
+    private val productCollectionRef = db.collection("Product")
 
     fun getProductsPagingSource(queryProducts: Query) =
         Pager(
@@ -33,13 +30,31 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
     // TODO("CRUD Operations for Product Collection")
     // I don't know if this is necessary but just in case!
     suspend fun getOneProductWithImagesAndInventories(productId: String): Product? {
-        val productsQuery = productCollectionRef.document(productId).get().await()
-        if (productsQuery != null) {
+        val productQuery = productCollectionRef.document(productId).get().await()
+        if (productQuery != null) {
 
-            val obj = productsQuery.toObject(Product::class.java)
+            val product = productQuery.toObject(Product::class.java)
+            if(product != null) {
 
-            obj?.let {
-                return it
+                val productImagesQuery = productCollectionRef.document(productQuery.id).collection("productImages").get().await()
+                val productImageList = mutableListOf<ProductImage>()
+                productImagesQuery?.let { querySnapshot ->
+                    for(document in querySnapshot.documents) {
+                        val productImage = document.toObject(ProductImage::class.java)!!.copy(id = document.id)
+                        productImageList.add(productImage)
+                    }
+                }
+
+                val inventoriesQuery = productCollectionRef.document(productQuery.id).collection("inventories").get().await()
+                val inventoryList = mutableListOf<Inventory>()
+                inventoriesQuery?.let { querySnapshot ->
+                    for(document in querySnapshot.documents) {
+                        val inventory = document.toObject(Inventory::class.java)!!.copy(id = document.id)
+                        inventoryList.add(inventory)
+                    }
+                }
+
+                return product.copy(id = productQuery.id, productImages = productImageList, inventories = inventoryList)
             }
         }
         return null
@@ -132,15 +147,15 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
 
     // TODO("I feel like there is something missing here.. I think I should use List<OrderDetail> instead of List<Cart>")
     // SHIPPED
-    suspend fun deductStockToCommittedCount(userId: String, cart: List<Cart>): Boolean {
+    suspend fun deductStockToCommittedCount(userId: String, orderDetailList: List<OrderDetail>): Boolean {
         val user = accountRepository.getUser(userId)
 
         user?.let { userInfo ->
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
-                for (item in cart) {
+                for (item in orderDetailList) {
                     val inventoryQuery =
-                        productCollectionRef.document(item.product.id).collection("inventories")
-                            .document(item.sizeInv.id).get().await()
+                        productCollectionRef.document(item.productId).collection("inventories")
+                            .document(item.inventoryId).get().await()
                     if (inventoryQuery != null) {
                         val stockNewCount =
                             inventoryQuery["stock"].toString().toLong() - item.quantity
@@ -151,8 +166,8 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
                             "committed" to committedNewCount
                         )
 
-                        productCollectionRef.document(item.product.id).collection("inventories")
-                            .document(item.sizeInv.id)
+                        productCollectionRef.document(item.productId).collection("inventories")
+                            .document(item.inventoryId)
                             .set(updateProductsInventoryMap, SetOptions.merge()).await()
                     }
                 }
@@ -164,16 +179,16 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
     }
 
     // CANCELED
-    suspend fun deductCommittedToStockCount(userId: String, cart: List<Cart>): Boolean {
+    suspend fun deductCommittedToStockCount(userId: String, orderDetailList: List<OrderDetail>): Boolean {
 
         val user = accountRepository.getUser(userId)
 
         user?.let { userInfo ->
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
-                for (item in cart) {
+                for (item in orderDetailList) {
                     val inventoryQuery =
-                        productCollectionRef.document(item.product.id).collection("inventories")
-                            .document(item.sizeInv.id).get().await()
+                        productCollectionRef.document(item.productId).collection("inventories")
+                            .document(item.inventoryId).get().await()
                     if (inventoryQuery != null) {
                         val committedNewCount =
                             inventoryQuery["committed"].toString().toLong() - item.quantity
@@ -184,8 +199,8 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
                             "committed" to committedNewCount
                         )
 
-                        productCollectionRef.document(item.product.id).collection("inventories")
-                            .document(item.sizeInv.id)
+                        productCollectionRef.document(item.productId).collection("inventories")
+                            .document(item.inventoryId)
                             .set(updateProductsInventoryMap, SetOptions.merge()).await()
                     }
                 }
@@ -197,16 +212,16 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
     }
 
     // COMPLETED
-    suspend fun deductCommittedToSoldCount(userId: String, cart: List<Cart>): Boolean {
+    suspend fun deductCommittedToSoldCount(userId: String, orderDetailList: List<OrderDetail>): Boolean {
 
         val user = accountRepository.getUser(userId)
 
         user?.let { userInfo ->
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
-                for (item in cart) {
+                for (item in orderDetailList) {
                     val inventoryQuery =
-                        productCollectionRef.document(item.product.id).collection("inventories")
-                            .document(item.sizeInv.id).get().await()
+                        productCollectionRef.document(item.productId).collection("inventories")
+                            .document(item.inventoryId).get().await()
                     if (inventoryQuery != null) {
                         val committedNewCount =
                             inventoryQuery["committed"].toString().toLong() - item.quantity
@@ -217,8 +232,8 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
                             "sold" to soldNewCount
                         )
 
-                        productCollectionRef.document(item.product.id).collection("inventories")
-                            .document(item.sizeInv.id)
+                        productCollectionRef.document(item.productId).collection("inventories")
+                            .document(item.inventoryId)
                             .set(updateProductsInventoryMap, SetOptions.merge()).await()
                     }
                 }
@@ -230,16 +245,16 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
     }
 
     // RETURNED
-    suspend fun deductSoldToReturnedCount(userId: String, cart: List<Cart>): Boolean {
+    suspend fun deductSoldToReturnedCount(userId: String, orderDetailList: List<OrderDetail>): Boolean {
 
         val user = accountRepository.getUser(userId)
 
         user?.let { userInfo ->
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
-                for (item in cart) {
+                for (item in orderDetailList) {
                     val inventoryQuery =
-                        productCollectionRef.document(item.product.id).collection("inventories")
-                            .document(item.sizeInv.id).get().await()
+                        productCollectionRef.document(item.productId).collection("inventories")
+                            .document(item.inventoryId).get().await()
                     if (inventoryQuery != null) {
                         val soldNewCount =
                             inventoryQuery["sold"].toString().toLong() - item.quantity
@@ -250,8 +265,8 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
                             "returned" to returnedNewCount
                         )
 
-                        productCollectionRef.document(item.product.id).collection("inventories")
-                            .document(item.sizeInv.id)
+                        productCollectionRef.document(item.productId).collection("inventories")
+                            .document(item.inventoryId)
                             .set(updateProductsInventoryMap, SetOptions.merge()).await()
                     }
                 }

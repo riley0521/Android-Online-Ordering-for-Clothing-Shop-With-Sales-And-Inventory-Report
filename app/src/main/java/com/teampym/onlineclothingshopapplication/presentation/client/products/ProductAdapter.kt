@@ -10,6 +10,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Product
+import com.teampym.onlineclothingshopapplication.data.repository.ProductFlag
 import com.teampym.onlineclothingshopapplication.databinding.ProductItemBinding
 
 class ProductAdapter(
@@ -35,7 +36,7 @@ class ProductAdapter(
     override fun onBindViewHolder(holder: ProductViewHolder, position: Int) {
         val product = getItem(position)
 
-        if(product != null)
+        if (product != null)
             holder.bind(product)
     }
 
@@ -45,9 +46,9 @@ class ProductAdapter(
         init {
             binding.root.setOnClickListener {
                 val position = bindingAdapterPosition
-                if(position != RecyclerView.NO_POSITION) {
+                if (position != RecyclerView.NO_POSITION) {
                     val item = getItem(position)
-                    if(item != null)
+                    if (item != null)
                         listener.onItemClicked(item)
                 }
             }
@@ -63,10 +64,25 @@ class ProductAdapter(
                     .into(imgProduct)
 
                 tvName.text = product.name
-                tvPrice.text = "$${product.price}"
+                tvPrice.text = "$${product.priceBig}"
 
-                if (product.flag.equals("NORMAL"))
+                if (product.flag == ProductFlag.NORMAL.toString())
                     tvFlag.isVisible = false
+
+                product.inventories?.let { products ->
+                    val isOutOfStock = products.sumOf { it.stock } == 0L
+                    labelOutOfStock.isVisible = isOutOfStock
+
+                    val totalSold = products.sumOf { it.sold }
+                    labelNumberOfSold.text = "Sold $totalSold"
+                }
+
+                product.reviews?.let { reviews ->
+                    val avgRate: Double = reviews.sumOf { it.rate }.div(reviews.size)
+                    labelRate.isVisible = true
+                    labelRate.text = avgRate.toString()
+                }
+
                 tvFlag.text = product.flag
 
                 btnShare.setOnClickListener {

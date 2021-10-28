@@ -34,19 +34,42 @@ class AccountAndDeliveryInformationImpl @Inject constructor(
 
         if (userQuery.exists()) {
 
-            val obj = userQuery.toObject(UserInformation::class.java)
-
-            obj?.let { userInfo ->
-
-                userInformationDao.insert(userInfo)
-                userInfo.deliveryInformation!!.forEach {
-                    deliveryInformationDao.insert(it)
+            val userInfo = userQuery.toObject(UserInformation::class.java)
+            if (userInfo != null) {
+                val deliveryInformationQuery =
+                    userCollectionRef.document(userQuery.id).collection("deliveryInformation").get()
+                        .await()
+                val deliveryInformationList = mutableListOf<DeliveryInformation>()
+                deliveryInformationQuery?.let { querySnapshot ->
+                    for (document in querySnapshot.documents) {
+                        val deliveryInfo = document.toObject(DeliveryInformation::class.java)!!.copy(id = document.id)
+                        deliveryInformationList.add(deliveryInfo)
+                        deliveryInformationDao.insert(deliveryInfo)
+                    }
                 }
-                userInfo.notificationTokens!!.forEach {
-                    notificationTokenDao.insert(it)
+
+                val notificationTokenQuery =
+                    userCollectionRef.document(userQuery.id).collection("notificationTokens").get()
+                        .await()
+                val notificationTokenList = mutableListOf<NotificationToken>()
+                notificationTokenQuery?.let { querySnapshot ->
+                    for (document in querySnapshot.documents) {
+                        val notificationToken =
+                            document.toObject(NotificationToken::class.java)!!.copy(id = document.id)
+                        notificationTokenList.add(notificationToken)
+                        notificationTokenDao.insert(notificationToken)
+                    }
                 }
 
-                return userInfo
+                userInformationDao.insert(
+                    userInfo.copy(
+                        userId = userQuery.id,
+                        deliveryInformation = deliveryInformationList,
+                        notificationTokens = notificationTokenList
+                    )
+                )
+
+
             }
         }
         return null

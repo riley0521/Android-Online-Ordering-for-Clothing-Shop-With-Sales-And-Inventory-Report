@@ -18,7 +18,6 @@ import javax.inject.Provider
     version = 1,
     exportSchema = false
 )
-@TypeConverters(BigDecimalTypeConverter::class)
 abstract class MyDatabase : RoomDatabase() {
 
     abstract fun regionDao(): RegionDao

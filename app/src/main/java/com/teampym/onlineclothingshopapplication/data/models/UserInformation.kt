@@ -24,9 +24,12 @@ data class UserInformation(
     var userType: String = UserType.CUSTOMER.toString(),
     @Ignore var notificationTokens: List<NotificationToken>? = null,
     @Ignore var cart: List<Cart>? = null,
-    var totalOfCart: BigDecimal = "0".toBigDecimal()
+    var totalOfCart: Double = 0.0
 ) : Parcelable {
-    constructor() : this("", "", "", null, "", "", UserType.CUSTOMER.toString(), null, null, "0".toBigDecimal())
+    constructor() : this("", "", "", null, "", "", UserType.CUSTOMER.toString(), null, null, 0.0)
+
+    @Ignore
+    val totalOfCartBig = totalOfCart.toBigDecimal()
 }
 
 fun Date.toString(format: String, locale: Locale = Locale.getDefault()): String {

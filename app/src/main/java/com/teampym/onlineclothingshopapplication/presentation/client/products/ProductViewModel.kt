@@ -21,28 +21,26 @@ class ProductViewModel @Inject constructor(
 ) : ViewModel() {
 
     val searchQuery = MutableLiveData("")
-    val categoryQuery = MutableLiveData("")
-    private val flagQuery = MutableLiveData(Utils.productFlag)
-
+    private val _categoryQuery = MutableLiveData("")
+    private val _flagQuery = MutableLiveData(Utils.productFlag)
 
     var productsFlow = combine(
         searchQuery.asFlow(),
-        flagQuery.asFlow()
+        _flagQuery.asFlow()
     ) { search, flag ->
         Pair(search, flag)
     }.flatMapLatest { (search, flag) ->
 
         lateinit var queryProducts: Query
-        val categoryId = categoryQuery.value
-        val productFlag = flag
-        if (productFlag.isEmpty()) {
+        val categoryId = _categoryQuery.value
+        if (flag.isEmpty()) {
             queryProducts = if (search.isEmpty()) {
-                db.collection("Products")
+                db.collection("Product")
                     .whereEqualTo("categoryId", categoryId)
                     .orderBy("name", Query.Direction.ASCENDING)
                     .limit(30)
             } else {
-                db.collection("Products")
+                db.collection("Product")
                     .whereEqualTo("categoryId", categoryId)
                     .orderBy("name", Query.Direction.ASCENDING)
                     .startAt(search)
@@ -50,21 +48,21 @@ class ProductViewModel @Inject constructor(
                     .limit(30)
             }
         } else {
-            queryProducts = db.collection("Products")
+            queryProducts = db.collection("Product")
                 .whereEqualTo("categoryId", categoryId)
-                .whereEqualTo("flag", productFlag)
+                .whereEqualTo("flag", flag)
                 .limit(30)
         }
 
         productRepository.getProductsPagingSource(queryProducts).flow
     }
 
-    fun updateCategory(categoryId: String) = viewModelScope.launch {
-        categoryQuery.value = categoryId
+    fun updateCategory(categoryId: String) {
+        _categoryQuery.value = categoryId
     }
 
     fun updateFlag(flag: String) = viewModelScope.launch {
         Utils.productFlag = flag
-        flagQuery.value = flag
+        _flagQuery.value = flag
     }
 }

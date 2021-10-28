@@ -22,13 +22,10 @@ class CategoryViewModel @Inject constructor(
             .addSnapshotListener { querySnapshot, _ ->
                 val categoriesFromDb = mutableListOf<Category>()
                 for (doc in querySnapshot!!) {
-                    val item = Category(
-                        doc.id,
-                        doc.getString("name")!!,
-                        doc.getString("imageUrl")!!
-                    )
+                    val item = doc.toObject(Category::class.java)
 
-                    categoriesFromDb.add(item)
+                    val c = item.copy(id = doc.id)
+                    categoriesFromDb.add(c)
                 }
 
                 _categories.value = categoriesFromDb

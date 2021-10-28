@@ -11,8 +11,12 @@ data class Order(
     val userId: String,
     val deliveryInformation: DeliveryInformation,
     val orderDate: Date,
-    val totalCost: BigDecimal,
+    val totalCost: Double,
     val status: String,
     val paymentMethod: String,
     val orderDetails: List<OrderDetail>? = null
-): Parcelable
+): Parcelable {
+    constructor(): this("", "", DeliveryInformation(), Date(0), 0.0, "", "", null)
+
+    val totalCostBig = totalCost.toBigDecimal()
+}

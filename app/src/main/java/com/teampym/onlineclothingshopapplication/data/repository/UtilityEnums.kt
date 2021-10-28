@@ -35,8 +35,8 @@ enum class UserType {
 }
 
 enum class ProductType {
-    SHIRT,
-    HOODY
+    SHIRTS,
+    HOODIES
 }
 
 enum class LogType {

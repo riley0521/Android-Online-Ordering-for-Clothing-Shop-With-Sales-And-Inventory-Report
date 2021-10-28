@@ -1,6 +1,7 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.products
 
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -8,6 +9,7 @@ import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.R
@@ -28,6 +30,8 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
 
     private val viewModel: ProductViewModel by viewModels()
 
+    private val args by navArgs<ProductFragmentArgs>()
+
     @Inject
     lateinit var db: FirebaseFirestore
 
@@ -35,6 +39,9 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentProductBinding.bind(view)
+
+        Log.d("CATEGORY", "${args.categoryId} fewfewfewf")
+        viewModel.updateCategory(args.categoryId)
 
         adapter = ProductAdapter(this)
 

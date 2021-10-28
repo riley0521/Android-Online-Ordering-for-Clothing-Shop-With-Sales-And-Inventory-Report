@@ -6,7 +6,9 @@ import com.bumptech.glide.load.HttpException
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
+import com.teampym.onlineclothingshopapplication.data.models.Inventory
 import com.teampym.onlineclothingshopapplication.data.models.Product
+import com.teampym.onlineclothingshopapplication.data.models.ProductImage
 import kotlinx.coroutines.tasks.await
 import java.io.IOException
 
@@ -16,7 +18,7 @@ class ProductPagingSource(
     private val queryProducts: Query
 ) : PagingSource<QuerySnapshot, Product>() {
 
-    val productCollectionRef = FirebaseFirestore.getInstance().collection("Products")
+    private val productCollectionRef = FirebaseFirestore.getInstance().collection("Product")
 
     override fun getRefreshKey(state: PagingState<QuerySnapshot, Product>): QuerySnapshot? {
         TODO("Not yet implemented")
@@ -38,11 +40,38 @@ class ProductPagingSource(
             }
 
             val productList = mutableListOf<Product>()
-            for (product in currentPage.documents) {
+            for (document in currentPage.documents) {
 
-                val obj = product.toObject(Product::class.java)
-                obj?.let {
-                    productList.add(it)
+                val product = document.toObject(Product::class.java)
+                if(product != null) {
+                    val inventoriesQuery = productCollectionRef.document(document.id).collection("inventories").get().await()
+                    val inventoryList = mutableListOf<Inventory>()
+                    inventoriesQuery?.let {
+                        for(doc in inventoriesQuery.documents) {
+                            val inventory = doc.toObject(Inventory::class.java)
+                            if(inventory != null) {
+                                val i = inventory.copy(id = doc.id)
+                                inventoryList.add(i)
+
+                            }
+                        }
+                    }
+
+                    val productImagesQuery = productCollectionRef.document(document.id).collection("productImages").get().await()
+                    val productImageList = mutableListOf<ProductImage>()
+                    productImagesQuery?.let {
+                        for(doc in productImagesQuery.documents) {
+                            val productImage = doc.toObject(ProductImage::class.java)
+                            if(productImage != null) {
+                                val p = productImage.copy(id = doc.id)
+                                productImageList.add(p)
+
+                            }
+                        }
+                    }
+
+                    val productItem = product.copy(id = document.id, inventories = inventoryList, productImages = productImageList)
+                    productList.add(productItem)
                 }
 
             }

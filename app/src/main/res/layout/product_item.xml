@@ -72,6 +72,7 @@
                 android:layout_marginTop="8dp"
                 android:textAppearance="?attr/textAppearanceBody2"
                 android:textColor="@color/black"
+                android:visibility="invisible"
                 android:textStyle="bold"
                 tools:text="Out Of Stock" />
 
@@ -87,6 +88,7 @@
                     android:textAppearance="?attr/textAppearanceBody2"
                     android:textColor="@color/black"
                     android:textStyle="bold"
+                    android:visibility="invisible"
                     tools:text="3.5" />
 
                 <TextView

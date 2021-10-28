@@ -15,10 +15,15 @@ data class OrderDetail(
     val inventoryId: String,
     val productName: String,
     val productImage: String,
-    val productPrice: BigDecimal,
+    val productPrice: Double,
     val size: String,
     val quantity: Long,
-    val subTotal: BigDecimal,
-    val dateSold: Date?,
+    val subTotal: Double,
+    val dateSold: Date? = null,
     val isExchangeable: Boolean = dateSold != null
-): Parcelable
+): Parcelable {
+    constructor(): this("", "", "", "", "", "", "", 0.0, "", 0L, 0.0)
+
+    val pPriceBig = productPrice.toBigDecimal()
+    val subTotalBig = subTotal.toBigDecimal()
+}

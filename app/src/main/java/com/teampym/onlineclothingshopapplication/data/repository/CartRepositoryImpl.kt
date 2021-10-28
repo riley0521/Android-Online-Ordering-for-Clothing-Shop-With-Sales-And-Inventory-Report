@@ -101,7 +101,7 @@ class CartRepositoryImpl @Inject constructor(
 //        return null
     }
 
-    suspend fun updateTotalOfCart(userId: String): BigDecimal {
+    suspend fun updateTotalOfCart(userId: String): Double {
         // Update the totalOfCart whether the product per price changes or not to add the grand total of all subTotal.
         val userCartQuery = userCartCollectionRef.document(userId).collection("cart").get().await()
 
@@ -127,7 +127,7 @@ class CartRepositoryImpl @Inject constructor(
                 return totalOfCart
             }
         }
-        return "0".toBigDecimal()
+        return 0.0
     }
 
     suspend fun addToCart(
@@ -167,7 +167,7 @@ class CartRepositoryImpl @Inject constructor(
                 product = product,
                 quantity = quantity,
                 sizeInv = inventory,
-                subTotal = product.price * quantity.toBigDecimal()
+                subTotal = product.price * quantity.toDouble()
             )
 
             val result = userCartCollectionRef.document(userId).collection("cart")
@@ -200,7 +200,7 @@ class CartRepositoryImpl @Inject constructor(
 
                 val updateQuantityOfCartItem = mapOf<String, Any>(
                     "quantity" to newQuantity,
-                    "subTotal" to (it.product.price * newQuantity.toBigDecimal())
+                    "subTotal" to (it.product.price * newQuantity.toDouble())
                 )
 
                 val result =

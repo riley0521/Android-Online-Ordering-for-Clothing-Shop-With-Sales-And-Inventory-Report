@@ -18,7 +18,7 @@ interface UserInformationDao {
     suspend fun getCurrentUser(userId: String): UserInformation
 
     @Query("UPDATE table_users SET totalOfCart = :totalOfCart WHERE userId = :userId")
-    suspend fun updateTotalOfCart(userId: String, totalOfCart: BigDecimal)
+    suspend fun updateTotalOfCart(userId: String, totalOfCart: Double)
 
     @Update
     suspend fun update(userInformation: UserInformation)

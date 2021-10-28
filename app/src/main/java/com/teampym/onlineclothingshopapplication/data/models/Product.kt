@@ -12,13 +12,14 @@ data class Product(
     val name: String,
     val description: String,
     val imageUrl: String,
-    val price: BigDecimal,
+    val price: Double,
     val flag: String,
     val type: String,
     val inventories: List<Inventory>? = null,
     val productImages: List<ProductImage>? = null,
     val reviews: List<Review>? = null,
-    val isOutOfStock: Boolean = false
 ): Parcelable {
-    constructor(): this("", "", "", "", "", "0".toBigDecimal(), "", ProductType.HOODY.toString())
+    constructor(): this("", "", "", "", "", 0.0, "", "")
+
+    val priceBig = price.toBigDecimal()
 }

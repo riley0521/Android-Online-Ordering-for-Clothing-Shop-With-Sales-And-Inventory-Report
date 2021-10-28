@@ -15,16 +15,18 @@ data class Cart(
     var userId: String,
     var productId: String,
     var inventoryId: String,
-    var subTotal: BigDecimal,
+    var subTotal: Double,
     var quantity: Long = 1,
     @Ignore var product: Product = Product(),
     @Ignore var sizeInv: Inventory = Inventory()
 ) : Parcelable {
 
-    constructor(): this("", "", "", "", "0".toBigDecimal(), 1)
+    constructor(): this("", "", "", "", 0.0, 1)
 
-    val calculatedTotalPrice: BigDecimal get() = quantity.toBigDecimal() * product.price
+    val calculatedTotalPrice: Double get() = quantity.toDouble() * product.price
     init {
         subTotal = calculatedTotalPrice
     }
+
+    @Ignore val subTotalBig = subTotal.toBigDecimal()
 }

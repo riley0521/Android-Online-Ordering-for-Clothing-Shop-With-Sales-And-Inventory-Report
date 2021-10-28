@@ -9,4 +9,6 @@ data class ProductImage(
     val id: String,
     val productId: String,
     val imageUrl: String
-): Parcelable
+): Parcelable {
+    constructor(): this("", "", "")
+}

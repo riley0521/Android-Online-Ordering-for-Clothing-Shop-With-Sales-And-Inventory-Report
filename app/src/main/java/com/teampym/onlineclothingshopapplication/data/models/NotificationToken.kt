@@ -13,4 +13,6 @@ data class NotificationToken(
     val id: String,
     val userId: String,
     val token: String
-) : Parcelable
+) : Parcelable {
+    constructor(): this("", "", "")
+}

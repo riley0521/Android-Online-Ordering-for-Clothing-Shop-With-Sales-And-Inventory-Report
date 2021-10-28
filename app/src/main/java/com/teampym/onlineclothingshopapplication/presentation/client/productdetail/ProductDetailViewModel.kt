@@ -18,9 +18,9 @@ class ProductDetailViewModel @Inject constructor(
     var reviewsFlow = emptyFlow<PagingData<Review>>()
 
     fun provideQuery(productId: String) {
-        val queryReviews = db.collection("Products")
+        val queryReviews = db.collection("Product")
             .document(productId)
-            .collection("Reviews")
+            .collection("reviews")
             .limit(30)
 
         reviewsFlow = Pager(
