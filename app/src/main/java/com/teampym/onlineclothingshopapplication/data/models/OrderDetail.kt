@@ -9,11 +9,16 @@ import java.util.*
 @Parcelize
 data class OrderDetail(
     val id: String,
+    val userId: String,
     val orderId: String,
-    val product: Product,
+    val productId: String,
+    val inventoryId: String,
+    val productName: String,
+    val productImage: String,
+    val productPrice: BigDecimal,
     val size: String,
-    val price: BigDecimal,
     val quantity: Long,
     val subTotal: BigDecimal,
-    val dateSold: Date?
+    val dateSold: Date?,
+    val isExchangeable: Boolean = dateSold != null
 ): Parcelable

@@ -9,13 +9,15 @@ import kotlinx.android.parcel.Parcelize
 @Parcelize
 data class DeliveryInformation(
     @PrimaryKey
-    val id: String,
-    val userId: String,
-    val contactNo: String,
-    val region: String,
-    val province: String,
-    val city: String,
-    val streetNumber: String,
-    val postalCode: String,
-    val default: Boolean = false
-): Parcelable
+    var id: String,
+    var userId: String,
+    var contactNo: String,
+    var region: String,
+    var province: String,
+    var city: String,
+    var streetNumber: String,
+    var postalCode: String,
+    var default: Boolean = false
+): Parcelable {
+    constructor(): this("", "", "", "", "", "", "", "", false)
+}

@@ -41,7 +41,7 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
 
     override fun onItemClick(category: Category) {
         val action =
-            CategoryFragmentDirections.actionCategoryFragmentToProductFragment(category)
+            CategoryFragmentDirections.actionCategoryFragmentToProductFragment(category.name, category.id)
         findNavController().navigate(action)
     }
 }

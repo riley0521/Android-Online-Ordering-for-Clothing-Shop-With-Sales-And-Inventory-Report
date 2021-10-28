@@ -2,6 +2,7 @@ package com.teampym.onlineclothingshopapplication.data.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.teampym.onlineclothingshopapplication.data.models.Cart
 import com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation
@@ -14,8 +15,10 @@ import javax.inject.Provider
 
 @Database(
     entities = [Region::class, Province::class, City::class, UserInformation::class, DeliveryInformation::class, NotificationToken::class, Cart::class],
-    version = 1
+    version = 1,
+    exportSchema = false
 )
+@TypeConverters(BigDecimalTypeConverter::class)
 abstract class MyDatabase : RoomDatabase() {
 
     abstract fun regionDao(): RegionDao

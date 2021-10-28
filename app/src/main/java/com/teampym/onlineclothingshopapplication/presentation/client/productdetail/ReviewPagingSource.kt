@@ -34,17 +34,11 @@ class ReviewPagingSource(
 
             val reviewList = mutableListOf<Review>()
             for (review in currentPage.documents) {
+
+                val obj = review.toObject(Review::class.java)
+
                 reviewList.add(
-                    Review(
-                        id = review.id,
-                        productId = review.getString("productId")!!,
-                        userId = review.getString("userId")!!,
-                        userAvatar = review.getString("userAvatar")!!,
-                        username = review.getString("username")!!,
-                        rate = review.getDouble("rate")!!,
-                        description = review.getString("description")!!,
-                        dateReview = review.getString("dateReview")!!
-                    )
+                    obj!!
                 )
             }
 

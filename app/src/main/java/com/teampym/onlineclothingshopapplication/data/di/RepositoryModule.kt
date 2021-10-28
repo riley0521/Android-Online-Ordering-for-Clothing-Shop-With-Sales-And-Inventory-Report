@@ -1,8 +1,9 @@
 package com.teampym.onlineclothingshopapplication.data.di
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.teampym.onlineclothingshopapplication.data.db.DeliveryInformationDao
+import com.teampym.onlineclothingshopapplication.data.db.NotificationTokenDao
+import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.repository.*
 import dagger.Module
 import dagger.Provides
@@ -17,17 +18,26 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideDbInstance() =
-        Firebase.firestore
+        FirebaseFirestore.getInstance()
 
     @Provides
     @Singleton
-    fun provideAccountAndDeliveryInformationRepository(db: FirebaseFirestore) =
-        AccountAndDeliveryInformationImpl(db)
+    fun provideAccountAndDeliveryInformationRepository(
+        db: FirebaseFirestore,
+        userInformationDao: UserInformationDao,
+        deliveryInformationDao: DeliveryInformationDao,
+        notificationTokenDao: NotificationTokenDao
+    ) = AccountAndDeliveryInformationImpl(
+        db,
+        userInformationDao,
+        deliveryInformationDao,
+        notificationTokenDao
+    )
 
     @Provides
     @Singleton
-    fun provideCartRepository(db: FirebaseFirestore) =
-        CartRepositoryImpl(db)
+    fun provideCartRepository(db: FirebaseFirestore, userInformationDao: UserInformationDao) =
+        CartRepositoryImpl(db, userInformationDao)
 
     @Provides
     @Singleton
@@ -44,7 +54,10 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideProductRepository(db: FirebaseFirestore) =
-        ProductImageWithInventoryAndReviewRepositoryImpl(db)
+    fun provideProductRepository(
+        db: FirebaseFirestore,
+        accountRepository: AccountAndDeliveryInformationImpl
+    ) =
+        ProductImageWithInventoryAndReviewRepositoryImpl(db, accountRepository)
 
 }

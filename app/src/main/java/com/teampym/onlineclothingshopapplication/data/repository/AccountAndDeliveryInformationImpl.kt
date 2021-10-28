@@ -2,6 +2,9 @@ package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.teampym.onlineclothingshopapplication.data.db.DeliveryInformationDao
+import com.teampym.onlineclothingshopapplication.data.db.NotificationTokenDao
+import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.*
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
@@ -10,7 +13,10 @@ import javax.inject.Inject
 
 
 class AccountAndDeliveryInformationImpl @Inject constructor(
-    private val db: FirebaseFirestore
+    private val db: FirebaseFirestore,
+    private val userInformationDao: UserInformationDao,
+    private val deliveryInformationDao: DeliveryInformationDao,
+    private val notificationTokenDao: NotificationTokenDao
 ) {
 
     private val userCollectionRef = db.collection("Users")
@@ -20,64 +26,30 @@ class AccountAndDeliveryInformationImpl @Inject constructor(
     // db.collection("Users").document(<id here>).collection("cart").document(<id here>).get().await()
 
     suspend fun getUser(
-        userId:String
-    ): Boolean {
+        userId: String
+    ): UserInformation? {
         val userQuery = userCollectionRef.document(userId)
             .get()
             .await()
 
-        if(userQuery.exists()) {
+        if (userQuery.exists()) {
 
-            // get all delivery information
-            val deliveryInformationQuery = userCollectionRef.document(userId).collection("deliveryInformation").get().await()
-            val deliveryInformationList = mutableListOf<DeliveryInformation>()
-            if(deliveryInformationQuery.documents.isNotEmpty()) {
-               for(document in deliveryInformationQuery) {
-                   deliveryInformationList.add(
-                       DeliveryInformation(
-                           id = document.id,
-                           userId = userId,
-                           contactNo = document["contactNo"].toString(),
-                           region = document["region"].toString(),
-                           province = document["province"].toString(),
-                           city = document["city"].toString(),
-                           postalCode = document["postalCode"].toString(),
-                           streetNumber = document["streetNumber"].toString(),
-                       )
-                   )
-               }
-            }
+            val obj = userQuery.toObject(UserInformation::class.java)
 
-            // get all notificationTokens
-            val notificationTokensQuery = userCollectionRef.document(userId).collection("notificationTokens").get().await()
-            val notificationTokenList = mutableListOf<NotificationToken>()
-            if(notificationTokensQuery.documents.isNotEmpty()) {
-                for(document in notificationTokensQuery) {
-                    notificationTokenList.add(
-                        NotificationToken(
-                            id = document.id,
-                            userId = userId,
-                            token = document["token"].toString()
-                        )
-                    )
+            obj?.let { userInfo ->
+
+                userInformationDao.insert(userInfo)
+                userInfo.deliveryInformation!!.forEach {
+                    deliveryInformationDao.insert(it)
                 }
-            }
+                userInfo.notificationTokens!!.forEach {
+                    notificationTokenDao.insert(it)
+                }
 
-            Utils.currentUser = UserInformation(
-                userId = userId,
-                firstName = userQuery["firstName"].toString(),
-                lastName = userQuery["lastName"].toString(),
-                deliveryInformation = deliveryInformationList,
-                birthDate = userQuery["birthDate"].toString(),
-                avatarUrl = userQuery["avatarUrl"].toString(),
-                userType = userQuery["userType"].toString(),
-                notificationTokens = notificationTokenList,
-                cart = null,
-                totalOfCart = userQuery["totalOfCart"].toString().toBigDecimal()
-            )
-            return true
+                return userInfo
+            }
         }
-        return false
+        return null
     }
 
     suspend fun createUser(
@@ -103,7 +75,7 @@ class AccountAndDeliveryInformationImpl @Inject constructor(
             .add(newUser)
             .await()
 
-        return if(result != null) {
+        return if (result != null) {
             newUser.copy(userId = result.id)
         } else {
             null
@@ -121,22 +93,29 @@ class AccountAndDeliveryInformationImpl @Inject constructor(
 
         val userMapToUpdate = mutableMapOf<String, Any>()
 
-        if(firstName.isNotEmpty() && birthDate.isNotEmpty()) {
+        if (firstName.isNotEmpty() && birthDate.isNotEmpty()) {
 
             val date = SimpleDateFormat("MM/dd/yyyy", Locale.ENGLISH).parse(birthDate)
             val calendarDate = Calendar.getInstance()
             calendarDate.time = date!!
 
             // Check if the user is in the right age to use the application
-            if(Calendar.getInstance().get(Calendar.YEAR).minus(calendarDate.get(Calendar.YEAR)) >= 12) {
+            if (Calendar.getInstance().get(Calendar.YEAR)
+                    .minus(calendarDate.get(Calendar.YEAR)) >= 12
+            ) {
                 userMapToUpdate["firstName"] = firstName
                 userMapToUpdate["lastName"] = lastName
                 userMapToUpdate["birthDate"] = birthDate
 
                 val userQuery = userCollectionRef.document(userId).get().await()
-                if(userQuery.exists()) {
-                    userCollectionRef.document(userId).set(userMapToUpdate, SetOptions.merge()).await()
-                    Utils.currentUser = Utils.currentUser?.copy(firstName = firstName, lastName = lastName, birthDate = birthDate)
+                if (userQuery.exists()) {
+                    userCollectionRef.document(userId).set(userMapToUpdate, SetOptions.merge())
+                        .await()
+                    Utils.currentUser = Utils.currentUser?.copy(
+                        firstName = firstName,
+                        lastName = lastName,
+                        birthDate = birthDate
+                    )
                 }
             }
         }

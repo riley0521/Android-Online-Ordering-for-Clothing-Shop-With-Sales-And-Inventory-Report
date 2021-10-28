@@ -73,7 +73,7 @@
     <fragment
         android:id="@+id/productFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.products.ProductFragment"
-        android:label="{category}"
+        android:label="{title}"
         tools:layout="@layout/fragment_product">
         <action
             android:id="@+id/action_productFragment_to_productDetailFragment"
@@ -82,8 +82,11 @@
             android:id="@+id/action_productFragment_to_inventoryModalFragment"
             app:destination="@id/inventoryModalFragment" />
         <argument
-            android:name="category"
-            app:argType="com.teampym.onlineclothingshopapplication.data.models.Category" />
+            android:name="title"
+            app:argType="string" />
+        <argument
+            android:name="categoryId"
+            app:argType="string" />
     </fragment>
     <fragment
         android:id="@+id/profileFragment"

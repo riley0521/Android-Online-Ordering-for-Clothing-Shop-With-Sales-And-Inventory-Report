@@ -2,111 +2,81 @@ package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.Cart
 import com.teampym.onlineclothingshopapplication.data.models.Inventory
 import com.teampym.onlineclothingshopapplication.data.models.Product
+import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import kotlinx.coroutines.tasks.await
 import java.math.BigDecimal
 import javax.inject.Inject
 
 class CartRepositoryImpl @Inject constructor(
-    private val db: FirebaseFirestore
+    private val db: FirebaseFirestore,
+    private val userInformationDao: UserInformationDao
 ) {
 
     private val userCartCollectionRef = db.collection("Users")
     private val updatedProductsCollectionRef = db.collection("Products")
 
+
+    // TODO("Use a flow to get updates in cart collection instantly")
     suspend fun getCartByUserId(userId: String): List<Cart>? {
         // get specific cart by userId
         val cartQuery = userCartCollectionRef.document(userId).collection("cart").get().await()
         val cartList = mutableListOf<Cart>()
         if (cartQuery != null) {
-            for (cartItem in cartQuery.documents) {
+            for (document in cartQuery.documents) {
 
-                // check if price of a single product has been changed and update the cart instantly.
-                val productId = cartItem["product.id"].toString()
-                val productQuery = updatedProductsCollectionRef.document(productId).get().await()
-                if (productQuery.exists()) {
-                    val updatePriceOfProductInCart = mapOf<String, Any>(
-                        "price" to productQuery["price"].toString().toBigDecimal()
-                    )
+                val cartItem = document.toObject(Cart::class.java)
 
-                    userCartCollectionRef.document(userId).collection("cart").document(cartItem.id)
-                        .set(updatePriceOfProductInCart, SetOptions.merge()).await()
+                cartItem?.let {
+                    // check if price of a single product has been changed and update the cart instantly.
+                    val productId = it.productId
+                    val productQuery =
+                        updatedProductsCollectionRef.document(productId).get().await()
+                    if (productQuery.exists()) {
+                        val updatePriceOfProductInCart = mapOf<String, Any>(
+                            "price" to productQuery["price"].toString().toBigDecimal()
+                        )
+
+                        userCartCollectionRef.document(userId).collection("cart")
+                            .document(document.id)
+                            .set(updatePriceOfProductInCart, SetOptions.merge()).await()
+                    }
+                    cartList.add(it)
                 }
-
-                // check if the inventory stock and committed changes and update the cart instantly.
-                val inventoryId = cartItem["selectedSizeFromInventory.id"].toString()
-                val inventoryQuery =
-                    db.collectionGroup("Inventories").whereEqualTo("id", inventoryId).limit(1).get()
-                        .await()
-                if (inventoryQuery != null) {
-                    val updateStockAndCommittedItemToCart = mapOf<String, Any>(
-                        "stock" to inventoryQuery.documents[0]["stock"].toString()
-                            .toLong() - inventoryQuery.documents[0]["committed"].toString()
-                            .toLong(),
-                        "committed" to inventoryQuery.documents[0]["committed"].toString().toLong()
-                    )
-
-                    userCartCollectionRef.document(userId).collection("cart").document(cartItem.id)
-                        .set(updateStockAndCommittedItemToCart, SetOptions.merge()).await()
-                }
-
-                cartList.add(
-                    Cart(
-                        id = cartItem["id"].toString(),
-                        userId = cartItem["userId"].toString(),
-                        product = Product(
-                            id = cartItem["product.id"].toString(),
-                            categoryId = cartItem["product.categoryId"].toString(),
-                            name = cartItem["product.name"].toString(),
-                            description = cartItem["product.description"].toString(),
-                            imageUrl = cartItem["product.imageUrl"].toString(),
-                            price = cartItem["product.price"].toString().toBigDecimal(),
-                            flag = cartItem["product.flag"].toString(),
-                            inventories = null,
-                            productImages = null
-                        ),
-                        quantity = cartItem["quantity"].toString().toLong(),
-                        selectedSizeFromInventory = Inventory(
-                            id = cartItem["selectedSizeFromInventory.id"].toString(),
-                            productId = cartItem["selectedSizeFromInventory.productId"].toString(),
-                            size = cartItem["selectedSizeFromInventory.size"].toString(),
-                            stock = cartItem["selectedSizeFromInventory.stock"].toString()
-                                .toLong() - cartItem["selectedSizeFromInventory.committed"].toString()
-                                .toLong(),
-                            committed = cartItem["selectedSizeFromInventory.committed"].toString()
-                                .toLong(),
-                            sold = cartItem["selectedSizeFromInventory.sold"].toString().toLong(),
-                            returned = cartItem["selectedSizeFromInventory.returned"].toString()
-                                .toLong(),
-                            restockLevel = cartItem["selectedSizeFromInventory.restockLevel"].toString()
-                                .toLong()
-                        ),
-                        subTotal = cartItem["subTotal"].toString().toBigDecimal()
-                    )
-                )
             }
-
-            updateAndGetTotalOfCart(userId)
+            updateTotalOfCart(userId)
             return cartList
         }
         return null
     }
 
-    suspend fun updateAndGetTotalOfCart(userId: String): BigDecimal {
+    suspend fun updateTotalOfCart(userId: String): BigDecimal {
         // Update the totalOfCart whether the product per price changes or not to add the grand total of all subTotal.
-        val currentCart = getCartByUserId(userId)
-        if (currentCart != null) {
+        val userCartQuery = userCartCollectionRef.document(userId).collection("cart").get().await()
+
+        if (userCartQuery != null) {
+
+            val cartList = mutableListOf<Cart>()
+            for (document in userCartQuery.documents) {
+                val cartItem = document.toObject(Cart::class.java)
+                cartItem?.let {
+                    cartList.add(it)
+                }
+            }
+
             val updateTotalOfCart = mapOf<String, Any>(
-                "totalOfCart" to currentCart.sumOf { it.subTotal }
+                "totalOfCart" to cartList.sumOf { it.subTotal }
             )
-            val result =
-                userCartCollectionRef.document(userId).set(updateTotalOfCart, SetOptions.merge())
-                    .await()
+            val result = userCartCollectionRef.document(userId)
+                .set(updateTotalOfCart, SetOptions.merge())
+                .await()
             if (result != null) {
-                // TODO("Maybe I can cache the grandTotal in room database here in repository using DAO")
-                return currentCart.sumOf { it.subTotal }
+                val totalOfCart = cartList.sumOf { it.subTotal }
+                userInformationDao.updateTotalOfCart(userId, totalOfCart)
+                return totalOfCart
             }
         }
         return "0".toBigDecimal()
@@ -118,33 +88,37 @@ class CartRepositoryImpl @Inject constructor(
         inventory: Inventory,
         quantity: Long
     ): Boolean {
-        // get specific cart by userId
-        val cartQuery = userCartCollectionRef.document(userId).collection("cart").get().await()
+
+        val cartQuery =
+            userCartCollectionRef.document(userId).collection("cart").document(product.id).get()
+                .await()
+
+        // check if the productId is existing in the user's cart. if true then update, if false then just add it.
         if (cartQuery != null) {
-            if (cartQuery.size() == 10)
-                return false
 
-            // loop in the cart collection to check if item is existing in the cart
-            for (cartItem in cartQuery.documents) {
+            val obj = cartQuery.toObject(Cart::class.java)
 
-                if (cartItem.id == product.id) {
+            obj?.let { cart ->
+                if (cart.id == product.id) {
                     val updateQuantityOfItemInCart = mapOf<String, Any>(
-                        "quantity" to cartItem["quantity"].toString().toLong() + quantity
+                        "quantity" to cart.quantity + quantity
                     )
 
                     val result = userCartCollectionRef.document(userId).collection("cart")
-                        .document(cartItem.id).set(updateQuantityOfItemInCart, SetOptions.merge())
+                        .document(cart.id).set(updateQuantityOfItemInCart, SetOptions.merge())
                         .await()
                     return result != null
                 }
             }
-
+        } else {
             val newItemInCart = Cart(
                 id = product.id,
                 userId = userId,
+                productId = product.id,
+                inventoryId = inventory.id,
                 product = product,
                 quantity = quantity,
-                selectedSizeFromInventory = inventory,
+                sizeInv = inventory,
                 subTotal = product.price * quantity.toBigDecimal()
             )
 
@@ -162,27 +136,33 @@ class CartRepositoryImpl @Inject constructor(
         cartId: String,
         flag: String,
     ): Boolean {
-        val cartItemQuery =
+        val updateCartQtyQuery =
             userCartCollectionRef.document(userId).collection("cart").document(cartId).get().await()
-        if (cartItemQuery != null) {
-            val newQuantity = when (flag) {
-                CartFlag.ADDING.toString() -> cartItemQuery["quantity"].toString().toLong() + 1
-                CartFlag.REMOVING.toString() -> cartItemQuery["quantity"].toString().toLong() - 1
-                else -> 0L
+
+        if (updateCartQtyQuery != null) {
+
+            val cartItemToUpdate = updateCartQtyQuery.toObject(Cart::class.java)
+
+            cartItemToUpdate?.let {
+                val newQuantity = when (flag) {
+                    CartFlag.ADDING.toString() -> it.quantity + 1
+                    CartFlag.REMOVING.toString() -> it.quantity - 1
+                    else -> 0L
+                }
+
+                val updateQuantityOfCartItem = mapOf<String, Any>(
+                    "quantity" to newQuantity,
+                    "subTotal" to (it.product.price * newQuantity.toBigDecimal())
+                )
+
+                val result =
+                    userCartCollectionRef.document(userId).collection("cart").document(cartId)
+                        .set(updateQuantityOfCartItem, SetOptions.merge()).await()
+                updateTotalOfCart(userId)
+                return result != null
+
             }
-
-            val updateQuantityOfCartItem = mapOf<String, Any>(
-                "quantity" to newQuantity,
-                "subTotal" to (cartItemQuery["product.price"].toString()
-                    .toBigDecimal() * newQuantity.toBigDecimal())
-            )
-
-            val result = userCartCollectionRef.document(userId).collection("cart").document(cartId)
-                .set(updateQuantityOfCartItem, SetOptions.merge()).await()
-            updateAndGetTotalOfCart(userId)
-            return result != null
         }
-
         return false
     }
 
@@ -205,9 +185,10 @@ class CartRepositoryImpl @Inject constructor(
         userId: String
     ): Boolean {
         val cartQuery = userCartCollectionRef.document(userId).collection("cart").get().await()
-        if(cartQuery != null) {
-            for(cartItem in cartQuery.documents) {
-                userCartCollectionRef.document(userId).collection("cart").document(cartItem.id).delete().await()
+        if (cartQuery != null) {
+            for (cartItem in cartQuery.documents) {
+                userCartCollectionRef.document(userId).collection("cart").document(cartItem.id)
+                    .delete().await()
             }
             return true
         }

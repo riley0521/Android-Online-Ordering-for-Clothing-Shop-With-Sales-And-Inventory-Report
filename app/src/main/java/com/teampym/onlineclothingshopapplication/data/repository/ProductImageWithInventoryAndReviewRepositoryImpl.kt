@@ -14,7 +14,8 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
-    private val db: FirebaseFirestore
+    private val db: FirebaseFirestore,
+    private val accountRepository: AccountAndDeliveryInformationImpl
 ) {
 
     // READ Operation
@@ -33,49 +34,13 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
     // I don't know if this is necessary but just in case!
     suspend fun getOneProductWithImagesAndInventories(productId: String): Product? {
         val productsQuery = productCollectionRef.document(productId).get().await()
-        if(productsQuery != null) {
-            // get all inventories
-            val inventoryQuery = productCollectionRef.document(productId).collection("inventories").get().await()
-            val inventoryList = mutableListOf<Inventory>()
-            for(inventory in inventoryQuery) {
-                inventoryList.add(
-                    Inventory(
-                        id = inventory.id,
-                        productId = inventory["productId"].toString(),
-                        size = inventory["size"].toString(),
-                        stock = inventory["stock"].toString().toLong() - inventory["committed"].toString().toLong(),
-                        committed = inventory["committed"].toString().toLong(),
-                        sold = inventory["sold"].toString().toLong(),
-                        returned = inventory["returned"].toString().toLong(),
-                        restockLevel = inventory["restockLevel"].toString().toLong()
-                    )
-                )
-            }
+        if (productsQuery != null) {
 
-            // get all productImages
-            val productImagesQuery = productCollectionRef.document(productId).collection("productImages").get().await()
-            val productImageList = mutableListOf<ProductImage>()
-            for(productImage in productImagesQuery) {
-                productImageList.add(
-                    ProductImage(
-                        id = productImage.id,
-                        productId = productImage["productId"].toString(),
-                        imageUrl = productImage["imageUrl"].toString()
-                    )
-                )
-            }
+            val obj = productsQuery.toObject(Product::class.java)
 
-            return Product(
-                id = productsQuery["id"].toString(),
-                categoryId = productsQuery["categoryId"].toString(),
-                name = productsQuery["name"].toString(),
-                description = productsQuery["description"].toString(),
-                imageUrl = productsQuery["imageUrl"].toString(),
-                price = productsQuery["price"].toString().toBigDecimal(),
-                flag = productsQuery["flag"].toString(),
-                inventories = inventoryList,
-                productImages = productImageList
-            )
+            obj?.let {
+                return it
+            }
         }
         return null
     }
@@ -112,20 +77,28 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
 
     // TODO("Inventory Collection operation - Add Stock, Create Inventory(size), Delete Inventory")
     suspend fun createInventory(inventory: Inventory): Inventory? {
-        val result = productCollectionRef.document(inventory.productId).collection("inventories").add(inventory).await()
-        if(result != null)
+        val result = productCollectionRef.document(inventory.productId).collection("inventories")
+            .add(inventory).await()
+        if (result != null)
             return inventory.copy(id = result.id)
         return null
     }
 
-    suspend fun addStockToInventory(productId: String, inventoryId: String, stockToAdd: Long): Boolean {
-        val inventoryQuery = productCollectionRef.document(productId).collection("inventories").document(inventoryId).get().await()
-        if(inventoryQuery != null) {
+    suspend fun addStockToInventory(
+        productId: String,
+        inventoryId: String,
+        stockToAdd: Long
+    ): Boolean {
+        val inventoryQuery =
+            productCollectionRef.document(productId).collection("inventories").document(inventoryId)
+                .get().await()
+        if (inventoryQuery != null) {
             val updateStockMap = mapOf<String, Any>(
                 "stock" to inventoryQuery["stock"].toString().toLong() + stockToAdd
             )
 
-            val result = productCollectionRef.document(productId).collection("inventories").document(inventoryId).set(updateStockMap, SetOptions.merge()).await()
+            val result = productCollectionRef.document(productId).collection("inventories")
+                .document(inventoryId).set(updateStockMap, SetOptions.merge()).await()
             return result != null
         }
         return false
@@ -142,104 +115,151 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
 
     // TODO("ProductImages Collection operation - Add and Delete")
     suspend fun createProductImage(productImage: ProductImage): ProductImage? {
-        val result = productCollectionRef.document(productImage.productId).collection("productImages").add(productImage).await()
-        if(result != null)
+        val result =
+            productCollectionRef.document(productImage.productId).collection("productImages")
+                .add(productImage).await()
+        if (result != null)
             return productImage.copy(id = result.id)
         return null
     }
 
     suspend fun deleteProductImage(productImage: ProductImage): Boolean {
-        val result = productCollectionRef.document(productImage.productId).collection("productImages").document(productImage.id).delete().await()
+        val result =
+            productCollectionRef.document(productImage.productId).collection("productImages")
+                .document(productImage.id).delete().await()
         return result != null
     }
 
-    // SHIPPING
-    suspend fun deductStockToCommittedCount(cart: List<Cart>) {
-        // TODO("Use Product Repository to update the deduct number of stock and add it to committed")
-        for (item in cart) {
-            val inventoryQuery =
-                productCollectionRef.document(item.product.id).collection("inventories")
-                    .document(item.selectedSizeFromInventory.id).get().await()
-            if (inventoryQuery != null) {
-                val stockNewCount = inventoryQuery["stock"].toString().toLong() - item.quantity
-                val committedNewCount =
-                    inventoryQuery["committed"].toString().toLong() + item.quantity
-                val updateProductsInventoryMap = mapOf<String, Any>(
-                    "stock" to stockNewCount,
-                    "committed" to committedNewCount
-                )
+    // TODO("I feel like there is something missing here.. I think I should use List<OrderDetail> instead of List<Cart>")
+    // SHIPPED
+    suspend fun deductStockToCommittedCount(userId: String, cart: List<Cart>): Boolean {
+        val user = accountRepository.getUser(userId)
 
-                productCollectionRef.document(item.product.id).collection("inventories")
-                    .document(item.selectedSizeFromInventory.id)
-                    .set(updateProductsInventoryMap, SetOptions.merge()).await()
+        user?.let { userInfo ->
+            if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
+                for (item in cart) {
+                    val inventoryQuery =
+                        productCollectionRef.document(item.product.id).collection("inventories")
+                            .document(item.sizeInv.id).get().await()
+                    if (inventoryQuery != null) {
+                        val stockNewCount =
+                            inventoryQuery["stock"].toString().toLong() - item.quantity
+                        val committedNewCount =
+                            inventoryQuery["committed"].toString().toLong() + item.quantity
+                        val updateProductsInventoryMap = mapOf<String, Any>(
+                            "stock" to stockNewCount,
+                            "committed" to committedNewCount
+                        )
+
+                        productCollectionRef.document(item.product.id).collection("inventories")
+                            .document(item.sizeInv.id)
+                            .set(updateProductsInventoryMap, SetOptions.merge()).await()
+                    }
+                }
+                return true
             }
+            return false
         }
+        return false
     }
 
     // CANCELED
-    suspend fun deductCommittedToStockCount(cart: List<Cart>) {
-        for (item in cart) {
-            val inventoryQuery =
-                productCollectionRef.document(item.product.id).collection("inventories")
-                    .document(item.selectedSizeFromInventory.id).get().await()
-            if (inventoryQuery != null) {
-                val committedNewCount =
-                    inventoryQuery["committed"].toString().toLong() - item.quantity
-                val stockNewCount = inventoryQuery["stock"].toString().toLong() + item.quantity
-                val updateProductsInventoryMap = mapOf<String, Any>(
-                    "stock" to stockNewCount,
-                    "committed" to committedNewCount
-                )
+    suspend fun deductCommittedToStockCount(userId: String, cart: List<Cart>): Boolean {
 
-                productCollectionRef.document(item.product.id).collection("inventories")
-                    .document(item.selectedSizeFromInventory.id)
-                    .set(updateProductsInventoryMap, SetOptions.merge()).await()
+        val user = accountRepository.getUser(userId)
+
+        user?.let { userInfo ->
+            if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
+                for (item in cart) {
+                    val inventoryQuery =
+                        productCollectionRef.document(item.product.id).collection("inventories")
+                            .document(item.sizeInv.id).get().await()
+                    if (inventoryQuery != null) {
+                        val committedNewCount =
+                            inventoryQuery["committed"].toString().toLong() - item.quantity
+                        val stockNewCount =
+                            inventoryQuery["stock"].toString().toLong() + item.quantity
+                        val updateProductsInventoryMap = mapOf<String, Any>(
+                            "stock" to stockNewCount,
+                            "committed" to committedNewCount
+                        )
+
+                        productCollectionRef.document(item.product.id).collection("inventories")
+                            .document(item.sizeInv.id)
+                            .set(updateProductsInventoryMap, SetOptions.merge()).await()
+                    }
+                }
+                return true
             }
+            return false
         }
+        return false
     }
 
     // COMPLETED
-    suspend fun deductCommittedToSoldCount(cart: List<Cart>) {
-        for (item in cart) {
-            val inventoryQuery =
-                productCollectionRef.document(item.product.id).collection("inventories")
-                    .document(item.selectedSizeFromInventory.id).get().await()
-            if (inventoryQuery != null) {
-                val committedNewCount =
-                    inventoryQuery["committed"].toString().toLong() - item.quantity
-                val soldNewCount = inventoryQuery["sold"].toString().toLong() + item.quantity
-                val updateProductsInventoryMap = mapOf<String, Any>(
-                    "committed" to committedNewCount,
-                    "sold" to soldNewCount
-                )
+    suspend fun deductCommittedToSoldCount(userId: String, cart: List<Cart>): Boolean {
 
-                productCollectionRef.document(item.product.id).collection("inventories")
-                    .document(item.selectedSizeFromInventory.id)
-                    .set(updateProductsInventoryMap, SetOptions.merge()).await()
+        val user = accountRepository.getUser(userId)
+
+        user?.let { userInfo ->
+            if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
+                for (item in cart) {
+                    val inventoryQuery =
+                        productCollectionRef.document(item.product.id).collection("inventories")
+                            .document(item.sizeInv.id).get().await()
+                    if (inventoryQuery != null) {
+                        val committedNewCount =
+                            inventoryQuery["committed"].toString().toLong() - item.quantity
+                        val soldNewCount =
+                            inventoryQuery["sold"].toString().toLong() + item.quantity
+                        val updateProductsInventoryMap = mapOf<String, Any>(
+                            "committed" to committedNewCount,
+                            "sold" to soldNewCount
+                        )
+
+                        productCollectionRef.document(item.product.id).collection("inventories")
+                            .document(item.sizeInv.id)
+                            .set(updateProductsInventoryMap, SetOptions.merge()).await()
+                    }
+                }
+                return true
             }
+            return false
         }
+        return false
     }
 
     // RETURNED
-    suspend fun deductSoldToReturnedCount(cart: List<Cart>) {
-        for (item in cart) {
-            val inventoryQuery =
-                productCollectionRef.document(item.product.id).collection("inventories")
-                    .document(item.selectedSizeFromInventory.id).get().await()
-            if (inventoryQuery != null) {
-                val soldNewCount = inventoryQuery["sold"].toString().toLong() - item.quantity
-                val returnedNewCount =
-                    inventoryQuery["returned"].toString().toLong() + item.quantity
-                val updateProductsInventoryMap = mapOf<String, Any>(
-                    "sold" to soldNewCount,
-                    "returned" to returnedNewCount
-                )
+    suspend fun deductSoldToReturnedCount(userId: String, cart: List<Cart>): Boolean {
 
-                productCollectionRef.document(item.product.id).collection("inventories")
-                    .document(item.selectedSizeFromInventory.id)
-                    .set(updateProductsInventoryMap, SetOptions.merge()).await()
+        val user = accountRepository.getUser(userId)
+
+        user?.let { userInfo ->
+            if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
+                for (item in cart) {
+                    val inventoryQuery =
+                        productCollectionRef.document(item.product.id).collection("inventories")
+                            .document(item.sizeInv.id).get().await()
+                    if (inventoryQuery != null) {
+                        val soldNewCount =
+                            inventoryQuery["sold"].toString().toLong() - item.quantity
+                        val returnedNewCount =
+                            inventoryQuery["returned"].toString().toLong() + item.quantity
+                        val updateProductsInventoryMap = mapOf<String, Any>(
+                            "sold" to soldNewCount,
+                            "returned" to returnedNewCount
+                        )
+
+                        productCollectionRef.document(item.product.id).collection("inventories")
+                            .document(item.sizeInv.id)
+                            .set(updateProductsInventoryMap, SetOptions.merge()).await()
+                    }
+                }
+                return true
             }
+            return false
         }
+        return false
     }
 
 }

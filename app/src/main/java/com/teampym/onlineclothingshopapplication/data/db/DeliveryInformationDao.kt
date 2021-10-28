@@ -10,6 +10,9 @@ interface DeliveryInformationDao {
     @Insert(onConflict = REPLACE)
     suspend fun insert(deliveryInformation: DeliveryInformation)
 
+    @Insert(onConflict = REPLACE)
+    suspend fun insertAll(vararg deliveryInformation: DeliveryInformation)
+
     @Update
     suspend fun update(deliveryInformation: DeliveryInformation)
 

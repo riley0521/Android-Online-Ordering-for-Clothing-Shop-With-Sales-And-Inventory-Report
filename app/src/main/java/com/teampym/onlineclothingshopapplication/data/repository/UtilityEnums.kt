@@ -33,3 +33,8 @@ enum class UserType {
     CUSTOMER,
     ADMIN
 }
+
+enum class ProductType {
+    SHIRT,
+    HOODY
+}

@@ -13,6 +13,9 @@ interface CartDao {
     @Insert(onConflict = REPLACE)
     suspend fun insert(cart: Cart)
 
+    @Insert(onConflict = REPLACE)
+    suspend fun insertAll(vararg cart: Cart)
+
     @Update
     suspend fun update(cart: Cart)
 

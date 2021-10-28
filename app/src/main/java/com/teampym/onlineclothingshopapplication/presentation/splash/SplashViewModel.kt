@@ -20,7 +20,7 @@ class SplashViewModel @Inject constructor(
     fun checkIfUserIsInDb(userId: String) = viewModelScope.launch {
         val isUserExisting = accountRepository.getUser(userId)
 
-        if (isUserExisting) {
+        if (isUserExisting != null) {
             splashEventChannel.send(SplashEvent.Registered)
         } else {
             splashEventChannel.send(SplashEvent.NotRegistered)

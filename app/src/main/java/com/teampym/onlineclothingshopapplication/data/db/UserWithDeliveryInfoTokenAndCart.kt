@@ -11,7 +11,7 @@ import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 data class UserWithDeliveryInfo(
     @Embedded val user: UserInformation,
     @Relation(
-        parentColumn = "id",
+        parentColumn = "userId",
         entityColumn = "userId"
     )
     val deliveryInformation: List<DeliveryInformation>
@@ -20,7 +20,7 @@ data class UserWithDeliveryInfo(
 data class UserWithTokens(
     @Embedded val user: UserInformation,
     @Relation(
-        parentColumn = "id",
+        parentColumn = "userId",
         entityColumn = "userId"
     )
     val notificationTokens: List<NotificationToken>
@@ -29,7 +29,7 @@ data class UserWithTokens(
 data class UserWithCart(
     @Embedded val user: UserInformation,
     @Relation(
-        parentColumn = "id",
+        parentColumn = "userId",
         entityColumn = "userId"
     )
     val cart: List<Cart>

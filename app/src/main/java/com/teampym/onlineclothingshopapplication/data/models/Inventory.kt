@@ -15,4 +15,6 @@ data class Inventory(
     val sold: Long,
     val returned: Long,
     val restockLevel: Long
-): Parcelable
+): Parcelable {
+    constructor(): this("", "", "", 0L, 0L, 0L, 0L, 0L)
+}

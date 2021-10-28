@@ -2,6 +2,7 @@ package com.teampym.onlineclothingshopapplication.data.models
 
 import android.os.Parcelable
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import kotlinx.android.parcel.Parcelize
 import java.math.BigDecimal
@@ -10,12 +11,20 @@ import java.math.BigDecimal
 @Parcelize
 data class Cart(
     @PrimaryKey
-    val id: String,
-    val userId: String,
-    val product: Product,
-    val quantity: Long = 1,
-    val selectedSizeFromInventory: Inventory,
-    val subTotal: BigDecimal
+    var id: String,
+    var userId: String,
+    var productId: String,
+    var inventoryId: String,
+    var subTotal: BigDecimal,
+    var quantity: Long = 1,
+    @Ignore var product: Product = Product(),
+    @Ignore var sizeInv: Inventory = Inventory()
 ) : Parcelable {
-    val calculatedTotalPrice: BigDecimal get() = quantity.times(product.price.toDouble()).toBigDecimal()
+
+    constructor(): this("", "", "", "", "0".toBigDecimal(), 1)
+
+    val calculatedTotalPrice: BigDecimal get() = quantity.toBigDecimal() * product.price
+    init {
+        subTotal = calculatedTotalPrice
+    }
 }

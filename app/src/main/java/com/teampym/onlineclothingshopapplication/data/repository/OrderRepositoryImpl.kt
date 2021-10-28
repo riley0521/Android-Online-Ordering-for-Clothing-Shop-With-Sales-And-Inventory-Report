@@ -55,6 +55,20 @@ class OrderRepositoryImpl @Inject constructor(
         return null
     }
 
+    suspend fun getOrderByUserId(userId: String, orderId: String): Order? {
+        val orderQuery = orderCollectionRef.document(orderId).get().await()
+        if(orderQuery != null) {
+            val obj = orderQuery.toObject(Order::class.java)
+            obj?.let {
+                return if(userId == it.userId)
+                    it
+                else
+                    null
+            }
+        }
+        return null
+    }
+
     suspend fun getOrderDetailByOrderId(
         orderId: String,
         userType: String,
@@ -76,27 +90,11 @@ class OrderRepositoryImpl @Inject constructor(
                     val orderDetailsForCustomer = mutableListOf<OrderDetail>()
                     // loop all order details
                     for (orderDetail in orderDetailCustomerQuery.documents) {
+
+                        val obj = orderDetail.toObject(OrderDetail::class.java)
+
                         orderDetailsForCustomer.add(
-                            OrderDetail(
-                                id = orderDetail["id"].toString(),
-                                orderId = orderDetail["orderId"].toString(),
-                                product = Product(
-                                    id = orderDetail["product.id"].toString(),
-                                    categoryId = orderDetail["product.categoryId"].toString(),
-                                    name = orderDetail["product.name"].toString(),
-                                    description = orderDetail["product.description"].toString(),
-                                    imageUrl = orderDetail["product.imageUrl"].toString(),
-                                    price = orderDetail["product.price"].toString().toBigDecimal(),
-                                    flag = orderDetail["product.flag"].toString(),
-                                    inventories = null,
-                                    productImages = null
-                                ),
-                                size = orderDetail["size"].toString(),
-                                price = orderDetail["price"].toString().toBigDecimal(),
-                                quantity = orderDetail["quantity"].toString().toLong(),
-                                subTotal = orderDetail["subTotal"].toString().toBigDecimal(),
-                                dateSold = null
-                            )
+                            obj!!
                         )
                         return orderDetailsForCustomer
                     }
@@ -110,27 +108,11 @@ class OrderRepositoryImpl @Inject constructor(
             if (orderDetailAdminQuery != null) {
                 // loop all order details
                 for (orderDetail in orderDetailAdminQuery.documents) {
+
+                    val obj = orderDetail.toObject(OrderDetail::class.java)
+
                     orderDetailsForAdmin.add(
-                        OrderDetail(
-                            id = orderDetail["id"].toString(),
-                            orderId = orderDetail["orderId"].toString(),
-                            product = Product(
-                                id = orderDetail["product.id"].toString(),
-                                categoryId = orderDetail["product.categoryId"].toString(),
-                                name = orderDetail["product.name"].toString(),
-                                description = orderDetail["product.description"].toString(),
-                                imageUrl = orderDetail["product.imageUrl"].toString(),
-                                price = orderDetail["product.price"].toString().toBigDecimal(),
-                                flag = orderDetail["product.flag"].toString(),
-                                inventories = null,
-                                productImages = null
-                            ),
-                            size = orderDetail["size"].toString(),
-                            price = orderDetail["price"].toString().toBigDecimal(),
-                            quantity = orderDetail["quantity"].toString().toLong(),
-                            subTotal = orderDetail["subTotal"].toString().toBigDecimal(),
-                            dateSold = null
-                        )
+                        obj!!
                     )
                     return orderDetailsForAdmin
                 }
@@ -157,13 +139,18 @@ class OrderRepositoryImpl @Inject constructor(
         if(result != null) {
             val orderDetailList = mutableListOf<OrderDetail>()
             for(cartItem in userInformation.cart!!) {
+
                 orderDetailList.add(
                     OrderDetail(
                         id = "",
+                        userId = userInformation.userId,
                         orderId = result.id,
-                        product = cartItem.product,
-                        size = cartItem.selectedSizeFromInventory.size,
-                        price = cartItem.product.price,
+                        productId = cartItem.productId,
+                        inventoryId = cartItem.sizeInv.id,
+                        productName = cartItem.product.name,
+                        productImage = cartItem.product.imageUrl,
+                        size = cartItem.sizeInv.size,
+                        productPrice = cartItem.product.price,
                         quantity = cartItem.quantity,
                         subTotal = cartItem.subTotal,
                         dateSold = null
@@ -176,7 +163,7 @@ class OrderRepositoryImpl @Inject constructor(
             )
             orderCollectionRef.document(result.id).set(updateOrderDetailMap, SetOptions.merge()).await()
 
-            productRepository.deductStockToCommittedCount(userInformation.cart)
+            // Delete all items from cart after placing order
             cartRepository.deleteAllItemFromCart(userInformation.userId)
         }
 

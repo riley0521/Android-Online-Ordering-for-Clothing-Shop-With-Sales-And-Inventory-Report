@@ -21,7 +21,8 @@ class ProductViewModel @Inject constructor(
 ) : ViewModel() {
 
     val searchQuery = MutableLiveData("")
-    val flagQuery = MutableLiveData(Utils.productFlag)
+    val categoryQuery = MutableLiveData("")
+    private val flagQuery = MutableLiveData(Utils.productFlag)
 
 
     var productsFlow = combine(
@@ -32,7 +33,7 @@ class ProductViewModel @Inject constructor(
     }.flatMapLatest { (search, flag) ->
 
         lateinit var queryProducts: Query
-        val categoryId = Utils.categoryId
+        val categoryId = categoryQuery.value
         val productFlag = flag
         if (productFlag.isEmpty()) {
             queryProducts = if (search.isEmpty()) {
@@ -56,6 +57,10 @@ class ProductViewModel @Inject constructor(
         }
 
         productRepository.getProductsPagingSource(queryProducts).flow
+    }
+
+    fun updateCategory(categoryId: String) = viewModelScope.launch {
+        categoryQuery.value = categoryId
     }
 
     fun updateFlag(flag: String) = viewModelScope.launch {

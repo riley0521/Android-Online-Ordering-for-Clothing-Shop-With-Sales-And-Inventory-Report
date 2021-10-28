@@ -47,7 +47,7 @@ class CartAdapter(
                     val position = absoluteAdapterPosition
                     if(position != RecyclerView.NO_POSITION && btnAdd.isEnabled) {
                         val item = getItem(position)
-                        val isMaximum = item.quantity + 1 > item.selectedSizeFromInventory.stock
+                        val isMaximum = item.quantity + 1 > item.sizeInv.stock
                         if(isMaximum) {
                             listener.onFailure("You have reached the maximum stocks available for this item.")
                         }
@@ -86,11 +86,11 @@ class CartAdapter(
 
                 tvName.text = cart.product.name
                 tvPrice.text = "$${cart.product.price}"
-                tvSize.text = "(${cart.selectedSizeFromInventory.size})"
+                tvSize.text = "(${cart.sizeInv.size})"
                 tvTotal.text = "$" + "%.2f".format(cart.calculatedTotalPrice)
                 tvCount.text = "${cart.quantity}"
 
-                btnAdd.isVisible = cart.selectedSizeFromInventory.stock > cart.quantity
+                btnAdd.isVisible = cart.sizeInv.stock > cart.quantity
                 btnRemove.isVisible = cart.quantity != 1.toLong()
             }
         }
