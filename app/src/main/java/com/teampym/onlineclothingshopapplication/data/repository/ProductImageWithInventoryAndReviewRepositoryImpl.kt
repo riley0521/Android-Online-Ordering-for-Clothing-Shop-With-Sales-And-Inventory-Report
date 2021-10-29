@@ -152,22 +152,22 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
 
         user?.let { userInfo ->
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
-                for (item in orderDetailList) {
+                for (orderDetail in orderDetailList) {
                     val inventoryQuery =
-                        productCollectionRef.document(item.productId).collection("inventories")
-                            .document(item.inventoryId).get().await()
+                        productCollectionRef.document(orderDetail.productId).collection("inventories")
+                            .document(orderDetail.inventoryId).get().await()
                     if (inventoryQuery != null) {
                         val stockNewCount =
-                            inventoryQuery["stock"].toString().toLong() - item.quantity
+                            inventoryQuery["stock"].toString().toLong() - orderDetail.quantity
                         val committedNewCount =
-                            inventoryQuery["committed"].toString().toLong() + item.quantity
+                            inventoryQuery["committed"].toString().toLong() + orderDetail.quantity
                         val updateProductsInventoryMap = mapOf<String, Any>(
                             "stock" to stockNewCount,
                             "committed" to committedNewCount
                         )
 
-                        productCollectionRef.document(item.productId).collection("inventories")
-                            .document(item.inventoryId)
+                        productCollectionRef.document(orderDetail.productId).collection("inventories")
+                            .document(orderDetail.inventoryId)
                             .set(updateProductsInventoryMap, SetOptions.merge()).await()
                     }
                 }
@@ -185,22 +185,22 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
 
         user?.let { userInfo ->
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
-                for (item in orderDetailList) {
+                for (orderDetail in orderDetailList) {
                     val inventoryQuery =
-                        productCollectionRef.document(item.productId).collection("inventories")
-                            .document(item.inventoryId).get().await()
+                        productCollectionRef.document(orderDetail.productId).collection("inventories")
+                            .document(orderDetail.inventoryId).get().await()
                     if (inventoryQuery != null) {
                         val committedNewCount =
-                            inventoryQuery["committed"].toString().toLong() - item.quantity
+                            inventoryQuery["committed"].toString().toLong() - orderDetail.quantity
                         val stockNewCount =
-                            inventoryQuery["stock"].toString().toLong() + item.quantity
+                            inventoryQuery["stock"].toString().toLong() + orderDetail.quantity
                         val updateProductsInventoryMap = mapOf<String, Any>(
                             "stock" to stockNewCount,
                             "committed" to committedNewCount
                         )
 
-                        productCollectionRef.document(item.productId).collection("inventories")
-                            .document(item.inventoryId)
+                        productCollectionRef.document(orderDetail.productId).collection("inventories")
+                            .document(orderDetail.inventoryId)
                             .set(updateProductsInventoryMap, SetOptions.merge()).await()
                     }
                 }
@@ -218,22 +218,22 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
 
         user?.let { userInfo ->
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
-                for (item in orderDetailList) {
+                for (orderDetail in orderDetailList) {
                     val inventoryQuery =
-                        productCollectionRef.document(item.productId).collection("inventories")
-                            .document(item.inventoryId).get().await()
+                        productCollectionRef.document(orderDetail.productId).collection("inventories")
+                            .document(orderDetail.inventoryId).get().await()
                     if (inventoryQuery != null) {
                         val committedNewCount =
-                            inventoryQuery["committed"].toString().toLong() - item.quantity
+                            inventoryQuery["committed"].toString().toLong() - orderDetail.quantity
                         val soldNewCount =
-                            inventoryQuery["sold"].toString().toLong() + item.quantity
+                            inventoryQuery["sold"].toString().toLong() + orderDetail.quantity
                         val updateProductsInventoryMap = mapOf<String, Any>(
                             "committed" to committedNewCount,
                             "sold" to soldNewCount
                         )
 
-                        productCollectionRef.document(item.productId).collection("inventories")
-                            .document(item.inventoryId)
+                        productCollectionRef.document(orderDetail.productId).collection("inventories")
+                            .document(orderDetail.inventoryId)
                             .set(updateProductsInventoryMap, SetOptions.merge()).await()
                     }
                 }
@@ -249,24 +249,24 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
 
         val user = accountRepository.getUser(userId)
 
-        user?.let { userInfo ->
-            if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
-                for (item in orderDetailList) {
+        user?.let {
+            if (userId == it.userId && it.userType == UserType.ADMIN.toString()) {
+                for (orderDetail in orderDetailList) {
                     val inventoryQuery =
-                        productCollectionRef.document(item.productId).collection("inventories")
-                            .document(item.inventoryId).get().await()
+                        productCollectionRef.document(orderDetail.productId).collection("inventories")
+                            .document(orderDetail.inventoryId).get().await()
                     if (inventoryQuery != null) {
                         val soldNewCount =
-                            inventoryQuery["sold"].toString().toLong() - item.quantity
+                            inventoryQuery["sold"].toString().toLong() - orderDetail.quantity
                         val returnedNewCount =
-                            inventoryQuery["returned"].toString().toLong() + item.quantity
+                            inventoryQuery["returned"].toString().toLong() + orderDetail.quantity
                         val updateProductsInventoryMap = mapOf<String, Any>(
                             "sold" to soldNewCount,
                             "returned" to returnedNewCount
                         )
 
-                        productCollectionRef.document(item.productId).collection("inventories")
-                            .document(item.inventoryId)
+                        productCollectionRef.document(orderDetail.productId).collection("inventories")
+                            .document(orderDetail.inventoryId)
                             .set(updateProductsInventoryMap, SetOptions.merge()).await()
                     }
                 }

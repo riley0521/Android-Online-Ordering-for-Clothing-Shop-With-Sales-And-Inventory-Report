@@ -63,29 +63,29 @@ class OrderRepositoryImpl @Inject constructor(
                     val orderDetailCustomerQuery =
                         orderCollectionRef.document(orderId).collection("orderDetails").get()
                             .await()
-                    val orderDetailsForCustomer = mutableListOf<OrderDetail>()
+                    val orderDetailsCustomerList = mutableListOf<OrderDetail>()
                     for (document in orderDetailCustomerQuery.documents) {
 
                         val orderDetail = document.toObject(OrderDetail::class.java)!!.copy(id = document.id)
 
-                        orderDetailsForCustomer.add(orderDetail)
-                        return orderDetailsForCustomer
+                        orderDetailsCustomerList.add(orderDetail)
                     }
+                    return orderDetailsCustomerList
                 }
             }
         } else if (userType == UserType.ADMIN.toString()) {
             // no need to compare userId when you are an admin to the order object because admin have higher access level
             val orderDetailAdminQuery =
                 orderCollectionRef.document(orderId).collection("orderDetails").get().await()
-            val orderDetailsForAdmin = mutableListOf<OrderDetail>()
+            val orderDetailsAdminList = mutableListOf<OrderDetail>()
             if (orderDetailAdminQuery != null) {
                 for (document in orderDetailAdminQuery.documents) {
 
                     val orderDetail = document.toObject(OrderDetail::class.java)!!.copy(id = document.id)
 
-                    orderDetailsForAdmin.add(orderDetail)
-                    return orderDetailsForAdmin
+                    orderDetailsAdminList.add(orderDetail)
                 }
+                return orderDetailsAdminList
             }
         }
         return null

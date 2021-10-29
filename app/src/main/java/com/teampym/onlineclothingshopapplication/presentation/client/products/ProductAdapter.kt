@@ -63,8 +63,10 @@ class ProductAdapter(
                     .error(R.drawable.ic_food)
                     .into(imgProduct)
 
-                tvName.text = product.name
-                tvPrice.text = "$${product.priceBig}"
+                tvProductName.text = product.name
+
+                val price = "$${product.price.toBigDecimal()}"
+                tvPrice.text = price
 
                 if (product.flag == ProductFlag.NORMAL.toString())
                     tvFlag.isVisible = false

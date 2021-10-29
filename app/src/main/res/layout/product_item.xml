@@ -48,7 +48,7 @@
 
             <!-- Title, secondary and supporting text -->
             <TextView
-                android:id="@+id/tvName"
+                android:id="@+id/tvProductName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"

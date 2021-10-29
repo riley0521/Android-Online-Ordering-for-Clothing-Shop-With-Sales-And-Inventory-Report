@@ -23,7 +23,4 @@ data class OrderDetail(
     val isExchangeable: Boolean = dateSold != null
 ): Parcelable {
     constructor(): this("", "", "", "", "", "", "", 0.0, "", 0L, 0.0)
-
-    val pPriceBig = productPrice.toBigDecimal()
-    val subTotalBig = subTotal.toBigDecimal()
 }

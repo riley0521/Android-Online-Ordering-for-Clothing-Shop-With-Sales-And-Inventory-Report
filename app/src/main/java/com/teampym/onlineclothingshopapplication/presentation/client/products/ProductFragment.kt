@@ -40,7 +40,6 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
 
         binding = FragmentProductBinding.bind(view)
 
-        Log.d("CATEGORY", "${args.categoryId} fewfewfewf")
         viewModel.updateCategory(args.categoryId)
 
         adapter = ProductAdapter(this)

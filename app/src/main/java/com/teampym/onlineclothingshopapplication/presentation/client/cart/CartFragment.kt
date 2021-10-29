@@ -15,6 +15,7 @@ import com.google.firebase.ktx.Firebase
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.Cart
+import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.models.Utils
 import com.teampym.onlineclothingshopapplication.data.repository.CartFlag
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCartBinding
@@ -31,31 +32,39 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
     private lateinit var adapter: CartAdapter
 
-    private val user = FirebaseAuth.getInstance().currentUser
+    private var userInfo: UserInformation? = null
+
+    @Inject
+    lateinit var userInformationDao: UserInformationDao
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentCartBinding.bind(view)
 
+        val user = FirebaseAuth.getInstance().currentUser
+
         adapter = CartAdapter(this)
 
-        if(user != null) {
-            viewModel.getCart(user.uid)
-        } else {
-            Toast.makeText(requireContext(), "Please log in first to view your cart.", Toast.LENGTH_LONG).show()
-            findNavController().navigate(R.id.action_cartFragment_to_categoryFragment)
-        }
-
         lifecycleScope.launchWhenStarted {
+
+            if(user != null) {
+                userInfo = userInformationDao.getCurrentUser(user.uid)
+                viewModel.getCart(user.uid)
+            } else {
+                Toast.makeText(requireContext(), "Please log in first to view your cart.", Toast.LENGTH_LONG).show()
+                findNavController().navigate(R.id.action_cartFragment_to_categoryFragment)
+            }
+
             viewModel.cart.observe(viewLifecycleOwner) {
-                if (it.isNotEmpty()) {
+                if (it != null) {
                     adapter.submitList(it)
 
                     // TODO("Display totalOfCart")
                 } else {
-                    binding.recyclerViewCart.isVisible = false
-                    binding.tvNoItems.isVisible = true
+                    binding.tvMerchandiseTotal.text = "$${userInfo!!.totalOfCart.toBigDecimal()}"
+                    binding.recyclerViewCart.visibility = View.INVISIBLE
+                    binding.labelNoCartItem.visibility = View.VISIBLE
                 }
             }
         }
@@ -64,15 +73,14 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
             recyclerViewCart.setHasFixedSize(true)
             recyclerViewCart.adapter = adapter
         }
-
     }
 
     override fun onAddQuantity(cartId: String) {
-        viewModel.updateCartItemQty(user!!.uid, cartId, CartFlag.ADDING.toString())
+        viewModel.updateCartItemQty(userInfo!!.userId, cartId, CartFlag.ADDING.toString())
     }
 
     override fun onRemoveQuantity(cartId: String) {
-        viewModel.updateCartItemQty(user!!.uid, cartId, CartFlag.REMOVING.toString())
+        viewModel.updateCartItemQty(userInfo!!.userId, cartId, CartFlag.REMOVING.toString())
     }
 
     override fun onFailure(msg: String) {

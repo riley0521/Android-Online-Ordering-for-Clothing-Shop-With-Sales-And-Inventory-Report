@@ -21,10 +21,6 @@ class AccountAndDeliveryInformationImpl @Inject constructor(
 
     private val userCollectionRef = db.collection("Users")
 
-    // db.collection("Users").document(<id here>).collection("deliveryInformation").document(<id here>).get().await()
-    // db.collection("Users").document(<id here>).collection("notificationTokens").document(<id here>).get().await()
-    // db.collection("Users").document(<id here>).collection("cart").document(<id here>).get().await()
-
     suspend fun getUser(
         userId: String
     ): UserInformation? {
@@ -32,7 +28,7 @@ class AccountAndDeliveryInformationImpl @Inject constructor(
             .get()
             .await()
 
-        if (userQuery.exists()) {
+        if (userQuery != null) {
 
             val userInfo = userQuery.toObject(UserInformation::class.java)
             if (userInfo != null) {
@@ -42,7 +38,8 @@ class AccountAndDeliveryInformationImpl @Inject constructor(
                 val deliveryInformationList = mutableListOf<DeliveryInformation>()
                 deliveryInformationQuery?.let { querySnapshot ->
                     for (document in querySnapshot.documents) {
-                        val deliveryInfo = document.toObject(DeliveryInformation::class.java)!!.copy(id = document.id)
+                        val deliveryInfo = document.toObject(DeliveryInformation::class.java)!!
+                            .copy(id = document.id)
                         deliveryInformationList.add(deliveryInfo)
                         deliveryInformationDao.insert(deliveryInfo)
                     }
@@ -55,7 +52,8 @@ class AccountAndDeliveryInformationImpl @Inject constructor(
                 notificationTokenQuery?.let { querySnapshot ->
                     for (document in querySnapshot.documents) {
                         val notificationToken =
-                            document.toObject(NotificationToken::class.java)!!.copy(id = document.id)
+                            document.toObject(NotificationToken::class.java)!!
+                                .copy(id = document.id)
                         notificationTokenList.add(notificationToken)
                         notificationTokenDao.insert(notificationToken)
                     }
@@ -63,43 +61,114 @@ class AccountAndDeliveryInformationImpl @Inject constructor(
 
                 userInformationDao.insert(
                     userInfo.copy(
-                        userId = userQuery.id,
-                        deliveryInformation = deliveryInformationList,
-                        notificationTokens = notificationTokenList
+                        userId = userQuery.id
                     )
                 )
 
-
+                return userInfo.copy(userId = userQuery.id, deliveryInformation = deliveryInformationList, notificationTokens = notificationTokenList)
             }
         }
         return null
     }
 
+    // getNotificationToken based on user id to notify them.
+    suspend fun getNotificationTokensOfUser(userId: String): List<NotificationToken> {
+        val notificationTokenQuery =
+            userCollectionRef.document(userId).collection("notificationTokens").get().await()
+        val notificationTokenList = mutableListOf<NotificationToken>()
+        notificationTokenQuery?.let { querySnapshot ->
+            for (document in querySnapshot.documents) {
+                val notificationToken =
+                    document.toObject(NotificationToken::class.java)!!.copy(id = document.id)
+                notificationTokenList.add(notificationToken)
+                notificationTokenDao.insert(notificationToken)
+            }
+        }
+        return notificationTokenList
+    }
+
+    suspend fun upsertNotificationToken(
+        userId: String,
+        notificationToken: NotificationToken
+    ): NotificationToken? {
+        val isNotificationTokenExistingQuery =
+            userCollectionRef.document(userId).collection("notificationTokens").get().await()
+        if (isNotificationTokenExistingQuery != null) {
+            for (document in isNotificationTokenExistingQuery.documents) {
+                if (document["token"].toString() == notificationToken.token)
+                    return document.toObject(NotificationToken::class.java)!!
+                        .copy(id = document.id, token = "Existing")
+            }
+        } else {
+            val result = userCollectionRef.document(userId).collection("notificationTokens")
+                .add(notificationToken).await()
+            if (result != null)
+                return notificationToken.copy(id = result.id)
+        }
+        return null
+    }
+
+    suspend fun getDeliveryInformation(userId: String): List<DeliveryInformation>? {
+        val deliveryInformationQuery =
+            userCollectionRef.document(userId).collection("deliveryInformation").get().await()
+        val deliveryInformationList = mutableListOf<DeliveryInformation>()
+        deliveryInformationQuery?.let { querySnapshot ->
+            for (document in querySnapshot.documents) {
+                val deliveryInformation =
+                    document.toObject(DeliveryInformation::class.java)!!.copy(id = document.id)
+                deliveryInformationList.add(deliveryInformation)
+                deliveryInformationDao.insert(deliveryInformation)
+            }
+            return deliveryInformationList
+        }
+        return null
+    }
+
+    suspend fun upsertDeliveryInformation(
+        userId: String,
+        deliveryInformation: DeliveryInformation
+    ): DeliveryInformation? {
+        val isDeliveryInformationExistingQuery = userCollectionRef.document(userId).collection("deliveryInformation").get().await()
+        if(isDeliveryInformationExistingQuery != null) {
+            for(document in isDeliveryInformationExistingQuery.documents) {
+                val deliveryInfo = document.toObject(DeliveryInformation::class.java)!!.copy(id = document.id)
+                if(deliveryInformation.contactNo == deliveryInfo.contactNo &&
+                        deliveryInformation.region == deliveryInfo.region &&
+                        deliveryInformation.streetNumber == deliveryInfo.streetNumber) {
+                    return deliveryInfo.copy(userId = "Existing")
+                }
+            }
+        } else {
+            val result = userCollectionRef.document(userId).collection("deliveryInformation").add(deliveryInformation).await()
+            if(result != null)
+                return deliveryInformation.copy(id = result.id)
+        }
+        return null
+    }
+
     suspend fun createUser(
+        userId: String,
         firstName: String,
         lastName: String,
         birthDate: String,
         avatarUrl: String
     ): UserInformation? {
         val newUser = UserInformation(
+            userId = userId,
             firstName = firstName,
             lastName = lastName,
             birthDate = birthDate,
             avatarUrl = avatarUrl
         )
 
-        // You can use this as well
-//        val result = userCollectionRef
-//            .document(UUID.randomUUID().toString())
-//            .set(newUser)
-//            .await()
-
         val result = userCollectionRef
-            .add(newUser)
+            .document(userId)
+            .set(newUser)
             .await()
 
         return if (result != null) {
-            newUser.copy(userId = result.id)
+            userInformationDao.insert(newUser)
+            newUser
         } else {
             null
         }
@@ -134,11 +203,7 @@ class AccountAndDeliveryInformationImpl @Inject constructor(
                 if (userQuery.exists()) {
                     userCollectionRef.document(userId).set(userMapToUpdate, SetOptions.merge())
                         .await()
-                    Utils.currentUser = Utils.currentUser?.copy(
-                        firstName = firstName,
-                        lastName = lastName,
-                        birthDate = birthDate
-                    )
+                    userInformationDao.updateBasicInfo(firstName, lastName, birthDate, userId)
                 }
             }
         }

@@ -15,13 +15,15 @@ import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
-import com.teampym.onlineclothingshopapplication.data.models.Utils
+import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
+import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.databinding.FragmentRegistrationBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_registration.*
 import kotlinx.coroutines.flow.collect
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class RegistrationFragment : Fragment(R.layout.fragment_registration) {
@@ -34,25 +36,22 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
     private var selectedBirthDate: String = ""
 
+    @Inject
+    lateinit var userInformationDao: UserInformationDao
+
+    private var userInfo: UserInformation? = null
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentRegistrationBinding.bind(view)
 
+        val currentUser = FirebaseAuth.getInstance().currentUser
+
         // Reuse this fragment when the user is editing his firstName, lastName, and birthDate
         val editMode = args.editMode
 
         binding.apply {
-
-            if (editMode) {
-                tvInstruction.isVisible = false
-                btnRegister.text = "Update Information"
-
-                edtFirstName.text.apply { Utils.currentUser?.firstName }
-                edtFirstName.text.apply { Utils.currentUser?.lastName }
-                tvBirthdate.text = Utils.currentUser?.birthDate
-            }
-
             btnSelectDate.setOnClickListener {
                 // TODO("Show material date picker and get selected date and display it to tvBirthdate textview")
 
@@ -60,7 +59,8 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                 val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
 
                 calendar.timeInMillis = today
-                calendar[Calendar.YEAR].minus(12)
+                calendar[Calendar.YEAR] = calendar[Calendar.YEAR] - 12
+                calendar[Calendar.MONTH] = Calendar.DECEMBER
                 val monthMinusTwelveYears = calendar.timeInMillis
 
                 val constraintsBuilder =
@@ -69,8 +69,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                         .setEnd(monthMinusTwelveYears)
 
                 val birthDatePicker = MaterialDatePicker.Builder.datePicker()
-                    .setTitleText("Your Birthdate")
-                    .setSelection(monthMinusTwelveYears)
+                    .setTitleText("Select your birthdate")
                     .setCalendarConstraints(constraintsBuilder.build())
                     .build()
 
@@ -79,6 +78,8 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                     val selectedDate = Calendar.getInstance()
                     selectedDate.timeInMillis = it
                     selectedBirthDate = formatter.format(selectedDate.time)
+                    tvBirthdate.text = selectedBirthDate
+                    btnRegister.isEnabled = checkDataIfValid(editMode)
                 }
 
                 birthDatePicker.show(parentFragmentManager, "DatePicker")
@@ -86,14 +87,23 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
             btnRegister.setOnClickListener {
                 if (editMode) {
-
+                    if(currentUser != null) {
+                        viewModel.updateBasicInformation(
+                            edtFirstName.text.toString(),
+                            edtLastName.text.toString(),
+                            selectedBirthDate,
+                            currentUser.uid
+                        )
+                    }
                 } else {
-                    viewModel.registerUser(
-                        edtFirstName.text.toString(),
-                        edtLastName.text.toString(),
-                        selectedBirthDate,
-                        FirebaseAuth.getInstance().currentUser!!
-                    )
+                    if (currentUser != null) {
+                        viewModel.registerUser(
+                            edtFirstName.text.toString(),
+                            edtLastName.text.toString(),
+                            selectedBirthDate,
+                            currentUser
+                        )
+                    }
                 }
             }
 
@@ -137,19 +147,26 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
         }
 
-        viewModel.createdUser.observe(viewLifecycleOwner) {
-            if (it.userId == "failed")
-                Snackbar.make(requireView(), "Registration failed", Snackbar.LENGTH_LONG).show()
-            else
-                viewModel.saveInfoToUtils(it)
-        }
-
         lifecycleScope.launchWhenStarted {
+
+            if (editMode && currentUser != null) {
+                tvInstruction.isVisible = false
+                btnRegister.text = "Update Information"
+
+                userInfo = userInformationDao.getCurrentUser(currentUser.uid)
+
+                userInfo?.let {
+                    binding.edtFirstName.text.apply { it.firstName }
+                    binding.edtLastName.text.apply { it.lastName }
+                    binding.tvBirthdate.text = it.birthDate
+                }
+            }
+
             viewModel.registrationEvent.collect { event ->
                 when (event) {
                     is RegistrationViewModel.RegistrationEvent.SuccessfulEvent -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
-                        findNavController().navigate(R.id.action_registrationFragment_to_categoryFragment)
+                        findNavController().popBackStack()
                     }
                 }
             }
@@ -158,8 +175,8 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
     fun checkDataIfValid(editMode: Boolean): Boolean {
         if (editMode) {
-            return !Utils.currentUser?.firstName!!.equals(edtFirstName.text.toString(), false) or
-                    !Utils.currentUser?.lastName!!.equals(edtLastName.text.toString(), false)
+            return !userInfo!!.firstName.equals(edtFirstName.text.toString(), true) or
+                    !userInfo!!.lastName.equals(edtLastName.text.toString(), true)
         }
         return edtFirstName.text!!.isNotBlank() && edtLastName.text!!.isNotBlank() && selectedBirthDate.isNotBlank()
     }

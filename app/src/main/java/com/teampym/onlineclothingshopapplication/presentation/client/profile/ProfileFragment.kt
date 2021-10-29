@@ -5,25 +5,27 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.firebase.ui.auth.AuthUI
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.ktx.Firebase
 import com.teampym.onlineclothingshopapplication.R
-import com.teampym.onlineclothingshopapplication.data.models.Utils
+import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProfileBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 private const val RC_SIGN_IN = 699
 
@@ -34,18 +36,17 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
     private val viewModel: ProfileViewModel by viewModels()
 
-    private var currentUser: FirebaseUser? = FirebaseAuth.getInstance().currentUser
+    @Inject
+    lateinit var userInformationDao: UserInformationDao
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentProfileBinding.bind(view)
 
-        val firstName = Utils.currentUser?.firstName ?: ""
-        val lastName = Utils.currentUser?.lastName ?: ""
-
-        if(firstName.isNotBlank() && lastName.isNotBlank()) {
-            binding.tvName.text = "$firstName $lastName"
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            viewModel.getCurrentUser(currentUser.uid)
         }
 
         binding.cardViewBanner.isVisible = currentUser != null
@@ -73,23 +74,20 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 viewModel.sendVerificationAgain(FirebaseAuth.getInstance().currentUser!!)
             }
 
-            FirebaseAuth.getInstance().addAuthStateListener {
-                if (it.currentUser == null) {
+            FirebaseAuth.getInstance().addAuthStateListener { auth ->
 
-                    viewModel.verificationSpan.value = 0
-
-                    btnSignOut.text = "Sign In"
-                    btnSignOut.setOnClickListener {
-                        showSignInMethods()
-
-                    }
-                } else {
-
-                    binding.cardViewBanner.isVisible = !it.currentUser!!.isEmailVerified
+                if (currentUser != null) {
+                    binding.cardViewBanner.isVisible = currentUser.isEmailVerified
 
                     btnSignOut.text = "Sign Out"
                     btnSignOut.setOnClickListener {
-                        showSignOutDialog()
+                        showSignOutDialog(auth)
+                    }
+                } else {
+                    viewModel.verificationSpan.value = 0
+                    btnSignOut.text = "Sign In"
+                    btnSignOut.setOnClickListener {
+                        showSignInMethods()
                     }
                 }
             }
@@ -99,7 +97,19 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             binding.btnSendVerification.isVisible = it > 0 && System.currentTimeMillis() > it
         }
 
-        lifecycleScope.launchWhenStarted {
+        lifecycleScope.launch {
+            viewModel.userInformation.observe(viewLifecycleOwner) { userInfo ->
+                Glide.with(requireView())
+                    .load(userInfo.avatarUrl)
+                    .centerCrop()
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .error(R.drawable.ic_user)
+                    .into(binding.imgAvatar)
+
+                val fullName = "${userInfo.firstName} ${userInfo.lastName}"
+                binding.tvUsername.text = fullName
+            }
+
             viewModel.profileEvent.collect { event ->
                 when (event) {
                     is ProfileViewModel.ProfileEvent.NotRegistered -> {
@@ -116,10 +126,13 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         ).show()
                         viewModel.verificationSpan.value = System.currentTimeMillis() + 3600
                     }
+                    ProfileViewModel.ProfileEvent.Verified -> {
+                        binding.cardViewBanner.isVisible = false
+                    }
                 }
             }
 
-            while(true) {
+            while (true) {
                 currentUser?.let {
                     it.reload()
                     binding.cardViewBanner.isVisible = !it.isEmailVerified
@@ -129,14 +142,14 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         }
     }
 
-    private fun showSignOutDialog() {
+    private fun showSignOutDialog(auth: FirebaseAuth) {
         AlertDialog.Builder(requireContext())
             .setTitle("SIGN OUT")
             .setMessage("Are you sure you want to sign out?")
             .setPositiveButton(
                 "YES"
             ) { dialog, _ ->
-                signOut()
+                signOut(auth)
                 dialog.dismiss()
             }
             .setNegativeButton("NO") { dialog, _ ->
@@ -145,15 +158,14 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             .show()
     }
 
-    private fun signOut() {
-        viewModel.signOut(FirebaseAuth.getInstance())
+    private fun signOut(auth: FirebaseAuth) {
+        viewModel.signOut(auth)
         resetInformation()
-        FirebaseAuth.getInstance().signOut()
     }
 
     private fun resetInformation() {
         binding.apply {
-            tvName.text = resources.getString(R.string.label_uncrowned_guest)
+            tvUsername.text = resources.getString(R.string.label_uncrowned_guest)
             imgAvatar.setImageResource(R.drawable.ic_user)
         }
     }
@@ -190,8 +202,8 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         if (requestCode == RC_SIGN_IN && resultCode == Activity.RESULT_OK) {
             // Successfully signed in
             val user = FirebaseAuth.getInstance().currentUser
-            user?.let {
-                viewModel.checkIfUserIsVerified(user)
+            if(user != null) {
+                viewModel.checkIfUserIsRegisteredOrVerified(user)
             }
         }
     }

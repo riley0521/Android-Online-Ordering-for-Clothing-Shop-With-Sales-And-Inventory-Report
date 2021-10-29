@@ -52,7 +52,6 @@ class ProductPagingSource(
                             if(inventory != null) {
                                 val i = inventory.copy(id = doc.id)
                                 inventoryList.add(i)
-
                             }
                         }
                     }

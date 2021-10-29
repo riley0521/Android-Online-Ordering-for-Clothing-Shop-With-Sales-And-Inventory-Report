@@ -21,7 +21,7 @@
     <string name="label_address" translatable="false">Addresses</string>
     <string name="label_favorites" translatable="false">Favorites</string>
     <string name="label_change_profile" translatable="false">Change Profile</string>
-    <string name="label_change_password" translatable="false">Change Password</string>
+    <string name="label_wish_list" translatable="false">Wish List</string>
     <string name="image_product_description" translatable="false">Product Image</string>
     <string name="button_add_to_cart" translatable="false">Add To Cart</string>
     <string name="button_share" translatable="false">Share</string>

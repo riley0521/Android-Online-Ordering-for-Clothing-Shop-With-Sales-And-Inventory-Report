@@ -30,7 +30,7 @@
             tools:srcCompat="@tools:sample/avatars" />
 
         <TextView
-            android:id="@+id/tvName"
+            android:id="@+id/labelCart"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
@@ -63,7 +63,7 @@
             app:layout_constraintBottom_toTopOf="@+id/tvTotal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toEndOf="@+id/tvName"
+            app:layout_constraintStart_toEndOf="@+id/labelCart"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.68"
             tools:text="(XL)" />
@@ -104,7 +104,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toEndOf="@+id/imgCartProduct"
-            app:layout_constraintTop_toBottomOf="@+id/tvName"
+            app:layout_constraintTop_toBottomOf="@+id/labelCart"
             app:layout_constraintVertical_bias="0.0"
             tools:text="$14.99" />
 
@@ -123,7 +123,7 @@
             app:layout_constraintEnd_toStartOf="@+id/btnAdd"
             app:layout_constraintHorizontal_bias="0.242"
             app:layout_constraintStart_toEndOf="@+id/btnRemove"
-            app:layout_constraintTop_toBottomOf="@+id/tvName"
+            app:layout_constraintTop_toBottomOf="@+id/labelCart"
             app:layout_constraintVertical_bias="0.686"
             tools:text="1" />
 

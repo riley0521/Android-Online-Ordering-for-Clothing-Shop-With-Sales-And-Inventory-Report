@@ -25,11 +25,17 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
 
         binding = FragmentSplashBinding.bind(view)
 
-        Handler().postDelayed(this::navigateToCategories, 2000)
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if(currentUser != null) {
+            viewModel.checkIfUserIsInDb(currentUser.uid)
+        }
+        else {
+            findNavController().navigate(R.id.action_splashFragment_to_categoryFragment)
+        }
 
         lifecycleScope.launchWhenStarted {
             viewModel.splashEvent.collect { event ->
-                when(event) {
+                when (event) {
                     SplashViewModel.SplashEvent.NotRegistered -> {
                         findNavController().navigate(R.id.action_splashFragment_to_registrationFragment)
                     }
@@ -38,17 +44,6 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
                     }
                 }
             }
-        }
-    }
-
-    private fun navigateToCategories() {
-        val user = FirebaseAuth.getInstance().currentUser
-        if (user != null) {
-            lifecycleScope.launchWhenStarted {
-                viewModel.checkIfUserIsInDb(user.uid)
-            }
-        } else {
-            findNavController().navigate(R.id.action_splashFragment_to_categoryFragment)
         }
     }
 }

@@ -17,6 +17,4 @@ data class Order(
     val orderDetails: List<OrderDetail>? = null
 ): Parcelable {
     constructor(): this("", "", DeliveryInformation(), Date(0), 0.0, "", "", null)
-
-    val totalCostBig = totalCost.toBigDecimal()
 }

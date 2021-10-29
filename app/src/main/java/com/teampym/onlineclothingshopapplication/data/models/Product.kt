@@ -20,6 +20,4 @@ data class Product(
     val reviews: List<Review>? = null,
 ): Parcelable {
     constructor(): this("", "", "", "", "", 0.0, "", "")
-
-    val priceBig = price.toBigDecimal()
 }

@@ -23,10 +23,8 @@ data class Cart(
 
     constructor(): this("", "", "", "", 0.0, 1)
 
-    val calculatedTotalPrice: Double get() = quantity.toDouble() * product.price
+    val calculatedTotalPrice: Double get() = quantity.toDouble() * product!!.price
     init {
         subTotal = calculatedTotalPrice
     }
-
-    @Ignore val subTotalBig = subTotal.toBigDecimal()
 }

@@ -15,24 +15,23 @@ interface UserInformationDao {
     suspend fun getAll(): List<UserInformation>
 
     @Query("SELECT * FROM table_users WHERE userId = :userId")
-    suspend fun getCurrentUser(userId: String): UserInformation
+    suspend fun getCurrentUser(userId: String): UserInformation?
 
     @Query("UPDATE table_users SET totalOfCart = :totalOfCart WHERE userId = :userId")
     suspend fun updateTotalOfCart(userId: String, totalOfCart: Double)
 
+    @Query("UPDATE table_users SET firstName = :firstName, lastName = :lastName, birthDate = :birthDate WHERE userId = :userId")
+    suspend fun updateBasicInfo(firstName: String, lastName: String, birthDate: String, userId: String)
+
     @Update
     suspend fun update(userInformation: UserInformation)
 
-    @Delete
-    suspend fun delete(userInformation: UserInformation)
+    @Query("DELETE FROM table_users WHERE userId = :userId")
+    suspend fun delete(userId: String)
 
     @Transaction
     @Query("SELECT * FROM table_users WHERE userId = :userId")
-    fun getCurrentUserWithDeliveryInfo(userId: String): List<UserWithDeliveryInfo>
-
-    @Transaction
-    @Query("SELECT * FROM table_users WHERE userId = :userId")
-    fun getCurrentUserWithTokens(userId: String): List<UserWithTokens>
+    fun getCurrentUserWithDeliveryInfo(userId: String): List<UserWithDeliveryInfoAndTokens>
 
     @Transaction
     @Query("SELECT * FROM table_users WHERE userId = :userId")

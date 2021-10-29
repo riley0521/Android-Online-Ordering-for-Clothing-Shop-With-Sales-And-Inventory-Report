@@ -1,11 +1,11 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.inventories
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.view.ViewCompat
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -33,6 +33,8 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
 
     private lateinit var product: Product
 
+    private var selectedInv: Inventory? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -46,6 +48,12 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
 
         binding = FragmentInventoryModalBinding.bind(view)
 
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        var userId = ""
+        if(currentUser != null) {
+            userId = currentUser.uid
+        }
+
         product = args.product
 
         binding.apply {
@@ -57,6 +65,14 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
                 .into(imgProductInventory)
 
             tvProductName.text = product.name
+
+            binding.btnAddToCart.setOnClickListener {
+                viewModel.addToCart(
+                    userId,
+                    product,
+                    selectedInv!!
+                )
+            }
         }
 
         if (product.inventories!!.size == 1) {
@@ -71,40 +87,30 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
             chip.id = View.generateViewId()
             chip.text = inventory.size
             chip.isCheckable = true
-            chip.setOnCheckedChangeListener { buttonView, isChecked ->
-                buttonView.isChecked = isChecked
-                checkIfValid(inventory)
+            chip.setOnClickListener {
+                binding.btnAddToCart.isEnabled = binding.chipSizeGroup.checkedChipIds.count() == 1 && userId.isNotEmpty()
+                selectedInv = inventory
+
+                Log.d("PRODUCT", "${product.id} &&& ${selectedInv!!.id}")
             }
 
             binding.chipSizeGroup.addView(chip)
         }
-
         binding.chipSizeGroup.isSingleSelection = true
 
         lifecycleScope.launchWhenStarted {
             viewModel.productEvent.collect { event ->
                 when (event) {
-                    is InventoryViewModel.ProductEvent.AddOrUpdateCart -> {
+                    is InventoryViewModel.ProductEvent.AddedToCart -> {
                         Toast.makeText(
                             requireContext(),
-                            "Added ${event.name} (${event.size}) to cart. Qty: ${event.count}",
+                            event.msg,
                             Toast.LENGTH_LONG
                         ).show()
                         findNavController().popBackStack()
                     }
                 }
             }
-        }
-    }
-
-    private fun checkIfValid(inventory: Inventory) {
-        binding.btnAddToCart.isEnabled = binding.chipSizeGroup.checkedChipIds.count() == 1
-
-        binding.btnAddToCart.setOnClickListener {
-            viewModel.addToCart(
-                product,
-                inventory
-            )
         }
     }
 }
