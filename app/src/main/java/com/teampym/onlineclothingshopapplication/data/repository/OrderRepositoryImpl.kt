@@ -97,18 +97,18 @@ class OrderRepositoryImpl @Inject constructor(
         val newOrder = Order(
             id = "",
             userId = userInformation.userId,
-            deliveryInformation = userInformation.deliveryInformation!!.first { it.default },
+            deliveryInformation = userInformation.deliveryInformationList!!.first { it.default },
             orderDate = Calendar.getInstance().time,
             totalCost = userInformation.totalOfCart,
             status = Status.SHIPPING.toString(),
             paymentMethod = paymentMethod,
-            orderDetails = null
+            orderDetails = emptyList()
         )
 
         val result = orderCollectionRef.add(newOrder).await()
         if(result != null) {
             val orderDetailList = mutableListOf<OrderDetail>()
-            for(cartItem in userInformation.cart!!) {
+            for(cartItem in userInformation.cartList!!) {
 
                 orderDetailList.add(
                     OrderDetail(
@@ -123,7 +123,8 @@ class OrderRepositoryImpl @Inject constructor(
                         productPrice = cartItem.product.price,
                         quantity = cartItem.quantity,
                         subTotal = cartItem.subTotal,
-                        dateSold = null
+                        dateSold = null,
+                        isExchangeable = false
                     )
                 )
             }

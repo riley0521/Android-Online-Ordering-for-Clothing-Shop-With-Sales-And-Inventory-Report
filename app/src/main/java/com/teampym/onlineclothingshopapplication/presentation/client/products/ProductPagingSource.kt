@@ -69,7 +69,7 @@ class ProductPagingSource(
                         }
                     }
 
-                    val productItem = product.copy(id = document.id, inventories = inventoryList, productImages = productImageList)
+                    val productItem = product.copy(id = document.id, inventoryList = inventoryList, productImageList = productImageList)
                     productList.add(productItem)
                 }
 

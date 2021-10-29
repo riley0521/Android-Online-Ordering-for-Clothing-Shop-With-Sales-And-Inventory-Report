@@ -17,7 +17,7 @@ data class DeliveryInformation(
     var city: String,
     var streetNumber: String,
     var postalCode: String,
-    var default: Boolean = false
+    var default: Boolean
 ): Parcelable {
     constructor(): this("", "", "", "", "", "", "", "", false)
 }

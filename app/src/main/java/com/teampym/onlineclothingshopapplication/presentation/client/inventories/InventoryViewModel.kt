@@ -25,14 +25,12 @@ class InventoryViewModel @Inject constructor(
     private val _inventoriesLiveData = MutableLiveData<List<Inventory>>()
     val inventories: LiveData<List<Inventory>> get() = _inventoriesLiveData
 
-    private val productEventChannel = Channel<ProductEvent>()
-    val productEvent = productEventChannel.receiveAsFlow()
+//    private val productEventChannel = Channel<ProductEvent>()
+//    val productEvent = productEventChannel.receiveAsFlow()
 
     fun addToCart(userId: String, product: Product, inventory: Inventory) = applicationScope.launch {
         // Use online database instead of Room
-        // Check if the user is logged in
-        val isAddedToCart = cartRepository.addToCart(userId, product, inventory)
-        productEventChannel.send(ProductEvent.AddedToCart(isAddedToCart))
+        cartRepository.addToCart(userId, product, inventory)
     }
 
     sealed class ProductEvent {

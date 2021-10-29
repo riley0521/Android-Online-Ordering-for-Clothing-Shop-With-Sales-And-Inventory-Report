@@ -19,8 +19,8 @@ data class OrderDetail(
     val size: String,
     val quantity: Long,
     val subTotal: Double,
-    val dateSold: Date? = null,
-    val isExchangeable: Boolean = dateSold != null
+    val dateSold: Date?,
+    val isExchangeable: Boolean
 ): Parcelable {
-    constructor(): this("", "", "", "", "", "", "", 0.0, "", 0L, 0.0)
+    constructor(): this("", "", "", "", "", "", "", 0.0, "", 0L, 0.0, Date(0), false)
 }

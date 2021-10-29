@@ -99,12 +99,13 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         lifecycleScope.launch {
             viewModel.userInformation.observe(viewLifecycleOwner) { userInfo ->
-                Glide.with(requireView())
-                    .load(userInfo.avatarUrl)
-                    .centerCrop()
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .error(R.drawable.ic_user)
-                    .into(binding.imgAvatar)
+                if(userInfo.avatarUrl.isNotEmpty())
+                    Glide.with(requireView())
+                        .load(userInfo.avatarUrl)
+                        .centerCrop()
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .error(R.drawable.ic_user)
+                        .into(binding.imgAvatar)
 
                 val fullName = "${userInfo.firstName} ${userInfo.lastName}"
                 binding.tvUsername.text = fullName

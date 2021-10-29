@@ -17,5 +17,5 @@ data class Review(
     val description: String,
     val dateReview: Date
 ): Parcelable {
-    constructor(): this("", "", "", "", "", 0.0, "", Date())
+    constructor(): this("", "", "", "", "", 0.0, "", Date(0))
 }

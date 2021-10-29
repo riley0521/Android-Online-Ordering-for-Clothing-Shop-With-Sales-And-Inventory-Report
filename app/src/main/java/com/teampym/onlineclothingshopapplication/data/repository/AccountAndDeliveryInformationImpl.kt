@@ -65,7 +65,7 @@ class AccountAndDeliveryInformationImpl @Inject constructor(
                     )
                 )
 
-                return userInfo.copy(userId = userQuery.id, deliveryInformation = deliveryInformationList, notificationTokens = notificationTokenList)
+                return userInfo.copy(userId = userQuery.id, deliveryInformationList = deliveryInformationList, notificationTokenList = notificationTokenList)
             }
         }
         return null
@@ -146,6 +146,7 @@ class AccountAndDeliveryInformationImpl @Inject constructor(
         return null
     }
 
+    // TODO("Should get firebase token as well while we're at it.")
     suspend fun createUser(
         userId: String,
         firstName: String,
@@ -158,7 +159,15 @@ class AccountAndDeliveryInformationImpl @Inject constructor(
             firstName = firstName,
             lastName = lastName,
             birthDate = birthDate,
-            avatarUrl = avatarUrl
+            avatarUrl = avatarUrl,
+            userType = UserType.CUSTOMER.toString(),
+            totalOfCart = 0.0,
+            deliveryInformation = "",
+            notificationTokens = "",
+            cart = "",
+            deliveryInformationList = emptyList(),
+            notificationTokenList = emptyList(),
+            cartList = emptyList()
         )
 
         val result = userCollectionRef

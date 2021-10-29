@@ -71,7 +71,7 @@ class ProductAdapter(
                 if (product.flag == ProductFlag.NORMAL.toString())
                     tvFlag.isVisible = false
 
-                product.inventories?.let { products ->
+                product.inventoryList?.let { products ->
                     val isOutOfStock = products.sumOf { it.stock } == 0L
                     labelOutOfStock.isVisible = isOutOfStock
 
@@ -79,7 +79,7 @@ class ProductAdapter(
                     labelNumberOfSold.text = "Sold $totalSold"
                 }
 
-                product.reviews?.let { reviews ->
+                product.reviewList?.let { reviews ->
                     val avgRate: Double = reviews.sumOf { it.rate }.div(reviews.size)
                     labelRate.isVisible = true
                     labelRate.text = avgRate.toString()

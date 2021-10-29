@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
@@ -20,7 +19,6 @@ import com.teampym.onlineclothingshopapplication.data.models.Inventory
 import com.teampym.onlineclothingshopapplication.data.models.Product
 import com.teampym.onlineclothingshopapplication.databinding.FragmentInventoryModalBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
 
 @AndroidEntryPoint
 class InventoryModalFragment : BottomSheetDialogFragment() {
@@ -75,13 +73,15 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
             }
         }
 
-        if (product.inventories!!.size == 1) {
+        if (product.inventoryList!!.size == 1) {
             // TODO("Directly Add to Cart")
-            Toast.makeText(requireContext(), "Added ${product.inventories!![0].size} Size to your cart", Toast.LENGTH_LONG).show()
+
+            viewModel.addToCart(userId, product, product.inventoryList!![0])
+            Toast.makeText(requireContext(), "Added ${product.inventoryList!![0].size} Size to your cart", Toast.LENGTH_LONG).show()
             findNavController().popBackStack()
         }
 
-        for (inventory in product.inventories!!) {
+        for (inventory in product.inventoryList!!) {
             // TODO("Compare if getLayoutInflater() is same as creating a new instance of LayoutInflater object.")
             val chip = layoutInflater.inflate(R.layout.inventory_item, null, false) as Chip
             chip.id = View.generateViewId()
@@ -97,20 +97,5 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
             binding.chipSizeGroup.addView(chip)
         }
         binding.chipSizeGroup.isSingleSelection = true
-
-        lifecycleScope.launchWhenStarted {
-            viewModel.productEvent.collect { event ->
-                when (event) {
-                    is InventoryViewModel.ProductEvent.AddedToCart -> {
-                        Toast.makeText(
-                            requireContext(),
-                            event.msg,
-                            Toast.LENGTH_LONG
-                        ).show()
-                        findNavController().popBackStack()
-                    }
-                }
-            }
-        }
     }
 }

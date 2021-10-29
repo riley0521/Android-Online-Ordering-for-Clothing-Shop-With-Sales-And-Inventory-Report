@@ -40,19 +40,19 @@ class CartRepositoryImpl @Inject constructor(
                         for (document in snapshot.documents) {
                             val cartItem = document.toObject(Cart::class.java)!!.copy(id = document.id)
 
-//                            CoroutineScope(Dispatchers.IO).launch {
-//                                val productQuery =
-//                                    updatedProductsCollectionRef.document(cartItem.productId).get().await()
-//                                if (productQuery.exists()) {
-//                                    val updatePriceOfProductInCart = mapOf<String, Any>(
-//                                        "price" to productQuery["price"].toString().toBigDecimal()
-//                                    )
-//
-//                                    userCartCollectionRef.document(userId).collection("cart")
-//                                        .document(document.id)
-//                                        .set(updatePriceOfProductInCart, SetOptions.merge()).await()
-//                                }
-//                            }
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val productQuery =
+                                    updatedProductsCollectionRef.document(cartItem.productId).get().await()
+                                if (productQuery.exists()) {
+                                    val updatePriceOfProductInCart = mapOf<String, Any>(
+                                        "price" to productQuery["price"].toString().toBigDecimal()
+                                    )
+
+                                    userCartCollectionRef.document(userId).collection("cart")
+                                        .document(document.id)
+                                        .set(updatePriceOfProductInCart, SetOptions.merge()).await()
+                                }
+                            }
                             cartList.add(cartItem)
                         }
 

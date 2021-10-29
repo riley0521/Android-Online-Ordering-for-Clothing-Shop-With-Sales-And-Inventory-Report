@@ -54,7 +54,7 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
                     }
                 }
 
-                return product.copy(id = productQuery.id, productImages = productImageList, inventories = inventoryList)
+                return product.copy(id = productQuery.id, productImageList = productImageList, inventoryList = inventoryList)
             }
         }
         return null

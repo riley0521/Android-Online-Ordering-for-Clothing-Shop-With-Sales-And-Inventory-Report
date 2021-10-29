@@ -17,11 +17,11 @@ data class Cart(
     var inventoryId: String,
     var subTotal: Double,
     var quantity: Long = 1,
-    @Ignore var product: Product = Product(),
-    @Ignore var sizeInv: Inventory = Inventory()
+    @Ignore var product: Product,
+    @Ignore var sizeInv: Inventory
 ) : Parcelable {
 
-    constructor(): this("", "", "", "", 0.0, 1)
+    constructor(): this("", "", "", "", 0.0, 1, Product(), Inventory())
 
     val calculatedTotalPrice: Double get() = quantity.toDouble() * product!!.price
     init {

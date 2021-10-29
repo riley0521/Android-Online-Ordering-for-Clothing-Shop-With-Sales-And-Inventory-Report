@@ -14,7 +14,7 @@ data class Order(
     val totalCost: Double,
     val status: String,
     val paymentMethod: String,
-    val orderDetails: List<OrderDetail>? = null
+    val orderDetails: List<OrderDetail>
 ): Parcelable {
-    constructor(): this("", "", DeliveryInformation(), Date(0), 0.0, "", "", null)
+    constructor(): this("", "", DeliveryInformation(), Date(0), 0.0, "", "", emptyList())
 }
