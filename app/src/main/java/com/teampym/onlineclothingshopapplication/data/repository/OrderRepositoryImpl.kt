@@ -4,20 +4,23 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.teampym.onlineclothingshopapplication.data.models.*
+import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
+import com.teampym.onlineclothingshopapplication.data.util.Status
 import kotlinx.coroutines.tasks.await
 import java.util.*
 import javax.inject.Inject
 
 class OrderRepositoryImpl @Inject constructor(
     private val db: FirebaseFirestore,
+    private val orderDetailRepository: OrderDetailRepositoryImpl,
     private val cartRepository: CartRepositoryImpl,
-    private val productRepository: ProductImageWithInventoryAndReviewRepositoryImpl
+    private val productRepository: ProductRepositoryImpl
 ) {
 
-    private val orderCollectionRef = db.collection("Orders")
+    private val orderCollectionRef = db.collection(ORDERS_COLLECTION)
 
     // get all orders if you are an admin
-    suspend fun getAllOrders(orderBy: String): List<Order>? {
+    suspend fun getAll(orderBy: String): List<Order>? {
         val ordersQuery = orderCollectionRef.whereEqualTo("status", orderBy)
             .orderBy("orderDate", Query.Direction.DESCENDING).get().await()
         val orderList = mutableListOf<Order>()
@@ -34,7 +37,7 @@ class OrderRepositoryImpl @Inject constructor(
         return null
     }
 
-    suspend fun getOrderByUserId(userId: String, orderId: String): Order? {
+    suspend fun getByUserId(userId: String, orderId: String): Order? {
         val orderQuery = orderCollectionRef.document(orderId).get().await()
         orderQuery?.let { documentSnapshot ->
             val order = documentSnapshot.toObject(Order::class.java)
@@ -45,54 +48,8 @@ class OrderRepositoryImpl @Inject constructor(
         return null
     }
 
-    suspend fun getOrderDetailByOrderId(
-        orderId: String,
-        userType: String,
-        userId: String
-    ): List<OrderDetail>? {
-
-        // check the user type first
-        // customer must match the userId == Orders.userId && orderId == doc.id because customer cannot view other customer's order/s
-        if (userType == UserType.CUSTOMER.toString()) {
-            val ordersQuery = orderCollectionRef
-                .document(orderId)
-                .get()
-                .await()
-            if (ordersQuery != null) {
-                if (userId == ordersQuery["userId"]) {
-                    val orderDetailCustomerQuery =
-                        orderCollectionRef.document(orderId).collection("orderDetails").get()
-                            .await()
-                    val orderDetailsCustomerList = mutableListOf<OrderDetail>()
-                    for (document in orderDetailCustomerQuery.documents) {
-
-                        val orderDetail = document.toObject(OrderDetail::class.java)!!.copy(id = document.id)
-
-                        orderDetailsCustomerList.add(orderDetail)
-                    }
-                    return orderDetailsCustomerList
-                }
-            }
-        } else if (userType == UserType.ADMIN.toString()) {
-            // no need to compare userId when you are an admin to the order object because admin have higher access level
-            val orderDetailAdminQuery =
-                orderCollectionRef.document(orderId).collection("orderDetails").get().await()
-            val orderDetailsAdminList = mutableListOf<OrderDetail>()
-            if (orderDetailAdminQuery != null) {
-                for (document in orderDetailAdminQuery.documents) {
-
-                    val orderDetail = document.toObject(OrderDetail::class.java)!!.copy(id = document.id)
-
-                    orderDetailsAdminList.add(orderDetail)
-                }
-                return orderDetailsAdminList
-            }
-        }
-        return null
-    }
-
     // TODO("Submit order for processing and delete all items in cart.")
-    suspend fun createOrderByCustomer(userInformation: UserInformation, paymentMethod: String): Order? {
+    suspend fun create(userInformation: UserInformation, paymentMethod: String): Order? {
 
         val newOrder = Order(
             id = "",
@@ -107,35 +64,11 @@ class OrderRepositoryImpl @Inject constructor(
 
         val result = orderCollectionRef.add(newOrder).await()
         if(result != null) {
-            val orderDetailList = mutableListOf<OrderDetail>()
-            for(cartItem in userInformation.cartList!!) {
 
-                orderDetailList.add(
-                    OrderDetail(
-                        id = "",
-                        userId = userInformation.userId,
-                        orderId = result.id,
-                        productId = cartItem.productId,
-                        inventoryId = cartItem.sizeInv.id,
-                        productName = cartItem.product.name,
-                        productImage = cartItem.product.imageUrl,
-                        size = cartItem.sizeInv.size,
-                        productPrice = cartItem.product.price,
-                        quantity = cartItem.quantity,
-                        subTotal = cartItem.subTotal,
-                        dateSold = null,
-                        isExchangeable = false
-                    )
-                )
-            }
-
-            val updateOrderDetailMap = mapOf<String, Any>(
-                "orderDetails" to orderDetailList
-            )
-            orderCollectionRef.document(result.id).set(updateOrderDetailMap, SetOptions.merge()).await()
+            orderDetailRepository.insertAll(result.id, userInformation.userId, userInformation.cartList)
 
             // Delete all items from cart after placing order
-            cartRepository.deleteAllItemFromCart(userInformation.userId)
+            cartRepository.deleteAll(userInformation.userId)
         }
 
         return null

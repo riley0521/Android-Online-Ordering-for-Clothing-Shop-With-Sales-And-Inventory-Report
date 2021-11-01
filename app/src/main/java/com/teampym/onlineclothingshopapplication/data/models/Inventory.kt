@@ -7,14 +7,14 @@ import java.math.BigDecimal
 
 @Parcelize
 data class Inventory(
-    val id: String,
     val productId: String,
     val size: String,
     val stock: Long,
-    val committed: Long,
-    val sold: Long,
-    val returned: Long,
-    val restockLevel: Long
+    val id: String = "",
+    val committed: Long = 0,
+    val sold: Long = 0,
+    val returned: Long = 0,
+    val restockLevel: Long = 0
 ): Parcelable {
-    constructor(): this("", "", "", 0L, 0L, 0L, 0L, 0L)
+    constructor(): this("", "", 0L)
 }

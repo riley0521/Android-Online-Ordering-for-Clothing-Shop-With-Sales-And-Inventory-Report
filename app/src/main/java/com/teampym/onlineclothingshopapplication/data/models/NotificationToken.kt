@@ -6,13 +6,13 @@ import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import kotlinx.android.parcel.Parcelize
 
-@Entity(tableName = "table_notification_token")
+@Entity(tableName = "table_tokens")
 @Parcelize
 data class NotificationToken(
-    @PrimaryKey
-    val id: String,
     val userId: String,
-    val token: String
+    val token: String,
+    @PrimaryKey
+    val id: String = ""
 ) : Parcelable {
-    constructor(): this("", "", "")
+    constructor(): this("", "")
 }

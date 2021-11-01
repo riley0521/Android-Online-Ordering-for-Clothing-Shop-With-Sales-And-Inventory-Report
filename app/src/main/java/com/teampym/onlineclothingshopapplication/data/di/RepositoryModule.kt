@@ -1,6 +1,8 @@
 package com.teampym.onlineclothingshopapplication.data.di
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.teampym.onlineclothingshopapplication.data.db.DeliveryInformationDao
 import com.teampym.onlineclothingshopapplication.data.db.NotificationTokenDao
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
@@ -18,19 +20,46 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideDbInstance() =
-        FirebaseFirestore.getInstance()
+        Firebase.firestore
 
     @Provides
     @Singleton
-    fun provideAccountAndDeliveryInformationRepository(
+    fun provideCategoryRepository(db: FirebaseFirestore) =
+        CategoryRepositoryImpl(db)
+
+    @Provides
+    @Singleton
+    fun provideAccountRepository(
         db: FirebaseFirestore,
-        userInformationDao: UserInformationDao,
-        deliveryInformationDao: DeliveryInformationDao,
-        notificationTokenDao: NotificationTokenDao
-    ) = AccountAndDeliveryInformationImpl(
+        deliveryInformationRepository: DeliveryInformationRepositoryImpl,
+        notificationTokenRepository: NotificationTokenRepositoryImpl,
+        cartRepository: CartRepositoryImpl,
+        userInformationDao: UserInformationDao
+    ) = AccountRepositoryImpl(
         db,
-        userInformationDao,
-        deliveryInformationDao,
+        deliveryInformationRepository,
+        notificationTokenRepository,
+        cartRepository,
+        userInformationDao
+    )
+
+    @Provides
+    @Singleton
+    fun provideDeliveryInformationRepository(
+        db: FirebaseFirestore,
+        deliveryInformationDao: DeliveryInformationDao
+    ) = DeliveryInformationRepositoryImpl(
+        db,
+        deliveryInformationDao
+    )
+
+    @Provides
+    @Singleton
+    fun provideNotificationTokenRepository(
+        db: FirebaseFirestore,
+        notificationTokenDao: NotificationTokenDao
+    ) = NotificationTokenRepositoryImpl(
+        db,
         notificationTokenDao
     )
 
@@ -41,23 +70,45 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideCategoryRepository(db: FirebaseFirestore) =
-        CategoryRepositoryImpl(db)
+    fun provideProductRepository(
+        db: FirebaseFirestore,
+        productImageRepository: ProductImageRepositoryImpl,
+        productInventoryRepository: ProductInventoryRepositoryImpl,
+        accountRepository: AccountRepositoryImpl
+    ) = ProductRepositoryImpl(
+        db,
+        productImageRepository,
+        productInventoryRepository,
+        accountRepository
+    )
+
+    @Provides
+    @Singleton
+    fun provideProductImageRepository(
+        db: FirebaseFirestore
+    ) = ProductImageRepositoryImpl(db)
+
+    @Provides
+    @Singleton
+    fun provideProductInventoryRepository(
+        db: FirebaseFirestore
+    ) = ProductInventoryRepositoryImpl(db)
 
     @Provides
     @Singleton
     fun provideOrderRepository(
         db: FirebaseFirestore,
+        orderDetailRepository: OrderDetailRepositoryImpl,
         cartRepository: CartRepositoryImpl,
-        productRepository: ProductImageWithInventoryAndReviewRepositoryImpl
-    ) = OrderRepositoryImpl(db, cartRepository, productRepository)
+        productRepository: ProductRepositoryImpl
+    ) = OrderRepositoryImpl(db, orderDetailRepository, cartRepository, productRepository)
 
     @Provides
     @Singleton
-    fun provideProductRepository(
-        db: FirebaseFirestore,
-        accountRepository: AccountAndDeliveryInformationImpl
-    ) =
-        ProductImageWithInventoryAndReviewRepositoryImpl(db, accountRepository)
+    fun provideOrderDetailRepository(
+        db: FirebaseFirestore
+    ) = OrderDetailRepositoryImpl(
+        db
+    )
 
 }

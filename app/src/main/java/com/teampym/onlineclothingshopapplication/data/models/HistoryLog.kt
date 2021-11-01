@@ -6,11 +6,11 @@ import java.util.*
 
 @Parcelize
 data class HistoryLog(
-    val id: String,
     val userId: String,
     val description: String,
     val type: String,
-    val date: Date
+    val date: Long = System.currentTimeMillis(),
+    val id: String = ""
 ): Parcelable {
-    constructor(): this("", "", "", "", Date(0))
+    constructor(): this("", "", "")
 }

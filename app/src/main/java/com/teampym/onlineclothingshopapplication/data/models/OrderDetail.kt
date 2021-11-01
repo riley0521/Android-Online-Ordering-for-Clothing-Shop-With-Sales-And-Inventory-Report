@@ -8,7 +8,6 @@ import java.util.*
 
 @Parcelize
 data class OrderDetail(
-    val id: String,
     val userId: String,
     val orderId: String,
     val productId: String,
@@ -19,8 +18,9 @@ data class OrderDetail(
     val size: String,
     val quantity: Long,
     val subTotal: Double,
-    val dateSold: Date?,
-    val isExchangeable: Boolean
+    val dateSold: Long,
+    val id: String = "",
+    val isExchangeable: Boolean = false
 ): Parcelable {
-    constructor(): this("", "", "", "", "", "", "", 0.0, "", 0L, 0.0, Date(0), false)
+    constructor(): this("", "", "", "", "", "", 0.0, "", 0L, 0.0, 0)
 }

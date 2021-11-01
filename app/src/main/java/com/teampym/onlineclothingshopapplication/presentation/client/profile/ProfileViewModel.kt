@@ -8,7 +8,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
-import com.teampym.onlineclothingshopapplication.data.repository.AccountAndDeliveryInformationImpl
+import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -17,7 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val accountRepository: AccountAndDeliveryInformationImpl,
+    private val accountRepository: AccountRepositoryImpl,
     private val userInformationDao: UserInformationDao,
     private val state: SavedStateHandle
 ) : ViewModel() {
@@ -41,7 +41,7 @@ class ProfileViewModel @Inject constructor(
 
     fun checkIfUserIsRegisteredOrVerified(user: FirebaseUser) = viewModelScope.launch {
 
-        val currentUser = accountRepository.getUser(user.uid)
+        val currentUser = accountRepository.get(user.uid)
 
         when {
             currentUser == null -> {

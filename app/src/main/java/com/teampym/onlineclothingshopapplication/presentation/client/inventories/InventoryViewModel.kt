@@ -3,16 +3,12 @@ package com.teampym.onlineclothingshopapplication.presentation.client.inventorie
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
 import com.teampym.onlineclothingshopapplication.data.models.Inventory
 import com.teampym.onlineclothingshopapplication.data.models.Product
 import com.teampym.onlineclothingshopapplication.data.repository.CartRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,7 +26,7 @@ class InventoryViewModel @Inject constructor(
 
     fun addToCart(userId: String, product: Product, inventory: Inventory) = applicationScope.launch {
         // Use online database instead of Room
-        cartRepository.addToCart(userId, product, inventory)
+        cartRepository.insert(userId, product, inventory)
     }
 
     sealed class ProductEvent {

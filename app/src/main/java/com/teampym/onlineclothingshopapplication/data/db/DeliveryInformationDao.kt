@@ -16,6 +16,6 @@ interface DeliveryInformationDao {
     @Update
     suspend fun update(deliveryInformation: DeliveryInformation)
 
-    @Delete
-    suspend fun delete(deliveryInformation: DeliveryInformation)
+    @Query("DELETE FROM table_users WHERE userId = :userId")
+    suspend fun delete(userId: String)
 }

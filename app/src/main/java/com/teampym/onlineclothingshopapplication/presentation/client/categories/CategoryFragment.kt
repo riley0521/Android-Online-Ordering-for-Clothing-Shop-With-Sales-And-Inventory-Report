@@ -7,7 +7,6 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Category
-import com.teampym.onlineclothingshopapplication.data.models.Utils
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCategoryBinding
 import dagger.hilt.android.AndroidEntryPoint
 

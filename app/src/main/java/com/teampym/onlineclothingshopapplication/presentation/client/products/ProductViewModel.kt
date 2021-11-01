@@ -6,8 +6,8 @@ import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.teampym.onlineclothingshopapplication.data.models.Utils
-import com.teampym.onlineclothingshopapplication.data.repository.ProductImageWithInventoryAndReviewRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.util.Utils
+import com.teampym.onlineclothingshopapplication.data.repository.ProductRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -17,7 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProductViewModel @Inject constructor(
     private val db: FirebaseFirestore,
-    private val productRepository: ProductImageWithInventoryAndReviewRepositoryImpl
+    private val productRepository: ProductRepositoryImpl
 ) : ViewModel() {
 
     val searchQuery = MutableLiveData("")
@@ -54,7 +54,7 @@ class ProductViewModel @Inject constructor(
                 .limit(30)
         }
 
-        productRepository.getProductsPagingSource(queryProducts).flow
+        productRepository.getSome(queryProducts).flow
     }
 
     fun updateCategory(categoryId: String) {

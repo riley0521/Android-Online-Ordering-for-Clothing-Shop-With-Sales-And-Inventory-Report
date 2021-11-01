@@ -6,19 +6,24 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.teampym.onlineclothingshopapplication.data.models.*
+import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
+import com.teampym.onlineclothingshopapplication.data.util.Resource
+import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.presentation.client.products.ProductPagingSource
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
+class ProductRepositoryImpl @Inject constructor(
     private val db: FirebaseFirestore,
-    private val accountRepository: AccountAndDeliveryInformationImpl
+    private val productImageRepository: ProductImageRepositoryImpl,
+    private val productInventoryRepository: ProductInventoryRepositoryImpl,
+    private val accountRepository: AccountRepositoryImpl
 ) {
 
     // READ Operation
-    private val productCollectionRef = db.collection("Product")
+    private val productCollectionRef = db.collection(PRODUCTS_COLLECTION)
 
-    fun getProductsPagingSource(queryProducts: Query) =
+    fun getSome(queryProducts: Query) =
         Pager(
             PagingConfig(
                 pageSize = 30
@@ -28,8 +33,7 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
         }
 
     // TODO("CRUD Operations for Product Collection")
-    // I don't know if this is necessary but just in case!
-    suspend fun getOneProductWithImagesAndInventories(productId: String): Product? {
+    suspend fun getOne(productId: String): Product? {
         val productQuery = productCollectionRef.document(productId).get().await()
         if (productQuery != null) {
 
@@ -60,14 +64,14 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
         return null
     }
 
-    suspend fun createProduct(product: Product): Product? {
+    suspend fun create(product: Product): Product? {
         val result = productCollectionRef.add(product).await()
         if (result != null)
             return product.copy(id = result.id)
         return null
     }
 
-    suspend fun updateProduct(product: Product): Boolean {
+    suspend fun update(product: Product): Boolean {
         val productQuery = productCollectionRef.document(product.id).get().await()
         if (productQuery != null) {
             val productToUpdateMap = mapOf<String, Any>(
@@ -85,72 +89,20 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
         return false
     }
 
-    suspend fun deleteProduct(productId: String): Boolean {
+    suspend fun delete(productId: String): Boolean {
         val result = productCollectionRef.document(productId).delete().await()
-        return result != null
-    }
-
-    // TODO("Inventory Collection operation - Add Stock, Create Inventory(size), Delete Inventory")
-    suspend fun createInventory(inventory: Inventory): Inventory? {
-        val result = productCollectionRef.document(inventory.productId).collection("inventories")
-            .add(inventory).await()
-        if (result != null)
-            return inventory.copy(id = result.id)
-        return null
-    }
-
-    suspend fun addStockToInventory(
-        productId: String,
-        inventoryId: String,
-        stockToAdd: Long
-    ): Boolean {
-        val inventoryQuery =
-            productCollectionRef.document(productId).collection("inventories").document(inventoryId)
-                .get().await()
-        if (inventoryQuery != null) {
-            val updateStockMap = mapOf<String, Any>(
-                "stock" to inventoryQuery["stock"].toString().toLong() + stockToAdd
-            )
-
-            val result = productCollectionRef.document(productId).collection("inventories")
-                .document(inventoryId).set(updateStockMap, SetOptions.merge()).await()
-            return result != null
-        }
-        return false
-    }
-
-    suspend fun deleteInventory(productId: String, inventoryId: String): Boolean {
-        val result = productCollectionRef
-            .document(productId)
-            .collection("inventories")
-            .document(inventoryId)
-            .delete().await()
-        return result != null
-    }
-
-    // TODO("ProductImages Collection operation - Add and Delete")
-    suspend fun createProductImage(productImage: ProductImage): ProductImage? {
-        val result =
-            productCollectionRef.document(productImage.productId).collection("productImages")
-                .add(productImage).await()
-        if (result != null)
-            return productImage.copy(id = result.id)
-        return null
-    }
-
-    suspend fun deleteProductImage(productImage: ProductImage): Boolean {
-        val result =
-            productCollectionRef.document(productImage.productId).collection("productImages")
-                .document(productImage.id).delete().await()
         return result != null
     }
 
     // TODO("I feel like there is something missing here.. I think I should use List<OrderDetail> instead of List<Cart>")
     // SHIPPED
     suspend fun deductStockToCommittedCount(userId: String, orderDetailList: List<OrderDetail>): Boolean {
-        val user = accountRepository.getUser(userId)
+        val user: UserInformation = when(val res = accountRepository.get(userId)) {
+            is Resource.Error -> UserInformation()
+            is Resource.Success -> res.res as UserInformation
+        }
 
-        user?.let { userInfo ->
+        user.let { userInfo ->
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
@@ -175,15 +127,17 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
             }
             return false
         }
-        return false
     }
 
     // CANCELED
     suspend fun deductCommittedToStockCount(userId: String, orderDetailList: List<OrderDetail>): Boolean {
 
-        val user = accountRepository.getUser(userId)
+        val user: UserInformation = when(val res = accountRepository.get(userId)) {
+            is Resource.Error -> UserInformation()
+            is Resource.Success -> res.res as UserInformation
+        }
 
-        user?.let { userInfo ->
+        user.let { userInfo ->
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
@@ -208,15 +162,17 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
             }
             return false
         }
-        return false
     }
 
     // COMPLETED
     suspend fun deductCommittedToSoldCount(userId: String, orderDetailList: List<OrderDetail>): Boolean {
 
-        val user = accountRepository.getUser(userId)
+        val user: UserInformation = when(val res = accountRepository.get(userId)) {
+            is Resource.Error -> UserInformation()
+            is Resource.Success -> res.res as UserInformation
+        }
 
-        user?.let { userInfo ->
+        user.let { userInfo ->
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
@@ -241,15 +197,17 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
             }
             return false
         }
-        return false
     }
 
     // RETURNED
     suspend fun deductSoldToReturnedCount(userId: String, orderDetailList: List<OrderDetail>): Boolean {
 
-        val user = accountRepository.getUser(userId)
+        val user: UserInformation = when(val res = accountRepository.get(userId)) {
+            is Resource.Error -> UserInformation()
+            is Resource.Success -> res.res as UserInformation
+        }
 
-        user?.let {
+        user.let {
             if (userId == it.userId && it.userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
@@ -274,7 +232,6 @@ class ProductImageWithInventoryAndReviewRepositoryImpl @Inject constructor(
             }
             return false
         }
-        return false
     }
 
 }

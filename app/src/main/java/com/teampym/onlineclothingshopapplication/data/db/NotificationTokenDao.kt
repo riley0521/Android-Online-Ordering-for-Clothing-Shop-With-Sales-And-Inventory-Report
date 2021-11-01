@@ -1,10 +1,7 @@
 package com.teampym.onlineclothingshopapplication.data.db
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
+import androidx.room.*
 import androidx.room.OnConflictStrategy.REPLACE
-import androidx.room.Update
 import com.teampym.onlineclothingshopapplication.data.models.NotificationToken
 
 @Dao
@@ -19,7 +16,7 @@ interface NotificationTokenDao {
     @Update
     suspend fun update(notificationToken: NotificationToken)
 
-    @Delete
-    suspend fun delete(notificationToken: NotificationToken)
+    @Query("DELETE FROM table_tokens WHERE userId = :userId")
+    suspend fun delete(userId: String)
 
 }

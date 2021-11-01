@@ -10,18 +10,18 @@ import java.math.BigDecimal
 @Entity(tableName = "table_cart")
 @Parcelize
 data class Cart(
-    @PrimaryKey
-    var id: String,
     var userId: String,
     var productId: String,
     var inventoryId: String,
     var subTotal: Double,
+    @PrimaryKey
+    var id: String = "",
     var quantity: Long = 1,
-    @Ignore var product: Product,
-    @Ignore var sizeInv: Inventory
+    @Ignore var product: Product = Product(),
+    @Ignore var sizeInv: Inventory = Inventory()
 ) : Parcelable {
 
-    constructor(): this("", "", "", "", 0.0, 1, Product(), Inventory())
+    constructor(): this("", "", "", 0.0)
 
     val calculatedTotalPrice: Double get() = quantity.toDouble() * product!!.price
     init {

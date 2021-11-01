@@ -5,13 +5,10 @@ import androidx.room.Ignore
 import com.google.firebase.firestore.Exclude
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.teampym.onlineclothingshopapplication.data.repository.ProductType
 import kotlinx.android.parcel.Parcelize
-import java.math.BigDecimal
 
 @Parcelize
 data class Product(
-    val id: String,
     val categoryId: String,
     val name: String,
     val description: String,
@@ -22,15 +19,15 @@ data class Product(
     val inventories: String,
     val productImages: String,
     val reviews: String,
+    val id: String = "",
     @get:Exclude
-    val inventoryList: List<Inventory>,
+    val inventoryList: List<Inventory> = emptyList(),
     @get:Exclude
-    val productImageList: List<ProductImage>,
+    val productImageList: List<ProductImage> = emptyList(),
     @get:Exclude
-    val reviewList: List<Review>,
+    val reviewList: List<Review> = emptyList(),
 ) : Parcelable {
     constructor() : this(
-        "",
         "",
         "",
         "",
@@ -41,9 +38,6 @@ data class Product(
         "",
         "",
         "",
-        emptyList(),
-        emptyList(),
-        emptyList()
     )
 
     @Ignore

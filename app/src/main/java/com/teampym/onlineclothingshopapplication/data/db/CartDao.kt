@@ -1,10 +1,7 @@
 package com.teampym.onlineclothingshopapplication.data.db
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
+import androidx.room.*
 import androidx.room.OnConflictStrategy.REPLACE
-import androidx.room.Update
 import com.teampym.onlineclothingshopapplication.data.models.Cart
 
 @Dao
@@ -19,7 +16,7 @@ interface CartDao {
     @Update
     suspend fun update(cart: Cart)
 
-    @Delete
-    suspend fun delete(cart: Cart)
+    @Query("DELETE FROM table_cart WHERE userId = :userId")
+    suspend fun delete(userId: String)
 
 }

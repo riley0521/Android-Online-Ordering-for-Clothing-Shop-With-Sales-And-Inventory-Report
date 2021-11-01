@@ -7,6 +7,7 @@ import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.Cart
 import com.teampym.onlineclothingshopapplication.data.models.Inventory
 import com.teampym.onlineclothingshopapplication.data.models.Product
+import com.teampym.onlineclothingshopapplication.data.util.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -19,90 +20,55 @@ class CartRepositoryImpl @Inject constructor(
     private val userInformationDao: UserInformationDao
 ) {
 
-    private val userCartCollectionRef = db.collection("Users")
-    private val updatedProductsCollectionRef = db.collection("Product")
+    private val userCartCollectionRef = db.collection(USERS_COLLECTION)
+    private val updatedProductsCollectionRef = db.collection(PRODUCTS_COLLECTION)
 
 
     // TODO("Use a flow to get updates in cart collection instantly")
-    fun getCartByUserId(userId: String): Flow<List<Cart>> {
+    fun getAll(userId: String): Flow<List<Cart>> = callbackFlow {
+        val cartListener = userCartCollectionRef.document(userId)
+            .collection(CART_SUB_COLLECTION)
+            .addSnapshotListener { querySnapshot, firebaseException ->
+                if (firebaseException != null) {
+                    cancel(message = "Error fetching cart", firebaseException)
+                    return@addSnapshotListener
+                }
 
-        return callbackFlow {
-            val cartListener = userCartCollectionRef.document(userId)
-                .collection("cart")
-                .addSnapshotListener { querySnapshot, firebaseException ->
-                    if (firebaseException != null) {
-                        cancel(message = "Error fetching cart", firebaseException)
-                        return@addSnapshotListener
-                    }
+                val cartList = mutableListOf<Cart>()
+                querySnapshot?.let { snapshot ->
+                    for (document in snapshot.documents) {
+                        val cartItem = document.toObject(Cart::class.java)!!.copy(id = document.id)
 
-                    val cartList = mutableListOf<Cart>()
-                    querySnapshot?.let { snapshot ->
-                        for (document in snapshot.documents) {
-                            val cartItem = document.toObject(Cart::class.java)!!.copy(id = document.id)
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val productQuery =
+                                updatedProductsCollectionRef.document(cartItem.productId).get()
+                                    .await()
+                            if (productQuery.exists()) {
+                                val updatePriceOfProductInCart = mapOf<String, Any>(
+                                    "price" to productQuery["price"].toString().toBigDecimal()
+                                )
 
-                            CoroutineScope(Dispatchers.IO).launch {
-                                val productQuery =
-                                    updatedProductsCollectionRef.document(cartItem.productId).get().await()
-                                if (productQuery.exists()) {
-                                    val updatePriceOfProductInCart = mapOf<String, Any>(
-                                        "price" to productQuery["price"].toString().toBigDecimal()
-                                    )
-
-                                    userCartCollectionRef.document(userId).collection("cart")
-                                        .document(document.id)
-                                        .set(updatePriceOfProductInCart, SetOptions.merge()).await()
-                                }
+                                userCartCollectionRef.document(userId)
+                                    .collection(CART_SUB_COLLECTION)
+                                    .document(document.id)
+                                    .set(updatePriceOfProductInCart, SetOptions.merge()).await()
                             }
-                            cartList.add(cartItem)
                         }
-
+                        cartList.add(cartItem)
                     }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        updateTotalOfCart(userId)
-                    }
-                    offer(cartList)
                 }
-            awaitClose {
-                Log.d("CART LISTENER", "Removing cart listener")
-                cartListener.remove()
+                offer(cartList)
             }
+        awaitClose {
+            cartListener.remove()
         }
     }
 
-    suspend fun updateTotalOfCart(userId: String): Double {
-        // Update the totalOfCart whether the product per price changes or not to add the grand total of all subTotal.
-        val userCartQuery = userCartCollectionRef.document(userId).collection("cart").get().await()
-
-        if (userCartQuery != null) {
-
-            val cartList = mutableListOf<Cart>()
-            for (document in userCartQuery.documents) {
-                val cartItem = document.toObject(Cart::class.java)
-                cartItem?.let {
-                    cartList.add(it)
-                }
-            }
-
-            val updateTotalOfCart = mapOf<String, Any>(
-                "totalOfCart" to cartList.sumOf { it.subTotal }
-            )
-            val result = userCartCollectionRef.document(userId)
-                .set(updateTotalOfCart, SetOptions.merge())
-                .await()
-            if (result != null) {
-                val totalOfCart = cartList.sumOf { it.subTotal }
-                userInformationDao.updateTotalOfCart(userId, totalOfCart)
-                return totalOfCart
-            }
-        }
-        return 0.0
-    }
-
-    suspend fun addToCart(
+    suspend fun insert(
         userId: String,
         product: Product,
         inventory: Inventory
-    ): String {
+    ): Resource {
 
         val cartQuery =
             userCartCollectionRef.document(userId).collection("cart").document(product.id).get()
@@ -122,8 +88,10 @@ class CartRepositoryImpl @Inject constructor(
                     val result = userCartCollectionRef.document(userId).collection("cart")
                         .document(it.id).set(updateQuantityOfItemInCart, SetOptions.merge())
                         .await()
-                    if(result != null)
-                        return "Cart Updated"
+                    if (result != null) {
+                        return Resource.Success("Success", cartItem)
+
+                    }
                 }
             }
         } else {
@@ -142,19 +110,18 @@ class CartRepositoryImpl @Inject constructor(
                 .document(newItemInCart.id)
                 .set(newItemInCart)
                 .await()
-            if(result != null) {
-                updateTotalOfCart(userId)
-                return "Added ${newItemInCart.product.name} (${newItemInCart.sizeInv.size}) To Cart"
+            if (result != null) {
+                return Resource.Success("Added ${newItemInCart.product.name} (${newItemInCart.sizeInv.size}) To Cart", newItemInCart)
             }
         }
-        return "Error adding/updating cart"
+        return Resource.Error("Failed", null)
     }
 
-    suspend fun updateCartQuantity(
+    suspend fun updateQty(
         userId: String,
         cartId: String,
         flag: String,
-    ): Boolean {
+    ): Resource {
         val updateCartQtyQuery =
             userCartCollectionRef.document(userId).collection("cart").document(cartId).get().await()
 
@@ -177,40 +144,39 @@ class CartRepositoryImpl @Inject constructor(
                 val result =
                     userCartCollectionRef.document(userId).collection("cart").document(cartId)
                         .set(updateQuantityOfCartItem, SetOptions.merge()).await()
-                updateTotalOfCart(userId)
-                return result != null
+                return Resource.Success("Success", result != null)
 
             }
         }
-        return false
+        return Resource.Error("Failed", false)
     }
 
-    suspend fun deleteCartItem(
+    suspend fun delete(
         userId: String,
         cartId: String
-    ): Boolean {
+    ): Resource {
         val cartItemQuery =
             userCartCollectionRef.document(userId).collection("cart").document(cartId).get().await()
         if (cartItemQuery != null) {
             val result =
                 userCartCollectionRef.document(userId).collection("cart").document(cartId).delete()
                     .await()
-            return result != null
+            return Resource.Success("Success", result != null)
         }
-        return false
+        return Resource.Error("Failed", false)
     }
 
-    suspend fun deleteAllItemFromCart(
+    suspend fun deleteAll(
         userId: String
-    ): Boolean {
+    ): Resource {
         val cartQuery = userCartCollectionRef.document(userId).collection("cart").get().await()
         if (cartQuery != null) {
             for (cartItem in cartQuery.documents) {
                 userCartCollectionRef.document(userId).collection("cart").document(cartItem.id)
                     .delete().await()
             }
-            return true
+            return Resource.Success("Success", emptyList<Cart>())
         }
-        return false
+        return Resource.Error("Failed", null)
     }
 }

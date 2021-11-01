@@ -1,20 +1,21 @@
 package com.teampym.onlineclothingshopapplication.data.models
 
 import android.os.Parcelable
+import com.teampym.onlineclothingshopapplication.data.util.Status
 import kotlinx.android.parcel.Parcelize
 import java.math.BigDecimal
 import java.util.*
 
 @Parcelize
 data class Order(
-    val id: String,
     val userId: String,
-    val deliveryInformation: DeliveryInformation,
-    val orderDate: Date,
     val totalCost: Double,
-    val status: String,
     val paymentMethod: String,
-    val orderDetails: List<OrderDetail>
+    val id: String = "",
+    val status: String = Status.SHIPPING.toString(),
+    val orderDate: Long = System.currentTimeMillis(),
+    val deliveryInformation: DeliveryInformation = DeliveryInformation(),
+    val orderDetails: List<OrderDetail> = emptyList()
 ): Parcelable {
-    constructor(): this("", "", DeliveryInformation(), Date(0), 0.0, "", "", emptyList())
+    constructor(): this("", 0.0, "")
 }
