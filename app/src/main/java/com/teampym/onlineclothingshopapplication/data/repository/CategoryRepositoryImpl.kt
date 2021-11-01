@@ -4,6 +4,7 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.teampym.onlineclothingshopapplication.data.models.Category
+import com.teampym.onlineclothingshopapplication.data.util.CATEGORIES_COLLECTION
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -11,10 +12,10 @@ class CategoryRepositoryImpl @Inject constructor(
     private val db: FirebaseFirestore
 ) {
 
-    private val categoriesCollectionRef = db.collection("Categories")
+    private val categoriesCollectionRef = db.collection(CATEGORIES_COLLECTION)
 
     fun getCategories(): CollectionReference {
-        return db.collection("Categories")
+        return categoriesCollectionRef
     }
 
     // TODO("CRUD Operation for Categories collection")

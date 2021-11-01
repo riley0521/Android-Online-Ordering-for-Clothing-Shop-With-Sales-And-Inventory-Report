@@ -4,11 +4,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.firebase.ui.auth.data.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -31,7 +33,7 @@ class ProfileViewModel @Inject constructor(
     val verificationSpan = state.getLiveData<Long>(VERIFICATION_SPAN, 0)
 
     fun signOut(user: FirebaseAuth) = viewModelScope.launch {
-        userInformationDao.delete(user.currentUser?.uid!!)
+        userInformationDao.deleteAll()
         user.signOut()
     }
 
@@ -41,10 +43,13 @@ class ProfileViewModel @Inject constructor(
 
     fun checkIfUserIsRegisteredOrVerified(user: FirebaseUser) = viewModelScope.launch {
 
-        val currentUser = accountRepository.get(user.uid)
+        val currentUser: UserInformation = when(val res = accountRepository.get(user.uid)) {
+            is Resource.Error -> UserInformation()
+            is Resource.Success -> res.res as UserInformation
+        }
 
         when {
-            currentUser == null -> {
+            currentUser.firstName.isEmpty() -> {
                 profileEventChannel.send(ProfileEvent.NotRegistered)
             }
             user.isEmailVerified -> {

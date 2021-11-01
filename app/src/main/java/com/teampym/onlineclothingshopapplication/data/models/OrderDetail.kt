@@ -10,17 +10,14 @@ import java.util.*
 data class OrderDetail(
     val userId: String,
     val orderId: String,
-    val productId: String,
     val inventoryId: String,
-    val productName: String,
-    val productImage: String,
-    val productPrice: Double,
     val size: String,
     val quantity: Long,
     val subTotal: Double,
-    val dateSold: Long,
     val id: String = "",
+    val dateSold: Long = 0,
+    val product: Product = Product(),
     val isExchangeable: Boolean = false
 ): Parcelable {
-    constructor(): this("", "", "", "", "", "", 0.0, "", 0L, 0.0, 0)
+    constructor(): this("", "", "", "", 0L, 0.0)
 }

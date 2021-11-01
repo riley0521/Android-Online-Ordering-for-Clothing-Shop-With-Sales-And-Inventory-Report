@@ -12,7 +12,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
-import com.teampym.onlineclothingshopapplication.data.repository.CartFlag
+import com.teampym.onlineclothingshopapplication.data.util.CartFlag
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCartBinding
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject

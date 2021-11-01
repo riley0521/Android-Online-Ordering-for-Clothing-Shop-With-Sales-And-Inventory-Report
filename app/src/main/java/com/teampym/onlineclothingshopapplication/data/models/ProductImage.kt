@@ -6,9 +6,9 @@ import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 data class ProductImage(
-    val id: String,
     val productId: String,
-    val imageUrl: String
+    val imageUrl: String,
+    val id: String = ""
 ): Parcelable {
-    constructor(): this("", "", "")
+    constructor(): this("", "")
 }

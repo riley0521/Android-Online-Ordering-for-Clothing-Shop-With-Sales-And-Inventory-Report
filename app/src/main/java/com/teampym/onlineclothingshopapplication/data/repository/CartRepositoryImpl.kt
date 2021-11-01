@@ -1,6 +1,5 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
-import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
@@ -41,7 +40,7 @@ class CartRepositoryImpl @Inject constructor(
 
                         CoroutineScope(Dispatchers.IO).launch {
                             val productQuery =
-                                updatedProductsCollectionRef.document(cartItem.productId).get()
+                                updatedProductsCollectionRef.document(cartItem.product.id).get()
                                     .await()
                             if (productQuery.exists()) {
                                 val updatePriceOfProductInCart = mapOf<String, Any>(
@@ -70,49 +69,52 @@ class CartRepositoryImpl @Inject constructor(
         inventory: Inventory
     ): Resource {
 
-        val cartQuery =
-            userCartCollectionRef.document(userId).collection("cart").document(product.id).get()
-                .await()
+        val cartQuery = userCartCollectionRef
+            .document(userId)
+            .collection("cart")
+            .document(product.id)
+            .get()
+            .await()
 
         // check if the productId is existing in the user's cart. if true then update, if false then just add it.
-        if (cartQuery != null) {
+        if (cartQuery.data != null) {
+            val cartItem = cartQuery.toObject(Cart::class.java)!!.copy(id = cartQuery.id)
 
-            val cartItem = cartQuery.toObject(Cart::class.java)?.copy(id = cartQuery.id)
-
-            cartItem?.let {
-                if (it.id == product.id) {
+            cartItem.let {
+                if (it.product.id == product.id && it.userId == userId) {
                     val updateQuantityOfItemInCart = mapOf<String, Any>(
                         "quantity" to it.quantity + 1
                     )
 
-                    val result = userCartCollectionRef.document(userId).collection("cart")
-                        .document(it.id).set(updateQuantityOfItemInCart, SetOptions.merge())
-                        .await()
+                    val result =
+                        userCartCollectionRef.document(userId).collection(CART_SUB_COLLECTION)
+                            .document(it.id).set(updateQuantityOfItemInCart, SetOptions.merge())
+                            .await()
                     if (result != null) {
                         return Resource.Success("Success", cartItem)
-
                     }
                 }
             }
+
         } else {
-            val newItemInCart = Cart(
+            val newItem = Cart(
                 id = product.id,
                 userId = userId,
-                productId = product.id,
-                inventoryId = inventory.id,
                 product = product,
                 quantity = 1,
                 sizeInv = inventory,
-                subTotal = product.price
+                subTotal = 0.0
             )
+            newItem.subTotal = newItem.calculatedTotalPrice
 
-            val result = userCartCollectionRef.document(userId).collection("cart")
-                .document(newItemInCart.id)
-                .set(newItemInCart)
-                .await()
-            if (result != null) {
-                return Resource.Success("Added ${newItemInCart.product.name} (${newItemInCart.sizeInv.size}) To Cart", newItemInCart)
-            }
+            userCartCollectionRef.document(userId).collection(CART_SUB_COLLECTION)
+                .document(product.id)
+                .set(newItem)
+                .addOnSuccessListener {
+                    return@addOnSuccessListener
+                }.addOnFailureListener {
+
+                }
         }
         return Resource.Error("Failed", null)
     }

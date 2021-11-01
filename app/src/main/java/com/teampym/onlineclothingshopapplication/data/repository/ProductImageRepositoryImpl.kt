@@ -23,7 +23,7 @@ class ProductImageRepositoryImpl @Inject constructor(
 
         if(productImagesQuery != null) {
             for(document in productImagesQuery.documents) {
-                val copy = document.toObject<ProductImage>()!!.copy(id = document.id)
+                val copy = document.toObject<ProductImage>()!!.copy(id = document.id, productId = productId)
                 productImageList.add(copy)
             }
         }

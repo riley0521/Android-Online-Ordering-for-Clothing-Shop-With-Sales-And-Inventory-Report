@@ -8,6 +8,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.teampym.onlineclothingshopapplication.data.util.Utils
 import com.teampym.onlineclothingshopapplication.data.repository.ProductRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -35,12 +36,12 @@ class ProductViewModel @Inject constructor(
         val categoryId = _categoryQuery.value
         if (flag.isEmpty()) {
             queryProducts = if (search.isEmpty()) {
-                db.collection("Product")
+                db.collection(PRODUCTS_COLLECTION)
                     .whereEqualTo("categoryId", categoryId)
                     .orderBy("name", Query.Direction.ASCENDING)
                     .limit(30)
             } else {
-                db.collection("Product")
+                db.collection(PRODUCTS_COLLECTION)
                     .whereEqualTo("categoryId", categoryId)
                     .orderBy("name", Query.Direction.ASCENDING)
                     .startAt(search)
@@ -48,7 +49,7 @@ class ProductViewModel @Inject constructor(
                     .limit(30)
             }
         } else {
-            queryProducts = db.collection("Product")
+            queryProducts = db.collection(PRODUCTS_COLLECTION)
                 .whereEqualTo("categoryId", categoryId)
                 .whereEqualTo("flag", flag)
                 .limit(30)

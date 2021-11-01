@@ -26,7 +26,7 @@ class ProductInventoryRepositoryImpl @Inject constructor(
 
         if(inventoriesQuery != null) {
             for(document in inventoriesQuery.documents) {
-                val copy = document.toObject<Inventory>()!!.copy(id = document.id)
+                val copy = document.toObject<Inventory>()!!.copy(id = document.id, productId = productId)
                 inventoryList.add(copy)
             }
         }

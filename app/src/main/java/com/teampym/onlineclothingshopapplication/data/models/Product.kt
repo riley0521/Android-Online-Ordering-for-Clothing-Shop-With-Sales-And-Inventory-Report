@@ -16,9 +16,6 @@ data class Product(
     val price: Double,
     val flag: String,
     val type: String,
-    val inventories: String,
-    val productImages: String,
-    val reviews: String,
     val id: String = "",
     @get:Exclude
     val inventoryList: List<Inventory> = emptyList(),
@@ -34,10 +31,7 @@ data class Product(
         "",
         0.0,
         "",
-        "",
-        "",
-        "",
-        "",
+        ""
     )
 
     @Ignore
@@ -52,8 +46,8 @@ data class Product(
     @Ignore
     private val rList = object : TypeToken<List<Review>>() {}.type
 
-    fun getterInventories(): List<Inventory> = gson.fromJson(inventories, iList)
-    fun getterProductImages(): List<ProductImage> = gson.fromJson(productImages, piList)
-    fun getterReviews(): List<Review> = gson.fromJson(reviews, rList)
+//    fun getterInventories(): List<Inventory> = gson.fromJson(inventories, iList)
+//    fun getterProductImages(): List<ProductImage> = gson.fromJson(productImages, piList)
+//    fun getterReviews(): List<Review> = gson.fromJson(reviews, rList)
 
 }

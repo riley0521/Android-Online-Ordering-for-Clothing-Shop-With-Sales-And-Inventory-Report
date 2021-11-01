@@ -52,14 +52,10 @@ class OrderRepositoryImpl @Inject constructor(
     suspend fun create(userInformation: UserInformation, paymentMethod: String): Order? {
 
         val newOrder = Order(
-            id = "",
             userId = userInformation.userId,
-            deliveryInformation = userInformation.deliveryInformationList!!.first { it.default },
-            orderDate = Calendar.getInstance().time,
             totalCost = userInformation.totalOfCart,
-            status = Status.SHIPPING.toString(),
             paymentMethod = paymentMethod,
-            orderDetails = emptyList()
+            deliveryInformation = userInformation.deliveryInformationList.first { it.default }
         )
 
         val result = orderCollectionRef.add(newOrder).await()

@@ -29,6 +29,9 @@ interface UserInformationDao {
     @Query("DELETE FROM table_users WHERE userId = :userId")
     suspend fun delete(userId: String)
 
+    @Query("DELETE FROM table_users")
+    suspend fun deleteAll()
+
     @Transaction
     @Query("SELECT * FROM table_users WHERE userId = :userId")
     fun getCurrentUserWithDeliveryInfo(userId: String): List<UserWithDeliveryInfoAndTokens>

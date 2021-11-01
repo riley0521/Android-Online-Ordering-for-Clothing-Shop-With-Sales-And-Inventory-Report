@@ -6,6 +6,8 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.data.models.Review
+import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
+import com.teampym.onlineclothingshopapplication.data.util.REVIEWS_SUB_COLLECTION
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.emptyFlow
 import javax.inject.Inject
@@ -18,9 +20,9 @@ class ProductDetailViewModel @Inject constructor(
     var reviewsFlow = emptyFlow<PagingData<Review>>()
 
     fun provideQuery(productId: String) {
-        val queryReviews = db.collection("Product")
+        val queryReviews = db.collection(PRODUCTS_COLLECTION)
             .document(productId)
-            .collection("reviews")
+            .collection(REVIEWS_SUB_COLLECTION)
             .limit(30)
 
         reviewsFlow = Pager(

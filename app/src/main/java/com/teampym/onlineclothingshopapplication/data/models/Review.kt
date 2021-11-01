@@ -8,14 +8,14 @@ import java.util.*
 
 @Parcelize
 data class Review(
-    val id: String,
     val userId: String,
     val productId: String,
     val userAvatar: String,
     val username: String,
     val rate: Double,
     val description: String,
-    val dateReview: Date
+    val id: String = "",
+    val dateReview: Long = System.currentTimeMillis()
 ): Parcelable {
-    constructor(): this("", "", "", "", "", 0.0, "", Date(0))
+    constructor(): this("", "", "", "", 0.0, "")
 }

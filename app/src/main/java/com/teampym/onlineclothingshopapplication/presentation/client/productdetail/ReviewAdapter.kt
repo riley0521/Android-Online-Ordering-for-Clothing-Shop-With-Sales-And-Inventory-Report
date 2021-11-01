@@ -9,7 +9,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Review
-import com.teampym.onlineclothingshopapplication.data.models.toString
+import com.teampym.onlineclothingshopapplication.data.models.getDate
 import com.teampym.onlineclothingshopapplication.databinding.ReviewItemBinding
 import java.util.*
 
@@ -52,7 +52,7 @@ class ReviewAdapter : PagingDataAdapter<Review, ReviewAdapter.ReviewViewHolder>(
 
                 tvUsername.text = review.username
                 tvReview.text = review.description
-                tvDate.text = review.dateReview.toString("MM/dd/yyyy", Locale.ENGLISH)
+                tvDate.text = getDate(review.dateReview)
             }
 
         }

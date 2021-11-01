@@ -65,19 +65,12 @@ class AccountRepositoryImpl @Inject constructor(
         avatarUrl: String
     ): Resource {
         val newUser = UserInformation(
-            userId = userId,
             firstName = firstName,
             lastName = lastName,
             birthDate = birthDate,
             avatarUrl = avatarUrl,
-            userType = UserType.CUSTOMER.toString(),
             totalOfCart = 0.0,
-            deliveryInformation = "",
-            notificationTokens = "",
-            cart = "",
-            deliveryInformationList = emptyList(),
-            notificationTokenList = emptyList(),
-            cartList = emptyList()
+            userId = userId
         )
 
         val result = userCollectionRef

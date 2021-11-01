@@ -10,7 +10,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Product
-import com.teampym.onlineclothingshopapplication.data.repository.ProductFlag
+import com.teampym.onlineclothingshopapplication.data.util.ProductFlag
 import com.teampym.onlineclothingshopapplication.databinding.ProductItemBinding
 
 class ProductAdapter(
@@ -71,17 +71,17 @@ class ProductAdapter(
                 if (product.flag == ProductFlag.NORMAL.toString())
                     tvFlag.isVisible = false
 
-                product.inventoryList?.let { products ->
-                    val isOutOfStock = products.sumOf { it.stock } == 0L
+                product.inventoryList.let { inv ->
+                    val isOutOfStock = inv.sumOf { it.stock } == 0L
                     labelOutOfStock.isVisible = isOutOfStock
 
-                    val totalSold = products.sumOf { it.sold }
+                    val totalSold = inv.sumOf { it.sold }
                     labelNumberOfSold.text = "Sold $totalSold"
                 }
 
-                product.reviewList?.let { reviews ->
+                product.reviewList.let { reviews ->
                     val avgRate: Double = reviews.sumOf { it.rate }.div(reviews.size)
-                    labelRate.isVisible = true
+                    labelRate.isVisible = avgRate > 0
                     labelRate.text = avgRate.toString()
                 }
 

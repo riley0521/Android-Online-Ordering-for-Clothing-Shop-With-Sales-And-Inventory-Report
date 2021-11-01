@@ -73,11 +73,11 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
             }
         }
 
-        if (product.inventoryList!!.size == 1) {
+        if (product.inventoryList.size == 1) {
             // TODO("Directly Add to Cart")
 
-            viewModel.addToCart(userId, product, product.inventoryList!![0])
-            Toast.makeText(requireContext(), "Added ${product.inventoryList!![0].size} Size to your cart", Toast.LENGTH_LONG).show()
+            viewModel.addToCart(userId, product, product.inventoryList[0])
+            Toast.makeText(requireContext(), "Added ${product.inventoryList[0].size} Size to your cart", Toast.LENGTH_LONG).show()
             findNavController().popBackStack()
         }
 
@@ -91,7 +91,7 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
                 binding.btnAddToCart.isEnabled = binding.chipSizeGroup.checkedChipIds.count() == 1 && userId.isNotEmpty()
                 selectedInv = inventory
 
-                Log.d("PRODUCT", "${product.id} &&& ${selectedInv!!.id}")
+                Log.d("PRODUCTS", "${product.id} &&& ${selectedInv!!.id}")
             }
 
             binding.chipSizeGroup.addView(chip)

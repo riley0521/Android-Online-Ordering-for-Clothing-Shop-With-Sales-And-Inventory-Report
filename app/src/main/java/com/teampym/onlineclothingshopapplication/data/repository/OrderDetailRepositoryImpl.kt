@@ -71,19 +71,13 @@ class OrderDetailRepositoryImpl @Inject constructor(
     ) {
         for (cartItem in cart) {
             val newProd = OrderDetail(
-                id = "",
                 userId = userId,
                 orderId = orderId,
-                productId = cartItem.productId,
                 inventoryId = cartItem.sizeInv.id,
-                productName = cartItem.product.name,
-                productImage = cartItem.product.imageUrl,
+                product = cartItem.product,
                 size = cartItem.sizeInv.size,
-                productPrice = cartItem.product.price,
                 quantity = cartItem.quantity,
-                subTotal = cartItem.subTotal,
-                dateSold = null,
-                isExchangeable = false
+                subTotal = cartItem.subTotal
             )
 
             orderCollectionRef.document(orderId).collection(ORDER_DETAILS_SUB_COLLECTION)

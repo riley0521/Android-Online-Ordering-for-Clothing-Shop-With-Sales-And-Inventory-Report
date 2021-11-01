@@ -16,6 +16,8 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.ProductImage
+import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
+import com.teampym.onlineclothingshopapplication.data.util.REVIEWS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductDetailBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.product_item.*
@@ -60,9 +62,9 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
         }
 
         lifecycleScope.launchWhenStarted {
-            val queryReviews = db.collection("Product")
+            val queryReviews = db.collection(PRODUCTS_COLLECTION)
                 .document(product.id)
-                .collection("reviews")
+                .collection(REVIEWS_SUB_COLLECTION)
                 .get()
                 .await()
 
