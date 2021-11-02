@@ -17,35 +17,52 @@ class ProductImageRepositoryImpl @Inject constructor(
     // TODO("ProductImages Collection operation - Add and Delete")
 
     suspend fun getAll(productId: String): List<ProductImage> {
-        val productImagesQuery = productCollectionRef.document(productId).collection(PRODUCT_IMAGES_SUB_COLLECTION)
-            .get().await()
+        val productImagesQuery = productCollectionRef
+            .document(productId)
+            .collection(PRODUCT_IMAGES_SUB_COLLECTION)
+            .get()
+            .await()
+
         val productImageList = mutableListOf<ProductImage>()
 
-        if(productImagesQuery != null) {
-            for(document in productImagesQuery.documents) {
-                val copy = document.toObject<ProductImage>()!!.copy(id = document.id, productId = productId)
+        if (productImagesQuery != null) {
+            for (document in productImagesQuery.documents) {
+                val copy = document.toObject<ProductImage>()!!
+                    .copy(id = document.id, productId = productId)
                 productImageList.add(copy)
             }
         }
         return productImageList
     }
 
-    suspend fun create(productImage: ProductImage): ProductImage? {
-        val result =
-            productCollectionRef.document(productImage.productId).collection(
-                PRODUCT_IMAGES_SUB_COLLECTION)
-                .add(productImage).await()
-        if (result != null)
-            return productImage.copy(id = result.id)
-        return null
+    suspend fun create(productImage: ProductImage): Boolean {
+
+        var isCreated = false
+        productCollectionRef
+            .document(productImage.productId)
+            .collection(PRODUCT_IMAGES_SUB_COLLECTION)
+            .add(productImage)
+            .addOnSuccessListener {
+                isCreated = true
+            }.addOnFailureListener {
+                // Add crashlytics later on
+            }
+        return isCreated
     }
 
     suspend fun delete(productImage: ProductImage): Boolean {
-        val result =
-            productCollectionRef.document(productImage.productId).collection(
-                PRODUCT_IMAGES_SUB_COLLECTION)
-                .document(productImage.id).delete().await()
-        return result != null
+        var isDeleted = false
+            productCollectionRef
+                .document(productImage.productId)
+                .collection(PRODUCT_IMAGES_SUB_COLLECTION)
+                .document(productImage.id)
+                .delete()
+                .addOnSuccessListener {
+                    isDeleted = true
+                }.addOnFailureListener {
+                    // Add crashlytics later on
+                }
+        return isDeleted
     }
 
 }

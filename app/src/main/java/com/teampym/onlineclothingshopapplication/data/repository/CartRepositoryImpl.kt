@@ -124,14 +124,18 @@ class CartRepositoryImpl @Inject constructor(
         cartId: String,
         flag: String,
     ): Resource {
-        val updateCartQtyQuery =
-            userCartCollectionRef.document(userId).collection("cart").document(cartId).get().await()
+        val updateCartQtyQuery = userCartCollectionRef
+            .document(userId)
+            .collection(CART_SUB_COLLECTION)
+            .document(cartId)
+            .get()
+            .await()
 
-        if (updateCartQtyQuery != null) {
+        if (updateCartQtyQuery.data != null) {
 
-            val cartItemToUpdate = updateCartQtyQuery.toObject(Cart::class.java)
+            val cartItemToUpdate = updateCartQtyQuery.toObject(Cart::class.java)!!.copy(id = updateCartQtyQuery.id)
 
-            cartItemToUpdate?.let {
+            cartItemToUpdate.let {
                 val newQuantity = when (flag) {
                     CartFlag.ADDING.toString() -> it.quantity + 1
                     CartFlag.REMOVING.toString() -> it.quantity - 1
@@ -140,14 +144,16 @@ class CartRepositoryImpl @Inject constructor(
 
                 val updateQuantityOfCartItem = mapOf<String, Any>(
                     "quantity" to newQuantity,
-                    "subTotal" to (it.product!!.price * newQuantity.toDouble())
+                    "subTotal" to (it.product.price * newQuantity.toDouble())
                 )
 
-                val result =
-                    userCartCollectionRef.document(userId).collection("cart").document(cartId)
-                        .set(updateQuantityOfCartItem, SetOptions.merge()).await()
+                val result = userCartCollectionRef
+                    .document(userId)
+                    .collection(CART_SUB_COLLECTION)
+                    .document(cartId)
+                    .set(updateQuantityOfCartItem, SetOptions.merge())
+                    .await()
                 return Resource.Success("Success", result != null)
-
             }
         }
         return Resource.Error("Failed", false)
@@ -157,12 +163,20 @@ class CartRepositoryImpl @Inject constructor(
         userId: String,
         cartId: String
     ): Resource {
-        val cartItemQuery =
-            userCartCollectionRef.document(userId).collection("cart").document(cartId).get().await()
-        if (cartItemQuery != null) {
-            val result =
-                userCartCollectionRef.document(userId).collection("cart").document(cartId).delete()
-                    .await()
+        val cartItemQuery = userCartCollectionRef
+            .document(userId)
+            .collection(CART_SUB_COLLECTION)
+            .document(cartId)
+            .get()
+            .await()
+
+        if (cartItemQuery.data != null) {
+            val result = userCartCollectionRef
+                .document(userId)
+                .collection(CART_SUB_COLLECTION)
+                .document(cartId)
+                .delete()
+                .await()
             return Resource.Success("Success", result != null)
         }
         return Resource.Error("Failed", false)
@@ -171,11 +185,20 @@ class CartRepositoryImpl @Inject constructor(
     suspend fun deleteAll(
         userId: String
     ): Resource {
-        val cartQuery = userCartCollectionRef.document(userId).collection("cart").get().await()
-        if (cartQuery != null) {
+        val cartQuery = userCartCollectionRef
+            .document(userId)
+            .collection(CART_SUB_COLLECTION)
+            .get()
+            .await()
+
+        if (cartQuery.documents.isNotEmpty()) {
             for (cartItem in cartQuery.documents) {
-                userCartCollectionRef.document(userId).collection("cart").document(cartItem.id)
-                    .delete().await()
+                userCartCollectionRef
+                    .document(userId)
+                    .collection(CART_SUB_COLLECTION)
+                    .document(cartItem.id)
+                    .delete()
+                    .await()
             }
             return Resource.Success("Success", emptyList<Cart>())
         }
