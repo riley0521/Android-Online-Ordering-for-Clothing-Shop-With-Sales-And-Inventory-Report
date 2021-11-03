@@ -108,16 +108,16 @@ class CartRepositoryImpl @Inject constructor(
         val cartQuery = userCartCollectionRef
             .document(userId)
             .collection("cart")
-            .document(product.id)
+            .document(inventory.id)
             .get()
             .await()
 
         // check if the productId is existing in the user's cart. if true then update, if false then just add it.
         if (cartQuery.data != null) {
-            val cartItem = cartQuery.toObject(Cart::class.java)!!.copy(id = cartQuery.id)
+            val cartItem = cartQuery.toObject(Cart::class.java)?.copy(id = cartQuery.id)
 
-            cartItem.let { obj ->
-                if (obj.product.id == product.id && obj.userId == userId) {
+            cartItem?.let { obj ->
+                if (obj.sizeInv.id == inventory.id && obj.userId == userId) {
 
                     obj.quantity += 1
                     val updateQuantityOfItemInCart = mapOf<String, Any>(
@@ -143,7 +143,7 @@ class CartRepositoryImpl @Inject constructor(
             }
         } else {
             val newItem = Cart(
-                id = product.id,
+                id = inventory.id,
                 userId = userId,
                 product = product,
                 quantity = 1,
@@ -153,8 +153,10 @@ class CartRepositoryImpl @Inject constructor(
             newItem.subTotal = newItem.calculatedTotalPrice.toDouble()
 
             var isCreated = false
-            userCartCollectionRef.document(userId).collection(CART_SUB_COLLECTION)
-                .document(product.id)
+            userCartCollectionRef
+                .document(userId)
+                .collection(CART_SUB_COLLECTION)
+                .document(inventory.id)
                 .set(newItem)
                 .addOnSuccessListener {
                     isCreated = true
