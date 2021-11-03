@@ -2,8 +2,8 @@ package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.db.CartDao
-import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.Cart
 import com.teampym.onlineclothingshopapplication.data.models.Inventory
 import com.teampym.onlineclothingshopapplication.data.models.Product
@@ -21,11 +21,13 @@ class CartRepositoryImpl @Inject constructor(
 ) {
 
     private val userCartCollectionRef = db.collection(USERS_COLLECTION)
-    private val updatedProductsCollectionRef = db.collection(PRODUCTS_COLLECTION)
+    private val productsCollectionRef = db.collection(PRODUCTS_COLLECTION)
 
 
     // TODO("Use a flow to get updates in cart collection instantly")
-    fun getAll(userId: String): Flow<List<Cart>> = callbackFlow {
+    fun getAll(userId: String): Flow<MutableList<Cart>> = callbackFlow {
+
+        // Add snapshot listener to cart
         val cartListener = userCartCollectionRef.document(userId)
             .collection(CART_SUB_COLLECTION)
             .addSnapshotListener { querySnapshot, firebaseException ->
@@ -36,22 +38,55 @@ class CartRepositoryImpl @Inject constructor(
 
                 val cartList = mutableListOf<Cart>()
                 querySnapshot?.let { snapshot ->
+
+                    // loop all items in cart
                     for (document in snapshot.documents) {
                         val cartItem = document.toObject(Cart::class.java)!!.copy(id = document.id)
 
                         CoroutineScope(Dispatchers.IO).launch {
-                            val productQuery =
-                                updatedProductsCollectionRef.document(cartItem.product.id).get()
-                                    .await()
-                            if (productQuery.exists()) {
-                                val updatePriceOfProductInCart = mapOf<String, Any>(
-                                    "price" to productQuery["price"].toString().toBigDecimal()
-                                )
 
-                                userCartCollectionRef.document(userId)
-                                    .collection(CART_SUB_COLLECTION)
-                                    .document(document.id)
-                                    .set(updatePriceOfProductInCart, SetOptions.merge()).await()
+                            // get corresponding product (cartItem.id == product.id)
+                            val productQuery = productsCollectionRef
+                                .document(cartItem.product.id)
+                                .get()
+                                .await()
+
+                            if (productQuery.data != null) {
+
+                                val pr = productQuery.toObject<Product>()!!
+                                    .copy(id = productQuery.id)
+
+                                // get corresponding inventory of a single product (product.id == inventory.productId)
+                                val inventoryQuery = productsCollectionRef
+                                    .document(pr.id)
+                                    .collection(INVENTORIES_SUB_COLLECTION)
+                                    .document(cartItem.sizeInv.id)
+                                    .get()
+                                    .await()
+
+                                if(inventoryQuery.data != null) {
+                                    val inv = inventoryQuery.toObject<Inventory>()!!
+                                        .copy(id = inventoryQuery.id, productId = cartItem.product.id)
+
+                                    // create update map.
+                                    val updatePriceOfProductInCart = mapOf<String, Any>(
+                                        "product.price" to pr.price,
+                                        "sizeInv.stock" to inv.stock,
+                                        "subTotal" to cartItem.quantity * pr.price,
+                                    )
+
+                                    userCartCollectionRef
+                                        .document(userId)
+                                        .collection(CART_SUB_COLLECTION)
+                                        .document(document.id)
+                                        .update(updatePriceOfProductInCart)
+                                        .addOnSuccessListener {
+
+                                        }.addOnFailureListener {
+
+                                        }
+                                }
+
                             }
                         }
                         cartList.add(cartItem)
@@ -134,49 +169,39 @@ class CartRepositoryImpl @Inject constructor(
         return Resource.Error("Failed", false)
     }
 
-    suspend fun updateQty(
+    suspend fun update(
         userId: String,
-        cartId: String,
-        flag: String,
-    ): Resource {
-        val updateCartQtyQuery = userCartCollectionRef
-            .document(userId)
-            .collection(CART_SUB_COLLECTION)
-            .document(cartId)
-            .get()
-            .await()
+        cart: List<Cart>
+    ): Boolean {
 
-        if (updateCartQtyQuery.data != null) {
+        var isUpdated = false
+        for(item in cart) {
+            val cartQuery = userCartCollectionRef
+                .document(userId)
+                .collection(CART_SUB_COLLECTION)
+                .document(item.id)
+                .get()
+                .await()
 
-            val cartItemToUpdate = updateCartQtyQuery.toObject(Cart::class.java)!!.copy(id = updateCartQtyQuery.id)
-
-            cartItemToUpdate.let {
-                val newQuantity = when (flag) {
-                    CartFlag.ADDING.toString() -> it.quantity + 1
-                    CartFlag.REMOVING.toString() -> it.quantity - 1
-                    else -> 0L
-                }
-
-                val updateQuantityOfCartItem = mapOf<String, Any>(
-                    "quantity" to newQuantity,
-                    "subTotal" to (it.product.price * newQuantity.toDouble())
+            if(cartQuery.data != null) {
+                val updateCartQty = mapOf<String, Any>(
+                    "quantity" to item.quantity,
+                    "subTotal" to item.subTotal
                 )
 
-                var isQtyUpdated = false
                 userCartCollectionRef
                     .document(userId)
                     .collection(CART_SUB_COLLECTION)
-                    .document(cartId)
-                    .set(updateQuantityOfCartItem, SetOptions.merge())
+                    .document(item.id)
+                    .update(updateCartQty)
                     .addOnSuccessListener {
-                        isQtyUpdated = true
+                        isUpdated = true
                     }.addOnFailureListener {
 
                     }
-                return Resource.Success("Success", isQtyUpdated)
             }
         }
-        return Resource.Error("Failed", false)
+        return isUpdated
     }
 
     suspend fun delete(

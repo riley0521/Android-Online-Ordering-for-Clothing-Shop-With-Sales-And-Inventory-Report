@@ -76,7 +76,9 @@ class ProductAdapter(
                     labelOutOfStock.isVisible = isOutOfStock
 
                     val totalSold = inv.sumOf { it.sold }
-                    labelNumberOfSold.text = "Sold $totalSold"
+                    val totalTxt = "Sold $totalSold"
+                    labelNumberOfSold.isVisible = totalSold > 0
+                    labelNumberOfSold.text = totalTxt
                 }
 
                 product.reviewList.let { reviews ->

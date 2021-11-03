@@ -15,6 +15,7 @@
         android:text="@string/label_no_items_yet"
         android:textAppearance="?attr/textAppearanceHeadline5"
         android:textStyle="bold"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@id/recyclerViewCart"
         app:layout_constraintEnd_toEndOf="@id/recyclerViewCart"
         app:layout_constraintStart_toStartOf="@id/recyclerViewCart"

@@ -1,6 +1,8 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.models.Inventory
@@ -27,7 +29,7 @@ class ProductInventoryRepositoryImpl @Inject constructor(
 
         val inventoryList = mutableListOf<Inventory>()
 
-        if (inventoriesQuery != null) {
+        if (inventoriesQuery.documents.isNotEmpty()) {
             for (document in inventoriesQuery.documents) {
                 val copy =
                     document.toObject<Inventory>()!!.copy(id = document.id, productId = productId)

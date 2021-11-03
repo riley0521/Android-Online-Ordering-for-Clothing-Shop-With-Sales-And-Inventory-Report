@@ -11,7 +11,7 @@ interface NotificationTokenDao {
     suspend fun insert(notificationToken: NotificationToken)
 
     @Insert(onConflict = REPLACE)
-    suspend fun insertAll(vararg notificationTokens: NotificationToken)
+    suspend fun insertAll(notificationTokens: List<NotificationToken>)
 
     @Update
     suspend fun update(notificationToken: NotificationToken)

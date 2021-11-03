@@ -12,7 +12,6 @@
         android:layout_height="wrap_content"
         android:padding="8dp">
 
-
         <ImageView
             android:id="@+id/imgCartProduct"
             android:layout_width="100dp"

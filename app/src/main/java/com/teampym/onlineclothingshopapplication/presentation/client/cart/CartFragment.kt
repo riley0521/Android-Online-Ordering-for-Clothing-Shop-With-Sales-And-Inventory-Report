@@ -5,17 +5,13 @@ import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
-import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
-import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.util.CartFlag
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCartBinding
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartListener {
@@ -28,63 +24,64 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
     private var userId = ""
 
-    @Inject
-    lateinit var userInformationDao: UserInformationDao
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentCartBinding.bind(view)
 
-        val user = FirebaseAuth.getInstance().currentUser
-
         adapter = CartAdapter(this)
 
-        lifecycleScope.launchWhenStarted {
-
-            if(user != null) {
-                viewModel.getCart(user.uid)
-            } else {
-                Toast.makeText(requireContext(), "Please log in first to view your cart.", Toast.LENGTH_LONG).show()
-                findNavController().navigate(R.id.action_cartFragment_to_categoryFragment)
-            }
-
-            viewModel.userInformation.observe(viewLifecycleOwner) {
-
-                if(it != null) {
-                    userId = it.userId
-
-                    val total = "$${it.totalOfCart.toBigDecimal()}"
-                    binding.tvMerchandiseTotal.text = total
-                    binding.recyclerViewCart.visibility = View.INVISIBLE
-                    binding.labelNoCartItem.visibility = View.VISIBLE
-                }
-            }
-
-            viewModel.cart.observe(viewLifecycleOwner) {
-                if (it != null) {
-                    adapter.submitList(it)
-
-                    // TODO("Display totalOfCart")
-                }
-            }
+        if (getFirebaseUser() == null) {
+            Toast.makeText(
+                requireContext(),
+                "Please log in first to view your cart.",
+                Toast.LENGTH_LONG
+            ).show()
+            findNavController().navigate(R.id.action_cartFragment_to_categoryFragment)
         }
 
         binding.apply {
             recyclerViewCart.setHasFixedSize(true)
             recyclerViewCart.adapter = adapter
         }
+
+        viewModel.userInformation.observe(viewLifecycleOwner) {
+            if (it != null) {
+                userId = it.userId
+            }
+        }
+
+        viewModel.cart.observe(viewLifecycleOwner) { cart ->
+            adapter.submitList(cart)
+
+            if(cart.isEmpty()) {
+                binding.recyclerViewCart.visibility = View.INVISIBLE
+                binding.labelNoCartItem.visibility = View.VISIBLE
+            }
+
+            val total = "$${cart.sumOf { it.calculatedTotalPrice }}"
+            binding.tvMerchandiseTotal.text = total
+        }
     }
 
-    override fun onAddQuantity(cartId: String) {
-        viewModel.updateCartItemQty(userId, cartId, CartFlag.ADDING.toString())
+    private fun getFirebaseUser() = FirebaseAuth.getInstance().currentUser
+
+    override fun onAddQuantity(cartId: String, pos: Int) {
+        viewModel.updateQty(cartId, CartFlag.ADDING.toString())
+        adapter.notifyItemChanged(pos)
     }
 
-    override fun onRemoveQuantity(cartId: String) {
-        viewModel.updateCartItemQty(userId, cartId, CartFlag.REMOVING.toString())
+    override fun onRemoveQuantity(cartId: String, pos: Int) {
+        viewModel.updateQty(cartId, CartFlag.REMOVING.toString())
+        adapter.notifyItemChanged(pos)
     }
 
     override fun onFailure(msg: String) {
         Snackbar.make(requireView(), msg, Snackbar.LENGTH_SHORT).show()
+    }
+
+    override fun onStop() {
+        viewModel.updateCart(userId, adapter.currentList)
+        super.onStop()
     }
 }

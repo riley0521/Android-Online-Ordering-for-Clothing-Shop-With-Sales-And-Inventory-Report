@@ -19,7 +19,7 @@ class CartAdapter(
     companion object {
         private val CART_COMPARATOR = object : DiffUtil.ItemCallback<Cart>() {
             override fun areItemsTheSame(oldItem: Cart, newItem: Cart) =
-                oldItem.product.id == newItem.product.id
+                oldItem.id == newItem.id
 
             override fun areContentsTheSame(oldItem: Cart, newItem: Cart) =
                 oldItem == newItem
@@ -51,8 +51,11 @@ class CartAdapter(
                         if(isMaximum) {
                             listener.onFailure("You have reached the maximum stocks available for this item.")
                         }
+                        else if(item.quantity + 1 == 100.toLong()) {
+                            listener.onFailure("You can only have 99 pieces per item.")
+                        }
                         else {
-                            listener.onAddQuantity(item.id)
+                            listener.onAddQuantity(item.id, position)
                         }
                     }
                 }
@@ -66,7 +69,7 @@ class CartAdapter(
                             listener.onFailure("1 is the minimum quantity.")
                         }
                         else {
-                            listener.onRemoveQuantity(item.id)
+                            listener.onRemoveQuantity(item.id, position)
                         }
                     }
                 }
@@ -84,21 +87,24 @@ class CartAdapter(
                     .error(R.drawable.ic_food)
                     .into(imgCartProduct)
 
+                labelCart.text = cart.product.name
+
                 tvPrice.text = "$${cart.product.price}"
                 tvSize.text = "(${cart.sizeInv.size})"
                 tvTotal.text = "$" + "%.2f".format(cart.calculatedTotalPrice)
                 tvCount.text = "${cart.quantity}"
 
-                btnAdd.isVisible = cart.sizeInv.stock > cart.quantity
-                btnRemove.isVisible = cart.quantity != 1.toLong()
+                val isMax = cart.sizeInv.stock == cart.quantity || cart.quantity == 99.toLong()
+                btnAdd.isVisible = !isMax
+                btnRemove.isVisible = cart.quantity > 1.toLong()
             }
         }
 
     }
 
     interface OnItemCartListener {
-        fun onAddQuantity(cartId: String)
-        fun onRemoveQuantity(cartId: String)
+        fun onAddQuantity(cartId: String, pos: Int)
+        fun onRemoveQuantity(cartId: String, pos: Int)
         fun onFailure(msg: String)
     }
 }
