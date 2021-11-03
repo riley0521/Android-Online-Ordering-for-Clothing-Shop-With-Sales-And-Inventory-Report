@@ -16,6 +16,7 @@ class ProductRepositoryImpl @Inject constructor(
     private val db: FirebaseFirestore,
     private val productImageRepository: ProductImageRepositoryImpl,
     private val productInventoryRepository: ProductInventoryRepositoryImpl,
+    private val reviewRepository: ReviewRepositoryImpl,
     private val accountRepository: AccountRepositoryImpl
 ) {
 
@@ -28,7 +29,12 @@ class ProductRepositoryImpl @Inject constructor(
                 pageSize = 30
             )
         ) {
-            ProductPagingSource(queryProducts, productImageRepository, productInventoryRepository)
+            ProductPagingSource(
+                queryProducts,
+                productImageRepository,
+                productInventoryRepository,
+                reviewRepository
+            )
         }
 
     // TODO("CRUD Operations for Product Collection")
@@ -42,10 +48,13 @@ class ProductRepositoryImpl @Inject constructor(
 
             val inventoryList = productInventoryRepository.getAll(productId)
 
+            val reviewList = reviewRepository.getFive(productId)
+
             return product.copy(
                 id = productQuery.id,
                 productImageList = productImageList,
-                inventoryList = inventoryList
+                inventoryList = inventoryList,
+                reviewList = reviewList
             )
         }
         return Product()

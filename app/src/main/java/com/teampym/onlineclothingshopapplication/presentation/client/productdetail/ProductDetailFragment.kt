@@ -44,37 +44,21 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
 
         binding = FragmentProductDetailBinding.bind(view)
 
-        val product = args.product
+        var product = args.product
+        val productId = args.productId
+
+        if(product == null) {
+           product = viewModel.getProductById(productId!!)
+        }
 
         adapter = ReviewAdapter()
 
         binding.btnAddToCart.setOnClickListener {
-            val action = ProductDetailFragmentDirections.actionProductDetailFragmentToInventoryModalFragment(product)
+            val action = ProductDetailFragmentDirections.actionProductDetailFragmentToInventoryModalFragment(product!!)
             findNavController().navigate(action)
         }
 
         lifecycleScope.launchWhenStarted {
-            viewModel.provideQuery(product.id)
-
-            viewModel.reviewsFlow.collect {
-                adapter.submitData(it)
-            }
-        }
-
-        lifecycleScope.launchWhenStarted {
-            val queryReviews = db.collection(PRODUCTS_COLLECTION)
-                .document(product.id)
-                .collection(REVIEWS_SUB_COLLECTION)
-                .get()
-                .await()
-
-            var rate = 0.0
-
-            if (queryReviews.size() > 0)
-                for (review in queryReviews.documents) {
-                    rate += review.getDouble("rate")!!
-                }
-
             binding.apply {
 
                 Glide.with(requireView())
@@ -92,16 +76,22 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                     findNavController().navigate(action)
                 }
 
-                if (rate == 0.0) {
-                    tvRate.text = rate.toString()
+                // submit list to the adapter if the reviewList is not empty.
+                if(product.reviewList.isNotEmpty()) {
+                    adapter.submitList(product.reviewList)
 
-                    labelNoReviews.isVisible = true
-                } else {
-                    tvRate.text = rate.toString()
+                    val rate = product.avgRate
 
-                    // Load Reviews here.
-                    recyclerReviews.setHasFixedSize(true)
-                    recyclerReviews.adapter = adapter
+                    if (rate == 0.0) {
+                        tvRate.text = rate.toString()
+                        labelNoReviews.isVisible = true
+                    } else {
+                        tvRate.text = rate.toString()
+
+                        // Load Reviews here.
+                        recyclerReviews.setHasFixedSize(true)
+                        recyclerReviews.adapter = adapter
+                    }
                 }
             }
         }

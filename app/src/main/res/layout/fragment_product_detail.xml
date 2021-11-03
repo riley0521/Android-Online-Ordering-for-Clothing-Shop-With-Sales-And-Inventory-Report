@@ -1,182 +1,192 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/prodDetailLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".presentation.client.productdetail.ProductDetailFragment">
+    android:layout_height="match_parent">
 
-
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <ScrollView
+        android:id="@+id/prodDetailLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <ImageView
-            android:id="@+id/imgProduct"
-            android:layout_width="0dp"
-            android:layout_height="150dp"
-            android:contentDescription="@string/image_product_description"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0"
-            tools:src="@tools:sample/avatars" />
-
-        <TextView
-            android:id="@+id/tvProductName"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
-            android:ellipsize="end"
-            android:maxLines="2"
-            android:text="@string/product_name"
-            android:textAppearance="?attr/textAppearanceHeadline6"
-            app:layout_constraintBottom_toTopOf="@id/tvPrice"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/imgProduct"
-            app:layout_constraintVertical_bias="0.0" />
-
-        <TextView
-            android:id="@+id/tvPrice"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
-            android:text="$14.99"
-            android:textAppearance="?attr/textAppearanceBody2"
-            android:textStyle="bold|italic"
-            app:layout_constraintBottom_toTopOf="@id/labelDescription"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvProductName" />
-
-        <TextView
-            android:id="@+id/labelDescription"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
-            android:text="@string/label_description"
-            android:textAppearance="?attr/textAppearanceHeadline6"
-            app:layout_constraintBottom_toTopOf="@id/tvDescription"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvPrice" />
-
-        <TextView
-            android:id="@+id/tvDescription"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="32dp"
-            android:layout_marginBottom="16dp"
-            android:ellipsize="end"
-            android:maxLines="4"
-            android:text="@string/long_sentence"
-            android:textAppearance="?attr/textAppearanceBody2"
-            app:layout_constraintBottom_toTopOf="@id/labelRate"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/labelDescription" />
-
-        <TextView
-            android:id="@+id/labelRate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:text="@string/label_rate"
-            android:textAppearance="?attr/textAppearanceHeadline6"
-            app:layout_constraintBottom_toTopOf="@id/labelReview"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvDescription" />
-
-        <TextView
-            android:id="@+id/tvRate"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
-            android:text="3.5"
-            android:textAppearance="?attr/textAppearanceHeadline6"
-            app:layout_constraintBottom_toTopOf="@id/labelReview"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toEndOf="@id/labelRate"
-            app:layout_constraintTop_toBottomOf="@id/tvDescription"
-            app:layout_constraintVertical_bias="0.65" />
-
-        <TextView
-            android:id="@+id/labelReview"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
-            android:text="@string/label_reviews"
-            android:textAppearance="?attr/textAppearanceHeadline6"
-            app:layout_constraintBottom_toTopOf="@id/recyclerReviews"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/labelRate" />
-
-        <TextView
-            android:id="@+id/labelNoReviews"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:gravity="center_horizontal"
-            android:text="@string/label_no_reviews_yet"
-            android:textAppearance="?attr/textAppearanceHeadline6"
-            app:layout_constraintBottom_toBottomOf="@id/recyclerReviews"
-            app:layout_constraintEnd_toEndOf="@id/recyclerReviews"
-            app:layout_constraintStart_toStartOf="@id/recyclerReviews"
-            app:layout_constraintTop_toTopOf="@id/recyclerReviews" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerReviews"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginBottom="8dp"
-            android:padding="8dp"
-            android:visibility="invisible"
-            tools:listitem="@layout/cart_item_final"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_constraintBottom_toBottomOf="@id/btnAddToCart"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/labelReview" />
-
-        <Button
-            android:id="@+id/btnAddToCart"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:gravity="center_horizontal"
-            android:text="@string/button_add_to_cart"
-            android:textAppearance="?attr/textAppearanceHeadline6"
-            app:layout_constraintTop_toBottomOf="@id/recyclerReviews"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+        android:layout_height="match_parent"
+        tools:context=".presentation.client.productdetail.ProductDetailFragment">
 
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</ScrollView>
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/imgProduct"
+                android:layout_width="0dp"
+                android:layout_height="150dp"
+                android:contentDescription="@string/image_product_description"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.0"
+                tools:src="@tools:sample/avatars" />
+
+            <TextView
+                android:id="@+id/tvProductName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:text="@string/product_name"
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                app:layout_constraintBottom_toTopOf="@id/tvPrice"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/imgProduct"
+                app:layout_constraintVertical_bias="0.0" />
+
+            <TextView
+                android:id="@+id/tvPrice"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:text="$14.99"
+                android:textAppearance="?attr/textAppearanceBody2"
+                android:textStyle="bold|italic"
+                app:layout_constraintBottom_toTopOf="@id/labelDescription"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvProductName" />
+
+            <TextView
+                android:id="@+id/labelDescription"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:text="@string/label_description"
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                app:layout_constraintBottom_toTopOf="@id/tvDescription"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvPrice" />
+
+            <TextView
+                android:id="@+id/tvDescription"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="32dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="32dp"
+                android:layout_marginBottom="16dp"
+                android:ellipsize="end"
+                android:maxLines="4"
+                android:text="@string/long_sentence"
+                android:textAppearance="?attr/textAppearanceBody2"
+                app:layout_constraintBottom_toTopOf="@id/labelRate"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/labelDescription" />
+
+            <TextView
+                android:id="@+id/labelRate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/label_rate"
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                app:layout_constraintBottom_toTopOf="@id/labelReview"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvDescription" />
+
+            <TextView
+                android:id="@+id/tvRate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:text="3.5"
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                app:layout_constraintBottom_toTopOf="@id/labelReview"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toEndOf="@id/labelRate"
+                app:layout_constraintTop_toBottomOf="@id/tvDescription"
+                app:layout_constraintVertical_bias="0.65" />
+
+            <TextView
+                android:id="@+id/labelReview"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:text="@string/label_reviews"
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                app:layout_constraintBottom_toTopOf="@id/recyclerReviews"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/labelRate" />
+
+            <TextView
+                android:id="@+id/labelNoReviews"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:gravity="center_horizontal"
+                android:text="@string/label_no_reviews_yet"
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                app:layout_constraintBottom_toBottomOf="@id/recyclerReviews"
+                app:layout_constraintEnd_toEndOf="@id/recyclerReviews"
+                app:layout_constraintStart_toStartOf="@id/recyclerReviews"
+                app:layout_constraintTop_toTopOf="@id/recyclerReviews" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerReviews"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                android:padding="8dp"
+                android:visibility="invisible"
+                tools:listitem="@layout/cart_item_final"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/labelReview" />
+
+
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+
+    <Button
+        android:id="@+id/btnAddToCart"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:text="@string/button_add_to_cart"
+        android:textAppearance="?attr/textAppearanceHeadline6"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/prodDetailLayout"
+        app:layout_constraintVertical_bias="0.9" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

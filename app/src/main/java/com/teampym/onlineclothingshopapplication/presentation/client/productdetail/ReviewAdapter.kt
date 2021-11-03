@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
@@ -13,7 +14,7 @@ import com.teampym.onlineclothingshopapplication.data.models.getDate
 import com.teampym.onlineclothingshopapplication.databinding.ReviewItemBinding
 import java.util.*
 
-class ReviewAdapter : PagingDataAdapter<Review, ReviewAdapter.ReviewViewHolder>(REVIEW_COMPARATOR) {
+class ReviewAdapter : ListAdapter<Review, ReviewAdapter.ReviewViewHolder>(REVIEW_COMPARATOR) {
 
     companion object {
         private val REVIEW_COMPARATOR = object : DiffUtil.ItemCallback<Review>() {

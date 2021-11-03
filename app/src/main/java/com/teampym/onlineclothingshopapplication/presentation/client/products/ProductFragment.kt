@@ -68,7 +68,8 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
     override fun onItemClicked(product: Product) {
         val action = ProductFragmentDirections.actionProductFragmentToProductDetailFragment(
             product,
-            product.name
+            product.name,
+            null
         )
         findNavController().navigate(action)
     }

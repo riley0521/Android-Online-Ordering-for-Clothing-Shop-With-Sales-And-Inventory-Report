@@ -75,11 +75,13 @@ object RepositoryModule {
         db: FirebaseFirestore,
         productImageRepository: ProductImageRepositoryImpl,
         productInventoryRepository: ProductInventoryRepositoryImpl,
+        reviewRepository: ReviewRepositoryImpl,
         accountRepository: AccountRepositoryImpl
     ) = ProductRepositoryImpl(
         db,
         productImageRepository,
         productInventoryRepository,
+        reviewRepository,
         accountRepository
     )
 
@@ -94,6 +96,12 @@ object RepositoryModule {
     fun provideProductInventoryRepository(
         db: FirebaseFirestore
     ) = ProductInventoryRepositoryImpl(db)
+
+    @Provides
+    @Singleton
+    fun provideReviewRepository(
+        db: FirebaseFirestore
+    ) = ReviewRepositoryImpl(db)
 
     @Provides
     @Singleton

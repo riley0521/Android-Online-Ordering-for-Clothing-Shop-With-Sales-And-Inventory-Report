@@ -11,6 +11,7 @@ import com.teampym.onlineclothingshopapplication.data.models.Product
 import com.teampym.onlineclothingshopapplication.data.models.ProductImage
 import com.teampym.onlineclothingshopapplication.data.repository.ProductImageRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.repository.ProductInventoryRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.ReviewRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import kotlinx.coroutines.tasks.await
 import java.io.IOException
@@ -21,7 +22,8 @@ private const val DEFAULT_PAGE_INDEX = 1
 class ProductPagingSource(
     private val queryProducts: Query,
     private val productImageRepository: ProductImageRepositoryImpl,
-    private val productInventoryRepository: ProductInventoryRepositoryImpl
+    private val productInventoryRepository: ProductInventoryRepositoryImpl,
+    private val reviewRepository: ReviewRepositoryImpl
 ) : PagingSource<QuerySnapshot, Product>() {
 
     private val productCollectionRef = FirebaseFirestore.getInstance().collection(PRODUCTS_COLLECTION)
@@ -54,7 +56,14 @@ class ProductPagingSource(
 
                     val productImageList = productImageRepository.getAll(document.id)
 
-                    val productItem = product.copy(id = document.id, inventoryList = inventoryList, productImageList = productImageList)
+                    val reviewList = reviewRepository.getFive(document.id)
+
+                    val productItem = product.copy(
+                        id = document.id,
+                        inventoryList = inventoryList,
+                        productImageList = productImageList,
+                        reviewList = reviewList
+                    )
                     productList.add(productItem)
                 }
 

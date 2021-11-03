@@ -95,8 +95,8 @@ class CartAdapter(
                 tvCount.text = "${cart.quantity}"
 
                 val isMax = cart.sizeInv.stock == cart.quantity || cart.quantity == 99.toLong()
-                btnAdd.isVisible = !isMax
-                btnRemove.isVisible = cart.quantity > 1.toLong()
+                btnAdd.isEnabled = !isMax
+                btnRemove.isEnabled = cart.quantity > 1.toLong()
             }
         }
 

@@ -136,7 +136,8 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toEndOf="@+id/imgCartProduct"
             app:layout_constraintTop_toBottomOf="@+id/tvPrice"
-            app:srcCompat="@drawable/ic_subtract" />
+            app:srcCompat="@drawable/ic_subtract"
+            android:contentDescription="@string/image_product_description" />
 
         <ImageView
             android:id="@+id/btnAdd"
@@ -147,7 +148,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/tvCount"
             app:layout_constraintTop_toBottomOf="@+id/tvPrice"
-            app:srcCompat="@drawable/ic_add" />
+            app:srcCompat="@drawable/ic_add"
+            android:contentDescription="@string/image_product_description" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

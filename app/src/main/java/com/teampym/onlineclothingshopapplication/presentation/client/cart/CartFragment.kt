@@ -59,8 +59,9 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
                 binding.labelNoCartItem.visibility = View.VISIBLE
             }
 
-            val total = "$${cart.sumOf { it.calculatedTotalPrice }}"
-            binding.tvMerchandiseTotal.text = total
+
+            val total = "%2.f".format(cart.sumOf { it.calculatedTotalPrice })
+            binding.tvMerchandiseTotal.text = "$$total"
         }
     }
 

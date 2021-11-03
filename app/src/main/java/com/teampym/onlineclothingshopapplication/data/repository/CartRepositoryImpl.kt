@@ -120,8 +120,12 @@ class CartRepositoryImpl @Inject constructor(
                 if (obj.sizeInv.id == inventory.id && obj.userId == userId) {
 
                     obj.quantity += 1
+                    // every time you get calculatedTotalPrice in Cart data class.
+                    // it will calculate quantity * product.price
+                    obj.subTotal = obj.calculatedTotalPrice.toDouble()
                     val updateQuantityOfItemInCart = mapOf<String, Any>(
-                        "quantity" to obj.quantity
+                        "quantity" to obj.quantity,
+                        "subTotal" to obj.subTotal
                     )
 
                     var isUpdated = false
