@@ -18,7 +18,6 @@ data class Product(
     var price: Double,
     var type: String,
     var flag: String = ProductFlag.NORMAL.toString(),
-    var avgRate: Double = 0.0,
     var id: String = "",
     @get:Exclude
     var inventoryList: List<Inventory> = emptyList(),

@@ -47,54 +47,56 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
         var product = args.product
         val productId = args.productId
 
-        if(product == null) {
-           product = viewModel.getProductById(productId!!)
+        if (product == null) {
+            product = viewModel.getProductById(productId!!)
         }
 
         adapter = ReviewAdapter()
 
-        binding.btnAddToCart.setOnClickListener {
-            val action = ProductDetailFragmentDirections.actionProductDetailFragmentToInventoryModalFragment(product!!)
-            findNavController().navigate(action)
-        }
+        binding.apply {
+            btnAddToCart.setOnClickListener {
+                val action =
+                    ProductDetailFragmentDirections.actionProductDetailFragmentToInventoryModalFragment(
+                        product
+                    )
+                findNavController().navigate(action)
+            }
 
-        lifecycleScope.launchWhenStarted {
-            binding.apply {
+            Glide.with(requireView())
+                .load(product.imageUrl)
+                .centerCrop()
+                .transition(DrawableTransitionOptions.withCrossFade())
+                .error(R.drawable.ic_food)
+                .into(imgProduct)
 
-                Glide.with(requireView())
-                    .load(product.imageUrl)
-                    .centerCrop()
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .error(R.drawable.ic_food)
-                    .into(imgProduct)
+            tvProductName.text = product.name
+            tvPrice.text = "$${product.price}"
+            tvDescription.text = product.description
+            btnAddToCart.setOnClickListener {
+                val action =
+                    ProductDetailFragmentDirections.actionProductDetailFragmentToInventoryModalFragment(
+                        product
+                    )
+                findNavController().navigate(action)
+            }
 
-                tvProductName.text = product.name
-                tvPrice.text = "$${product.price}"
-                tvDescription.text = product.description
-                btnAddToCart.setOnClickListener {
-                    val action = ProductDetailFragmentDirections.actionProductDetailFragmentToInventoryModalFragment(product)
-                    findNavController().navigate(action)
-                }
+            // submit list to the adapter if the reviewList is not empty.
+            if (product.reviewList.isNotEmpty()) {
+                adapter.submitList(product.reviewList)
 
-                // submit list to the adapter if the reviewList is not empty.
-                if(product.reviewList.isNotEmpty()) {
-                    adapter.submitList(product.reviewList)
+                val rate = viewModel.getAvgRate(productId!!)
 
-                    val rate = product.avgRate
+                if (rate == 0.0) {
+                    tvRate.text = rate.toString()
+                    labelNoReviews.isVisible = true
+                } else {
+                    tvRate.text = rate.toString()
 
-                    if (rate == 0.0) {
-                        tvRate.text = rate.toString()
-                        labelNoReviews.isVisible = true
-                    } else {
-                        tvRate.text = rate.toString()
-
-                        // Load Reviews here.
-                        recyclerReviews.setHasFixedSize(true)
-                        recyclerReviews.adapter = adapter
-                    }
+                    // Load Reviews here.
+                    recyclerReviews.setHasFixedSize(true)
+                    recyclerReviews.adapter = adapter
                 }
             }
         }
     }
-
 }

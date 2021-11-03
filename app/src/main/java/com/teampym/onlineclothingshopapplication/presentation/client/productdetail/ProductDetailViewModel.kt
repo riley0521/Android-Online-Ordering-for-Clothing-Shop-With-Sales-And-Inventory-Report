@@ -9,6 +9,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.data.models.Product
 import com.teampym.onlineclothingshopapplication.data.models.Review
 import com.teampym.onlineclothingshopapplication.data.repository.ProductRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.ReviewRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.REVIEWS_SUB_COLLECTION
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ProductDetailViewModel @Inject constructor(
     private val db: FirebaseFirestore,
-    private val productRepository: ProductRepositoryImpl
+    private val productRepository: ProductRepositoryImpl,
+    private val reviewRepository: ReviewRepositoryImpl
 ): ViewModel() {
 
     fun getProductById(productId: String): Product {
@@ -28,6 +30,15 @@ class ProductDetailViewModel @Inject constructor(
             selectedProduct = productRepository.getOne(productId)
         }
         return selectedProduct
+    }
+
+
+    fun getAvgRate(productId: String): Double {
+        var avgRate = 0.0
+        viewModelScope.launch {
+            avgRate = reviewRepository.getAvgRate(productId)
+        }
+        return avgRate
     }
 
 }

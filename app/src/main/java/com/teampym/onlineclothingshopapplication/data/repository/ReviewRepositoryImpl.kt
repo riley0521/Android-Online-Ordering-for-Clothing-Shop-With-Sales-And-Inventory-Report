@@ -33,4 +33,20 @@ class ReviewRepositoryImpl @Inject constructor(
         return reviewList
     }
 
+    suspend fun getAvgRate(productId: String): Double {
+        var avgRate = 0.0
+
+        val reviewsQuery = reviewCollectionRef
+            .document(productId)
+            .collection(REVIEWS_SUB_COLLECTION)
+            .get()
+            .await()
+
+        if(reviewsQuery.documents.isNotEmpty()) {
+            avgRate = reviewsQuery
+                .documents.sumOf { it["rate"].toString().toDouble() } / reviewsQuery.documents.size
+        }
+        return avgRate
+    }
+
 }
