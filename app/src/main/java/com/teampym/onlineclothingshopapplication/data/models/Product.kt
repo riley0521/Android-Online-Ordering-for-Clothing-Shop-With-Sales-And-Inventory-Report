@@ -5,6 +5,7 @@ import androidx.room.Ignore
 import com.google.firebase.firestore.Exclude
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.android.parcel.IgnoredOnParcel
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
@@ -35,15 +36,19 @@ data class Product(
     )
 
     @Ignore
+    @IgnoredOnParcel
     private val gson = Gson()
 
     @Ignore
+    @IgnoredOnParcel
     private val iList = object : TypeToken<List<Inventory>>() {}.type
 
     @Ignore
+    @IgnoredOnParcel
     private val piList = object : TypeToken<List<ProductImage>>() {}.type
 
     @Ignore
+    @IgnoredOnParcel
     private val rList = object : TypeToken<List<Review>>() {}.type
 
 //    fun getterInventories(): List<Inventory> = gson.fromJson(inventories, iList)

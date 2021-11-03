@@ -1,7 +1,10 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
+import androidx.lifecycle.SavedStateHandle
+import com.google.firebase.auth.UserInfo
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.teampym.onlineclothingshopapplication.USER_ID_KEY
 import com.teampym.onlineclothingshopapplication.data.db.DeliveryInformationDao
 import com.teampym.onlineclothingshopapplication.data.db.NotificationTokenDao
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
@@ -9,6 +12,9 @@ import com.teampym.onlineclothingshopapplication.data.models.*
 import com.teampym.onlineclothingshopapplication.data.util.Resource
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.*
@@ -47,13 +53,12 @@ class AccountRepositoryImpl @Inject constructor(
                 }
 
                 val copy = userInfo.copy(userId = userQuery.id, deliveryInformationList = deliveryInformationList, notificationTokenList = notificationTokenList)
-
                 userInformationDao.insert(copy)
 
                 return Resource.Success("Success", copy)
             }
         }
-        return Resource.Error("Failed", null)
+        return Resource.Error("Failed", UserInformation())
     }
 
     // TODO("Should get firebase token as well while we're at it.")
@@ -82,7 +87,7 @@ class AccountRepositoryImpl @Inject constructor(
             userInformationDao.insert(newUser)
             Resource.Success("Success", newUser)
         } else {
-            Resource.Error("Failed", null)
+            Resource.Error("Failed", UserInformation())
         }
     }
 
@@ -111,13 +116,23 @@ class AccountRepositoryImpl @Inject constructor(
 
                 val userQuery = userCollectionRef.document(userId).get().await()
                 if (userQuery.exists()) {
-                    userCollectionRef.document(userId).set(userMapToUpdate, SetOptions.merge())
-                        .await()
-                    userInformationDao.updateBasicInfo(firstName, lastName, birthDate, userId)
-                    return Resource.Success("Success", UserInformation())
+                    var isUpdated = false
+                    userCollectionRef
+                        .document(userId)
+                        .set(userMapToUpdate, SetOptions.merge())
+                        .addOnSuccessListener {
+                            isUpdated = true
+                            CoroutineScope(Dispatchers.IO).launch {
+                                userInformationDao.updateBasicInfo(firstName, lastName, birthDate, userId)
+                            }
+                        }.addOnFailureListener {
+
+                        }
+
+                    return Resource.Success("Success", isUpdated)
                 }
             }
         }
-        return Resource.Error("Failed", null)
+        return Resource.Error("Failed", false)
     }
 }

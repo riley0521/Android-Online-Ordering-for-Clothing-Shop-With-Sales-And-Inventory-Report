@@ -70,32 +70,31 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
                     product,
                     selectedInv!!
                 )
+                Toast.makeText(requireContext(), "Adding ${product.name}(${selectedInv!!.size}) to your cart", Toast.LENGTH_LONG).show()
+                findNavController().popBackStack()
             }
         }
 
         if (product.inventoryList.size == 1) {
-            // TODO("Directly Add to Cart")
-
             viewModel.addToCart(userId, product, product.inventoryList[0])
-            Toast.makeText(requireContext(), "Added ${product.inventoryList[0].size} Size to your cart", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), "Adding ${product.name}(${product.inventoryList[0].size}) to your cart", Toast.LENGTH_LONG).show()
             findNavController().popBackStack()
         }
 
-        for (inventory in product.inventoryList!!) {
-            // TODO("Compare if getLayoutInflater() is same as creating a new instance of LayoutInflater object.")
-            val chip = layoutInflater.inflate(R.layout.inventory_item, null, false) as Chip
-            chip.id = View.generateViewId()
-            chip.text = inventory.size
-            chip.isCheckable = true
-            chip.setOnClickListener {
-                binding.btnAddToCart.isEnabled = binding.chipSizeGroup.checkedChipIds.count() == 1 && userId.isNotEmpty()
-                selectedInv = inventory
-
-                Log.d("PRODUCTS", "${product.id} &&& ${selectedInv!!.id}")
+        if(product.inventoryList.isNotEmpty()) {
+            for (inventory in product.inventoryList) {
+                // TODO("Compare if getLayoutInflater() is same as creating a new instance of LayoutInflater object.")
+                val chip = layoutInflater.inflate(R.layout.inventory_item, null, false) as Chip
+                chip.id = View.generateViewId()
+                chip.text = inventory.size
+                chip.isCheckable = true
+                chip.setOnClickListener {
+                    binding.btnAddToCart.isEnabled = binding.chipSizeGroup.checkedChipIds.count() == 1 && userId.isNotEmpty()
+                    selectedInv = inventory
+                }
+                binding.chipSizeGroup.addView(chip)
             }
-
-            binding.chipSizeGroup.addView(chip)
+            binding.chipSizeGroup.isSingleSelection = true
         }
-        binding.chipSizeGroup.isSingleSelection = true
     }
 }

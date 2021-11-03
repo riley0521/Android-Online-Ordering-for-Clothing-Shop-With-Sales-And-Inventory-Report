@@ -34,7 +34,10 @@ class CategoryRepositoryImpl @Inject constructor(
                 "imageUrl" to category.imageUrl
             )
 
-            val result = categoriesCollectionRef.document(category.id).set(categoryUpdateMap, SetOptions.merge()).await()
+            val result = categoriesCollectionRef
+                .document(category.id)
+                .set(categoryUpdateMap, SetOptions.merge())
+                .await()
             if(result != null)
                 return category
         }

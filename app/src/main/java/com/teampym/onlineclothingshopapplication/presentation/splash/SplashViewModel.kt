@@ -3,6 +3,7 @@ package com.teampym.onlineclothingshopapplication.presentation.splash
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -18,12 +19,9 @@ class SplashViewModel @Inject constructor(
     val splashEvent = splashEventChannel.receiveAsFlow()
 
     fun checkIfUserIsInDb(userId: String) = viewModelScope.launch {
-        val isUserExisting = accountRepository.get(userId)
-
-        if (isUserExisting != null) {
-            splashEventChannel.send(SplashEvent.Registered)
-        } else {
-            splashEventChannel.send(SplashEvent.NotRegistered)
+        when(accountRepository.get(userId)) {
+            is Resource.Error -> splashEventChannel.send(SplashEvent.NotRegistered)
+            is Resource.Success -> splashEventChannel.send(SplashEvent.Registered)
         }
     }
 

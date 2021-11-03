@@ -8,6 +8,7 @@ import com.google.firebase.firestore.Exclude
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.teampym.onlineclothingshopapplication.data.util.UserType
+import kotlinx.android.parcel.IgnoredOnParcel
 import kotlinx.android.parcel.Parcelize
 import java.text.SimpleDateFormat
 import java.util.*
@@ -18,8 +19,8 @@ data class UserInformation(
     var firstName: String,
     var lastName: String,
     var birthDate: String,
-    var avatarUrl: String,
-    var totalOfCart: Double,
+    var avatarUrl: String? = null,
+    var totalOfCart: Double = 0.0,
     @PrimaryKey
     var userId: String = "",
     var userType: String = UserType.CUSTOMER.toString(),
@@ -36,21 +37,23 @@ data class UserInformation(
     constructor() : this(
         "",
         "",
-        "",
-        "",
-        0.0,
+        ""
     )
 
     @Ignore
+    @IgnoredOnParcel
     private val gson = Gson()
 
     @Ignore
+    @IgnoredOnParcel
     private val dlList = object : TypeToken<List<DeliveryInformation>>() {}.type
 
     @Ignore
+    @IgnoredOnParcel
     private val ntList = object : TypeToken<List<NotificationToken>>() {}.type
 
     @Ignore
+    @IgnoredOnParcel
     private val cList = object : TypeToken<List<Cart>>() {}.type
 
 //    fun getterDeliveryInformation(): List<DeliveryInformation> =

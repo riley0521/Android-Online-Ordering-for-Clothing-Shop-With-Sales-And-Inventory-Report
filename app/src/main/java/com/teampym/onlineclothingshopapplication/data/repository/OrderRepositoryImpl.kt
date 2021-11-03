@@ -21,35 +21,41 @@ class OrderRepositoryImpl @Inject constructor(
 
     // get all orders if you are an admin
     suspend fun getAll(orderBy: String): List<Order>? {
-        val ordersQuery = orderCollectionRef.whereEqualTo("status", orderBy)
-            .orderBy("orderDate", Query.Direction.DESCENDING).get().await()
+        val ordersQuery = orderCollectionRef
+            .whereEqualTo("status", orderBy)
+            .orderBy("orderDate", Query.Direction.DESCENDING)
+            .get()
+            .await()
+
         val orderList = mutableListOf<Order>()
-        ordersQuery?.let { querySnapshot ->
+        if(ordersQuery.documents.isNotEmpty()) {
             // loop all order based on the status selected by the admin
-            for (document in querySnapshot.documents) {
-                val order = document.toObject(Order::class.java)
-                if(order != null) {
-                    orderList.add(order.copy(id = document.id))
-                }
+            for (document in ordersQuery.documents) {
+                val order = document.toObject(Order::class.java)!!.copy(id = document.id)
+                orderList.add(order.copy(id = document.id))
             }
             return orderList
         }
         return null
     }
 
-    suspend fun getByUserId(userId: String, orderId: String): Order? {
-        val orderQuery = orderCollectionRef.document(orderId).get().await()
-        orderQuery?.let { documentSnapshot ->
-            val order = documentSnapshot.toObject(Order::class.java)
-            if(order != null) {
-                return order.copy(id = documentSnapshot.id)
-            }
+    suspend fun getByUserId(userId: String, orderId: String): Order {
+        val orderQuery = orderCollectionRef
+            .document(orderId)
+            .get()
+            .await()
+
+        if(orderQuery.data != null) {
+            val order = orderQuery.toObject(Order::class.java)!!.copy(id = orderQuery.id)
+            if(order.userId == userId)
+                return order
+            return Order()
         }
-        return null
+        return Order()
     }
 
     // TODO("Submit order for processing and delete all items in cart.")
-    suspend fun create(userInformation: UserInformation, paymentMethod: String): Order? {
+    suspend fun create(userInformation: UserInformation, paymentMethod: String): Order {
 
         val newOrder = Order(
             userId = userInformation.userId,
@@ -67,7 +73,7 @@ class OrderRepositoryImpl @Inject constructor(
             cartRepository.deleteAll(userInformation.userId)
         }
 
-        return null
+        return Order()
     }
 
     suspend fun updateOrderStatus(userId: String, orderId: String, status: String): Boolean {

@@ -36,9 +36,6 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
     private var selectedBirthDate: String = ""
 
-    @Inject
-    lateinit var userInformationDao: UserInformationDao
-
     private var userInfo: UserInformation? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -86,16 +83,16 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
             }
 
             btnRegister.setOnClickListener {
-                if (editMode) {
-                    if(currentUser != null) {
-                        viewModel.updateBasicInformation(
-                            edtFirstName.text.toString(),
-                            edtLastName.text.toString(),
-                            selectedBirthDate,
-                            currentUser.uid
-                        )
-                    }
-                } else {
+                if (editMode && currentUser != null) {
+                    viewModel.updateBasicInformation(
+                        edtFirstName.text.toString(),
+                        edtLastName.text.toString(),
+                        selectedBirthDate,
+                        currentUser.uid
+                    )
+                    return@setOnClickListener
+                }
+                else {
                     if (currentUser != null) {
                         viewModel.registerUser(
                             edtFirstName.text.toString(),
@@ -147,24 +144,27 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
         }
 
-        lifecycleScope.launchWhenStarted {
+        viewModel.userInformation.observe(viewLifecycleOwner) {
+            if(it != null && editMode) {
 
-            if (editMode && currentUser != null) {
                 tvInstruction.isVisible = false
                 btnRegister.text = "Update Information"
 
-                userInfo = userInformationDao.getCurrentUser(currentUser.uid)
-
-                userInfo?.let {
-                    binding.edtFirstName.text.apply { it.firstName }
-                    binding.edtLastName.text.apply { it.lastName }
-                    binding.tvBirthdate.text = it.birthDate
-                }
+                userInfo = it
+                binding.edtFirstName.text.apply { it.firstName }
+                binding.edtLastName.text.apply { it.lastName }
+                binding.tvBirthdate.text = it.birthDate
             }
+        }
 
+        lifecycleScope.launchWhenStarted {
             viewModel.registrationEvent.collect { event ->
                 when (event) {
-                    is RegistrationViewModel.RegistrationEvent.SuccessfulEvent -> {
+                    is RegistrationViewModel.RegistrationEvent.ShowSuccessfulMessage -> {
+                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
+                        findNavController().popBackStack()
+                    }
+                    is RegistrationViewModel.RegistrationEvent.ShowErrorMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
                         findNavController().popBackStack()
                     }

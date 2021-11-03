@@ -2,6 +2,7 @@ package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.teampym.onlineclothingshopapplication.data.db.CartDao
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.Cart
 import com.teampym.onlineclothingshopapplication.data.models.Inventory
@@ -16,7 +17,7 @@ import javax.inject.Inject
 
 class CartRepositoryImpl @Inject constructor(
     private val db: FirebaseFirestore,
-    private val userInformationDao: UserInformationDao
+    private val cartDao: CartDao
 ) {
 
     private val userCartCollectionRef = db.collection(USERS_COLLECTION)
@@ -80,22 +81,31 @@ class CartRepositoryImpl @Inject constructor(
         if (cartQuery.data != null) {
             val cartItem = cartQuery.toObject(Cart::class.java)!!.copy(id = cartQuery.id)
 
-            cartItem.let {
-                if (it.product.id == product.id && it.userId == userId) {
+            cartItem.let { obj ->
+                if (obj.product.id == product.id && obj.userId == userId) {
+
+                    obj.quantity += 1
                     val updateQuantityOfItemInCart = mapOf<String, Any>(
-                        "quantity" to it.quantity + 1
+                        "quantity" to obj.quantity
                     )
 
-                    val result =
-                        userCartCollectionRef.document(userId).collection(CART_SUB_COLLECTION)
-                            .document(it.id).set(updateQuantityOfItemInCart, SetOptions.merge())
-                            .await()
-                    if (result != null) {
-                        return Resource.Success("Success", cartItem)
-                    }
+                    var isUpdated = false
+                    userCartCollectionRef
+                        .document(userId)
+                        .collection(CART_SUB_COLLECTION)
+                        .document(obj.id)
+                        .set(updateQuantityOfItemInCart, SetOptions.merge())
+                        .addOnSuccessListener {
+                            isUpdated = true
+                            CoroutineScope(Dispatchers.IO).launch {
+                                cartDao.insert(obj)
+                            }
+                        }.addOnFailureListener {
+
+                        }
+                    return Resource.Success("Success", isUpdated)
                 }
             }
-
         } else {
             val newItem = Cart(
                 id = product.id,
@@ -105,18 +115,23 @@ class CartRepositoryImpl @Inject constructor(
                 sizeInv = inventory,
                 subTotal = 0.0
             )
-            newItem.subTotal = newItem.calculatedTotalPrice
+            newItem.subTotal = newItem.calculatedTotalPrice.toDouble()
 
+            var isCreated = false
             userCartCollectionRef.document(userId).collection(CART_SUB_COLLECTION)
                 .document(product.id)
                 .set(newItem)
                 .addOnSuccessListener {
-                    return@addOnSuccessListener
+                    isCreated = true
+                    CoroutineScope(Dispatchers.IO).launch {
+                        cartDao.insert(newItem)
+                    }
                 }.addOnFailureListener {
 
                 }
+            return Resource.Success("Success", isCreated)
         }
-        return Resource.Error("Failed", null)
+        return Resource.Error("Failed", false)
     }
 
     suspend fun updateQty(
@@ -147,13 +162,18 @@ class CartRepositoryImpl @Inject constructor(
                     "subTotal" to (it.product.price * newQuantity.toDouble())
                 )
 
-                val result = userCartCollectionRef
+                var isQtyUpdated = false
+                userCartCollectionRef
                     .document(userId)
                     .collection(CART_SUB_COLLECTION)
                     .document(cartId)
                     .set(updateQuantityOfCartItem, SetOptions.merge())
-                    .await()
-                return Resource.Success("Success", result != null)
+                    .addOnSuccessListener {
+                        isQtyUpdated = true
+                    }.addOnFailureListener {
+
+                    }
+                return Resource.Success("Success", isQtyUpdated)
             }
         }
         return Resource.Error("Failed", false)
@@ -171,13 +191,18 @@ class CartRepositoryImpl @Inject constructor(
             .await()
 
         if (cartItemQuery.data != null) {
-            val result = userCartCollectionRef
+            var isDeleted = false
+            userCartCollectionRef
                 .document(userId)
                 .collection(CART_SUB_COLLECTION)
                 .document(cartId)
                 .delete()
-                .await()
-            return Resource.Success("Success", result != null)
+                .addOnSuccessListener {
+                    isDeleted = true
+                }.addOnFailureListener {
+
+                }
+            return Resource.Success("Success", isDeleted)
         }
         return Resource.Error("Failed", false)
     }
@@ -198,10 +223,14 @@ class CartRepositoryImpl @Inject constructor(
                     .collection(CART_SUB_COLLECTION)
                     .document(cartItem.id)
                     .delete()
-                    .await()
+                    .addOnSuccessListener {
+
+                    }.addOnFailureListener {
+
+                    }
             }
-            return Resource.Success("Success", emptyList<Cart>())
+            return Resource.Success("Success", true)
         }
-        return Resource.Error("Failed", null)
+        return Resource.Error("Failed", false)
     }
 }

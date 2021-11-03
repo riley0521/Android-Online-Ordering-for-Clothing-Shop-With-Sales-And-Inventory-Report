@@ -26,7 +26,7 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
     private lateinit var adapter: CartAdapter
 
-    private var userInfo: UserInformation? = null
+    private var userId = ""
 
     @Inject
     lateinit var userInformationDao: UserInformationDao
@@ -43,11 +43,22 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
         lifecycleScope.launchWhenStarted {
 
             if(user != null) {
-                userInfo = userInformationDao.getCurrentUser(user.uid)
                 viewModel.getCart(user.uid)
             } else {
                 Toast.makeText(requireContext(), "Please log in first to view your cart.", Toast.LENGTH_LONG).show()
                 findNavController().navigate(R.id.action_cartFragment_to_categoryFragment)
+            }
+
+            viewModel.userInformation.observe(viewLifecycleOwner) {
+
+                if(it != null) {
+                    userId = it.userId
+
+                    val total = "$${it.totalOfCart.toBigDecimal()}"
+                    binding.tvMerchandiseTotal.text = total
+                    binding.recyclerViewCart.visibility = View.INVISIBLE
+                    binding.labelNoCartItem.visibility = View.VISIBLE
+                }
             }
 
             viewModel.cart.observe(viewLifecycleOwner) {
@@ -55,10 +66,6 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
                     adapter.submitList(it)
 
                     // TODO("Display totalOfCart")
-                } else {
-                    binding.tvMerchandiseTotal.text = "$${userInfo!!.totalOfCart.toBigDecimal()}"
-                    binding.recyclerViewCart.visibility = View.INVISIBLE
-                    binding.labelNoCartItem.visibility = View.VISIBLE
                 }
             }
         }
@@ -70,11 +77,11 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
     }
 
     override fun onAddQuantity(cartId: String) {
-        viewModel.updateCartItemQty(userInfo!!.userId, cartId, CartFlag.ADDING.toString())
+        viewModel.updateCartItemQty(userId, cartId, CartFlag.ADDING.toString())
     }
 
     override fun onRemoveQuantity(cartId: String) {
-        viewModel.updateCartItemQty(userInfo!!.userId, cartId, CartFlag.REMOVING.toString())
+        viewModel.updateCartItemQty(userId, cartId, CartFlag.REMOVING.toString())
     }
 
     override fun onFailure(msg: String) {

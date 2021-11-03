@@ -3,6 +3,7 @@ package com.teampym.onlineclothingshopapplication.data.db
 import androidx.room.*
 import androidx.room.OnConflictStrategy.REPLACE
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
+import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
 
 @Dao
@@ -12,10 +13,10 @@ interface UserInformationDao {
     suspend fun insert(userInformation: UserInformation)
 
     @Query("SELECT * FROM table_users")
-    suspend fun getAll(): List<UserInformation>
+    fun getAll(): Flow<List<UserInformation>>
 
     @Query("SELECT * FROM table_users WHERE userId = :userId")
-    suspend fun getCurrentUser(userId: String): UserInformation?
+    fun getCurrentUser(userId: String): Flow<UserInformation?>
 
     @Query("UPDATE table_users SET totalOfCart = :totalOfCart WHERE userId = :userId")
     suspend fun updateTotalOfCart(userId: String, totalOfCart: Double)

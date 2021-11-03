@@ -5,6 +5,7 @@ import androidx.paging.PagingConfig
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.models.*
 import com.teampym.onlineclothingshopapplication.data.util.*
 import com.teampym.onlineclothingshopapplication.presentation.client.products.ProductPagingSource
@@ -31,26 +32,30 @@ class ProductRepositoryImpl @Inject constructor(
         }
 
     // TODO("CRUD Operations for Product Collection")
-    suspend fun getOne(productId: String): Product? {
+    suspend fun getOne(productId: String): Product {
         val productQuery = productCollectionRef.document(productId).get().await()
         if (productQuery.data != null) {
 
-            val product = productQuery.toObject(Product::class.java)!!.copy(id = productQuery.id)
+            val product = productQuery.toObject<Product>()!!.copy(id = productQuery.id)
 
             val productImageList = productImageRepository.getAll(productId)
 
             val inventoryList = productInventoryRepository.getAll(productId)
 
-            return product.copy(id = productQuery.id, productImageList = productImageList, inventoryList = inventoryList)
+            return product.copy(
+                id = productQuery.id,
+                productImageList = productImageList,
+                inventoryList = inventoryList
+            )
         }
-        return null
+        return Product()
     }
 
-    suspend fun create(product: Product): Product? {
+    suspend fun create(product: Product): Product {
         val result = productCollectionRef.add(product).await()
         if (result != null)
             return product.copy(id = result.id)
-        return null
+        return Product()
     }
 
     suspend fun update(product: Product): Boolean {
@@ -64,8 +69,10 @@ class ProductRepositoryImpl @Inject constructor(
                 "flag" to product.flag
             )
 
-            val result = productCollectionRef.document(product.id)
-                .set(productToUpdateMap, SetOptions.merge()).await()
+            val result = productCollectionRef
+                .document(product.id)
+                .set(productToUpdateMap, SetOptions.merge())
+                .await()
             return result != null
         }
         return false
@@ -76,10 +83,12 @@ class ProductRepositoryImpl @Inject constructor(
         return result != null
     }
 
-    // TODO("I feel like there is something missing here.. I think I should use List<OrderDetail> instead of List<Cart>")
     // SHIPPED
-    suspend fun deductStockToCommittedCount(userId: String, orderDetailList: List<OrderDetail>): Boolean {
-        val user: UserInformation = when(val res = accountRepository.get(userId)) {
+    suspend fun deductStockToCommittedCount(
+        userId: String,
+        orderDetailList: List<OrderDetail>
+    ): Boolean {
+        val user: UserInformation = when (val res = accountRepository.get(userId)) {
             is Resource.Error -> UserInformation()
             is Resource.Success -> res.res as UserInformation
         }
@@ -89,7 +98,8 @@ class ProductRepositoryImpl @Inject constructor(
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
                         productCollectionRef.document(orderDetail.product.id).collection(
-                            INVENTORIES_SUB_COLLECTION)
+                            INVENTORIES_SUB_COLLECTION
+                        )
                             .document(orderDetail.inventoryId).get().await()
                     if (inventoryQuery != null) {
                         val stockNewCount =
@@ -102,7 +112,8 @@ class ProductRepositoryImpl @Inject constructor(
                         )
 
                         productCollectionRef.document(orderDetail.product.id).collection(
-                            INVENTORIES_SUB_COLLECTION)
+                            INVENTORIES_SUB_COLLECTION
+                        )
                             .document(orderDetail.inventoryId)
                             .set(updateProductsInventoryMap, SetOptions.merge()).await()
                     }
@@ -114,9 +125,12 @@ class ProductRepositoryImpl @Inject constructor(
     }
 
     // CANCELED
-    suspend fun deductCommittedToStockCount(userId: String, orderDetailList: List<OrderDetail>): Boolean {
+    suspend fun deductCommittedToStockCount(
+        userId: String,
+        orderDetailList: List<OrderDetail>
+    ): Boolean {
 
-        val user: UserInformation = when(val res = accountRepository.get(userId)) {
+        val user: UserInformation = when (val res = accountRepository.get(userId)) {
             is Resource.Error -> UserInformation()
             is Resource.Success -> res.res as UserInformation
         }
@@ -126,7 +140,8 @@ class ProductRepositoryImpl @Inject constructor(
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
                         productCollectionRef.document(orderDetail.product.id).collection(
-                            INVENTORIES_SUB_COLLECTION)
+                            INVENTORIES_SUB_COLLECTION
+                        )
                             .document(orderDetail.inventoryId).get().await()
                     if (inventoryQuery != null) {
                         val committedNewCount =
@@ -139,7 +154,8 @@ class ProductRepositoryImpl @Inject constructor(
                         )
 
                         productCollectionRef.document(orderDetail.product.id).collection(
-                            INVENTORIES_SUB_COLLECTION)
+                            INVENTORIES_SUB_COLLECTION
+                        )
                             .document(orderDetail.inventoryId)
                             .set(updateProductsInventoryMap, SetOptions.merge()).await()
                     }
@@ -151,9 +167,12 @@ class ProductRepositoryImpl @Inject constructor(
     }
 
     // COMPLETED
-    suspend fun deductCommittedToSoldCount(userId: String, orderDetailList: List<OrderDetail>): Boolean {
+    suspend fun deductCommittedToSoldCount(
+        userId: String,
+        orderDetailList: List<OrderDetail>
+    ): Boolean {
 
-        val user: UserInformation = when(val res = accountRepository.get(userId)) {
+        val user: UserInformation = when (val res = accountRepository.get(userId)) {
             is Resource.Error -> UserInformation()
             is Resource.Success -> res.res as UserInformation
         }
@@ -163,7 +182,8 @@ class ProductRepositoryImpl @Inject constructor(
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
                         productCollectionRef.document(orderDetail.product.id).collection(
-                            INVENTORIES_SUB_COLLECTION)
+                            INVENTORIES_SUB_COLLECTION
+                        )
                             .document(orderDetail.inventoryId).get().await()
                     if (inventoryQuery != null) {
                         val committedNewCount =
@@ -176,7 +196,8 @@ class ProductRepositoryImpl @Inject constructor(
                         )
 
                         productCollectionRef.document(orderDetail.product.id).collection(
-                            INVENTORIES_SUB_COLLECTION)
+                            INVENTORIES_SUB_COLLECTION
+                        )
                             .document(orderDetail.inventoryId)
                             .set(updateProductsInventoryMap, SetOptions.merge()).await()
                     }
@@ -188,9 +209,12 @@ class ProductRepositoryImpl @Inject constructor(
     }
 
     // RETURNED
-    suspend fun deductSoldToReturnedCount(userId: String, orderDetailList: List<OrderDetail>): Boolean {
+    suspend fun deductSoldToReturnedCount(
+        userId: String,
+        orderDetailList: List<OrderDetail>
+    ): Boolean {
 
-        val user: UserInformation = when(val res = accountRepository.get(userId)) {
+        val user: UserInformation = when (val res = accountRepository.get(userId)) {
             is Resource.Error -> UserInformation()
             is Resource.Success -> res.res as UserInformation
         }
@@ -200,7 +224,8 @@ class ProductRepositoryImpl @Inject constructor(
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
                         productCollectionRef.document(orderDetail.product.id).collection(
-                            INVENTORIES_SUB_COLLECTION)
+                            INVENTORIES_SUB_COLLECTION
+                        )
                             .document(orderDetail.inventoryId).get().await()
                     if (inventoryQuery != null) {
                         val soldNewCount =
@@ -213,7 +238,8 @@ class ProductRepositoryImpl @Inject constructor(
                         )
 
                         productCollectionRef.document(orderDetail.product.id).collection(
-                            INVENTORIES_SUB_COLLECTION)
+                            INVENTORIES_SUB_COLLECTION
+                        )
                             .document(orderDetail.inventoryId)
                             .set(updateProductsInventoryMap, SetOptions.merge()).await()
                     }

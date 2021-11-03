@@ -17,51 +17,62 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
     private val userCollectionRef = db.collection(USERS_COLLECTION)
 
     suspend fun getAll(userId: String): Resource {
-        val deliveryInformationQuery =
-            userCollectionRef.document(userId).collection(DELIVERY_INFORMATION_SUB_COLLECTION).get()
-                .await()
+        val deliveryInformationQuery = userCollectionRef
+            .document(userId)
+            .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
+            .get()
+            .await()
+
         val deliveryInformationList = mutableListOf<DeliveryInformation>()
-        deliveryInformationQuery?.let { querySnapshot ->
-            for (document in querySnapshot.documents) {
-                val deliveryInformation =
-                    document.toObject(DeliveryInformation::class.java)!!.copy(id = document.id)
+        if (deliveryInformationQuery.documents.isNotEmpty()) {
+            for (document in deliveryInformationQuery.documents) {
+                val deliveryInformation = document
+                    .toObject(DeliveryInformation::class.java)!!.copy(id = document.id)
+
                 deliveryInformationList.add(deliveryInformation)
                 deliveryInformationDao.insert(deliveryInformation)
             }
             return Resource.Success("Success", deliveryInformationList)
         }
-        return Resource.Error("Failed", null)
+        return Resource.Error("Failed", emptyList<DeliveryInformation>())
     }
 
     suspend fun upsert(
         userId: String,
         deliveryInformation: DeliveryInformation
     ): Resource {
-        val isDeliveryInformationExistingQuery = userCollectionRef.document(userId).collection(
-            DELIVERY_INFORMATION_SUB_COLLECTION
-        ).get().await()
-        if (isDeliveryInformationExistingQuery != null) {
+        val isDeliveryInformationExistingQuery = userCollectionRef
+            .document(userId)
+            .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
+            .get()
+            .await()
+
+        if (isDeliveryInformationExistingQuery.documents.isNotEmpty()) {
             for (document in isDeliveryInformationExistingQuery.documents) {
-                val deliveryInfo =
-                    document.toObject(DeliveryInformation::class.java)!!.copy(id = document.id)
-                if (deliveryInformation.contactNo == deliveryInfo.contactNo &&
-                    deliveryInformation.region == deliveryInfo.region &&
-                    deliveryInformation.streetNumber == deliveryInfo.streetNumber
+                val deliveryInformationFromDb = document
+                    .toObject(DeliveryInformation::class.java)!!.copy(id = document.id)
+
+                if (deliveryInformation.contactNo == deliveryInformationFromDb.contactNo &&
+                    deliveryInformation.region == deliveryInformationFromDb.region &&
+                    deliveryInformation.streetNumber == deliveryInformationFromDb.streetNumber
                 ) {
-                    val copy = deliveryInfo.copy(userId = "Existing")
-                    return Resource.Success("Success", copy)
+                    return Resource.Success("Failed", false)
                 }
             }
         } else {
-            val result = userCollectionRef.document(userId).collection(
-                DELIVERY_INFORMATION_SUB_COLLECTION
-            ).add(deliveryInformation).await()
-            if (result != null) {
-                val res = deliveryInformation.copy(id = result.id)
-                return Resource.Success("Success", res)
-            }
+            var isCreated = false
+            userCollectionRef
+                .document(userId)
+                .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
+                .add(deliveryInformation)
+                .addOnSuccessListener {
+                    isCreated = true
+                }.addOnFailureListener {
+
+                }
+            return Resource.Success("Success", isCreated)
         }
-        return Resource.Error("Failed", null)
+        return Resource.Error("Failed", false)
     }
 
 }

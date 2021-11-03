@@ -17,14 +17,18 @@ class NotificationTokenRepositoryImpl @Inject constructor(
     private val userCollectionRef = db.collection(USERS_COLLECTION)
 
     suspend fun getAll(userId: String): Resource {
-        val notificationTokenQuery =
-            userCollectionRef.document(userId).collection(NOTIFICATION_TOKENS_SUB_COLLECTION).get()
-                .await()
+        val notificationTokenQuery = userCollectionRef
+            .document(userId)
+            .collection(NOTIFICATION_TOKENS_SUB_COLLECTION)
+            .get()
+            .await()
+
         val notificationTokenList = mutableListOf<NotificationToken>()
-        notificationTokenQuery?.let { querySnapshot ->
-            for (document in querySnapshot.documents) {
-                val notificationToken =
-                    document.toObject(NotificationToken::class.java)!!.copy(id = document.id)
+        if (notificationTokenQuery.documents.isNotEmpty()) {
+            for (document in notificationTokenQuery.documents) {
+                val notificationToken = document
+                    .toObject(NotificationToken::class.java)!!.copy(id = document.id)
+
                 notificationTokenList.add(notificationToken)
                 notificationTokenDao.insert(notificationToken)
             }
@@ -36,28 +40,31 @@ class NotificationTokenRepositoryImpl @Inject constructor(
         userId: String,
         notificationToken: NotificationToken
     ): Resource {
-        val isNotificationTokenExistingQuery =
-            userCollectionRef.document(userId).collection(NOTIFICATION_TOKENS_SUB_COLLECTION).get()
-                .await()
-        if (isNotificationTokenExistingQuery != null) {
+        val isNotificationTokenExistingQuery = userCollectionRef
+            .document(userId)
+            .collection(NOTIFICATION_TOKENS_SUB_COLLECTION)
+            .get()
+            .await()
+
+        if (isNotificationTokenExistingQuery.documents.isNotEmpty()) {
             for (document in isNotificationTokenExistingQuery.documents) {
                 if (document["token"].toString() == notificationToken.token) {
-
-                    val copy = document.toObject(NotificationToken::class.java)!!
-                        .copy(id = document.id, token = "Existing")
-                    return Resource.Error(msg = "Existing", copy)
+                    return Resource.Error("Failed", false)
                 }
             }
         } else {
-            val result = userCollectionRef.document(userId).collection(
-                NOTIFICATION_TOKENS_SUB_COLLECTION
-            ).add(notificationToken).await()
-            if (result != null) {
-                val res = notificationToken.copy(id = result.id)
-                return Resource.Success("Success", res)
-            }
-        }
-        return Resource.Error("Failed", null)
-    }
+            var isCreated = false
+            userCollectionRef
+                .document(userId)
+                .collection(NOTIFICATION_TOKENS_SUB_COLLECTION)
+                .add(notificationToken)
+                .addOnSuccessListener {
+                    isCreated = true
+                }.addOnFailureListener {
 
+                }
+            return Resource.Success("Success", isCreated)
+        }
+        return Resource.Error("Failed", false)
+    }
 }

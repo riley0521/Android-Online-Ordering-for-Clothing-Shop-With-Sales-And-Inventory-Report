@@ -1,16 +1,18 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.profile
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import com.firebase.ui.auth.data.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.teampym.onlineclothingshopapplication.USER_ID_KEY
+import com.teampym.onlineclothingshopapplication.VERIFICATION_SPAN
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.util.Resource
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -27,49 +29,55 @@ class ProfileViewModel @Inject constructor(
     private val profileEventChannel = Channel<ProfileEvent>()
     val profileEvent = profileEventChannel.receiveAsFlow()
 
-    private val _userInformation = MutableLiveData<UserInformation>()
-    val userInformation: MutableLiveData<UserInformation> get() = _userInformation
-
     val verificationSpan = state.getLiveData<Long>(VERIFICATION_SPAN, 0)
 
+    var userInformation = getUserFromDb(Utils.userId)
+
+    private fun getUserFromDb(userId: String) =
+        userInformationDao.getCurrentUser(userId).asLiveData()
+
+    // Remove the FirebaseAuth cache and in the room db.
     fun signOut(user: FirebaseAuth) = viewModelScope.launch {
         userInformationDao.deleteAll()
+        Utils.userId = ""
         user.signOut()
     }
 
-    fun getCurrentUser(userId: String) = viewModelScope.launch {
-        _userInformation.value = userInformationDao.getCurrentUser(userId)
-    }
-
+    // Check if the user is registered and/or verified then save
+    // the userId in UI State.
     fun checkIfUserIsRegisteredOrVerified(user: FirebaseUser) = viewModelScope.launch {
 
-        val currentUser: UserInformation = when(val res = accountRepository.get(user.uid)) {
+        val currentUser: UserInformation = when (val res = accountRepository.get(user.uid)) {
             is Resource.Error -> UserInformation()
             is Resource.Success -> res.res as UserInformation
         }
 
+        userInformation = getUserFromDb(Utils.userId)
+
+
+        if (currentUser.firstName.isBlank()) {
+            profileEventChannel.send(ProfileEvent.NotRegistered)
+        }
+
         when {
-            currentUser.firstName.isEmpty() -> {
-                profileEventChannel.send(ProfileEvent.NotRegistered)
+            user.isEmailVerified.not() -> {
+                Utils.userId = user.uid
+                profileEventChannel.send(ProfileEvent.NotVerified)
             }
             user.isEmailVerified -> {
+                Utils.userId = user.uid
                 profileEventChannel.send(ProfileEvent.Verified)
-            }
-            else -> {
-                profileEventChannel.send(ProfileEvent.NotVerified)
             }
         }
     }
 
+    // Send the verification again if it expired.
     fun sendVerificationAgain(user: FirebaseUser) = viewModelScope.launch {
         user.sendEmailVerification()
         profileEventChannel.send(ProfileEvent.VerificationSent)
     }
 
-    companion object {
-        const val VERIFICATION_SPAN = "verification_span"
-    }
-
+    // Events used to notify the UI about what's happening.
     sealed class ProfileEvent {
         object NotRegistered : ProfileEvent()
         object NotVerified : ProfileEvent()

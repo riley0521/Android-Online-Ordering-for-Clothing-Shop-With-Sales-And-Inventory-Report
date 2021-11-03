@@ -29,16 +29,18 @@ class OrderDetailRepositoryImpl @Inject constructor(
                 .document(orderId)
                 .get()
                 .await()
-            if (ordersQuery != null) {
-                if (userId == ordersQuery["userId"]) {
-                    val orderDetailCustomerQuery =
-                        orderCollectionRef.document(orderId)
-                            .collection(ORDER_DETAILS_SUB_COLLECTION).get()
-                            .await()
-                    for (document in orderDetailCustomerQuery.documents) {
 
-                        val orderDetail =
-                            document.toObject(OrderDetail::class.java)!!.copy(id = document.id)
+            if (ordersQuery.data != null) {
+                if (userId == ordersQuery["userId"]) {
+                    val orderDetailCustomerQuery = orderCollectionRef
+                        .document(orderId)
+                        .collection(ORDER_DETAILS_SUB_COLLECTION)
+                        .get()
+                        .await()
+
+                    for (document in orderDetailCustomerQuery.documents) {
+                        val orderDetail = document
+                            .toObject(OrderDetail::class.java)!!.copy(id = document.id)
 
                         orderDetailList.add(orderDetail)
                     }
@@ -47,14 +49,16 @@ class OrderDetailRepositoryImpl @Inject constructor(
             }
         } else if (userType == UserType.ADMIN.toString()) {
             // no need to compare userId when you are an admin to the order object because admin have higher access level
-            val orderDetailAdminQuery =
-                orderCollectionRef.document(orderId).collection(ORDER_DETAILS_SUB_COLLECTION).get()
-                    .await()
+            val orderDetailAdminQuery = orderCollectionRef
+                .document(orderId)
+                .collection(ORDER_DETAILS_SUB_COLLECTION)
+                .get()
+                .await()
+
             if (orderDetailAdminQuery != null) {
                 for (document in orderDetailAdminQuery.documents) {
-
-                    val orderDetail =
-                        document.toObject(OrderDetail::class.java)!!.copy(id = document.id)
+                    val orderDetail = document
+                        .toObject(OrderDetail::class.java)!!.copy(id = document.id)
 
                     orderDetailList.add(orderDetail)
                 }
@@ -68,7 +72,8 @@ class OrderDetailRepositoryImpl @Inject constructor(
         orderId: String,
         userId: String,
         cart: List<Cart>
-    ) {
+    ): Boolean {
+        var isCreated = false
         for (cartItem in cart) {
             val newProd = OrderDetail(
                 userId = userId,
@@ -80,15 +85,17 @@ class OrderDetailRepositoryImpl @Inject constructor(
                 subTotal = cartItem.subTotal
             )
 
-            orderCollectionRef.document(orderId).collection(ORDER_DETAILS_SUB_COLLECTION)
+            orderCollectionRef
+                .document(orderId)
+                .collection(ORDER_DETAILS_SUB_COLLECTION)
                 .add(newProd)
                 .addOnSuccessListener {
-
+                    isCreated = true
                 }.addOnFailureListener {
 
                 }
-
         }
+        return isCreated
     }
 
 }

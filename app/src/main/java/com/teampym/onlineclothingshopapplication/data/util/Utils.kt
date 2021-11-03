@@ -16,10 +16,13 @@ const val ORDERS_COLLECTION = "Orders"
 const val ORDER_DETAILS_SUB_COLLECTION = "orderDetails"
 
 const val POSTS_COLLECTION = "Posts"
+const val LIKES_SUB_COLLECTION = "likes"
+const val COMMENTS_SUB_COLLECTION = "comments"
 
 class Utils {
     companion object {
         var productFlag: String = ""
+        var userId: String = ""
     }
 }
 

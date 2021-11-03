@@ -6,6 +6,7 @@ import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.firebase.firestore.Exclude
 import kotlinx.android.parcel.Parcelize
+import java.math.BigDecimal
 
 @Entity(tableName = "table_cart")
 @Parcelize
@@ -22,5 +23,5 @@ data class Cart(
     constructor(): this("", 0.0)
 
     @get:Exclude
-    val calculatedTotalPrice: Double get() = quantity.toDouble() * product.price
+    val calculatedTotalPrice: BigDecimal get() = quantity.toBigDecimal() * product.price.toBigDecimal()
 }
