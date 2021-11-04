@@ -8,6 +8,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.teampym.onlineclothingshopapplication.USER_ID_KEY
 import com.teampym.onlineclothingshopapplication.VERIFICATION_SPAN
+import com.teampym.onlineclothingshopapplication.data.db.DeliveryInformationDao
+import com.teampym.onlineclothingshopapplication.data.db.NotificationTokenDao
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
@@ -23,6 +25,8 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val accountRepository: AccountRepositoryImpl,
     private val userInformationDao: UserInformationDao,
+    private val deliveryInformationDao: DeliveryInformationDao,
+    private val notificationTokenDao: NotificationTokenDao,
     private val state: SavedStateHandle
 ) : ViewModel() {
 
@@ -39,6 +43,11 @@ class ProfileViewModel @Inject constructor(
     // Remove the FirebaseAuth cache and in the room db.
     fun signOut(user: FirebaseAuth) = viewModelScope.launch {
         userInformationDao.deleteAll()
+        deliveryInformationDao.deleteAll()
+        notificationTokenDao.deleteAll()
+
+        // I think I need to use dataStore to replace Sorting Mechanism
+        // And this user Id to store session.
         Utils.userId = ""
         user.signOut()
     }

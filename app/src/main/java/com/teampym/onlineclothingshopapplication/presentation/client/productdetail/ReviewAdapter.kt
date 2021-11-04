@@ -2,7 +2,6 @@ package com.teampym.onlineclothingshopapplication.presentation.client.productdet
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -12,7 +11,6 @@ import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Review
 import com.teampym.onlineclothingshopapplication.data.models.getDate
 import com.teampym.onlineclothingshopapplication.databinding.ReviewItemBinding
-import java.util.*
 
 class ReviewAdapter : ListAdapter<Review, ReviewAdapter.ReviewViewHolder>(REVIEW_COMPARATOR) {
 

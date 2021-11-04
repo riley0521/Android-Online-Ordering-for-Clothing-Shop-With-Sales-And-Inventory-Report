@@ -9,9 +9,12 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
+import com.teampym.onlineclothingshopapplication.data.models.Cart
+import com.teampym.onlineclothingshopapplication.data.models.Checkout
 import com.teampym.onlineclothingshopapplication.data.util.CartFlag
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCartBinding
 import dagger.hilt.android.AndroidEntryPoint
+import java.math.BigDecimal
 
 @AndroidEntryPoint
 class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartListener {
@@ -23,6 +26,10 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
     private lateinit var adapter: CartAdapter
 
     private var userId = ""
+
+    private var cartList: List<Cart> = emptyList()
+
+    private var total: BigDecimal = 0.toBigDecimal()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -41,6 +48,13 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
         }
 
         binding.apply {
+            btnCheckOut.setOnClickListener {
+                val action = CartFragmentDirections.actionCartFragmentToCheckOutFragment(
+                    cart = Checkout(getFirebaseUser()?.uid!!, cartList, total)
+                )
+                findNavController().navigate(action)
+            }
+
             recyclerViewCart.setHasFixedSize(true)
             recyclerViewCart.adapter = adapter
         }
@@ -54,14 +68,16 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
         viewModel.cart.observe(viewLifecycleOwner) { cart ->
             adapter.submitList(cart)
 
+            cartList = cart
+
             if(cart.isEmpty()) {
                 binding.recyclerViewCart.visibility = View.INVISIBLE
                 binding.labelNoCartItem.visibility = View.VISIBLE
             }
 
-
-            val total = "%2.f".format(cart.sumOf { it.calculatedTotalPrice })
-            binding.tvMerchandiseTotal.text = "$$total"
+            total = cart.sumOf { it.calculatedTotalPrice }
+            val totalText = "$%2.f".format(total)
+            binding.tvMerchandiseTotal.text = totalText
         }
     }
 

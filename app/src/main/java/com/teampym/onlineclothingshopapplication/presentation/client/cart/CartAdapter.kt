@@ -87,7 +87,7 @@ class CartAdapter(
                     .error(R.drawable.ic_food)
                     .into(imgCartProduct)
 
-                labelCart.text = cart.product.name
+                tvProductName.text = cart.product.name
 
                 tvPrice.text = "$${cart.product.price}"
                 tvSize.text = "(${cart.sizeInv.size})"

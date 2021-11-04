@@ -35,7 +35,7 @@ interface UserInformationDao {
 
     @Transaction
     @Query("SELECT * FROM table_users WHERE userId = :userId")
-    fun getUserWithDeliveryInfoAndTokens(userId: String): List<UserWithDeliveryInfoAndTokens>
+    fun getUserWithDeliveryInfoAndTokens(userId: String): Flow<UserWithDeliveryInfoAndTokens>
 
     @Transaction
     @Query("SELECT * FROM table_users WHERE userId = :userId")

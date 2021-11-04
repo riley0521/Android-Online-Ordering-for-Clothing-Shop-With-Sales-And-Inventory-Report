@@ -49,12 +49,6 @@ enum class PaymentMethod {
     COD
 }
 
-enum class ProductFlag {
-    NORMAL,
-    NEW,
-    BEST_SELLER
-}
-
 enum class CartFlag {
     ADDING,
     REMOVING

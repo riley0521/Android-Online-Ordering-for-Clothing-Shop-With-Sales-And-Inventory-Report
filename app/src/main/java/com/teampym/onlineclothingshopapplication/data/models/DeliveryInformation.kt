@@ -8,7 +8,7 @@ import kotlinx.android.parcel.Parcelize
 @Entity(tableName = "table_delivery_info")
 @Parcelize
 data class DeliveryInformation(
-    var userId: String,
+    var name: String,
     var contactNo: String,
     var region: String,
     var province: String,
@@ -17,6 +17,7 @@ data class DeliveryInformation(
     var postalCode: String,
     @PrimaryKey
     var id: String = "",
+    var userId: String = "",
     var default: Boolean = false
 ): Parcelable {
     constructor(): this("", "", "", "", "", "", "")

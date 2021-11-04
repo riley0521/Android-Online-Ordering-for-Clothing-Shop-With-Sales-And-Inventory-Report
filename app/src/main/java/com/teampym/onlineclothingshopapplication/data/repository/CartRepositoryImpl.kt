@@ -260,6 +260,7 @@ class CartRepositoryImpl @Inject constructor(
 
                     }
             }
+            cartDao.deleteAll()
             return Resource.Success("Success", true)
         }
         return Resource.Error("Failed", false)

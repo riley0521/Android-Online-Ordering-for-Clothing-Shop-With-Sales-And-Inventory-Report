@@ -54,6 +54,9 @@
             app:destination="@id/categoryFragment"
             app:popUpTo="@id/cartFragment"
             app:popUpToInclusive="true"/>
+        <action
+            android:id="@+id/action_cartFragment_to_checkOutFragment"
+            app:destination="@id/checkOutFragment" />
     </fragment>
     <fragment
         android:id="@+id/newsFragment"
@@ -133,4 +136,18 @@
             android:name="product"
             app:argType="com.teampym.onlineclothingshopapplication.data.models.Product" />
     </dialog>
+    <fragment
+        android:id="@+id/checkOutFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.checkout.CheckOutFragment"
+        android:label="Check Out"
+        tools:layout="@layout/fragment_check_out" >
+        <argument
+            android:name="cart"
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.Checkout" />
+        <action
+            android:id="@+id/action_checkOutFragment_to_categoryFragment"
+            app:destination="@id/categoryFragment"
+            app:popUpTo="@id/checkOutFragment"
+            app:popUpToInclusive="true"/>
+    </fragment>
 </navigation>

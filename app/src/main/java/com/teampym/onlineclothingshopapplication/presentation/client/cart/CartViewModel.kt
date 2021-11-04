@@ -2,6 +2,7 @@ package com.teampym.onlineclothingshopapplication.presentation.client.cart
 
 import androidx.lifecycle.*
 import com.teampym.onlineclothingshopapplication.USER_ID_KEY
+import com.teampym.onlineclothingshopapplication.data.db.CartDao
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
 import com.teampym.onlineclothingshopapplication.data.models.Cart
@@ -18,6 +19,7 @@ import javax.inject.Inject
 class CartViewModel @Inject constructor(
     private val cartRepository: CartRepositoryImpl,
     private val userInformationDao: UserInformationDao,
+    private val cartDao: CartDao,
     @ApplicationScope val appScope: CoroutineScope
 ): ViewModel() {
 
@@ -44,5 +46,6 @@ class CartViewModel @Inject constructor(
 
     fun updateCart(userId: String, cart: List<Cart>) = appScope.launch {
         cartRepository.update(userId, cart)
+        cartDao.insertAll(cart)
     }
 }

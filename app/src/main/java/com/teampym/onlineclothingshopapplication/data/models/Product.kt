@@ -1,12 +1,8 @@
 package com.teampym.onlineclothingshopapplication.data.models
 
 import android.os.Parcelable
-import androidx.room.Ignore
 import com.google.firebase.firestore.Exclude
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import com.teampym.onlineclothingshopapplication.data.util.ProductFlag
-import kotlinx.android.parcel.IgnoredOnParcel
+import com.teampym.onlineclothingshopapplication.data.util.ProductType
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
@@ -16,9 +12,9 @@ data class Product(
     var description: String,
     var imageUrl: String,
     var price: Double,
-    var type: String,
-    var flag: String = ProductFlag.NORMAL.toString(),
     var id: String = "",
+    var type: String = ProductType.HOODIES.name,
+    var dateAdded: Long = System.currentTimeMillis(),
     @get:Exclude
     var inventoryList: List<Inventory> = emptyList(),
     @get:Exclude
@@ -31,8 +27,6 @@ data class Product(
         "",
         "",
         "",
-        0.0,
-        "",
-        ""
+        0.0
     )
 }

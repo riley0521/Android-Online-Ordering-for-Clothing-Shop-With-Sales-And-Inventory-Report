@@ -20,7 +20,6 @@ data class UserInformation(
     var lastName: String,
     var birthDate: String,
     var avatarUrl: String? = null,
-    var totalOfCart: Double = 0.0,
     @PrimaryKey
     var userId: String = "",
     var userType: String = UserType.CUSTOMER.toString(),
