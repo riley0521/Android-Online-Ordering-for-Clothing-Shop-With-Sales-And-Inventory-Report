@@ -1,6 +1,5 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.checkout
 
-
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil

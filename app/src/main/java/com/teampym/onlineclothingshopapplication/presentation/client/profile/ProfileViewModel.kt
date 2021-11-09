@@ -1,22 +1,19 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.profile
 
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.teampym.onlineclothingshopapplication.USER_ID_KEY
 import com.teampym.onlineclothingshopapplication.VERIFICATION_SPAN
 import com.teampym.onlineclothingshopapplication.data.db.DeliveryInformationDao
 import com.teampym.onlineclothingshopapplication.data.db.NotificationTokenDao
+import com.teampym.onlineclothingshopapplication.data.db.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.util.Resource
-import com.teampym.onlineclothingshopapplication.data.util.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,7 +24,8 @@ class ProfileViewModel @Inject constructor(
     private val userInformationDao: UserInformationDao,
     private val deliveryInformationDao: DeliveryInformationDao,
     private val notificationTokenDao: NotificationTokenDao,
-    private val state: SavedStateHandle
+    private val state: SavedStateHandle,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val profileEventChannel = Channel<ProfileEvent>()
@@ -35,10 +33,11 @@ class ProfileViewModel @Inject constructor(
 
     val verificationSpan = state.getLiveData<Long>(VERIFICATION_SPAN, 0)
 
-    var userInformation = getUserFromDb(Utils.userId)
+    private val userFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
+        userInformationDao.getCurrentUser(sessionPref.userId)
+    }
 
-    private fun getUserFromDb(userId: String) =
-        userInformationDao.getCurrentUser(userId).asLiveData()
+    val user = userFlow.asLiveData()
 
     // Remove the FirebaseAuth cache and in the room db.
     fun signOut(user: FirebaseAuth) = viewModelScope.launch {
@@ -48,8 +47,16 @@ class ProfileViewModel @Inject constructor(
 
         // I think I need to use dataStore to replace Sorting Mechanism
         // And this user Id to store session.
-        Utils.userId = ""
+        removeUserIdFromSession()
         user.signOut()
+    }
+
+    private fun removeUserIdFromSession() = viewModelScope.launch {
+        preferencesManager.updateUserId("")
+    }
+
+    private fun updateUserId(userId: String) = viewModelScope.launch {
+        preferencesManager.updateUserId(userId)
     }
 
     // Check if the user is registered and/or verified then save
@@ -61,20 +68,17 @@ class ProfileViewModel @Inject constructor(
             is Resource.Success -> res.res as UserInformation
         }
 
-        userInformation = getUserFromDb(Utils.userId)
-
-
         if (currentUser.firstName.isBlank()) {
             profileEventChannel.send(ProfileEvent.NotRegistered)
         }
 
         when {
             user.isEmailVerified.not() -> {
-                Utils.userId = user.uid
+                updateUserId(user.uid)
                 profileEventChannel.send(ProfileEvent.NotVerified)
             }
             user.isEmailVerified -> {
-                Utils.userId = user.uid
+                updateUserId(user.uid)
                 profileEventChannel.send(ProfileEvent.Verified)
             }
         }
@@ -93,5 +97,4 @@ class ProfileViewModel @Inject constructor(
         object Verified : ProfileEvent()
         object VerificationSent : ProfileEvent()
     }
-
 }

@@ -10,6 +10,7 @@ buildscript {
         recyclerviewVersion = "1.2.1"
         roomVersion = "2.3.0"
         gsonVersion = "2.8.6"
+        datastoreVersion = "1.0.0-alpha04"
 
         hiltVersion = "2.37"
         hiltAndroidXVersion = '1.0.0-alpha03'

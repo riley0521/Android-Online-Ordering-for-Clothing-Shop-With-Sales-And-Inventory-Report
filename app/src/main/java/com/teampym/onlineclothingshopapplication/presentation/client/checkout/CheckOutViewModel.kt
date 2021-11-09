@@ -1,26 +1,38 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.checkout
 
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
-import androidx.lifecycle.viewModelScope
-import com.teampym.onlineclothingshopapplication.data.db.DeliveryInformationDao
+import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.db.CartDao
+import com.teampym.onlineclothingshopapplication.data.db.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
+import com.teampym.onlineclothingshopapplication.data.db.UserWithDeliveryInfoAndTokens
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.OrderRepositoryImpl
-import com.teampym.onlineclothingshopapplication.data.util.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class CheckOutViewModel @Inject constructor(
     private val userInformationDao: UserInformationDao,
-    private val orderRepository: OrderRepositoryImpl
-): ViewModel() {
+    private val cartDao: CartDao,
+    private val orderRepository: OrderRepositoryImpl,
+    private val preferencesManager: PreferencesManager
+) : ViewModel() {
 
-    val user = userInformationDao.getUserWithDeliveryInfoAndTokens(Utils.userId).asLiveData()
+    lateinit var user: LiveData<UserWithDeliveryInfoAndTokens>
+
+    val selectedPaymentMethod = MutableLiveData("")
+
+    private val cartFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
+        selectedPaymentMethod.value = sessionPref.paymentMethod.toString()
+
+        user = userInformationDao.getUserWithDeliveryInfoAndTokens(sessionPref.userId).asLiveData()
+        cartDao.getAll(sessionPref.userId)
+    }
+
+    val cart = cartFlow.asLiveData()
 
     val order = MutableLiveData<Order>()
 

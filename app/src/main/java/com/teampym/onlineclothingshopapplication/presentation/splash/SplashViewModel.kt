@@ -19,15 +19,14 @@ class SplashViewModel @Inject constructor(
     val splashEvent = splashEventChannel.receiveAsFlow()
 
     fun checkIfUserIsInDb(userId: String) = viewModelScope.launch {
-        when(accountRepository.get(userId)) {
+        when (accountRepository.get(userId)) {
             is Resource.Error -> splashEventChannel.send(SplashEvent.NotRegistered)
             is Resource.Success -> splashEventChannel.send(SplashEvent.Registered)
         }
     }
 
     sealed class SplashEvent {
-        object NotRegistered: SplashEvent()
-        object Registered: SplashEvent()
+        object NotRegistered : SplashEvent()
+        object Registered : SplashEvent()
     }
-
 }

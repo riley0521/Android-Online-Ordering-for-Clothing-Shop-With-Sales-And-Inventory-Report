@@ -6,6 +6,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
+import com.teampym.onlineclothingshopapplication.data.db.SortOrder
 import com.teampym.onlineclothingshopapplication.data.models.*
 import com.teampym.onlineclothingshopapplication.data.util.*
 import com.teampym.onlineclothingshopapplication.presentation.client.products.ProductPagingSource
@@ -23,7 +24,7 @@ class ProductRepositoryImpl @Inject constructor(
     // READ Operation
     private val productCollectionRef = db.collection(PRODUCTS_COLLECTION)
 
-    fun getSome(queryProducts: Query) =
+    fun getSome(queryProducts: Query, sortOrder: SortOrder) =
         Pager(
             PagingConfig(
                 pageSize = 30
@@ -31,6 +32,7 @@ class ProductRepositoryImpl @Inject constructor(
         ) {
             ProductPagingSource(
                 queryProducts,
+                sortOrder,
                 productImageRepository,
                 productInventoryRepository,
                 reviewRepository
@@ -74,8 +76,7 @@ class ProductRepositoryImpl @Inject constructor(
                 "name" to product.name,
                 "description" to product.description,
                 "imageUrl" to product.imageUrl,
-                "price" to product.price,
-                "flag" to product.flag
+                "price" to product.price
             )
 
             val result = productCollectionRef

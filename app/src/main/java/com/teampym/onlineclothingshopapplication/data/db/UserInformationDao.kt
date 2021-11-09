@@ -18,9 +18,6 @@ interface UserInformationDao {
     @Query("SELECT * FROM table_users WHERE userId = :userId")
     fun getCurrentUser(userId: String): Flow<UserInformation?>
 
-    @Query("UPDATE table_users SET totalOfCart = :totalOfCart WHERE userId = :userId")
-    suspend fun updateTotalOfCart(userId: String, totalOfCart: Double)
-
     @Query("UPDATE table_users SET firstName = :firstName, lastName = :lastName, birthDate = :birthDate WHERE userId = :userId")
     suspend fun updateBasicInfo(firstName: String, lastName: String, birthDate: String, userId: String)
 
@@ -37,8 +34,9 @@ interface UserInformationDao {
     @Query("SELECT * FROM table_users WHERE userId = :userId")
     fun getUserWithDeliveryInfoAndTokens(userId: String): Flow<UserWithDeliveryInfoAndTokens>
 
+    // I don't know if this necessary in the future. but I will leave it here for now.
     @Transaction
     @Query("SELECT * FROM table_users WHERE userId = :userId")
-    fun getCurrentUserWithCart(userId: String): List<UserWithCart>
+    fun getCurrentUserWithCart(userId: String): Flow<UserWithCart>
 
 }

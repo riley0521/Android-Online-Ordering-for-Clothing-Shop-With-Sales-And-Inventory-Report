@@ -74,7 +74,6 @@ class AccountRepositoryImpl @Inject constructor(
             lastName = lastName,
             birthDate = birthDate,
             avatarUrl = avatarUrl,
-            totalOfCart = 0.0,
             userId = userId
         )
 

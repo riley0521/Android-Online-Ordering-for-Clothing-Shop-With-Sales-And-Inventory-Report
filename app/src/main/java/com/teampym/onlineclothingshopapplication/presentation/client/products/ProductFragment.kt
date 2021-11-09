@@ -1,11 +1,10 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.products
 
 import android.os.Bundle
-import android.util.Log
-import android.view.*
+import android.view.* // ktlint-disable no-wildcard-imports
 import android.widget.Toast
-import androidx.fragment.app.Fragment
 import androidx.appcompat.widget.SearchView
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -13,6 +12,7 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.R
+import com.teampym.onlineclothingshopapplication.data.db.SortOrder
 import com.teampym.onlineclothingshopapplication.data.models.Product
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -53,8 +53,6 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
                 findNavController().navigate(R.id.action_global_cartFragment)
             }
         }
-
-        viewModel.updateFlag("")
 
         lifecycleScope.launchWhenStarted {
             viewModel.productsFlow.collectLatest {
@@ -105,7 +103,6 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
             override fun onQueryTextChange(newText: String?): Boolean {
                 // Search
                 viewModel.searchQuery.value = newText
-                viewModel.updateFlag("")
                 return true
             }
         })
@@ -119,23 +116,18 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_no_sort -> {
-                viewModel.updateFlag("")
+                viewModel.updateSortOrder(SortOrder.BY_NAME)
                 true
             }
             R.id.action_sort_best_seller -> {
-                viewModel.updateFlag("BEST_SELLER")
+                viewModel.updateSortOrder(SortOrder.BY_POPULARITY)
                 true
             }
             R.id.action_sort_by_new -> {
-                viewModel.updateFlag("NEW")
+                viewModel.updateSortOrder(SortOrder.BY_NEWEST)
                 true
             }
             else -> false
         }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        viewModel.updateFlag("")
     }
 }

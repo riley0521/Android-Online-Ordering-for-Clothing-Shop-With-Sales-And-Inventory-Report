@@ -15,7 +15,6 @@ import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
-import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.databinding.FragmentRegistrationBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,7 +22,6 @@ import kotlinx.android.synthetic.main.fragment_registration.*
 import kotlinx.coroutines.flow.collect
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class RegistrationFragment : Fragment(R.layout.fragment_registration) {
@@ -144,7 +142,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
         }
 
-        viewModel.userInformation.observe(viewLifecycleOwner) {
+        viewModel.user.observe(viewLifecycleOwner) {
             if(it != null && editMode) {
 
                 tvInstruction.isVisible = false

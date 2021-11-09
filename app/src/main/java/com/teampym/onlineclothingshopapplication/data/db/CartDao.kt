@@ -3,6 +3,7 @@ package com.teampym.onlineclothingshopapplication.data.db
 import androidx.room.*
 import androidx.room.OnConflictStrategy.REPLACE
 import com.teampym.onlineclothingshopapplication.data.models.Cart
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CartDao {
@@ -12,6 +13,9 @@ interface CartDao {
 
     @Insert(onConflict = REPLACE)
     suspend fun insertAll(cart: List<Cart>)
+
+    @Query("SELECT * FROM table_cart WHERE userId = :userId")
+    fun getAll(userId: String): Flow<List<Cart>>
 
     @Update
     suspend fun update(cart: Cart)

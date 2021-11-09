@@ -1,12 +1,10 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.products
 
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asFlow
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.teampym.onlineclothingshopapplication.data.util.Utils
+import com.teampym.onlineclothingshopapplication.data.db.PreferencesManager
+import com.teampym.onlineclothingshopapplication.data.db.SortOrder
 import com.teampym.onlineclothingshopapplication.data.repository.ProductRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,52 +16,67 @@ import javax.inject.Inject
 @HiltViewModel
 class ProductViewModel @Inject constructor(
     private val db: FirebaseFirestore,
-    private val productRepository: ProductRepositoryImpl
+    private val productRepository: ProductRepositoryImpl,
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     val searchQuery = MutableLiveData("")
     private val _categoryQuery = MutableLiveData("")
-    private val _flagQuery = MutableLiveData(Utils.productFlag)
 
     var productsFlow = combine(
         searchQuery.asFlow(),
-        _flagQuery.asFlow()
-    ) { search, flag ->
-        Pair(search, flag)
-    }.flatMapLatest { (search, flag) ->
+        preferencesManager.preferencesFlow
+    ) { search, sessionPref ->
+        Pair(search, sessionPref)
+    }.flatMapLatest { (search, sessionPref) ->
 
-        lateinit var queryProducts: Query
+        var queryProducts: Query?
         val categoryId = _categoryQuery.value
-        if (flag.isEmpty()) {
-            queryProducts = if (search.isEmpty()) {
-                db.collection(PRODUCTS_COLLECTION)
-                    .whereEqualTo("categoryId", categoryId)
-                    .orderBy("name", Query.Direction.ASCENDING)
-                    .limit(30)
-            } else {
-                db.collection(PRODUCTS_COLLECTION)
-                    .whereEqualTo("categoryId", categoryId)
-                    .orderBy("name", Query.Direction.ASCENDING)
-                    .startAt(search)
-                    .endAt(search + '\uf8ff')
-                    .limit(30)
+
+        queryProducts = when (sessionPref.sortOrder) {
+            SortOrder.BY_NAME -> {
+                if (search.isEmpty()) {
+                    db.collection(PRODUCTS_COLLECTION)
+                        .whereEqualTo("categoryId", categoryId)
+                        .orderBy("name", Query.Direction.ASCENDING)
+                        .limit(30)
+                } else {
+                    db.collection(PRODUCTS_COLLECTION)
+                        .whereEqualTo("categoryId", categoryId)
+                        .orderBy("name", Query.Direction.ASCENDING)
+                        .startAt(search)
+                        .endAt(search + '\uf8ff')
+                        .limit(30)
+                }
             }
-        } else {
-            queryProducts = db.collection(PRODUCTS_COLLECTION)
-                .whereEqualTo("categoryId", categoryId)
-                .whereEqualTo("flag", flag)
-                .limit(30)
+            SortOrder.BY_NEWEST -> {
+                if (search.isEmpty()) {
+                    db.collection(PRODUCTS_COLLECTION)
+                        .whereEqualTo("categoryId", categoryId)
+                        .orderBy("dateAdded", Query.Direction.DESCENDING)
+                        .limit(30)
+                } else {
+                    db.collection(PRODUCTS_COLLECTION)
+                        .whereEqualTo("categoryId", categoryId)
+                        .orderBy("dateAdded", Query.Direction.DESCENDING)
+                        .startAt(search)
+                        .endAt(search + '\uf8ff')
+                        .limit(30)
+                }
+            }
+            SortOrder.BY_POPULARITY -> {
+                null
+            }
         }
 
-        productRepository.getSome(queryProducts).flow
+        productRepository.getSome(queryProducts!!, sessionPref.sortOrder).flow
     }
 
     fun updateCategory(categoryId: String) {
         _categoryQuery.value = categoryId
     }
 
-    fun updateFlag(flag: String) = viewModelScope.launch {
-        Utils.productFlag = flag
-        _flagQuery.value = flag
+    fun updateSortOrder(sortOrder: SortOrder) = viewModelScope.launch {
+        preferencesManager.updateSortOrder(sortOrder)
     }
 }

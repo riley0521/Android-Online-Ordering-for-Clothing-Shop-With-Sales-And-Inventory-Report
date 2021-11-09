@@ -1,7 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.splash
 
 import android.os.Bundle
-import android.os.Handler
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -26,10 +25,9 @@ class SplashFragment : Fragment(R.layout.fragment_splash) {
         binding = FragmentSplashBinding.bind(view)
 
         val currentUser = FirebaseAuth.getInstance().currentUser
-        if(currentUser != null) {
+        if (currentUser != null) {
             viewModel.checkIfUserIsInDb(currentUser.uid)
-        }
-        else {
+        } else {
             findNavController().navigate(R.id.action_splashFragment_to_categoryFragment)
         }
 

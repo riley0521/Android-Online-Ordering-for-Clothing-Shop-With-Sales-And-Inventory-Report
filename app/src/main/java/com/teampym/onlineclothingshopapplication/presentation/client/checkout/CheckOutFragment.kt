@@ -2,18 +2,16 @@ package com.teampym.onlineclothingshopapplication.presentation.client.checkout
 
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
+import com.teampym.onlineclothingshopapplication.data.models.Cart
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
-import com.teampym.onlineclothingshopapplication.data.util.PaymentMethod
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCheckOutBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_check_out.*
@@ -31,29 +29,53 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
     private lateinit var adapter: CheckOutAdapter
 
+    var finalUser: UserInformation = UserInformation()
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentCheckOutBinding.bind(view)
 
-        val cartList = args.cart.cart
+        var cartList = emptyList<Cart>()
 
         adapter = CheckOutAdapter()
 
+        viewModel.cart.observe(viewLifecycleOwner) { cart ->
+            adapter.submitList(cart)
+            cartList = cart
+        }
+
         binding.apply {
-            btnPlaceOrder.setOnClickListener {
-                // TODO("Complete placing order process.")
+            btnChangeAddress.setOnClickListener {
+                // TODO("Proceed to addresses layout (not made yet?)")
+                Toast.makeText(requireContext(), "Change Address layout.", Toast.LENGTH_SHORT).show()
+            }
+
+            btnChangePaymentMethod.setOnClickListener {
+                // TODO("Proceed to payment method layout (not made yet?)")
+                Toast.makeText(requireContext(), "Change Payment Method layout.", Toast.LENGTH_SHORT).show()
             }
 
             tvMerchandiseTotal.text = "$${args.cart.totalCost}"
-
-            adapter.submitList(cartList)
 
             recyclerFinalItems.setHasFixedSize(true)
             recyclerFinalItems.adapter = adapter
         }
 
+        viewModel.selectedPaymentMethod.observe(viewLifecycleOwner) { paymentMethod ->
+            btnPlaceOrder.setOnClickListener {
+
+                // get the final cart and place order
+                viewModel.placeOrder(finalUser.copy(cartList = cartList), paymentMethod)
+            }
+        }
+
         viewModel.user.observe(viewLifecycleOwner) { user ->
+            finalUser = user.user.copy(
+                deliveryInformationList = user.deliveryInformation,
+                notificationTokenList = user.notificationTokens
+            )
+
             val defaultInfo = user.deliveryInformation.first { it.default }
             binding.apply {
                 val contact = if (defaultInfo.contactNo[0].toString() == "0")
@@ -66,51 +88,12 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                 tvNameAndContactNo.text = nameAndContact
 
                 val completeAddress = "${defaultInfo.streetNumber} " +
-                        "${defaultInfo.city}, " +
-                        "${defaultInfo.province}, " +
-                        "${defaultInfo.province}, " +
-                        defaultInfo.postalCode
+                    "${defaultInfo.city}, " +
+                    "${defaultInfo.province}, " +
+                    "${defaultInfo.province}, " +
+                    defaultInfo.postalCode
                 tvCompleteAddress.text = completeAddress
             }
-
-            btnPlaceOrder.setOnClickListener {
-                val paymentMethod = tvPaymentMethod.text.toString()
-
-                // create new User Object to pass in the context
-                val newUser = UserInformation(
-                    firstName = user.user.firstName,
-                    lastName = user.user.lastName,
-                    birthDate = user.user.lastName,
-                    avatarUrl = user.user.avatarUrl,
-                    userId = user.user.userId,
-                    userType = user.user.userType,
-                    deliveryInformationList = user.deliveryInformation,
-                    notificationTokenList = user.notificationTokens,
-                    cartList = cartList
-                )
-
-                when {
-                    paymentMethod.contains("COD") -> {
-                        // Place Order
-
-                        viewModel.placeOrder(newUser, PaymentMethod.COD.name)
-                    }
-                    paymentMethod.contains("GCASH") -> {
-                        PaymentMethod.GCASH.name
-                        // Send to GCASH payment page
-                    }
-                    paymentMethod.contains("PAYMAYA") -> {
-                        PaymentMethod.PAYMAYA.name
-                        // Send to PAYMAYA payment page
-                    }
-                    else -> {
-                        PaymentMethod.BPI.name
-                        // Send to BPI payment page
-                    }
-                }
-
-            }
-
         }
 
         viewModel.order.observe(viewLifecycleOwner) {

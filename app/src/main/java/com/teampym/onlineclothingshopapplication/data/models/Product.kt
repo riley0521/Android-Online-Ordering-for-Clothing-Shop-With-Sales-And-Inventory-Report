@@ -2,6 +2,7 @@ package com.teampym.onlineclothingshopapplication.data.models
 
 import android.os.Parcelable
 import com.google.firebase.firestore.Exclude
+import com.teampym.onlineclothingshopapplication.data.db.SortOrder
 import com.teampym.onlineclothingshopapplication.data.util.ProductType
 import kotlinx.android.parcel.Parcelize
 
@@ -29,4 +30,7 @@ data class Product(
         "",
         0.0
     )
+
+    @get:Exclude
+    val flag: String = SortOrder.BY_NAME.name
 }

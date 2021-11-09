@@ -1,17 +1,18 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.cart
 
-import androidx.lifecycle.*
-import com.teampym.onlineclothingshopapplication.USER_ID_KEY
+import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.db.CartDao
+import com.teampym.onlineclothingshopapplication.data.db.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
 import com.teampym.onlineclothingshopapplication.data.models.Cart
+import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.CartRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.util.CartFlag
-import com.teampym.onlineclothingshopapplication.data.util.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,17 +21,22 @@ class CartViewModel @Inject constructor(
     private val cartRepository: CartRepositoryImpl,
     private val userInformationDao: UserInformationDao,
     private val cartDao: CartDao,
+    private val preferencesManager: PreferencesManager,
     @ApplicationScope val appScope: CoroutineScope
-): ViewModel() {
+) : ViewModel() {
 
-    val userInformation = userInformationDao.getCurrentUser(Utils.userId).asLiveData()
+    lateinit var userInformation: LiveData<UserInformation?>
 
-    private val _cart = cartRepository.getAll(Utils.userId).asLiveData()
-    val cart: MutableLiveData<MutableList<Cart>> = _cart as MutableLiveData<MutableList<Cart>>
+    private val cartFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
+        userInformation = userInformationDao.getCurrentUser(sessionPref.userId).asLiveData()
+        cartRepository.getAll(sessionPref.userId)
+    }
+
+    val cart = cartFlow.asLiveData() as MutableLiveData<MutableList<Cart>>
 
     fun updateQty(cartId: String, flag: String) = viewModelScope.launch {
         cart.value?.first { it.id == cartId }?.let {
-            when(flag) {
+            when (flag) {
                 CartFlag.ADDING.toString() -> {
                     it.quantity += 1
                     it.subTotal = it.calculatedTotalPrice.toDouble()

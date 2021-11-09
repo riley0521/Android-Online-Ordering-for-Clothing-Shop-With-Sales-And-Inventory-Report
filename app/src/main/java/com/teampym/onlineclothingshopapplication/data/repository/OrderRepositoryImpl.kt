@@ -12,7 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.util.*
+import java.util.* // ktlint-disable no-wildcard-imports
 import javax.inject.Inject
 
 class OrderRepositoryImpl @Inject constructor(
@@ -83,7 +83,6 @@ class OrderRepositoryImpl @Inject constructor(
                     cartRepository.deleteAll(userInformation.userId)
                 }
             }.addOnFailureListener {
-
             }
         return Order()
     }
@@ -216,5 +215,4 @@ class OrderRepositoryImpl @Inject constructor(
         }
         return false
     }
-
 }

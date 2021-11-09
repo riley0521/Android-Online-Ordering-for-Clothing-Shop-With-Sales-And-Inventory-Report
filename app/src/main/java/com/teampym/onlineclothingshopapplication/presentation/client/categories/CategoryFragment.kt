@@ -8,7 +8,6 @@ import androidx.navigation.fragment.findNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Category
-import com.teampym.onlineclothingshopapplication.data.util.Utils
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCategoryBinding
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -27,8 +26,8 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
         binding = FragmentCategoryBinding.bind(view)
 
         val currentUser = FirebaseAuth.getInstance().currentUser
-        if(currentUser != null)
-            Utils.userId = currentUser.uid
+        if (currentUser != null)
+            categoryViewModel.updateUserId(currentUser.uid)
 
         adapter = CategoryAdapter(this)
 

@@ -81,7 +81,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             binding.btnSendVerification.isVisible = it > 0 && System.currentTimeMillis() > it
         }
 
-        viewModel.userInformation.observe(viewLifecycleOwner) { userInfo ->
+        viewModel.user.observe(viewLifecycleOwner) { userInfo ->
             if(userInfo != null) {
                 Log.d(TAG, "${userInfo?.firstName}")
 

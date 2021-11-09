@@ -19,16 +19,9 @@ const val POSTS_COLLECTION = "Posts"
 const val LIKES_SUB_COLLECTION = "likes"
 const val COMMENTS_SUB_COLLECTION = "comments"
 
-class Utils {
-    companion object {
-        var productFlag: String = ""
-        var userId: String = ""
-    }
-}
-
 sealed class Resource {
-    data class Success(val msg: String, val res: Any): Resource()
-    data class Error(val msg: String, val ex: Any?): Resource()
+    data class Success(val msg: String, val res: Any) : Resource()
+    data class Error(val msg: String, val ex: Any?) : Resource()
 }
 
 enum class Status {
@@ -40,13 +33,6 @@ enum class Status {
     RETURNED,
     // When the user canceled the order within 24 hours
     CANCELED
-}
-
-enum class PaymentMethod {
-    GCASH,
-    PAYMAYA,
-    BPI,
-    COD
 }
 
 enum class CartFlag {
