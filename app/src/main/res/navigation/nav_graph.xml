@@ -150,4 +150,25 @@
             app:popUpTo="@id/checkOutFragment"
             app:popUpToInclusive="true"/>
     </fragment>
+    <fragment
+        android:id="@+id/deliveryInformationFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.deliveryinformation.DeliveryInformationFragment"
+        android:label="fragment_delivery_information"
+        tools:layout="@layout/fragment_delivery_information" >
+        <action
+            android:id="@+id/action_deliveryInformationFragment_to_addEditDeliveryInformationFragment"
+            app:destination="@id/addEditDeliveryInformationFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/addEditDeliveryInformationFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.addeditdeliveryinfo.AddEditDeliveryInformationFragment"
+        android:label="fragment_add_edit_delivery_information"
+        tools:layout="@layout/fragment_add_edit_delivery_information" >
+        <argument
+            android:name="deliveryInfo"
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+    <action android:id="@+id/action_global_deliveryInformationFragment" app:destination="@id/deliveryInformationFragment" />
 </navigation>

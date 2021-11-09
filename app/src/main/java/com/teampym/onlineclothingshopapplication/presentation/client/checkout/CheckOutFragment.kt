@@ -47,8 +47,7 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
         binding.apply {
             btnChangeAddress.setOnClickListener {
-                // TODO("Proceed to addresses layout (not made yet?)")
-                Toast.makeText(requireContext(), "Change Address layout.", Toast.LENGTH_SHORT).show()
+                findNavController().navigate(R.id.action_global_deliveryInformationFragment)
             }
 
             btnChangePaymentMethod.setOnClickListener {
@@ -66,7 +65,8 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
             btnPlaceOrder.setOnClickListener {
 
                 // get the final cart and place order
-                viewModel.placeOrder(finalUser.copy(cartList = cartList), paymentMethod)
+                if (paymentMethod.isNotBlank())
+                    viewModel.placeOrder(finalUser.copy(cartList = cartList), paymentMethod)
             }
         }
 

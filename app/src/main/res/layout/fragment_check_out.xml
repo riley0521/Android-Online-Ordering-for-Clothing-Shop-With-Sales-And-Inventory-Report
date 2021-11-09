@@ -66,7 +66,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/labelPaymentMethod" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnChangePaymentMethod"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -170,7 +170,7 @@
             app:layout_constraintTop_toBottomOf="@+id/tvMerchandiseTotal"
             tools:text="$14.99" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnPlaceOrder"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -232,7 +232,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tv2"
                 app:layout_constraintVertical_bias="0.0"
-                tools:text="Riley Farro | (+63) 966 371 6734" />
+                tools:text="@string/test_name_contact" />
 
             <TextView
                 android:id="@+id/tvCompleteAddress"
@@ -250,9 +250,9 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tvNameAndContactNo"
                 app:layout_constraintVertical_bias="0.0"
-                tools:text="#39 7th Avenue Justice Lourdes Paredes Cubao Quezon City \nQuezon City, Metro Manila, Metro Manila, 1109" />
+                tools:text="@string/test_address" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnChangeAddress"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

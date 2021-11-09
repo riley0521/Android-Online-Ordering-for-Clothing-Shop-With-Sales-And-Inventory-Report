@@ -7,8 +7,8 @@ import com.teampym.onlineclothingshopapplication.data.db.CartDao
 import com.teampym.onlineclothingshopapplication.data.models.Cart
 import com.teampym.onlineclothingshopapplication.data.models.Inventory
 import com.teampym.onlineclothingshopapplication.data.models.Product
-import com.teampym.onlineclothingshopapplication.data.util.*
-import kotlinx.coroutines.*
+import com.teampym.onlineclothingshopapplication.data.util.* // ktlint-disable no-wildcard-imports
+import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -22,7 +22,6 @@ class CartRepositoryImpl @Inject constructor(
 
     private val userCartCollectionRef = db.collection(USERS_COLLECTION)
     private val productsCollectionRef = db.collection(PRODUCTS_COLLECTION)
-
 
     // TODO("Use a flow to get updates in cart collection instantly")
     fun getAll(userId: String): Flow<MutableList<Cart>> = callbackFlow {
@@ -64,7 +63,7 @@ class CartRepositoryImpl @Inject constructor(
                                     .get()
                                     .await()
 
-                                if(inventoryQuery.data != null) {
+                                if (inventoryQuery.data != null) {
                                     val inv = inventoryQuery.toObject<Inventory>()!!
                                         .copy(id = inventoryQuery.id, productId = cartItem.product.id)
 
@@ -81,12 +80,9 @@ class CartRepositoryImpl @Inject constructor(
                                         .document(document.id)
                                         .update(updatePriceOfProductInCart)
                                         .addOnSuccessListener {
-
                                         }.addOnFailureListener {
-
                                         }
                                 }
-
                             }
                         }
                         cartList.add(cartItem)
@@ -140,7 +136,6 @@ class CartRepositoryImpl @Inject constructor(
                                 cartDao.insert(obj)
                             }
                         }.addOnFailureListener {
-
                         }
                     return Resource.Success("Success", isUpdated)
                 }
@@ -168,7 +163,6 @@ class CartRepositoryImpl @Inject constructor(
                         cartDao.insert(newItem)
                     }
                 }.addOnFailureListener {
-
                 }
             return Resource.Success("Success", isCreated)
         }
@@ -181,7 +175,7 @@ class CartRepositoryImpl @Inject constructor(
     ): Boolean {
 
         var isUpdated = false
-        for(item in cart) {
+        for (item in cart) {
             val cartQuery = userCartCollectionRef
                 .document(userId)
                 .collection(CART_SUB_COLLECTION)
@@ -189,7 +183,7 @@ class CartRepositoryImpl @Inject constructor(
                 .get()
                 .await()
 
-            if(cartQuery.data != null) {
+            if (cartQuery.data != null) {
                 val updateCartQty = mapOf<String, Any>(
                     "quantity" to item.quantity,
                     "subTotal" to item.subTotal
@@ -203,7 +197,6 @@ class CartRepositoryImpl @Inject constructor(
                     .addOnSuccessListener {
                         isUpdated = true
                     }.addOnFailureListener {
-
                     }
             }
         }
@@ -231,7 +224,6 @@ class CartRepositoryImpl @Inject constructor(
                 .addOnSuccessListener {
                     isDeleted = true
                 }.addOnFailureListener {
-
                 }
             return Resource.Success("Success", isDeleted)
         }
@@ -255,9 +247,7 @@ class CartRepositoryImpl @Inject constructor(
                     .document(cartItem.id)
                     .delete()
                     .addOnSuccessListener {
-
                     }.addOnFailureListener {
-
                     }
             }
             cartDao.deleteAll()

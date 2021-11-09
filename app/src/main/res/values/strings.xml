@@ -63,5 +63,9 @@
     <string name="btn_change_payment_method">Change</string>
     <string name="product_name">Product Name</string>
     <string name="long_sentence">Hmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm</string>
+    <string name="test_address">#39 7th Avenue Justice Lourdes Paredes Cubao Quezon City \nQuezon City, Metro Manila, Metro Manila, 1109</string>
+    <string name="test_name_contact">Riley Farro | (+63) 912 345 6789</string>
+    <string name="default_delivery_information">Default Delivery Information</string>
+    <string name="add_new_delivery_information">Add New Delivery Information</string>
 
 </resources>
