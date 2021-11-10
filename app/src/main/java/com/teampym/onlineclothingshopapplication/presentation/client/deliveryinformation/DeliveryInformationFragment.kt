@@ -6,11 +6,14 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.databinding.FragmentDeliveryInformationBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 
 @AndroidEntryPoint
 class DeliveryInformationFragment :
@@ -69,6 +72,16 @@ class DeliveryInformationFragment :
 
             recyclerDeliveryInformation.setHasFixedSize(true)
             recyclerDeliveryInformation.adapter = adapter
+        }
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.deliveryInfoEvent.collectLatest { event ->
+                when (event) {
+                    is DeliveryInformationViewModel.DeliveryInfoEvent.ShowMessage -> {
+                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
+                    }
+                }
+            }
         }
     }
 

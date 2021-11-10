@@ -8,7 +8,9 @@ import com.teampym.onlineclothingshopapplication.data.db.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.repository.DeliveryInformationRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,6 +22,9 @@ class DeliveryInformationViewModel @Inject constructor(
 ) : ViewModel() {
 
     private var userId = ""
+
+    private val deliveryInformationChannel = Channel<DeliveryInfoEvent>()
+    val deliveryInfoEvent = deliveryInformationChannel.receiveAsFlow()
 
     private val deliveryInformationFlow =
         preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
@@ -33,10 +38,19 @@ class DeliveryInformationViewModel @Inject constructor(
         defaultDeliveryInfo: DeliveryInformation?,
         deliveryInfo: DeliveryInformation
     ) = viewModelScope.launch {
-        deliveryInformationRepository.changeDefault(userId, defaultDeliveryInfo, deliveryInfo)
+        val isModified = deliveryInformationRepository.changeDefault(userId, defaultDeliveryInfo, deliveryInfo)
         if (defaultDeliveryInfo != null) {
             deliveryInformationDao.update(defaultDeliveryInfo)
         }
         deliveryInformationDao.update(deliveryInfo)
+        if (isModified) {
+            deliveryInformationChannel.send(DeliveryInfoEvent.ShowMessage("Successfully changed the default delivery information."))
+        } else {
+            deliveryInformationChannel.send(DeliveryInfoEvent.ShowMessage("Failed to change the default delivery information."))
+        }
+    }
+
+    sealed class DeliveryInfoEvent {
+        data class ShowMessage(val msg: String) : DeliveryInfoEvent()
     }
 }
