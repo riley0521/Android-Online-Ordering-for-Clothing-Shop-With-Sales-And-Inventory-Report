@@ -38,11 +38,15 @@ class DeliveryInformationViewModel @Inject constructor(
         defaultDeliveryInfo: DeliveryInformation?,
         deliveryInfo: DeliveryInformation
     ) = viewModelScope.launch {
+
+        // modify old info to false and modify the new info to true to make it the default
         val isModified = deliveryInformationRepository.changeDefault(userId, defaultDeliveryInfo, deliveryInfo)
         if (defaultDeliveryInfo != null) {
             deliveryInformationDao.update(defaultDeliveryInfo)
         }
         deliveryInformationDao.update(deliveryInfo)
+
+        // Emit message for the view to show in snackbar
         if (isModified) {
             deliveryInformationChannel.send(DeliveryInfoEvent.ShowMessage("Successfully changed the default delivery information."))
         } else {
