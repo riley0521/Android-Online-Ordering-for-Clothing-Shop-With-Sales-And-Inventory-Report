@@ -7,14 +7,17 @@ import com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.models.NotificationToken
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 
-
-data class UserWithDeliveryInfoAndTokens(
+data class UserWithDeliveryInfo(
     @Embedded val user: UserInformation,
     @Relation(
         parentColumn = "userId",
         entityColumn = "userId"
     )
-    val deliveryInformation: List<DeliveryInformation>,
+    val deliveryInformation: List<DeliveryInformation>
+)
+
+data class UserWithNotificationTokens(
+    @Embedded val user: UserInformation,
     @Relation(
         parentColumn = "userId",
         entityColumn = "userId"

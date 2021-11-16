@@ -54,11 +54,18 @@ object LocalDbModule {
     @Singleton
     fun provideCartDao(db: MyDatabase) = db.cartDao()
 
+    @Provides
+    @Singleton
+    fun provideProductDao(db: MyDatabase) = db.productDao()
+
+    @Provides
+    @Singleton
+    fun provideInventoryDao(db: MyDatabase) = db.inventoryDao()
+
     @ApplicationScope
     @Provides
     @Singleton
     fun provideApplicationScope() = CoroutineScope(SupervisorJob())
-
 }
 
 @Retention(AnnotationRetention.RUNTIME)

@@ -55,7 +55,7 @@ class CheckOutAdapter : ListAdapter<Cart, CheckOutAdapter.CheckOutViewHolder>(CA
                 tvPrice.text = "$${item.product.price}"
                 tvQuantity.text = item.quantity.toString()
                 tvTotal.text = item.subTotal.toString()
-                tvSize.text = item.sizeInv.size
+                tvSize.text = item.inventory.size
             }
         }
     }

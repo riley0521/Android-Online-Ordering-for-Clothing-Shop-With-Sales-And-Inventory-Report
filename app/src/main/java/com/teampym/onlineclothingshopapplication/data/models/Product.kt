@@ -1,11 +1,15 @@
 package com.teampym.onlineclothingshopapplication.data.models
 
 import android.os.Parcelable
+import androidx.room.Entity
+import androidx.room.Ignore
+import androidx.room.PrimaryKey
 import com.google.firebase.firestore.Exclude
 import com.teampym.onlineclothingshopapplication.data.db.SortOrder
 import com.teampym.onlineclothingshopapplication.data.util.ProductType
 import kotlinx.android.parcel.Parcelize
 
+@Entity(tableName = "table_products")
 @Parcelize
 data class Product(
     var categoryId: String,
@@ -13,14 +17,23 @@ data class Product(
     var description: String,
     var imageUrl: String,
     var price: Double,
-    var id: String = "",
+    var productId: String = "",
+    @PrimaryKey
+    @get:Exclude
+    var roomId: String = "",
+    @get:Exclude
+    var cartId: String = "",
     var type: String = ProductType.HOODIES.name,
     var dateAdded: Long = System.currentTimeMillis(),
+    var dateModified: Long = 0,
     @get:Exclude
+    @Ignore
     var inventoryList: List<Inventory> = emptyList(),
     @get:Exclude
+    @Ignore
     var productImageList: List<ProductImage> = emptyList(),
     @get:Exclude
+    @Ignore
     var reviewList: List<Review> = emptyList(),
 ) : Parcelable {
     constructor() : this(
@@ -32,5 +45,6 @@ data class Product(
     )
 
     @get:Exclude
-    val flag: String = SortOrder.BY_NAME.name
+    @Ignore
+    var flag: String = ""
 }

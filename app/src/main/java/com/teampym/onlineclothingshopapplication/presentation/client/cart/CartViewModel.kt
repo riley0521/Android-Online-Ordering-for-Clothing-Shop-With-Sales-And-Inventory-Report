@@ -12,7 +12,6 @@ import com.teampym.onlineclothingshopapplication.data.util.CartFlag
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,12 +24,14 @@ class CartViewModel @Inject constructor(
     @ApplicationScope val appScope: CoroutineScope
 ) : ViewModel() {
 
-    lateinit var userInformation: LiveData<UserInformation?>
+    private val _userInformation = MutableLiveData<UserInformation?>()
 
     private val cartFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
-        userInformation = userInformationDao.getCurrentUser(sessionPref.userId).asLiveData()
-        cartRepository.getAll(sessionPref.userId)
+        _userInformation.value = userInformationDao.getCurrentUser(sessionPref.userId)
+        cartRepository.getAll(if (sessionPref.userId.isNotBlank()) sessionPref.userId else null)
     }
+
+    val userInformation: LiveData<UserInformation?> get() = _userInformation
 
     val cart = cartFlow.asLiveData() as MutableLiveData<MutableList<Cart>>
 

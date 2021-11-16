@@ -26,7 +26,7 @@ class RegistrationViewModel @Inject constructor(
     val registrationEvent = registrationEventChannel.receiveAsFlow()
 
     private val userFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
-        userInformationDao.getCurrentUser(sessionPref.userId)
+        userInformationDao.getUserFlow(sessionPref.userId)
     }
 
     val user = userFlow.asLiveData()

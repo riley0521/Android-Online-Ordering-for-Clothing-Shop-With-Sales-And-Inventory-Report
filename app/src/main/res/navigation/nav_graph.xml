@@ -153,8 +153,8 @@
     <fragment
         android:id="@+id/deliveryInformationFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.deliveryinformation.DeliveryInformationFragment"
-        android:label="fragment_delivery_information"
-        tools:layout="@layout/fragment_delivery_information" >
+        android:label="Delivery Information List"
+        tools:layout="@layout/fragment_delivery_information">
         <action
             android:id="@+id/action_deliveryInformationFragment_to_addEditDeliveryInformationFragment"
             app:destination="@id/addEditDeliveryInformationFragment" />
@@ -162,13 +162,38 @@
     <fragment
         android:id="@+id/addEditDeliveryInformationFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.addeditdeliveryinfo.AddEditDeliveryInformationFragment"
-        android:label="fragment_add_edit_delivery_information"
-        tools:layout="@layout/fragment_add_edit_delivery_information" >
+        android:label="{title}"
+        tools:layout="@layout/fragment_add_edit_delivery_information">
         <argument
             android:name="deliveryInfo"
+            android:defaultValue="@null"
             app:argType="com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation"
-            app:nullable="true"
-            android:defaultValue="@null" />
+            app:nullable="true" />
+        <action
+            android:id="@+id/action_addEditDeliveryInformationFragment_to_selectRegionProvinceCityFragment"
+            app:destination="@id/selectRegionProvinceCityFragment" />
+        <argument
+            android:name="title"
+            app:argType="string"
+            android:defaultValue="Add New Address" />
     </fragment>
     <action android:id="@+id/action_global_deliveryInformationFragment" app:destination="@id/deliveryInformationFragment" />
+    <fragment
+        android:id="@+id/selectRegionProvinceCityFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.addeditdeliveryinfo.SelectRegionProvinceCityFragment"
+        android:label="{title}"
+        tools:layout="@layout/fragment_select_region_province_city">
+        <argument
+            android:name="regionId"
+            android:defaultValue="0L"
+            app:argType="long" />
+        <argument
+            android:name="provinceId"
+            android:defaultValue="0L"
+            app:argType="long" />
+        <argument
+            android:name="title"
+            app:argType="string"
+            android:defaultValue="Select Region" />
+    </fragment>
 </navigation>

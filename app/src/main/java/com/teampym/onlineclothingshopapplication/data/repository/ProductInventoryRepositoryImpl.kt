@@ -1,12 +1,9 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
-import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.models.Inventory
-import com.teampym.onlineclothingshopapplication.data.models.ProductImage
 import com.teampym.onlineclothingshopapplication.data.util.INVENTORIES_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import kotlinx.coroutines.tasks.await
@@ -32,7 +29,7 @@ class ProductInventoryRepositoryImpl @Inject constructor(
         if (inventoriesQuery.documents.isNotEmpty()) {
             for (document in inventoriesQuery.documents) {
                 val copy =
-                    document.toObject<Inventory>()!!.copy(id = document.id, productId = productId)
+                    document.toObject<Inventory>()!!.copy(inventoryId = document.id, pid = productId)
                 inventoryList.add(copy)
             }
         }
@@ -42,7 +39,7 @@ class ProductInventoryRepositoryImpl @Inject constructor(
     suspend fun create(inventory: Inventory): Boolean {
         var isCreated = false
         productCollectionRef
-            .document(inventory.productId)
+            .document(inventory.pid)
             .collection(INVENTORIES_SUB_COLLECTION)
             .add(inventory)
             .addOnSuccessListener {

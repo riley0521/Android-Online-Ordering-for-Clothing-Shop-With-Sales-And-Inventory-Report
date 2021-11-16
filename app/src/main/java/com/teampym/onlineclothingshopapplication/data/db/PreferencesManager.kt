@@ -17,6 +17,8 @@ private const val TAG = "PreferencesManager"
 private const val SESSION_PREFERENCES = "session_preferences"
 
 enum class SortOrder { BY_NAME, BY_POPULARITY, BY_NEWEST }
+const val MOST_POPULAR = "MOST POPULAR"
+const val NEWEST = "NEWEST"
 
 enum class PaymentMethod {
     GCASH,

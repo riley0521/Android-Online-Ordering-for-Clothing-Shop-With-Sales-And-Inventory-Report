@@ -2,7 +2,6 @@ package com.teampym.onlineclothingshopapplication.presentation.client.cart
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -47,7 +46,7 @@ class CartAdapter(
                     val position = absoluteAdapterPosition
                     if(position != RecyclerView.NO_POSITION && btnAdd.isEnabled) {
                         val item = getItem(position)
-                        val isMaximum = item.quantity + 1 > item.sizeInv.stock
+                        val isMaximum = item.quantity + 1 > item.inventory.stock
                         if(isMaximum) {
                             listener.onFailure("You have reached the maximum stocks available for this item.")
                         }
@@ -90,11 +89,11 @@ class CartAdapter(
                 tvProductName.text = cart.product.name
 
                 tvPrice.text = "$${cart.product.price}"
-                tvSize.text = "(${cart.sizeInv.size})"
+                tvSize.text = "(${cart.inventory.size})"
                 tvTotal.text = "$" + "%.2f".format(cart.calculatedTotalPrice)
                 tvCount.text = "${cart.quantity}"
 
-                val isMax = cart.sizeInv.stock == cart.quantity || cart.quantity == 99.toLong()
+                val isMax = cart.inventory.stock == cart.quantity || cart.quantity == 99.toLong()
                 btnAdd.isEnabled = !isMax
                 btnRemove.isEnabled = cart.quantity > 1.toLong()
             }

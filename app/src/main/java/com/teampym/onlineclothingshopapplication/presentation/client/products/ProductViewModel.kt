@@ -65,11 +65,23 @@ class ProductViewModel @Inject constructor(
                 }
             }
             SortOrder.BY_POPULARITY -> {
-                null
+                if (search.isEmpty()) {
+                    db.collection(PRODUCTS_COLLECTION)
+                        .whereEqualTo("categoryId", categoryId)
+                        .orderBy("name", Query.Direction.ASCENDING)
+                        .limit(30)
+                } else {
+                    db.collection(PRODUCTS_COLLECTION)
+                        .whereEqualTo("categoryId", categoryId)
+                        .orderBy("name", Query.Direction.ASCENDING)
+                        .startAt(search)
+                        .endAt(search + '\uf8ff')
+                        .limit(30)
+                }
             }
         }
 
-        productRepository.getSome(queryProducts!!, sessionPref.sortOrder).flow
+        productRepository.getSome(queryProducts, sessionPref.sortOrder).flow
     }
 
     fun updateCategory(categoryId: String) {

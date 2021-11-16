@@ -4,7 +4,6 @@ import androidx.room.*
 import androidx.room.OnConflictStrategy.REPLACE
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import kotlinx.coroutines.flow.Flow
-import java.math.BigDecimal
 
 @Dao
 interface UserInformationDao {
@@ -16,7 +15,10 @@ interface UserInformationDao {
     fun getAll(): Flow<List<UserInformation>>
 
     @Query("SELECT * FROM table_users WHERE userId = :userId")
-    fun getCurrentUser(userId: String): Flow<UserInformation?>
+    suspend fun getCurrentUser(userId: String): UserInformation?
+
+    @Query("SELECT * FROM table_users WHERE userId = :userId")
+    fun getUserFlow(userId: String): Flow<UserInformation?>
 
     @Query("UPDATE table_users SET firstName = :firstName, lastName = :lastName, birthDate = :birthDate WHERE userId = :userId")
     suspend fun updateBasicInfo(firstName: String, lastName: String, birthDate: String, userId: String)
@@ -32,11 +34,14 @@ interface UserInformationDao {
 
     @Transaction
     @Query("SELECT * FROM table_users WHERE userId = :userId")
-    fun getUserWithDeliveryInfoAndTokens(userId: String): Flow<UserWithDeliveryInfoAndTokens>
+    fun getUserWithDeliveryInfo(userId: String): Flow<UserWithDeliveryInfo>
+
+    @Transaction
+    @Query("SELECT * FROM table_users WHERE userId = :userId")
+    fun getUserWithNotificationTokens(userId: String): Flow<UserWithNotificationTokens>
 
     // I don't know if this necessary in the future. but I will leave it here for now.
     @Transaction
     @Query("SELECT * FROM table_users WHERE userId = :userId")
     fun getCurrentUserWithCart(userId: String): Flow<UserWithCart>
-
 }

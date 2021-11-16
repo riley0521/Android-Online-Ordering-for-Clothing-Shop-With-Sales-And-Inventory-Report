@@ -2,20 +2,20 @@ package com.teampym.onlineclothingshopapplication.data.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
-import com.teampym.onlineclothingshopapplication.data.models.Cart
-import com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation
-import com.teampym.onlineclothingshopapplication.data.models.NotificationToken
-import com.teampym.onlineclothingshopapplication.data.models.UserInformation
+import com.teampym.onlineclothingshopapplication.data.models.* // ktlint-disable no-wildcard-imports
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Provider
 
 @Database(
-    entities = [Region::class, Province::class, City::class, UserInformation::class, DeliveryInformation::class, NotificationToken::class, Cart::class],
+    entities = [
+        Region::class, Province::class, City::class,
+        UserInformation::class, DeliveryInformation::class, NotificationToken::class,
+        Cart::class, Product::class, Inventory::class
+    ],
     version = 1,
     exportSchema = false
 )
@@ -28,7 +28,10 @@ abstract class MyDatabase : RoomDatabase() {
     abstract fun userInformationDao(): UserInformationDao
     abstract fun deliveryInformationDao(): DeliveryInformationDao
     abstract fun notificationTokenDao(): NotificationTokenDao
+
     abstract fun cartDao(): CartDao
+    abstract fun productDao(): ProductDao
+    abstract fun inventoryDao(): InventoryDao
 
     class Callback @Inject constructor(
         private val database: Provider<MyDatabase>,
@@ -358,8 +361,6 @@ abstract class MyDatabase : RoomDatabase() {
                 cityDao.insert(City(254, 13, "Ubay"))
                 cityDao.insert(City(255, 13, "Valencia"))
             }
-
         }
     }
-
 }

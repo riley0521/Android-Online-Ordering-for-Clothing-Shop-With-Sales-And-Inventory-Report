@@ -67,5 +67,25 @@
     <string name="test_name_contact">Riley Farro | (+63) 912 345 6789</string>
     <string name="default_delivery_information">Default Delivery Information</string>
     <string name="add_new_delivery_information">Add New Delivery Information</string>
+    <string name="full_name">Full Name</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="phone_number_edt">(+63) Phone Number</string>
+    <string name="region">Region</string>
+    <string name="region_select">Region ></string>
+    <string name="province">Province</string>
+    <string name="province_select">Province ></string>
+    <string name="city">City</string>
+    <string name="city_select">City ></string>
+    <string name="postal_code">Postal Code</string>
+    <string name="detailed_address">Detailed Address</string>
+    <string name="unit_number_house_number_building_street_name">Unit number, house number, building, street name</string>
+    <string name="enter_your_detailed_address_here">Enter your detailed address here</string>
+    <string name="set_as_default_address">Set As Default Address</string>
+    <string name="delete_address">Delete Address</string>
+    <string name="submit">SUBMIT</string>
+    <string name="region_province_city">Region Province City</string>
+    <string name="no_delivery_address_yet_please_create_one">No Delivery Address Yet. Please Create One.</string>
+    <string name="no_delivery_address_yet_please_create_one_fab">No Delivery Address Yet. Please Create One By Tapping the + Button below.</string>
+
 
 </resources>

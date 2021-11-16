@@ -34,7 +34,7 @@ class ProfileViewModel @Inject constructor(
     val verificationSpan = state.getLiveData<Long>(VERIFICATION_SPAN, 0)
 
     private val userFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
-        userInformationDao.getCurrentUser(sessionPref.userId)
+        userInformationDao.getUserFlow(sessionPref.userId)
     }
 
     val user = userFlow.asLiveData()

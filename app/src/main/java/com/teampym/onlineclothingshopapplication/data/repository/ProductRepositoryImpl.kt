@@ -44,7 +44,7 @@ class ProductRepositoryImpl @Inject constructor(
         val productQuery = productCollectionRef.document(productId).get().await()
         if (productQuery.data != null) {
 
-            val product = productQuery.toObject<Product>()!!.copy(id = productQuery.id)
+            val product = productQuery.toObject<Product>()!!.copy(productId = productQuery.id)
 
             val productImageList = productImageRepository.getAll(productId)
 
@@ -53,7 +53,7 @@ class ProductRepositoryImpl @Inject constructor(
             val reviewList = reviewRepository.getFive(productId)
 
             return product.copy(
-                id = productQuery.id,
+                productId = productQuery.id,
                 productImageList = productImageList,
                 inventoryList = inventoryList,
                 reviewList = reviewList
@@ -65,12 +65,12 @@ class ProductRepositoryImpl @Inject constructor(
     suspend fun create(product: Product): Product {
         val result = productCollectionRef.add(product).await()
         if (result != null)
-            return product.copy(id = result.id)
+            return product.copy(productId = result.id)
         return Product()
     }
 
     suspend fun update(product: Product): Boolean {
-        val productQuery = productCollectionRef.document(product.id).get().await()
+        val productQuery = productCollectionRef.document(product.productId).get().await()
         if (productQuery != null) {
             val productToUpdateMap = mapOf<String, Any>(
                 "name" to product.name,
@@ -80,7 +80,7 @@ class ProductRepositoryImpl @Inject constructor(
             )
 
             val result = productCollectionRef
-                .document(product.id)
+                .document(product.productId)
                 .set(productToUpdateMap, SetOptions.merge())
                 .await()
             return result != null
@@ -107,7 +107,7 @@ class ProductRepositoryImpl @Inject constructor(
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
-                        productCollectionRef.document(orderDetail.product.id).collection(
+                        productCollectionRef.document(orderDetail.product.productId).collection(
                             INVENTORIES_SUB_COLLECTION
                         )
                             .document(orderDetail.inventoryId).get().await()
@@ -121,7 +121,7 @@ class ProductRepositoryImpl @Inject constructor(
                             "committed" to committedNewCount
                         )
 
-                        productCollectionRef.document(orderDetail.product.id).collection(
+                        productCollectionRef.document(orderDetail.product.productId).collection(
                             INVENTORIES_SUB_COLLECTION
                         )
                             .document(orderDetail.inventoryId)
@@ -149,7 +149,7 @@ class ProductRepositoryImpl @Inject constructor(
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
-                        productCollectionRef.document(orderDetail.product.id).collection(
+                        productCollectionRef.document(orderDetail.product.productId).collection(
                             INVENTORIES_SUB_COLLECTION
                         )
                             .document(orderDetail.inventoryId).get().await()
@@ -163,7 +163,7 @@ class ProductRepositoryImpl @Inject constructor(
                             "committed" to committedNewCount
                         )
 
-                        productCollectionRef.document(orderDetail.product.id).collection(
+                        productCollectionRef.document(orderDetail.product.productId).collection(
                             INVENTORIES_SUB_COLLECTION
                         )
                             .document(orderDetail.inventoryId)
@@ -191,7 +191,7 @@ class ProductRepositoryImpl @Inject constructor(
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
-                        productCollectionRef.document(orderDetail.product.id).collection(
+                        productCollectionRef.document(orderDetail.product.productId).collection(
                             INVENTORIES_SUB_COLLECTION
                         )
                             .document(orderDetail.inventoryId).get().await()
@@ -205,7 +205,7 @@ class ProductRepositoryImpl @Inject constructor(
                             "sold" to soldNewCount
                         )
 
-                        productCollectionRef.document(orderDetail.product.id).collection(
+                        productCollectionRef.document(orderDetail.product.productId).collection(
                             INVENTORIES_SUB_COLLECTION
                         )
                             .document(orderDetail.inventoryId)
@@ -233,7 +233,7 @@ class ProductRepositoryImpl @Inject constructor(
             if (userId == it.userId && it.userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
-                        productCollectionRef.document(orderDetail.product.id).collection(
+                        productCollectionRef.document(orderDetail.product.productId).collection(
                             INVENTORIES_SUB_COLLECTION
                         )
                             .document(orderDetail.inventoryId).get().await()
@@ -247,7 +247,7 @@ class ProductRepositoryImpl @Inject constructor(
                             "returned" to returnedNewCount
                         )
 
-                        productCollectionRef.document(orderDetail.product.id).collection(
+                        productCollectionRef.document(orderDetail.product.productId).collection(
                             INVENTORIES_SUB_COLLECTION
                         )
                             .document(orderDetail.inventoryId)

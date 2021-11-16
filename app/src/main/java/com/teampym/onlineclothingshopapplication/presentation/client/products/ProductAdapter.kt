@@ -21,7 +21,7 @@ class ProductAdapter(
     companion object {
         private val PRODUCT_COMPARATOR = object : DiffUtil.ItemCallback<Product>() {
             override fun areItemsTheSame(oldItem: Product, newItem: Product) =
-                oldItem.id == newItem.id
+                oldItem.productId == newItem.productId
 
             override fun areContentsTheSame(oldItem: Product, newItem: Product) =
                 oldItem == newItem
@@ -68,10 +68,10 @@ class ProductAdapter(
                 val price = "$${product.price.toBigDecimal()}"
                 tvPrice.text = price
 
-                if (product.flag == SortOrder.BY_NAME.toString())
+                if (product.flag.isBlank())
                     tvFlag.isVisible = false
-
-                tvFlag.text = product.flag
+                else
+                    tvFlag.text = product.flag
 
                 product.inventoryList.let { inv ->
                     val isOutOfStock = inv.sumOf { it.stock } == 0L

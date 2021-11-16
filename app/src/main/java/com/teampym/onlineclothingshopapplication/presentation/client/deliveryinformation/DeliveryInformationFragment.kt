@@ -3,7 +3,6 @@ package com.teampym.onlineclothingshopapplication.presentation.client.deliveryin
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -36,42 +35,50 @@ class DeliveryInformationFragment :
         adapter = DeliveryInformationAdapter(this)
 
         viewModel.deliveryInformation.observe(viewLifecycleOwner) { deliveryInfoList ->
-            val filteredList = deliveryInfoList.filter { !it.default }
-            adapter.submitList(filteredList)
+            if (deliveryInfoList.isNotEmpty()) {
+                val filteredList = deliveryInfoList.filter { !it.default }
+                adapter.submitList(filteredList)
+                binding.recyclerDeliveryInformation.setHasFixedSize(true)
+                binding.recyclerDeliveryInformation.adapter = adapter
 
-            defaultDeliveryInfo = deliveryInfoList.firstOrNull { it.default }
-            if (defaultDeliveryInfo != null) {
-                binding.apply {
-                    val contact = if (defaultDeliveryInfo?.contactNo?.get(0).toString() == "0")
-                        defaultDeliveryInfo?.contactNo?.length?.let {
-                            defaultDeliveryInfo?.contactNo?.substring(
-                                1,
-                                it
-                            )
-                        } else defaultDeliveryInfo?.contactNo
+                binding.tvNoAddressYet.visibility = View.GONE
 
-                    val nameAndContact = "${defaultDeliveryInfo?.name} | (+63) $contact"
-                    tvNameAndContact.text = nameAndContact
+                defaultDeliveryInfo = deliveryInfoList.firstOrNull { it.default }
+                if (defaultDeliveryInfo != null) {
+                    binding.apply {
+                        viewSelectedDeliveryInfo.visibility = View.VISIBLE
 
-                    val completeAddress = "${defaultDeliveryInfo?.streetNumber} " +
-                        "${defaultDeliveryInfo?.city}, " +
-                        "${defaultDeliveryInfo?.province}, " +
-                        "${defaultDeliveryInfo?.province}, " +
-                        defaultDeliveryInfo?.postalCode
-                    tvAddress.text = completeAddress
+                        val contact = if (defaultDeliveryInfo?.contactNo?.get(0).toString() == "0")
+                            defaultDeliveryInfo?.contactNo?.length?.let {
+                                defaultDeliveryInfo?.contactNo?.substring(
+                                    1,
+                                    it
+                                )
+                            } else defaultDeliveryInfo?.contactNo
+
+                        val nameAndContact = "${defaultDeliveryInfo?.name} | (+63) $contact"
+                        tvNameAndContact.text = nameAndContact
+
+                        val completeAddress = "${defaultDeliveryInfo?.streetNumber} " +
+                            "${defaultDeliveryInfo?.city}, " +
+                            "${defaultDeliveryInfo?.province}, " +
+                            "${defaultDeliveryInfo?.province}, " +
+                            defaultDeliveryInfo?.postalCode
+                        tvAddress.text = completeAddress
+                    }
                 }
-            } else {
-                binding.viewSelectedDeliveryInfo.isVisible = false
             }
         }
 
         binding.apply {
             fabCreateNew.setOnClickListener {
-                // TODO("Move to add edit delivery information")
+                val action =
+                    DeliveryInformationFragmentDirections.actionDeliveryInformationFragmentToAddEditDeliveryInformationFragment(
+                        null,
+                        "Add New Address"
+                    )
+                findNavController().navigate(action)
             }
-
-            recyclerDeliveryInformation.setHasFixedSize(true)
-            recyclerDeliveryInformation.adapter = adapter
         }
 
         lifecycleScope.launchWhenStarted {
@@ -106,7 +113,8 @@ class DeliveryInformationFragment :
     override fun onEditClicked(deliveryInfo: DeliveryInformation) {
         val action =
             DeliveryInformationFragmentDirections.actionDeliveryInformationFragmentToAddEditDeliveryInformationFragment(
-                deliveryInfo
+                deliveryInfo,
+                "Edit Address"
             )
         findNavController().navigate(action)
     }

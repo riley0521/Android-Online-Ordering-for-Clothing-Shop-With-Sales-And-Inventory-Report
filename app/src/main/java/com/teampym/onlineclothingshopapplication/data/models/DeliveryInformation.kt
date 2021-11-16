@@ -19,6 +19,6 @@ data class DeliveryInformation(
     var id: String = "",
     var userId: String = "",
     var default: Boolean = false
-): Parcelable {
-    constructor(): this("", "", "", "", "", "", "")
+) : Parcelable {
+    constructor() : this("", "", "", "", "", "", "")
 }

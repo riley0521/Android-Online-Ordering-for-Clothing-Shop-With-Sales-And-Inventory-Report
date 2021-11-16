@@ -3,9 +3,11 @@ package com.teampym.onlineclothingshopapplication.data.repository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
+import com.teampym.onlineclothingshopapplication.data.db.CartWithProductAndInventory
+import com.teampym.onlineclothingshopapplication.data.models.Cart
+import com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
-import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.Status
 import kotlinx.coroutines.CoroutineScope
@@ -60,13 +62,18 @@ class OrderRepositoryImpl @Inject constructor(
     }
 
     // TODO("Submit order for processing and delete all items in cart.")
-    suspend fun create(userInformation: UserInformation, paymentMethod: String): Order {
+    suspend fun create(
+        userId: String,
+        cartList: List<Cart>,
+        deliveryInformation: DeliveryInformation,
+        paymentMethod: String
+    ): Order {
 
         val newOrder = Order(
-            userId = userInformation.userId,
-            totalCost = userInformation.cartList.sumOf { it.subTotal },
+            userId = userId,
+            totalCost = cartList.sumOf { it.subTotal },
             paymentMethod = paymentMethod,
-            deliveryInformation = userInformation.deliveryInformationList.first { it.default }
+            deliveryInformation = deliveryInformation
         )
 
         orderCollectionRef
@@ -75,12 +82,12 @@ class OrderRepositoryImpl @Inject constructor(
                 CoroutineScope(Dispatchers.IO).launch {
                     orderDetailRepository.insertAll(
                         it.id,
-                        userInformation.userId,
-                        userInformation.cartList
+                        userId,
+                        cartList
                     )
 
                     // Delete all items from cart after placing order
-                    cartRepository.deleteAll(userInformation.userId)
+                    cartRepository.deleteAll(userId)
                 }
             }.addOnFailureListener {
             }

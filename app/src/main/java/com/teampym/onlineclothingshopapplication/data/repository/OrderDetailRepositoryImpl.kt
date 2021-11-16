@@ -1,6 +1,7 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.teampym.onlineclothingshopapplication.data.db.CartWithProductAndInventory
 import com.teampym.onlineclothingshopapplication.data.models.Cart
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
@@ -78,11 +79,11 @@ class OrderDetailRepositoryImpl @Inject constructor(
             val newProd = OrderDetail(
                 userId = userId,
                 orderId = orderId,
-                inventoryId = cartItem.sizeInv.id,
-                product = cartItem.product,
-                size = cartItem.sizeInv.size,
+                inventoryId = cartItem.inventory.inventoryId,
+                size = cartItem.inventory.size,
                 quantity = cartItem.quantity,
-                subTotal = cartItem.subTotal
+                product = cartItem.product,
+                subTotal = cartItem.subTotal,
             )
 
             orderCollectionRef

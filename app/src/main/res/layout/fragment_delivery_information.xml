@@ -13,6 +13,8 @@
         android:layout_height="170dp"
         android:layout_margin="8dp"
         android:padding="8dp"
+        android:visibility="gone"
+        tools:visibility="visible"
         app:cardCornerRadius="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -99,5 +101,18 @@
         app:layout_constraintStart_toStartOf="parent"
         android:focusable="true"
         android:contentDescription="@string/add_new_delivery_information" />
+
+    <TextView
+        android:id="@+id/tvNoAddressYet"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:text="@string/no_delivery_address_yet_please_create_one_fab"
+        android:textAppearance="?attr/textAppearanceHeadline6"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

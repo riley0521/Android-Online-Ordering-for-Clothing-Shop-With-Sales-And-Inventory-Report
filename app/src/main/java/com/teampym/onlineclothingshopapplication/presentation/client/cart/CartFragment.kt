@@ -70,13 +70,13 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
             cartList = cart
 
-            if(cart.isEmpty()) {
+            if (cart.isEmpty()) {
                 binding.recyclerViewCart.visibility = View.INVISIBLE
                 binding.labelNoCartItem.visibility = View.VISIBLE
             }
 
             total = cart.sumOf { it.calculatedTotalPrice }
-            val totalText = "$%2.f".format(total)
+            val totalText = "$" + String.format("%.2f", total)
             binding.tvMerchandiseTotal.text = totalText
         }
     }

@@ -1,9 +1,12 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.db.CartDao
+import com.teampym.onlineclothingshopapplication.data.db.InventoryDao
+import com.teampym.onlineclothingshopapplication.data.db.ProductDao
 import com.teampym.onlineclothingshopapplication.data.models.Cart
 import com.teampym.onlineclothingshopapplication.data.models.Inventory
 import com.teampym.onlineclothingshopapplication.data.models.Product
@@ -17,81 +20,111 @@ import javax.inject.Inject
 
 class CartRepositoryImpl @Inject constructor(
     private val db: FirebaseFirestore,
-    private val cartDao: CartDao
+    private val cartDao: CartDao,
+    private val productDao: ProductDao,
+    private val inventoryDao: InventoryDao
 ) {
 
     private val userCartCollectionRef = db.collection(USERS_COLLECTION)
     private val productsCollectionRef = db.collection(PRODUCTS_COLLECTION)
 
     // TODO("Use a flow to get updates in cart collection instantly")
-    fun getAll(userId: String): Flow<MutableList<Cart>> = callbackFlow {
+    fun getAll(userId: String?): Flow<MutableList<Cart>> = callbackFlow {
 
+        var cartListener: ListenerRegistration? = null
         // Add snapshot listener to cart
-        val cartListener = userCartCollectionRef.document(userId)
-            .collection(CART_SUB_COLLECTION)
-            .addSnapshotListener { querySnapshot, firebaseException ->
-                if (firebaseException != null) {
-                    cancel(message = "Error fetching cart", firebaseException)
-                    return@addSnapshotListener
-                }
+        if (userId != null) {
+            cartListener = userCartCollectionRef.document(userId)
+                .collection(CART_SUB_COLLECTION)
+                .addSnapshotListener { querySnapshot, firebaseException ->
+                    if (firebaseException != null) {
+                        cancel(message = "Error fetching cart", firebaseException)
+                        return@addSnapshotListener
+                    }
 
-                val cartList = mutableListOf<Cart>()
-                querySnapshot?.let { snapshot ->
+                    val cartList = mutableListOf<Cart>()
+                    querySnapshot?.let { snapshot ->
 
-                    // loop all items in cart
-                    for (document in snapshot.documents) {
-                        val cartItem = document.toObject(Cart::class.java)!!.copy(id = document.id)
+                        // loop all items in cart
+                        for (document in snapshot.documents) {
+                            var cartItem = document.toObject(Cart::class.java)!!.copy(id = document.id)
+                            val foundProduct = cartItem.product.copy(roomId = cartItem.id, cartId = cartItem.id)
+                            val foundInventory = cartItem.inventory.copy(pCartId = cartItem.id)
 
-                        CoroutineScope(Dispatchers.IO).launch {
+                            cartItem.product = foundProduct
+                            cartItem.inventory = foundInventory
 
-                            // get corresponding product (cartItem.id == product.id)
-                            val productQuery = productsCollectionRef
-                                .document(cartItem.product.id)
-                                .get()
-                                .await()
-
-                            if (productQuery.data != null) {
-
-                                val pr = productQuery.toObject<Product>()!!
-                                    .copy(id = productQuery.id)
-
-                                // get corresponding inventory of a single product (product.id == inventory.productId)
-                                val inventoryQuery = productsCollectionRef
-                                    .document(pr.id)
-                                    .collection(INVENTORIES_SUB_COLLECTION)
-                                    .document(cartItem.sizeInv.id)
+                            CoroutineScope(Dispatchers.IO).launch {
+                                // get corresponding product (cartItem.id == product.id)
+                                val productQuery = productsCollectionRef
+                                    .document(cartItem.product.productId)
                                     .get()
                                     .await()
 
-                                if (inventoryQuery.data != null) {
-                                    val inv = inventoryQuery.toObject<Inventory>()!!
-                                        .copy(id = inventoryQuery.id, productId = cartItem.product.id)
+                                if (productQuery.data != null) {
 
-                                    // create update map.
-                                    val updatePriceOfProductInCart = mapOf<String, Any>(
-                                        "product.price" to pr.price,
-                                        "sizeInv.stock" to inv.stock,
-                                        "subTotal" to cartItem.quantity * pr.price,
-                                    )
+                                    val updatedProductToFetch = productQuery.toObject<Product>()!!
+                                        .copy(
+                                            productId = productQuery.id,
+                                            roomId = cartItem.id,
+                                            cartId = cartItem.id
+                                        )
 
-                                    userCartCollectionRef
-                                        .document(userId)
-                                        .collection(CART_SUB_COLLECTION)
-                                        .document(document.id)
-                                        .update(updatePriceOfProductInCart)
-                                        .addOnSuccessListener {
-                                        }.addOnFailureListener {
-                                        }
+                                    // get corresponding inventory of a single product (product.id == inventory.productId)
+                                    val inventoryQuery = productsCollectionRef
+                                        .document(updatedProductToFetch.productId)
+                                        .collection(INVENTORIES_SUB_COLLECTION)
+                                        .document(cartItem.inventory.inventoryId)
+                                        .get()
+                                        .await()
+
+                                    if (inventoryQuery.data != null) {
+                                        val updatedInventoryToFetch = inventoryQuery.toObject<Inventory>()!!
+                                            .copy(
+                                                inventoryId = inventoryQuery.id,
+                                                pid = cartItem.product.productId,
+                                                pCartId = cartItem.id
+                                            )
+
+                                        // create update map.
+                                        val updatePriceOfProductInCart = mapOf<String, Any>(
+                                            "product.price" to updatedProductToFetch.price,
+                                            "inventory.stock" to updatedInventoryToFetch.stock,
+                                            "subTotal" to cartItem.quantity * updatedProductToFetch.price,
+                                        )
+
+                                        userCartCollectionRef
+                                            .document(userId)
+                                            .collection(CART_SUB_COLLECTION)
+                                            .document(document.id)
+                                            .update(updatePriceOfProductInCart)
+                                            .addOnSuccessListener {
+                                                CoroutineScope(Dispatchers.IO).launch {
+                                                    // TODO("INSERT PRODUCT AND INVENTORY TO ROOM DB BECAUSE IT IS NOT LOADING IN CHECK OUT")
+                                                    cartItem = cartItem.copy(
+                                                        product = updatedProductToFetch,
+                                                        inventory = updatedInventoryToFetch
+                                                    )
+
+                                                    productDao.insert(updatedProductToFetch)
+                                                    inventoryDao.insert(updatedInventoryToFetch)
+                                                }
+                                            }.addOnFailureListener {
+                                            }
+                                    }
                                 }
                             }
+                            cartList.add(cartItem)
                         }
-                        cartList.add(cartItem)
                     }
+                    CoroutineScope(Dispatchers.IO).launch {
+                        cartDao.insertAll(cartList)
+                    }
+                    offer(cartList)
                 }
-                offer(cartList)
-            }
+        }
         awaitClose {
-            cartListener.remove()
+            cartListener?.remove()
         }
     }
 
@@ -104,7 +137,7 @@ class CartRepositoryImpl @Inject constructor(
         val cartQuery = userCartCollectionRef
             .document(userId)
             .collection("cart")
-            .document(inventory.id)
+            .document(inventory.inventoryId)
             .get()
             .await()
 
@@ -113,7 +146,7 @@ class CartRepositoryImpl @Inject constructor(
             val cartItem = cartQuery.toObject(Cart::class.java)?.copy(id = cartQuery.id)
 
             cartItem?.let { obj ->
-                if (obj.sizeInv.id == inventory.id && obj.userId == userId) {
+                if (obj.inventory.inventoryId == inventory.inventoryId && obj.userId == userId) {
 
                     obj.quantity += 1
                     // every time you get calculatedTotalPrice in Cart data class.
@@ -142,11 +175,11 @@ class CartRepositoryImpl @Inject constructor(
             }
         } else {
             val newItem = Cart(
-                id = inventory.id,
+                id = inventory.inventoryId,
                 userId = userId,
                 product = product,
                 quantity = 1,
-                sizeInv = inventory,
+                inventory = inventory,
                 subTotal = 0.0
             )
             newItem.subTotal = newItem.calculatedTotalPrice.toDouble()
@@ -155,7 +188,7 @@ class CartRepositoryImpl @Inject constructor(
             userCartCollectionRef
                 .document(userId)
                 .collection(CART_SUB_COLLECTION)
-                .document(inventory.id)
+                .document(inventory.inventoryId)
                 .set(newItem)
                 .addOnSuccessListener {
                     isCreated = true

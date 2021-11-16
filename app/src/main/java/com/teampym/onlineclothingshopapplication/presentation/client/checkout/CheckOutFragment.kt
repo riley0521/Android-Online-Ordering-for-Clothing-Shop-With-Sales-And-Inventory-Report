@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -29,7 +30,7 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
     private lateinit var adapter: CheckOutAdapter
 
-    var finalUser: UserInformation = UserInformation()
+    private var finalUser: UserInformation = UserInformation()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -40,9 +41,16 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
         adapter = CheckOutAdapter()
 
-        viewModel.cart.observe(viewLifecycleOwner) { cart ->
+        viewModel.cartList.observe(viewLifecycleOwner) { cart ->
             adapter.submitList(cart)
+            binding.recyclerFinalItems.setHasFixedSize(true)
+            binding.recyclerFinalItems.adapter = adapter
+
             cartList = cart
+
+            cart.forEach {
+                Log.d(TAG, it.toString())
+            }
         }
 
         binding.apply {
@@ -55,10 +63,8 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                 Toast.makeText(requireContext(), "Change Payment Method layout.", Toast.LENGTH_SHORT).show()
             }
 
-            tvMerchandiseTotal.text = "$${args.cart.totalCost}"
-
-            recyclerFinalItems.setHasFixedSize(true)
-            recyclerFinalItems.adapter = adapter
+            val totalCostStr = "$" + String.format("%.2f", args.cart.totalCost)
+            tvMerchandiseTotal.text = totalCostStr
         }
 
         viewModel.selectedPaymentMethod.observe(viewLifecycleOwner) { paymentMethod ->
@@ -66,33 +72,40 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
                 // get the final cart and place order
                 if (paymentMethod.isNotBlank())
-                    viewModel.placeOrder(finalUser.copy(cartList = cartList), paymentMethod)
+                    viewModel.placeOrder(finalUser, cartList, paymentMethod)
             }
         }
 
-        viewModel.user.observe(viewLifecycleOwner) { user ->
-            finalUser = user.user.copy(
-                deliveryInformationList = user.deliveryInformation,
-                notificationTokenList = user.notificationTokens
-            )
+        viewModel.userWithDeliveryInfo.observe(viewLifecycleOwner) { user ->
+            if (user != null) {
+                finalUser = user.user.copy(
+                    deliveryInformationList = user.deliveryInformation,
+                )
 
-            val defaultInfo = user.deliveryInformation.first { it.default }
-            binding.apply {
-                val contact = if (defaultInfo.contactNo[0].toString() == "0")
-                    defaultInfo.contactNo.substring(
-                        1,
-                        defaultInfo.contactNo.length - 1
-                    ) else defaultInfo.contactNo
+                val defaultInfo = finalUser.deliveryInformationList.firstOrNull { it.default }
+                binding.apply {
+                    if (defaultInfo != null) {
+                        val contact = if (defaultInfo.contactNo[0].toString() == "0")
+                            defaultInfo.contactNo.substring(
+                                1,
+                                defaultInfo.contactNo.length - 1
+                            ) else defaultInfo.contactNo
 
-                val nameAndContact = "${defaultInfo.name} | (+63) $contact"
-                tvNameAndContactNo.text = nameAndContact
+                        val nameAndContact = "${defaultInfo.name} | (+63) $contact"
+                        tvNameAndContactNo.visibility = View.VISIBLE
+                        tvNameAndContactNo.text = nameAndContact
 
-                val completeAddress = "${defaultInfo.streetNumber} " +
-                    "${defaultInfo.city}, " +
-                    "${defaultInfo.province}, " +
-                    "${defaultInfo.province}, " +
-                    defaultInfo.postalCode
-                tvCompleteAddress.text = completeAddress
+                        val completeAddress = "${defaultInfo.streetNumber} " +
+                            "${defaultInfo.city}, " +
+                            "${defaultInfo.province}, " +
+                            "${defaultInfo.province}, " +
+                            defaultInfo.postalCode
+                        tvCompleteAddress.visibility = View.VISIBLE
+                        tvCompleteAddress.text = completeAddress
+
+                        tvNoAddressYet.visibility = View.INVISIBLE
+                    }
+                }
             }
         }
 

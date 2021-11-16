@@ -1,6 +1,6 @@
 package com.teampym.onlineclothingshopapplication.data.db
 
-import androidx.room.*
+import androidx.room.* // ktlint-disable no-wildcard-imports
 import androidx.room.OnConflictStrategy.REPLACE
 import com.teampym.onlineclothingshopapplication.data.models.Cart
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +14,7 @@ interface CartDao {
     @Insert(onConflict = REPLACE)
     suspend fun insertAll(cart: List<Cart>)
 
+    @Transaction
     @Query("SELECT * FROM table_cart WHERE userId = :userId")
     fun getAll(userId: String): Flow<List<Cart>>
 
@@ -25,5 +26,4 @@ interface CartDao {
 
     @Query("DELETE FROM table_cart")
     suspend fun deleteAll()
-
 }
