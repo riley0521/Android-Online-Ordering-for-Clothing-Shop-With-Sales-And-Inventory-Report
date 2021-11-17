@@ -26,13 +26,13 @@ class DeliveryInformationViewModel @Inject constructor(
     private val deliveryInformationChannel = Channel<DeliveryInfoEvent>()
     val deliveryInfoEvent = deliveryInformationChannel.receiveAsFlow()
 
-    private val deliveryInformationFlow =
+    private val _deliveryInformationFlow =
         preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
             userId = sessionPref.userId
             deliveryInformationRepository.getFlow(sessionPref.userId)
         }
 
-    val deliveryInformation = deliveryInformationFlow.asLiveData()
+    val deliveryInformation = _deliveryInformationFlow.asLiveData()
 
     fun onDeliveryInformationDefaultChanged(
         defaultDeliveryInfo: DeliveryInformation?,
@@ -40,7 +40,8 @@ class DeliveryInformationViewModel @Inject constructor(
     ) = viewModelScope.launch {
 
         // modify old info to false and modify the new info to true to make it the default
-        val isModified = deliveryInformationRepository.changeDefault(userId, defaultDeliveryInfo, deliveryInfo)
+        val isModified =
+            deliveryInformationRepository.changeDefault(userId, defaultDeliveryInfo, deliveryInfo)
         if (defaultDeliveryInfo != null) {
             deliveryInformationDao.update(defaultDeliveryInfo)
         }

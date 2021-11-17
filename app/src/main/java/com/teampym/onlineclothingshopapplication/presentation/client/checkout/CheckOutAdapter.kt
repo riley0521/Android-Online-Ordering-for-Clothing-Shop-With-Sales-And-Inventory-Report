@@ -51,11 +51,16 @@ class CheckOutAdapter : ListAdapter<Cart, CheckOutAdapter.CheckOutViewHolder>(CA
                     .error(R.drawable.ic_food)
                     .into(imgCartProduct)
 
+                val priceStr = "$" + String.format("%.2f", item.product.price)
+                val qtyStr = item.quantity.toString() + " pcs ="
+                val totalStr = "$" + String.format("%.2f", item.subTotal)
+                val sizeStr = "Size (${item.inventory.size})"
+
                 tvProductName.text = item.product.name
-                tvPrice.text = "$${item.product.price}"
-                tvQuantity.text = item.quantity.toString()
-                tvTotal.text = item.subTotal.toString()
-                tvSize.text = item.inventory.size
+                tvPrice.text = priceStr
+                tvQuantity.text = qtyStr
+                tvTotal.text = totalStr
+                tvSize.text = sizeStr
             }
         }
     }

@@ -16,7 +16,7 @@ class NotificationTokenRepositoryImpl @Inject constructor(
 
     private val userCollectionRef = db.collection(USERS_COLLECTION)
 
-    suspend fun getAll(userId: String): Resource {
+    suspend fun getAll(userId: String): List<NotificationToken> {
         val notificationTokenQuery = userCollectionRef
             .document(userId)
             .collection(NOTIFICATION_TOKENS_SUB_COLLECTION)
@@ -33,7 +33,7 @@ class NotificationTokenRepositoryImpl @Inject constructor(
                 notificationTokenDao.insert(notificationToken)
             }
         }
-        return Resource.Success(msg = "Successful", res = notificationTokenList)
+        return notificationTokenList
     }
 
     suspend fun upsert(
@@ -61,7 +61,6 @@ class NotificationTokenRepositoryImpl @Inject constructor(
                 .addOnSuccessListener {
                     isCreated = true
                 }.addOnFailureListener {
-
                 }
             return Resource.Success("Success", isCreated)
         }

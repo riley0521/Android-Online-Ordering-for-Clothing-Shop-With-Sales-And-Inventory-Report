@@ -12,37 +12,36 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class CheckOutViewModel @Inject constructor(
+class CheckOutSharedViewModel @Inject constructor(
     private val userInformationDao: UserInformationDao,
     private val cartDao: CartDao,
     private val orderRepository: OrderRepositoryImpl,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
-    private var _userWithDeliveryInfo = MutableLiveData<UserWithDeliveryInfo>()
-    private var _userWithNotificationsTokens = MutableLiveData<UserWithNotificationTokens>()
+    private var _userWithDeliveryInfo = MutableLiveData<UserWithDeliveryInfo?>()
+    private var _userWithNotificationsTokens = MutableLiveData<UserWithNotificationTokens?>()
 
-    private val _selectedPaymentMethod = MutableLiveData("")
-
-    private val _cartList = MutableLiveData<List<CartWithProductAndInventory>>()
+    private val _selectedPaymentMethod = MutableLiveData<PaymentMethod>()
 
     private val _cartFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
-        _selectedPaymentMethod.value = sessionPref.paymentMethod.toString()
+        _selectedPaymentMethod.value = sessionPref.paymentMethod
 
-        _userWithDeliveryInfo = userInformationDao.getUserWithDeliveryInfo(sessionPref.userId)
-            .asLiveData() as MutableLiveData<UserWithDeliveryInfo>
+        _userWithDeliveryInfo.value = userInformationDao.getUserWithDeliveryInfo()
+            .firstOrNull { it.user.userId == sessionPref.userId }
 
-        _userWithNotificationsTokens =
-            userInformationDao.getUserWithNotificationTokens(sessionPref.userId)
-            .asLiveData() as MutableLiveData<UserWithNotificationTokens>
+        _userWithNotificationsTokens.value = userInformationDao.getUserWithNotificationTokens()
+            .firstOrNull { it.user.userId == sessionPref.userId }
 
         cartDao.getAll(sessionPref.userId)
     }
 
-    val selectedPaymentMethod: LiveData<String> get() = _selectedPaymentMethod
+    val selectedPaymentMethod: LiveData<PaymentMethod> get() = _selectedPaymentMethod
 
-    val userWithDeliveryInfo: LiveData<UserWithDeliveryInfo> get() = _userWithDeliveryInfo
-    val userWithNotificationTokens: LiveData<UserWithNotificationTokens> get() = _userWithNotificationsTokens
+    val userWithDeliveryInfo: LiveData<UserWithDeliveryInfo?> get() = _userWithDeliveryInfo
+
+    // I think I will remove this because what I need is the notification token of admins to notify them.
+    val userWithNotificationTokens: LiveData<UserWithNotificationTokens?> get() = _userWithNotificationsTokens
 
     val cartList = _cartFlow.asLiveData()
 
@@ -56,8 +55,12 @@ class CheckOutViewModel @Inject constructor(
         order.value = orderRepository.create(
             userInformation.userId,
             cartList,
-            userInformation.deliveryInformationList.first { it.default },
+            userInformation.deliveryInformationList.first { it.isPrimary },
             paymentMethod
         )
     }
+
+    //region For Select Payment Fragment
+
+    //endregion
 }

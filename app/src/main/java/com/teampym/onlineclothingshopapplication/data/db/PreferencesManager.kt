@@ -28,8 +28,8 @@ enum class PaymentMethod {
 }
 
 data class SessionPreferences(
-    val sortOrder: SortOrder,
-    val paymentMethod: PaymentMethod,
+    val sortOrder: SortOrder = SortOrder.BY_NAME,
+    val paymentMethod: PaymentMethod = PaymentMethod.COD,
     val userId: String
 )
 
@@ -51,7 +51,7 @@ class PreferencesManager @Inject constructor(
         }
         .map { preferences ->
             val sortOrder = SortOrder.valueOf(
-                preferences[PreferencesKeys.SORT_ORDER] ?: SortOrder.BY_POPULARITY.name
+                preferences[PreferencesKeys.SORT_ORDER] ?: SortOrder.BY_NAME.name
             )
             val paymentMethod = PaymentMethod.valueOf(
                 preferences[PreferencesKeys.PAYMENT_METHOD] ?: PaymentMethod.COD.name

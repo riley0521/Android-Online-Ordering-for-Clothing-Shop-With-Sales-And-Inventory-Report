@@ -20,9 +20,9 @@ interface DeliveryInformationDao {
     @Update
     suspend fun update(deliveryInformation: DeliveryInformation)
 
-    @Query("DELETE FROM table_users WHERE userId = :userId")
-    suspend fun delete(userId: String)
+    @Query("DELETE FROM table_delivery_info WHERE id = :id")
+    suspend fun delete(id: String)
 
-    @Query("DELETE FROM table_delivery_info")
-    suspend fun deleteAll()
+    @Query("DELETE FROM table_delivery_info WHERE userId = :userId")
+    suspend fun deleteAll(userId: String)
 }

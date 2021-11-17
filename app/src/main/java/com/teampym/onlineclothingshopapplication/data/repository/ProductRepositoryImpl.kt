@@ -7,8 +7,8 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.db.SortOrder
-import com.teampym.onlineclothingshopapplication.data.models.*
-import com.teampym.onlineclothingshopapplication.data.util.*
+import com.teampym.onlineclothingshopapplication.data.models.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.util.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.presentation.client.products.ProductPagingSource
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -98,12 +98,9 @@ class ProductRepositoryImpl @Inject constructor(
         userId: String,
         orderDetailList: List<OrderDetail>
     ): Boolean {
-        val user: UserInformation = when (val res = accountRepository.get(userId)) {
-            is Resource.Error -> UserInformation()
-            is Resource.Success -> res.res as UserInformation
-        }
+        val foundUser = accountRepository.get(userId)
 
-        user.let { userInfo ->
+        foundUser?.let { userInfo ->
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
@@ -132,6 +129,7 @@ class ProductRepositoryImpl @Inject constructor(
             }
             return false
         }
+        return false
     }
 
     // CANCELED
@@ -140,12 +138,9 @@ class ProductRepositoryImpl @Inject constructor(
         orderDetailList: List<OrderDetail>
     ): Boolean {
 
-        val user: UserInformation = when (val res = accountRepository.get(userId)) {
-            is Resource.Error -> UserInformation()
-            is Resource.Success -> res.res as UserInformation
-        }
+        val foundUser = accountRepository.get(userId)
 
-        user.let { userInfo ->
+        foundUser?.let { userInfo ->
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
@@ -174,6 +169,7 @@ class ProductRepositoryImpl @Inject constructor(
             }
             return false
         }
+        return false
     }
 
     // COMPLETED
@@ -182,12 +178,9 @@ class ProductRepositoryImpl @Inject constructor(
         orderDetailList: List<OrderDetail>
     ): Boolean {
 
-        val user: UserInformation = when (val res = accountRepository.get(userId)) {
-            is Resource.Error -> UserInformation()
-            is Resource.Success -> res.res as UserInformation
-        }
+        val foundUser = accountRepository.get(userId)
 
-        user.let { userInfo ->
+        foundUser?.let { userInfo ->
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
@@ -216,6 +209,7 @@ class ProductRepositoryImpl @Inject constructor(
             }
             return false
         }
+        return false
     }
 
     // RETURNED
@@ -224,12 +218,9 @@ class ProductRepositoryImpl @Inject constructor(
         orderDetailList: List<OrderDetail>
     ): Boolean {
 
-        val user: UserInformation = when (val res = accountRepository.get(userId)) {
-            is Resource.Error -> UserInformation()
-            is Resource.Success -> res.res as UserInformation
-        }
+        val foundUser = accountRepository.get(userId)
 
-        user.let {
+        foundUser?.let {
             if (userId == it.userId && it.userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
@@ -258,6 +249,6 @@ class ProductRepositoryImpl @Inject constructor(
             }
             return false
         }
+        return false
     }
-
 }

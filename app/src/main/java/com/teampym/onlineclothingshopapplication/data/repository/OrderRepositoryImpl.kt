@@ -3,7 +3,6 @@ package com.teampym.onlineclothingshopapplication.data.repository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
-import com.teampym.onlineclothingshopapplication.data.db.CartWithProductAndInventory
 import com.teampym.onlineclothingshopapplication.data.models.Cart
 import com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.models.Order

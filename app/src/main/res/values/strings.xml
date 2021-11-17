@@ -36,7 +36,7 @@
     <string name="action_no_sort" translatable="false">No Sort</string>
     <string name="sort_best_seller" translatable="false">Sort By Best Seller</string>
     <string name="action_sort_new" translatable="false">Sort By New</string>
-    <string name="label_merchandise_total" translatable="false">Merchandise Total</string>
+    <string name="label_merchandise_total" translatable="false">Merchandise Total \n(Shipping fee not yet included)</string>
     <string name="label_shipping_total" translatable="false">Shipping Total</string>
     <string name="label_total_payment" translatable="false">Total Payment</string>
     <string name="button_check_out" translatable="false">Check Out</string>
@@ -46,7 +46,7 @@
     <string name="button_change_address" translatable="false">Change Address</string>
     <string name="label_payment_method" translatable="false">Payment Method</string>
     <string name="rb_credit_debit" translatable="false">Credit/Debit</string>
-    <string name="rb_cod" translatable="false">COD (Cash On Delivery)</string>
+    <string name="rb_cod" translatable="false">Cash On Delivery (COD)</string>
     <string name="rb_gcash" translatable="false">G-Cash</string>
     <string name="rb_paymaya" translatable="false">Paymaya</string>
     <string name="label_email_verification" translatable="false">Verification link has been sent to your email. Please click the link to verify your account and remove this message.</string>
@@ -63,8 +63,8 @@
     <string name="btn_change_payment_method">Change</string>
     <string name="product_name">Product Name</string>
     <string name="long_sentence">Hmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm</string>
-    <string name="test_address">#39 7th Avenue Justice Lourdes Paredes Cubao Quezon City \nQuezon City, Metro Manila, Metro Manila, 1109</string>
-    <string name="test_name_contact">Riley Farro | (+63) 912 345 6789</string>
+    <string name="test_address">#300 11th Avenue Justice Lourdes Paredes Cubao Quezon City \nQuezon City, Metro Manila, Metro Manila, 1109</string>
+    <string name="test_name_contact">John Doe | (+63) 912 345 6789</string>
     <string name="default_delivery_information">Default Delivery Information</string>
     <string name="add_new_delivery_information">Add New Delivery Information</string>
     <string name="full_name">Full Name</string>

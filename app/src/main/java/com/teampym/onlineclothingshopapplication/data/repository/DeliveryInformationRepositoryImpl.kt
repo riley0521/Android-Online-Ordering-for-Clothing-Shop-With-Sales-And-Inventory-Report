@@ -4,7 +4,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.data.db.DeliveryInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.util.DELIVERY_INFORMATION_SUB_COLLECTION
-import com.teampym.onlineclothingshopapplication.data.util.Resource
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +22,7 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
 
     private val userCollectionRef = db.collection(USERS_COLLECTION)
 
-    suspend fun getAll(userId: String): Resource {
+    suspend fun getAll(userId: String): List<DeliveryInformation> {
         val deliveryInformationQuery = userCollectionRef
             .document(userId)
             .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
@@ -34,14 +33,17 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
         if (deliveryInformationQuery.documents.isNotEmpty()) {
             for (document in deliveryInformationQuery.documents) {
                 val deliveryInformation = document
-                    .toObject(DeliveryInformation::class.java)!!.copy(id = document.id)
+                    .toObject(DeliveryInformation::class.java)!!.copy(
+                    id = document.id,
+                    isPrimary = document["isPrimary"].toString().toBoolean()
+                )
 
                 deliveryInformationList.add(deliveryInformation)
                 deliveryInformationDao.insert(deliveryInformation)
             }
-            return Resource.Success("Success", deliveryInformationList)
+            return deliveryInformationList
         }
-        return Resource.Error("Failed", emptyList<DeliveryInformation>())
+        return emptyList()
     }
 
     fun getFlow(userId: String): Flow<List<DeliveryInformation>> = callbackFlow {
@@ -55,15 +57,19 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
                 }
 
                 val deliveryInformationList = mutableListOf<DeliveryInformation>()
-                if (value?.documents!!.isNotEmpty()) {
-                    for (document in value.documents) {
-                        val deliveryInformation = document
-                            .toObject(DeliveryInformation::class.java)!!.copy(id = document.id)
+                value?.let { querySnapshot ->
+                    if (querySnapshot.documents.isNotEmpty()) {
+                        for (document in querySnapshot.documents) {
+                            val deliveryInformation = document
+                                .toObject(DeliveryInformation::class.java)!!
+                                .copy(id = document.id, userId = userId)
 
-                        deliveryInformationList.add(deliveryInformation)
-                        CoroutineScope(Dispatchers.IO).launch {
-                            deliveryInformationDao.insert(deliveryInformation)
+                            deliveryInformationList.add(deliveryInformation)
+                            CoroutineScope(Dispatchers.IO).launch {
+                                deliveryInformationDao.insert(deliveryInformation)
+                            }
                         }
+                        offer(deliveryInformationList)
                     }
                 }
             }
@@ -75,7 +81,7 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
     suspend fun upsert(
         userId: String,
         deliveryInformation: DeliveryInformation
-    ): Resource {
+    ): Boolean {
         val isDeliveryInformationExistingQuery = userCollectionRef
             .document(userId)
             .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
@@ -91,7 +97,7 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
                     deliveryInformation.region == deliveryInformationFromDb.region &&
                     deliveryInformation.streetNumber == deliveryInformationFromDb.streetNumber
                 ) {
-                    return Resource.Success("Failed", false)
+                    return false
                 } else {
                     val updateDeliveryInfoMap = mapOf<String, Any>(
                         "name" to deliveryInformation.name,
@@ -101,7 +107,7 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
                         "city" to deliveryInformation.city,
                         "streetNumber" to deliveryInformation.streetNumber,
                         "postalCode" to deliveryInformation.postalCode,
-                        "default" to deliveryInformation.default
+                        "default" to deliveryInformation.isPrimary
                     )
 
                     var isUpdated = false
@@ -114,7 +120,7 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
                             isUpdated = true
                         }.addOnFailureListener {
                         }
-                    return Resource.Success("Success", isUpdated)
+                    return isUpdated
                 }
             }
         } else {
@@ -127,9 +133,9 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
                     isCreated = true
                 }.addOnFailureListener {
                 }
-            return Resource.Success("Success", isCreated)
+            return isCreated
         }
-        return Resource.Error("Failed", false)
+        return false
     }
 
     suspend fun changeDefault(
@@ -139,15 +145,16 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
     ): Boolean {
         var isCompleted = false
 
-        val updateOldInfoMap = mapOf<String, Any>(
-            "default" to false,
-        )
+        // This will call null safety just in case there is only one address added.
+        old?.let {
+            val updateOldInfoMap = mapOf<String, Any>(
+                "default" to false,
+            )
 
-        old?.id?.let {
             userCollectionRef
                 .document(userId)
                 .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
-                .document(it)
+                .document(it.id)
                 .update(updateOldInfoMap)
                 .addOnSuccessListener {
                 }.addOnFailureListener {
@@ -171,5 +178,19 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
             }
 
         return isCompleted
+    }
+
+    suspend fun delete(userId: String, deliveryInformation: DeliveryInformation): Boolean {
+        var isDeleted = false
+
+        userCollectionRef.document(userId)
+            .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
+            .document(deliveryInformation.id)
+            .delete()
+            .addOnSuccessListener {
+                isDeleted = true
+            }.addOnCanceledListener {
+            }
+        return isDeleted
     }
 }

@@ -4,14 +4,13 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
-import com.teampym.onlineclothingshopapplication.data.models.Cart
+import com.teampym.onlineclothingshopapplication.data.db.PaymentMethod
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCheckOutBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,7 +23,7 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
     private lateinit var binding: FragmentCheckOutBinding
 
-    private val viewModel by viewModels<CheckOutViewModel>()
+    private val viewModel: CheckOutSharedViewModel by activityViewModels()
 
     private val args by navArgs<CheckOutFragmentArgs>()
 
@@ -37,20 +36,13 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
         binding = FragmentCheckOutBinding.bind(view)
 
-        var cartList = emptyList<Cart>()
-
         adapter = CheckOutAdapter()
 
         viewModel.cartList.observe(viewLifecycleOwner) { cart ->
             adapter.submitList(cart)
+            finalUser.cartList = cart
             binding.recyclerFinalItems.setHasFixedSize(true)
             binding.recyclerFinalItems.adapter = adapter
-
-            cartList = cart
-
-            cart.forEach {
-                Log.d(TAG, it.toString())
-            }
         }
 
         binding.apply {
@@ -58,48 +50,73 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                 findNavController().navigate(R.id.action_global_deliveryInformationFragment)
             }
 
-            btnChangePaymentMethod.setOnClickListener {
+            labelPaymentMethod.setOnClickListener {
                 // TODO("Proceed to payment method layout (not made yet?)")
-                Toast.makeText(requireContext(), "Change Payment Method layout.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Change Payment Method layout.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            labelPaymentMethod2.setOnClickListener {
+                // TODO("Proceed to payment method layout (not made yet?)")
+                Toast.makeText(
+                    requireContext(),
+                    "Change Payment Method layout.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
 
             val totalCostStr = "$" + String.format("%.2f", args.cart.totalCost)
             tvMerchandiseTotal.text = totalCostStr
+            tvTotalPayment.text = totalCostStr
+            tvTotalPaymentAgain.text = totalCostStr
         }
 
         viewModel.selectedPaymentMethod.observe(viewLifecycleOwner) { paymentMethod ->
-            btnPlaceOrder.setOnClickListener {
+            paymentMethod?.let { pm ->
+                val paymentMethodStr = when (pm) {
+                    PaymentMethod.GCASH -> R.string.rb_gcash
+                    PaymentMethod.PAYMAYA -> R.string.rb_paymaya
+                    PaymentMethod.BPI -> R.string.rb_credit_debit
+                    PaymentMethod.COD -> R.string.rb_cod
+                }
 
-                // get the final cart and place order
-                if (paymentMethod.isNotBlank())
-                    viewModel.placeOrder(finalUser, cartList, paymentMethod)
+                binding.tvPaymentMethod.text = getString(paymentMethodStr)
+                binding.btnPlaceOrder.setOnClickListener {
+                    // get the final cart and place order
+                    viewModel.placeOrder(finalUser, finalUser.cartList, pm.name)
+                }
             }
         }
 
-        viewModel.userWithDeliveryInfo.observe(viewLifecycleOwner) { user ->
-            if (user != null) {
+        viewModel.userWithDeliveryInfo.observe(viewLifecycleOwner) { userWithDeliveryInfo ->
+            userWithDeliveryInfo?.let { user ->
+                Log.d(TAG, user.toString())
+
                 finalUser = user.user.copy(
                     deliveryInformationList = user.deliveryInformation,
                 )
 
-                val defaultInfo = finalUser.deliveryInformationList.firstOrNull { it.default }
+                val defaultDeliveryInfo = user.deliveryInformation.firstOrNull { it.isPrimary }
                 binding.apply {
-                    if (defaultInfo != null) {
-                        val contact = if (defaultInfo.contactNo[0].toString() == "0")
-                            defaultInfo.contactNo.substring(
+                    defaultDeliveryInfo?.let { del ->
+                        val contact = if (del.contactNo[0].toString() == "0")
+                            del.contactNo.substring(
                                 1,
-                                defaultInfo.contactNo.length - 1
-                            ) else defaultInfo.contactNo
+                                del.contactNo.length - 1
+                            ) else del.contactNo
 
-                        val nameAndContact = "${defaultInfo.name} | (+63) $contact"
+                        val nameAndContact = "${del.name} | (+63) $contact"
                         tvNameAndContactNo.visibility = View.VISIBLE
                         tvNameAndContactNo.text = nameAndContact
 
-                        val completeAddress = "${defaultInfo.streetNumber} " +
-                            "${defaultInfo.city}, " +
-                            "${defaultInfo.province}, " +
-                            "${defaultInfo.province}, " +
-                            defaultInfo.postalCode
+                        val completeAddress = "${del.streetNumber} " +
+                            "${del.city}, " +
+                            "${del.province}, " +
+                            "${del.province}, " +
+                            del.postalCode
                         tvCompleteAddress.visibility = View.VISIBLE
                         tvCompleteAddress.text = completeAddress
 
@@ -110,7 +127,8 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
         }
 
         viewModel.order.observe(viewLifecycleOwner) {
-            Log.d(TAG, "$it")
+            Toast.makeText(requireContext(), "Your order has been placed.", Toast.LENGTH_SHORT)
+                .show()
             findNavController().navigate(R.id.action_checkOutFragment_to_categoryFragment)
         }
     }

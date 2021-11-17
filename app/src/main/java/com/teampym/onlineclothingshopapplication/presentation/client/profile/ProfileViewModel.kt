@@ -8,9 +8,7 @@ import com.teampym.onlineclothingshopapplication.data.db.DeliveryInformationDao
 import com.teampym.onlineclothingshopapplication.data.db.NotificationTokenDao
 import com.teampym.onlineclothingshopapplication.data.db.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
-import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
-import com.teampym.onlineclothingshopapplication.data.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
@@ -41,9 +39,11 @@ class ProfileViewModel @Inject constructor(
 
     // Remove the FirebaseAuth cache and in the room db.
     fun signOut(user: FirebaseAuth) = viewModelScope.launch {
-        userInformationDao.deleteAll()
-        deliveryInformationDao.deleteAll()
-        notificationTokenDao.deleteAll()
+        user.let {
+            userInformationDao.deleteAll(it.uid!!)
+            deliveryInformationDao.deleteAll(it.uid!!)
+            notificationTokenDao.deleteAll(it.uid!!)
+        }
 
         // I think I need to use dataStore to replace Sorting Mechanism
         // And this user Id to store session.
@@ -63,13 +63,12 @@ class ProfileViewModel @Inject constructor(
     // the userId in UI State.
     fun checkIfUserIsRegisteredOrVerified(user: FirebaseUser) = viewModelScope.launch {
 
-        val currentUser: UserInformation = when (val res = accountRepository.get(user.uid)) {
-            is Resource.Error -> UserInformation()
-            is Resource.Success -> res.res as UserInformation
-        }
+        val currentUser = accountRepository.get(user.uid)
 
-        if (currentUser.firstName.isBlank()) {
-            profileEventChannel.send(ProfileEvent.NotRegistered)
+        currentUser?.let {
+            if (currentUser.firstName.isBlank()) {
+                profileEventChannel.send(ProfileEvent.NotRegistered)
+            }
         }
 
         when {

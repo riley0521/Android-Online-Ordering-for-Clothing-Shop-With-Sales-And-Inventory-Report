@@ -1,25 +1,18 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
-import androidx.lifecycle.SavedStateHandle
-import com.google.firebase.auth.UserInfo
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import com.teampym.onlineclothingshopapplication.USER_ID_KEY
-import com.teampym.onlineclothingshopapplication.data.db.DeliveryInformationDao
-import com.teampym.onlineclothingshopapplication.data.db.NotificationTokenDao
 import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
-import com.teampym.onlineclothingshopapplication.data.models.*
+import com.teampym.onlineclothingshopapplication.data.models.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.util.Resource
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
-import com.teampym.onlineclothingshopapplication.data.util.UserType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.* // ktlint-disable no-wildcard-imports
 import javax.inject.Inject
-
 
 class AccountRepositoryImpl @Inject constructor(
     private val db: FirebaseFirestore,
@@ -33,32 +26,28 @@ class AccountRepositoryImpl @Inject constructor(
 
     suspend fun get(
         userId: String
-    ): Resource {
+    ): UserInformation? {
         val userQuery = userCollectionRef.document(userId)
             .get()
             .await()
 
-        if (userQuery != null) {
+        if (userQuery.data != null) {
 
-            val userInfo = userQuery.toObject(UserInformation::class.java)
-            if (userInfo != null) {
-                val deliveryInformationList: List<DeliveryInformation> = when(val res = deliveryInformationRepository.getAll(userQuery.id)) {
-                    is Resource.Error -> emptyList()
-                    is Resource.Success -> res.res as List<DeliveryInformation>
-                }
+            val userInfo = userQuery.toObject(UserInformation::class.java)!!.copy(userId = userId)
 
-                val notificationTokenList: List<NotificationToken> = when(val res = notificationTokenRepository.getAll(userQuery.id)) {
-                    is Resource.Error -> emptyList()
-                    is Resource.Success -> res.res as List<NotificationToken>
-                }
+            val deliveryInformationList = deliveryInformationRepository.getAll(userQuery.id)
 
-                val copy = userInfo.copy(userId = userQuery.id, deliveryInformationList = deliveryInformationList, notificationTokenList = notificationTokenList)
-                userInformationDao.insert(copy)
+            val notificationTokenList = notificationTokenRepository.getAll(userQuery.id)
 
-                return Resource.Success("Success", copy)
-            }
+            val finalUser = userInfo.copy(
+                deliveryInformationList = deliveryInformationList,
+                notificationTokenList = notificationTokenList
+            )
+            userInformationDao.insert(finalUser)
+
+            return finalUser
         }
-        return Resource.Error("Failed", UserInformation())
+        return null
     }
 
     // TODO("Should get firebase token as well while we're at it.")
@@ -107,7 +96,7 @@ class AccountRepositoryImpl @Inject constructor(
 
             // Check if the user is in the right age to use the application
             if (Calendar.getInstance().get(Calendar.YEAR)
-                    .minus(calendarDate.get(Calendar.YEAR)) >= 12
+                .minus(calendarDate.get(Calendar.YEAR)) >= 12
             ) {
                 userMapToUpdate["firstName"] = firstName
                 userMapToUpdate["lastName"] = lastName
@@ -122,10 +111,14 @@ class AccountRepositoryImpl @Inject constructor(
                         .addOnSuccessListener {
                             isUpdated = true
                             CoroutineScope(Dispatchers.IO).launch {
-                                userInformationDao.updateBasicInfo(firstName, lastName, birthDate, userId)
+                                userInformationDao.updateBasicInfo(
+                                    firstName,
+                                    lastName,
+                                    birthDate,
+                                    userId
+                                )
                             }
                         }.addOnFailureListener {
-
                         }
 
                     return Resource.Success("Success", isUpdated)

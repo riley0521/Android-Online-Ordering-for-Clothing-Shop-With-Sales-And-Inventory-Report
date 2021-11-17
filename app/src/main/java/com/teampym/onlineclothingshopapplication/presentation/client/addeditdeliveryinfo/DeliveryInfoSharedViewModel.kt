@@ -1,10 +1,16 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.addeditdeliveryinfo
 
-import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
-import com.teampym.onlineclothingshopapplication.data.db.* // ktlint-disable no-wildcard-imports
+import androidx.lifecycle.*
+import com.teampym.onlineclothingshopapplication.data.db.*
+import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
+import com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.models.Selector
+import com.teampym.onlineclothingshopapplication.data.repository.DeliveryInformationRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -13,11 +19,20 @@ class DeliveryInfoSharedViewModel @Inject constructor(
     private val regionDao: RegionDao,
     private val provinceDao: ProvinceDao,
     private val cityDao: CityDao,
+    private val deliveryInformationRepository: DeliveryInformationRepositoryImpl,
     private val deliveryInformationDao: DeliveryInformationDao,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    @ApplicationScope val appScope: CoroutineScope
 ) : ViewModel() {
 
+    private val _userId = MutableLiveData("")
+    val userId: LiveData<String> get() = _userId
+
+    private val _deliveryInformationChannel = Channel<AddEditDeliveryInformationEvent>()
+    val event = _deliveryInformationChannel.receiveAsFlow()
+
     private val _userDeliveryInfoList = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
+        _userId.value = sessionPref.userId
         deliveryInformationDao.getAll(sessionPref.userId)
     }
 
@@ -60,5 +75,39 @@ class DeliveryInfoSharedViewModel @Inject constructor(
 
     fun onSelectedCity(selector: Selector) = viewModelScope.launch {
         _selectedCity.value = City(id = selector.id, provinceId = selector.parentId, name = selector.name)
+    }
+
+    fun onDeleteAddressClicked(deliveryInfo: DeliveryInformation) = appScope.launch {
+        _userId.value?.let {
+            if (it.isNotBlank()) {
+                if (deliveryInformationRepository.delete(it, deliveryInfo)) {
+                    deliveryInformationDao.delete(deliveryInfo.id)
+                    _deliveryInformationChannel.send(AddEditDeliveryInformationEvent.ShowMessage("Delivery Information Deleted Successfully."))
+                } else {
+                    _deliveryInformationChannel.send(AddEditDeliveryInformationEvent.ShowMessage("Failed to delete delivery information."))
+                }
+            } else {
+                _deliveryInformationChannel.send(AddEditDeliveryInformationEvent.ShowMessage("Failed to delete delivery information."))
+            }
+        }
+    }
+
+    fun onSubmitClicked(deliveryInfo: DeliveryInformation) = appScope.launch {
+        _userId.value?.let {
+            if (it.isNotBlank()) {
+                if (deliveryInformationRepository.upsert(it, deliveryInfo)) {
+                    deliveryInformationDao.insert(deliveryInfo)
+                    _deliveryInformationChannel.send(AddEditDeliveryInformationEvent.ShowMessage("Delivery Information Added Successfully."))
+                } else {
+                    _deliveryInformationChannel.send(AddEditDeliveryInformationEvent.ShowMessage("Failed to add delivery information."))
+                }
+            } else {
+                _deliveryInformationChannel.send(AddEditDeliveryInformationEvent.ShowMessage("Failed to add delivery information."))
+            }
+        }
+    }
+
+    sealed class AddEditDeliveryInformationEvent {
+        data class ShowMessage(val msg: String) : AddEditDeliveryInformationEvent()
     }
 }

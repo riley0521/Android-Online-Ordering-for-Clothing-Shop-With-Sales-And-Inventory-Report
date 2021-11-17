@@ -19,6 +19,6 @@ interface NotificationTokenDao {
     @Query("DELETE FROM table_tokens WHERE userId = :userId")
     suspend fun delete(userId: String)
 
-    @Query("DELETE FROM table_tokens")
-    suspend fun deleteAll()
+    @Query("DELETE FROM table_tokens WHERE userId = :userId")
+    suspend fun deleteAll(userId: String)
 }

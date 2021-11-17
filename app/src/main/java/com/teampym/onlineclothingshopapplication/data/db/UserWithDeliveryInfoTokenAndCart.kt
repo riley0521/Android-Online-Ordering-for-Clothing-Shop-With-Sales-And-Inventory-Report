@@ -25,6 +25,7 @@ data class UserWithNotificationTokens(
     val notificationTokens: List<NotificationToken>
 )
 
+// I don't know if this is necessary for now.
 data class UserWithCart(
     @Embedded val user: UserInformation,
     @Relation(

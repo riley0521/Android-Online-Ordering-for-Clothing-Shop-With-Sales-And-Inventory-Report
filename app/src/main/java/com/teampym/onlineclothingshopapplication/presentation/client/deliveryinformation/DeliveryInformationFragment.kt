@@ -36,14 +36,14 @@ class DeliveryInformationFragment :
 
         viewModel.deliveryInformation.observe(viewLifecycleOwner) { deliveryInfoList ->
             if (deliveryInfoList.isNotEmpty()) {
-                val filteredList = deliveryInfoList.filter { !it.default }
+                val filteredList = deliveryInfoList.filter { !it.isPrimary }
                 adapter.submitList(filteredList)
                 binding.recyclerDeliveryInformation.setHasFixedSize(true)
                 binding.recyclerDeliveryInformation.adapter = adapter
 
                 binding.tvNoAddressYet.visibility = View.GONE
 
-                defaultDeliveryInfo = deliveryInfoList.firstOrNull { it.default }
+                defaultDeliveryInfo = deliveryInfoList.firstOrNull { it.isPrimary }
                 if (defaultDeliveryInfo != null) {
                     binding.apply {
                         viewSelectedDeliveryInfo.visibility = View.VISIBLE
@@ -101,8 +101,8 @@ class DeliveryInformationFragment :
             )
             .setPositiveButton("Yes") { dialog, _ ->
                 viewModel.onDeliveryInformationDefaultChanged(
-                    defaultDeliveryInfo?.copy(default = false),
-                    deliveryInfo.copy(default = true)
+                    defaultDeliveryInfo?.copy(isPrimary = false),
+                    deliveryInfo.copy(isPrimary = true)
                 )
                 dialog.dismiss()
             }.setNegativeButton("No") { dialog, _ ->

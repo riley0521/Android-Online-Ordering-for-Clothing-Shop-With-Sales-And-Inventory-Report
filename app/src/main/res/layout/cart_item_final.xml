@@ -22,8 +22,6 @@
             android:layout_marginBottom="8dp"
             android:contentDescription="@string/image_product_description"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.0"
@@ -35,17 +33,16 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
             android:ellipsize="end"
             android:maxLines="1"
             android:textAllCaps="true"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toEndOf="@+id/imgCartProduct"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0"
             tools:text="Product 1" />
 
         <TextView
@@ -59,12 +56,10 @@
             android:textAllCaps="true"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toEndOf="@+id/imgCartProduct"
             app:layout_constraintTop_toBottomOf="@+id/tvProductName"
-            app:layout_constraintVertical_bias="0.0"
             tools:text="$14.99" />
 
         <TextView
@@ -78,8 +73,10 @@
             android:textAllCaps="true"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textStyle="italic"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toEndOf="@+id/tvQuantity"
-            app:layout_constraintTop_toBottomOf="@+id/tvProductName"
+            app:layout_constraintTop_toBottomOf="@+id/tvPrice"
             tools:text="= $14.99" />
 
         <TextView
@@ -87,6 +84,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
             android:ellipsize="end"
             android:maxLines="1"
             android:textAllCaps="true"
@@ -102,15 +100,13 @@
             android:id="@+id/tvQuantity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textStyle="italic"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toEndOf="@+id/tvPrice"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.4"
+            app:layout_constraintHorizontal_bias="0.03"
+            app:layout_constraintStart_toEndOf="@+id/imgCartProduct"
+            app:layout_constraintTop_toBottomOf="@+id/tvPrice"
             tools:text="x1" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

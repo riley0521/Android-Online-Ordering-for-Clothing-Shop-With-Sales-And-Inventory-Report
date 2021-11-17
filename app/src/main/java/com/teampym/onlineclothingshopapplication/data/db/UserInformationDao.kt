@@ -29,19 +29,19 @@ interface UserInformationDao {
     @Query("DELETE FROM table_users WHERE userId = :userId")
     suspend fun delete(userId: String)
 
-    @Query("DELETE FROM table_users")
-    suspend fun deleteAll()
+    @Query("DELETE FROM table_users WHERE userId = :userId")
+    suspend fun deleteAll(userId: String)
 
     @Transaction
-    @Query("SELECT * FROM table_users WHERE userId = :userId")
-    fun getUserWithDeliveryInfo(userId: String): Flow<UserWithDeliveryInfo>
+    @Query("SELECT * FROM table_users")
+    suspend fun getUserWithDeliveryInfo(): List<UserWithDeliveryInfo>
 
     @Transaction
-    @Query("SELECT * FROM table_users WHERE userId = :userId")
-    fun getUserWithNotificationTokens(userId: String): Flow<UserWithNotificationTokens>
+    @Query("SELECT * FROM table_users")
+    suspend fun getUserWithNotificationTokens(): List<UserWithNotificationTokens>
 
     // I don't know if this necessary in the future. but I will leave it here for now.
     @Transaction
-    @Query("SELECT * FROM table_users WHERE userId = :userId")
-    fun getCurrentUserWithCart(userId: String): Flow<UserWithCart>
+    @Query("SELECT * FROM table_users")
+    suspend fun getUserWithCart(): List<UserWithCart>
 }
