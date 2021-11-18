@@ -1,4 +1,4 @@
-package com.teampym.onlineclothingshopapplication.data.db
+package com.teampym.onlineclothingshopapplication.data.room
 
 import android.content.Context
 import android.util.Log

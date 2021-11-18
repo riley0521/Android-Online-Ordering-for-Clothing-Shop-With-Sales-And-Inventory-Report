@@ -3,14 +3,15 @@ package com.teampym.onlineclothingshopapplication.presentation.client.cart
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
-import com.teampym.onlineclothingshopapplication.data.models.Cart
 import com.teampym.onlineclothingshopapplication.data.models.Checkout
+import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.util.CartFlag
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCartBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -49,10 +50,29 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
         binding.apply {
             btnCheckOut.setOnClickListener {
-                val action = CartFragmentDirections.actionCartFragmentToCheckOutFragment(
-                    cart = Checkout(getFirebaseUser()?.uid!!, cartList, total)
-                )
-                findNavController().navigate(action)
+                val outOfStockList = cartList.filter { it.inventory.stock == 0L }
+
+                if (outOfStockList.isNotEmpty()) {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("DELETE OUT OF STOCK ITEMS")
+                        .setMessage("Are you sure you want to proceed? You cannot reverse this action.")
+                        .setPositiveButton("YES") { _, _ ->
+                            viewModel.onDeleteOutOfStockItems(outOfStockList)
+
+                            val action = CartFragmentDirections.actionCartFragmentToCheckOutFragment(
+                                cart = Checkout(getFirebaseUser()?.uid!!, cartList, total)
+                            )
+                            findNavController().navigate(action)
+                        }.setNegativeButton("NO") { dialog, _ ->
+                            dialog.dismiss()
+                        }
+                        .show()
+                } else {
+                    val action = CartFragmentDirections.actionCartFragmentToCheckOutFragment(
+                        cart = Checkout(getFirebaseUser()?.uid!!, cartList, total)
+                    )
+                    findNavController().navigate(action)
+                }
             }
 
             recyclerViewCart.setHasFixedSize(true)
@@ -84,12 +104,12 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
     private fun getFirebaseUser() = FirebaseAuth.getInstance().currentUser
 
     override fun onAddQuantity(cartId: String, pos: Int) {
-        viewModel.updateQty(cartId, CartFlag.ADDING.toString())
+        viewModel.onQuantityUpdated(cartId, CartFlag.ADDING.toString())
         adapter.notifyItemChanged(pos)
     }
 
     override fun onRemoveQuantity(cartId: String, pos: Int) {
-        viewModel.updateQty(cartId, CartFlag.REMOVING.toString())
+        viewModel.onQuantityUpdated(cartId, CartFlag.REMOVING.toString())
         adapter.notifyItemChanged(pos)
     }
 
@@ -98,7 +118,7 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
     }
 
     override fun onStop() {
-        viewModel.updateCart(userId, adapter.currentList)
+        viewModel.onCartUpdated(userId, adapter.currentList)
         super.onStop()
     }
 }

@@ -2,7 +2,7 @@ package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
+import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.util.Resource
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION

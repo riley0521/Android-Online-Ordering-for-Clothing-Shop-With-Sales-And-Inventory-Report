@@ -2,13 +2,15 @@
 buildscript {
     ext {
         kotlinVersion = "1.4.32"
+        googleMaterialVersion = "1.5.0-beta01"
+        fragmentVersion = "1.4.0"
         navigationVersion = "2.3.5"
         lifecycleVersion = "2.4.0"
         retrofitVersion = "2.9.0"
-        pagingVersion = "3.1.0-beta01"
+        pagingVersion = "3.1.0"
         glideVersion = "4.12.0"
         recyclerviewVersion = "1.2.1"
-        roomVersion = "2.3.0"
+        roomVersion = "2.4.0-beta02"
         gsonVersion = "2.8.6"
         datastoreVersion = "1.0.0-alpha04"
 

@@ -4,13 +4,16 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
-import com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation
+import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.databinding.FragmentDeliveryInformationBinding
+import com.teampym.onlineclothingshopapplication.presentation.client.addeditdeliveryinfo.ADD_EDIT_DELETE_REQUEST
+import com.teampym.onlineclothingshopapplication.presentation.client.addeditdeliveryinfo.ADD_EDIT_DELETE_RESULT
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 
@@ -25,8 +28,6 @@ class DeliveryInformationFragment :
 
     private lateinit var adapter: DeliveryInformationAdapter
 
-    private var defaultDeliveryInfo: DeliveryInformation? = null
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -39,32 +40,57 @@ class DeliveryInformationFragment :
                 val filteredList = deliveryInfoList.filter { !it.isPrimary }
                 adapter.submitList(filteredList)
                 binding.recyclerDeliveryInformation.setHasFixedSize(true)
+                binding.recyclerDeliveryInformation.visibility = View.VISIBLE
                 binding.recyclerDeliveryInformation.adapter = adapter
 
+                binding.tvDeliveryAddressTitle.visibility = View.VISIBLE
                 binding.tvNoAddressYet.visibility = View.GONE
 
-                defaultDeliveryInfo = deliveryInfoList.firstOrNull { it.isPrimary }
-                if (defaultDeliveryInfo != null) {
+                deliveryInfoList.firstOrNull { it.isPrimary }?.let { info ->
                     binding.apply {
                         viewSelectedDeliveryInfo.visibility = View.VISIBLE
 
-                        val contact = if (defaultDeliveryInfo?.contactNo?.get(0).toString() == "0")
-                            defaultDeliveryInfo?.contactNo?.length?.let {
-                                defaultDeliveryInfo?.contactNo?.substring(
+                        val contact = if (info.contactNo[0].toString() == "0")
+                            info.contactNo.length.let {
+                                info.contactNo.substring(
                                     1,
                                     it
                                 )
-                            } else defaultDeliveryInfo?.contactNo
+                            } else info.contactNo
 
-                        val nameAndContact = "${defaultDeliveryInfo?.name} | (+63) $contact"
+                        val nameAndContact = "${info.name} | (+63) $contact"
                         tvNameAndContact.text = nameAndContact
 
-                        val completeAddress = "${defaultDeliveryInfo?.streetNumber} " +
-                            "${defaultDeliveryInfo?.city}, " +
-                            "${defaultDeliveryInfo?.province}, " +
-                            "${defaultDeliveryInfo?.province}, " +
-                            defaultDeliveryInfo?.postalCode
+                        val completeAddress = "${info.streetNumber} " +
+                            "${info.city}, " +
+                            "${info.province}, " +
+                            "${info.province}, " +
+                            info.postalCode
                         tvAddress.text = completeAddress
+
+                        btnDelete.setOnClickListener {
+                            AlertDialog.Builder(requireContext())
+                                .setTitle("DELETE DELIVERY INFORMATION")
+                                .setMessage(
+                                    "Are you sure you want to delete this delivery information?\n" +
+                                        "Reminder: You cannot reverse this action"
+                                )
+                                .setPositiveButton("Yes") { dialog, _ ->
+                                    viewModel.onDeleteClicked(info)
+                                    dialog.dismiss()
+                                }.setNegativeButton("No") { dialog, _ ->
+                                    dialog.dismiss()
+                                }.show()
+                        }
+
+                        btnEdit.setOnClickListener {
+                            val action =
+                                DeliveryInformationFragmentDirections.actionDeliveryInformationFragmentToAddEditDeliveryInformationFragment(
+                                    info,
+                                    "Edit Address"
+                                )
+                            findNavController().navigate(action)
+                        }
                     }
                 }
             }
@@ -81,8 +107,13 @@ class DeliveryInformationFragment :
             }
         }
 
+        setFragmentResultListener(ADD_EDIT_DELETE_REQUEST) { _, bundle ->
+            val result = bundle.getInt(ADD_EDIT_DELETE_RESULT)
+            viewModel.onAddEditOrDeleteResult(result)
+        }
+
         lifecycleScope.launchWhenStarted {
-            viewModel.deliveryInfoEvent.collectLatest { event ->
+            viewModel.deliveryInformationEvent.collectLatest { event ->
                 when (event) {
                     is DeliveryInformationViewModel.DeliveryInfoEvent.ShowMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
@@ -101,7 +132,6 @@ class DeliveryInformationFragment :
             )
             .setPositiveButton("Yes") { dialog, _ ->
                 viewModel.onDeliveryInformationDefaultChanged(
-                    defaultDeliveryInfo?.copy(isPrimary = false),
                     deliveryInfo.copy(isPrimary = true)
                 )
                 dialog.dismiss()

@@ -3,9 +3,10 @@ package com.teampym.onlineclothingshopapplication.presentation.client.deliveryin
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import com.teampym.onlineclothingshopapplication.data.db.DeliveryInformationDao
-import com.teampym.onlineclothingshopapplication.data.db.PreferencesManager
-import com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation
+import com.teampym.onlineclothingshopapplication.*
+import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformationDao
+import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
+import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.repository.DeliveryInformationRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -23,8 +24,8 @@ class DeliveryInformationViewModel @Inject constructor(
 
     private var userId = ""
 
-    private val deliveryInformationChannel = Channel<DeliveryInfoEvent>()
-    val deliveryInfoEvent = deliveryInformationChannel.receiveAsFlow()
+    private val _deliveryInformationChannel = Channel<DeliveryInfoEvent>()
+    val deliveryInformationEvent = _deliveryInformationChannel.receiveAsFlow()
 
     private val _deliveryInformationFlow =
         preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
@@ -35,23 +36,73 @@ class DeliveryInformationViewModel @Inject constructor(
     val deliveryInformation = _deliveryInformationFlow.asLiveData()
 
     fun onDeliveryInformationDefaultChanged(
-        defaultDeliveryInfo: DeliveryInformation?,
-        deliveryInfo: DeliveryInformation
+        deliveryInformation: DeliveryInformation
     ) = viewModelScope.launch {
 
         // modify old info to false and modify the new info to true to make it the default
         val isModified =
-            deliveryInformationRepository.changeDefault(userId, defaultDeliveryInfo, deliveryInfo)
-        if (defaultDeliveryInfo != null) {
-            deliveryInformationDao.update(defaultDeliveryInfo)
-        }
-        deliveryInformationDao.update(deliveryInfo)
+            deliveryInformationRepository.changeDefault(userId, deliveryInformation)
+        deliveryInformationDao.insert(deliveryInformation)
 
         // Emit message for the view to show in snackbar
         if (isModified) {
-            deliveryInformationChannel.send(DeliveryInfoEvent.ShowMessage("Successfully changed the default delivery information."))
+            _deliveryInformationChannel.send(DeliveryInfoEvent.ShowMessage("Successfully changed the default delivery information."))
         } else {
-            deliveryInformationChannel.send(DeliveryInfoEvent.ShowMessage("Failed to change the default delivery information."))
+            _deliveryInformationChannel.send(DeliveryInfoEvent.ShowMessage("Failed to change the default delivery information."))
+        }
+    }
+
+    fun onDeleteClicked(deliveryInformation: DeliveryInformation?) = viewModelScope.launch {
+        deliveryInformation?.let {
+            if (deliveryInformationRepository.delete(userId, it)) {
+                deliveryInformationDao.delete(it.id)
+                _deliveryInformationChannel.send(
+                    DeliveryInfoEvent.ShowMessage(
+                        "Successfully deleted delivery information."
+                    )
+                )
+            } else {
+                _deliveryInformationChannel.send(
+                    DeliveryInfoEvent.ShowMessage(
+                        "Failed to delete delivery information."
+                    )
+                )
+            }
+        }
+    }
+
+    fun onAddEditOrDeleteResult(result: Int) = viewModelScope.launch {
+        when (result) {
+            ADD_DELIVERY_INFO_RESULT_OK -> _deliveryInformationChannel.send(
+                DeliveryInfoEvent.ShowMessage(
+                    "Successfully added delivery information."
+                )
+            )
+            EDIT_DELIVERY_INFO_RESULT_OK -> _deliveryInformationChannel.send(
+                DeliveryInfoEvent.ShowMessage(
+                    "Successfully updated delivery information."
+                )
+            )
+            DELETE_DELIVERY_INFO_RESULT_OK -> _deliveryInformationChannel.send(
+                DeliveryInfoEvent.ShowMessage(
+                    "Successfully deleted delivery information."
+                )
+            )
+            ADD_DELIVERY_INFO_RESULT_ERR -> _deliveryInformationChannel.send(
+                DeliveryInfoEvent.ShowMessage(
+                    "Failed to add delivery information."
+                )
+            )
+            EDIT_DELIVERY_INFO_RESULT_ERR -> _deliveryInformationChannel.send(
+                DeliveryInfoEvent.ShowMessage(
+                    "Failed to update delivery information."
+                )
+            )
+            DELETE_DELIVERY_INFO_RESULT_ERR -> _deliveryInformationChannel.send(
+                DeliveryInfoEvent.ShowMessage(
+                    "Failed to delete delivery information."
+                )
+            )
         }
     }
 

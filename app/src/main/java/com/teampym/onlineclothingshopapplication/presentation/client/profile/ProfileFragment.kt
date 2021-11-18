@@ -60,7 +60,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             }
 
             FirebaseAuth.getInstance().addAuthStateListener { auth ->
-                if(auth.currentUser == null) {
+                if (auth.currentUser == null) {
                     binding.cardViewBanner.isVisible = false
 
                     btnSignOut.text = "Sign In"
@@ -82,7 +82,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         }
 
         viewModel.user.observe(viewLifecycleOwner) { userInfo ->
-            if(userInfo != null) {
+            if (userInfo != null) {
                 Log.d(TAG, "${userInfo?.firstName}")
 
                 Glide.with(requireView())
@@ -121,7 +121,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             }
 
             while (true) {
-                if(getCurrentUser() != null) {
+                if (getCurrentUser() != null) {
                     val it = getCurrentUser()
                     it?.reload()
                     binding.cardViewBanner.isVisible = !it?.isEmailVerified!!
@@ -169,9 +169,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         // Choose authentication providers
         val providers = arrayListOf(
             AuthUI.IdpConfig.EmailBuilder().build(),
-            AuthUI.IdpConfig.PhoneBuilder().build(),
-            AuthUI.IdpConfig.GoogleBuilder().build(),
-            AuthUI.IdpConfig.FacebookBuilder().build(),
+            AuthUI.IdpConfig.GoogleBuilder().build()
         )
 
         startActivityForResult(
@@ -187,7 +185,6 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 .build(),
             RC_SIGN_IN
         )
-
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -196,14 +193,13 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         if (requestCode == RC_SIGN_IN && resultCode == Activity.RESULT_OK) {
             // Successfully signed in
             val user = getCurrentUser()
-            if(user != null) {
+            if (user != null) {
                 // Try to send email verification for the first time the user uses the app.
-                if(user.isEmailVerified.not())
+                if (user.isEmailVerified.not())
                     user.sendEmailVerification()
 
                 viewModel.checkIfUserIsRegisteredOrVerified(user)
             }
         }
     }
-
 }

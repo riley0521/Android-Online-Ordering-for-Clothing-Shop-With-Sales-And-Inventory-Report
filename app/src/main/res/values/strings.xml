@@ -3,9 +3,6 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
-    <string name="facebook_application_id" translatable="false">492431628473103</string>
-    <string name="fb_login_protocol_scheme" translatable="false">fb492431628473103</string>
-
     <!--  UI Labels  -->
     <string name="home_nav_title" translatable="false">Home</string>
     <string name="news_nav_title" translatable="false">News Feed</string>
@@ -26,7 +23,7 @@
     <string name="button_add_to_cart" translatable="false">Add To Cart</string>
     <string name="button_share" translatable="false">Share</string>
     <string name="label_description" translatable="false">Description</string>
-    <string name="label_rate" translatable="false">Rating -</string>
+    <string name="label_rate" translatable="false">Rating </string>
     <string name="label_reviews" translatable="false">Reviews</string>
     <string name="label_no_reviews_yet" translatable="false">No Reviews Yet.</string>
     <string name="label_uncrowned_guest" translatable="false">Uncrowned Guest</string>
@@ -45,7 +42,7 @@
     <string name="label_delivery_address" translatable="false">Delivery Address</string>
     <string name="button_change_address" translatable="false">Change Address</string>
     <string name="label_payment_method" translatable="false">Payment Method</string>
-    <string name="rb_credit_debit" translatable="false">Credit/Debit</string>
+    <string name="rb_credit_debit_card" translatable="false">Credit/Debit Card</string>
     <string name="rb_cod" translatable="false">Cash On Delivery (COD)</string>
     <string name="rb_gcash" translatable="false">G-Cash</string>
     <string name="rb_paymaya" translatable="false">Paymaya</string>
@@ -62,10 +59,10 @@
     <string name="txt_date_picker" translatable="false">Date Picker</string>
     <string name="btn_change_payment_method">Change</string>
     <string name="product_name">Product Name</string>
-    <string name="long_sentence">Hmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm</string>
+    <string name="long_sentence">Hmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm</string>
     <string name="test_address">#300 11th Avenue Justice Lourdes Paredes Cubao Quezon City \nQuezon City, Metro Manila, Metro Manila, 1109</string>
     <string name="test_name_contact">John Doe | (+63) 912 345 6789</string>
-    <string name="default_delivery_information">Default Delivery Information</string>
+    <string name="default_text">Default</string>
     <string name="add_new_delivery_information">Add New Delivery Information</string>
     <string name="full_name">Full Name</string>
     <string name="phone_number">Phone Number</string>
@@ -86,6 +83,17 @@
     <string name="region_province_city">Region Province City</string>
     <string name="no_delivery_address_yet_please_create_one">No Delivery Address Yet. Please Create One.</string>
     <string name="no_delivery_address_yet_please_create_one_fab">No Delivery Address Yet. Please Create One By Tapping the + Button below.</string>
+    <string name="set_full_name">Set Full Name</string>
+    <string name="set_phone_number">Set Phone Number</string>
+    <string name="set_postal_code">Set Postal Code</string>
+    <string name="set_detailed_address">Set Detailed Address</string>
+    <string name="delivery_addresses">Delivery Addresses</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="make_default">Make Default</string>
+    <string name="no_available_rating">No Available Rating.</string>
+    <string name="choose_payment_method">Choose Payment Method</string>
+    <string name="out_of_stock">(Out Of Stock)</string>
 
 
 </resources>

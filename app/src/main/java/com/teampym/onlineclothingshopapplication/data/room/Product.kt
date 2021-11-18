@@ -1,11 +1,12 @@
-package com.teampym.onlineclothingshopapplication.data.models
+package com.teampym.onlineclothingshopapplication.data.room
 
 import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.firebase.firestore.Exclude
-import com.teampym.onlineclothingshopapplication.data.db.SortOrder
+import com.teampym.onlineclothingshopapplication.data.models.ProductImage
+import com.teampym.onlineclothingshopapplication.data.models.Review
 import com.teampym.onlineclothingshopapplication.data.util.ProductType
 import kotlinx.android.parcel.Parcelize
 

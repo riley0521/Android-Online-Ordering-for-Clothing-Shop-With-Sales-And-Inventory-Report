@@ -1,4 +1,4 @@
-package com.teampym.onlineclothingshopapplication.data.db
+package com.teampym.onlineclothingshopapplication.data.room
 
 import androidx.room.Embedded
 import androidx.room.Entity

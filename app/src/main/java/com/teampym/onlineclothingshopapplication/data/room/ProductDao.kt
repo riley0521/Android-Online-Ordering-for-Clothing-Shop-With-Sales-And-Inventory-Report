@@ -1,9 +1,8 @@
-package com.teampym.onlineclothingshopapplication.data.db
+package com.teampym.onlineclothingshopapplication.data.room
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy.REPLACE
-import com.teampym.onlineclothingshopapplication.data.models.Product
 
 @Dao
 interface ProductDao {

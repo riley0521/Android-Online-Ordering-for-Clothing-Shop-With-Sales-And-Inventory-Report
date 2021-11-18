@@ -2,7 +2,7 @@ package com.teampym.onlineclothingshopapplication.data.di
 
 import android.app.Application
 import androidx.room.Room
-import com.teampym.onlineclothingshopapplication.data.db.MyDatabase
+import com.teampym.onlineclothingshopapplication.data.room.MyDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

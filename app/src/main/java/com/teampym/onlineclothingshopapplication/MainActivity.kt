@@ -1,5 +1,6 @@
 package com.teampym.onlineclothingshopapplication
 
+import android.app.Activity
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -73,4 +74,11 @@ class MainActivity : AppCompatActivity() {
 }
 
 const val VERIFICATION_SPAN = "verification_span"
-const val USER_ID_KEY = "user_id"
+
+const val ADD_DELIVERY_INFO_RESULT_OK = Activity.RESULT_FIRST_USER
+const val EDIT_DELIVERY_INFO_RESULT_OK = Activity.RESULT_FIRST_USER + 1
+const val DELETE_DELIVERY_INFO_RESULT_OK = Activity.RESULT_FIRST_USER + 2
+
+const val ADD_DELIVERY_INFO_RESULT_ERR = -1
+const val EDIT_DELIVERY_INFO_RESULT_ERR = -2
+const val DELETE_DELIVERY_INFO_RESULT_ERR = -3

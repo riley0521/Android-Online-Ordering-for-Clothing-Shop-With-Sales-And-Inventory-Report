@@ -1,7 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.inventories
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,8 +14,8 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.chip.Chip
 import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
-import com.teampym.onlineclothingshopapplication.data.models.Inventory
-import com.teampym.onlineclothingshopapplication.data.models.Product
+import com.teampym.onlineclothingshopapplication.data.room.Inventory
+import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.databinding.FragmentInventoryModalBinding
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -48,7 +47,7 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
 
         val currentUser = FirebaseAuth.getInstance().currentUser
         var userId = ""
-        if(currentUser != null) {
+        if (currentUser != null) {
             userId = currentUser.uid
         }
 
@@ -81,16 +80,20 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
             findNavController().popBackStack()
         }
 
-        if(product.inventoryList.isNotEmpty()) {
+        if (product.inventoryList.isNotEmpty()) {
             for (inventory in product.inventoryList) {
                 // TODO("Compare if getLayoutInflater() is same as creating a new instance of LayoutInflater object.")
                 val chip = layoutInflater.inflate(R.layout.inventory_item, null, false) as Chip
                 chip.id = View.generateViewId()
                 chip.text = inventory.size
                 chip.isCheckable = true
+                chip.isEnabled = inventory.stock > 0
                 chip.setOnClickListener {
                     binding.btnAddToCart.isEnabled = binding.chipSizeGroup.checkedChipIds.count() == 1 && userId.isNotEmpty()
                     selectedInv = inventory
+
+                    val numberOfAvailableStocksForSize = "(Available: ${selectedInv?.stock ?: 0})"
+                    binding.tvAvailableStocks.text = numberOfAvailableStocksForSize
                 }
                 binding.chipSizeGroup.addView(chip)
             }

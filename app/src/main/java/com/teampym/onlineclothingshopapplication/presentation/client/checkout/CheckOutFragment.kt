@@ -10,11 +10,10 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
-import com.teampym.onlineclothingshopapplication.data.db.PaymentMethod
+import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCheckOutBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.fragment_check_out.*
 
 private const val TAG = "CheckOutFragment"
 
@@ -38,7 +37,7 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
         adapter = CheckOutAdapter()
 
-        viewModel.cartList.observe(viewLifecycleOwner) { cart ->
+        viewModel.finalCartList.observe(viewLifecycleOwner) { cart ->
             adapter.submitList(cart)
             finalUser.cartList = cart
             binding.recyclerFinalItems.setHasFixedSize(true)
@@ -51,21 +50,17 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
             }
 
             labelPaymentMethod.setOnClickListener {
-                // TODO("Proceed to payment method layout (not made yet?)")
-                Toast.makeText(
-                    requireContext(),
-                    "Change Payment Method layout.",
-                    Toast.LENGTH_SHORT
-                ).show()
+                val action = CheckOutFragmentDirections.actionCheckOutFragmentToSelectPaymentMethodFragment(
+                    tvPaymentMethod.text.toString()
+                )
+                findNavController().navigate(action)
             }
 
             labelPaymentMethod2.setOnClickListener {
-                // TODO("Proceed to payment method layout (not made yet?)")
-                Toast.makeText(
-                    requireContext(),
-                    "Change Payment Method layout.",
-                    Toast.LENGTH_SHORT
-                ).show()
+                val action = CheckOutFragmentDirections.actionCheckOutFragmentToSelectPaymentMethodFragment(
+                    tvPaymentMethod.text.toString()
+                )
+                findNavController().navigate(action)
             }
 
             val totalCostStr = "$" + String.format("%.2f", args.cart.totalCost)
@@ -79,7 +74,7 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                 val paymentMethodStr = when (pm) {
                     PaymentMethod.GCASH -> R.string.rb_gcash
                     PaymentMethod.PAYMAYA -> R.string.rb_paymaya
-                    PaymentMethod.BPI -> R.string.rb_credit_debit
+                    PaymentMethod.BPI -> R.string.rb_credit_debit_card
                     PaymentMethod.COD -> R.string.rb_cod
                 }
 
@@ -126,10 +121,12 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
             }
         }
 
-        viewModel.order.observe(viewLifecycleOwner) {
-            Toast.makeText(requireContext(), "Your order has been placed.", Toast.LENGTH_SHORT)
-                .show()
-            findNavController().navigate(R.id.action_checkOutFragment_to_categoryFragment)
+        viewModel.order.observe(viewLifecycleOwner) { placedOrder ->
+            placedOrder?.let {
+                Toast.makeText(requireContext(), "Your order has been placed.", Toast.LENGTH_SHORT)
+                    .show()
+                findNavController().navigate(R.id.action_checkOutFragment_to_categoryFragment)
+            }
         }
     }
 

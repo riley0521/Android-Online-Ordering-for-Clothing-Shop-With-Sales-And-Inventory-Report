@@ -3,8 +3,8 @@ package com.teampym.onlineclothingshopapplication.presentation.client.products
 import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.teampym.onlineclothingshopapplication.data.db.PreferencesManager
-import com.teampym.onlineclothingshopapplication.data.db.SortOrder
+import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
+import com.teampym.onlineclothingshopapplication.data.room.SortOrder
 import com.teampym.onlineclothingshopapplication.data.repository.ProductRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import dagger.hilt.android.lifecycle.HiltViewModel

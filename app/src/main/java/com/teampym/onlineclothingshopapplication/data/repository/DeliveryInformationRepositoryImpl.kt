@@ -1,22 +1,20 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.teampym.onlineclothingshopapplication.data.db.DeliveryInformationDao
-import com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation
+import com.google.firebase.firestore.QuerySnapshot
+import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
+import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.DELIVERY_INFORMATION_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class DeliveryInformationRepositoryImpl @Inject constructor(
-    private val db: FirebaseFirestore,
+    db: FirebaseFirestore,
     private val deliveryInformationDao: DeliveryInformationDao
 ) {
 
@@ -62,7 +60,11 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
                         for (document in querySnapshot.documents) {
                             val deliveryInformation = document
                                 .toObject(DeliveryInformation::class.java)!!
-                                .copy(id = document.id, userId = userId)
+                                .copy(
+                                    id = document.id,
+                                    userId = userId,
+                                    isPrimary = document["isPrimary"].toString().toBoolean()
+                                )
 
                             deliveryInformationList.add(deliveryInformation)
                             CoroutineScope(Dispatchers.IO).launch {
@@ -107,7 +109,7 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
                         "city" to deliveryInformation.city,
                         "streetNumber" to deliveryInformation.streetNumber,
                         "postalCode" to deliveryInformation.postalCode,
-                        "default" to deliveryInformation.isPrimary
+                        "isPrimary" to deliveryInformation.isPrimary
                     )
 
                     var isUpdated = false
@@ -118,6 +120,10 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
                         .update(updateDeliveryInfoMap)
                         .addOnSuccessListener {
                             isUpdated = true
+
+                            CoroutineScope(Dispatchers.IO).launch {
+                                deliveryInformationDao.insert(deliveryInformation)
+                            }
                         }.addOnFailureListener {
                         }
                     return isUpdated
@@ -131,6 +137,13 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
                 .add(deliveryInformation)
                 .addOnSuccessListener {
                     isCreated = true
+
+                    if (deliveryInformation.isPrimary) {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            changeDefault(userId, deliveryInformation)
+                            deliveryInformationDao.insert(deliveryInformation)
+                        }
+                    }
                 }.addOnFailureListener {
                 }
             return isCreated
@@ -140,44 +153,51 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
 
     suspend fun changeDefault(
         userId: String,
-        old: DeliveryInformation?,
         new: DeliveryInformation
     ): Boolean {
         var isCompleted = false
-
-        // This will call null safety just in case there is only one address added.
-        old?.let {
-            val updateOldInfoMap = mapOf<String, Any>(
-                "default" to false,
-            )
-
-            userCollectionRef
-                .document(userId)
-                .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
-                .document(it.id)
-                .update(updateOldInfoMap)
-                .addOnSuccessListener {
-                }.addOnFailureListener {
-                    isCompleted = false
-                }
-        }
-
-        val updateNewInfoMap = mapOf<String, Any>(
-            "default" to true
-        )
-
-        userCollectionRef
-            .document(userId)
-            .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
-            .document(new.id)
-            .update(updateNewInfoMap)
-            .addOnSuccessListener {
-                isCompleted = true
+        userCollectionRef.document(userId).collection(DELIVERY_INFORMATION_SUB_COLLECTION)
+            .whereEqualTo("isPrimary", true)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                isCompleted = switchDefaultAddressInFirestore(querySnapshot, userId, new)
             }.addOnFailureListener {
-                isCompleted = false
             }
 
         return isCompleted
+    }
+
+    private fun switchDefaultAddressInFirestore(
+        querySnapshot: QuerySnapshot,
+        userId: String,
+        new: DeliveryInformation
+    ): Boolean {
+        var isSuccess = false
+
+        querySnapshot.forEach { doc ->
+            doc.reference.update(
+                mutableMapOf<String, Any>(
+                    "isPrimary" to false
+                )
+            ).addOnSuccessListener {
+                val updateNewInfoMap = mapOf<String, Any>(
+                    "isPrimary" to true
+                )
+
+                userCollectionRef
+                    .document(userId)
+                    .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
+                    .document(new.id)
+                    .update(updateNewInfoMap)
+                    .addOnSuccessListener {
+                        isSuccess = true
+                    }.addOnFailureListener {
+                    }
+            }.addOnFailureListener {
+            }
+        }
+        return isSuccess
     }
 
     suspend fun delete(userId: String, deliveryInformation: DeliveryInformation): Boolean {

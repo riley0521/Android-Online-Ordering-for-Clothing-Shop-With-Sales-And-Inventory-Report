@@ -1,9 +1,10 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.addeditdeliveryinfo
 
-import androidx.lifecycle.*
-import com.teampym.onlineclothingshopapplication.data.db.*
+import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.room.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
-import com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation
+import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.models.Selector
 import com.teampym.onlineclothingshopapplication.data.repository.DeliveryInformationRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -77,37 +78,71 @@ class DeliveryInfoSharedViewModel @Inject constructor(
         _selectedCity.value = City(id = selector.id, provinceId = selector.parentId, name = selector.name)
     }
 
-    fun onDeleteAddressClicked(deliveryInfo: DeliveryInformation) = appScope.launch {
-        _userId.value?.let {
-            if (it.isNotBlank()) {
-                if (deliveryInformationRepository.delete(it, deliveryInfo)) {
-                    deliveryInformationDao.delete(deliveryInfo.id)
-                    _deliveryInformationChannel.send(AddEditDeliveryInformationEvent.ShowMessage("Delivery Information Deleted Successfully."))
-                } else {
-                    _deliveryInformationChannel.send(AddEditDeliveryInformationEvent.ShowMessage("Failed to delete delivery information."))
+    fun onDeleteAddressClicked(deliveryInfo: DeliveryInformation?) = appScope.launch {
+        _userId.value?.let { userId ->
+            if (userId.isNotBlank()) {
+                deliveryInfo?.let {
+                    if (deliveryInformationRepository.delete(userId, it)) {
+                        deliveryInformationDao.delete(it.id)
+                        _deliveryInformationChannel.send(
+                            AddEditDeliveryInformationEvent.NavigateBackWithResult(
+                                DELETE_DELIVERY_INFO_RESULT_OK
+                            )
+                        )
+                    } else {
+                        _deliveryInformationChannel.send(
+                            AddEditDeliveryInformationEvent.NavigateBackWithResult(
+                                DELETE_DELIVERY_INFO_RESULT_ERR
+                            )
+                        )
+                    }
                 }
             } else {
-                _deliveryInformationChannel.send(AddEditDeliveryInformationEvent.ShowMessage("Failed to delete delivery information."))
+                _deliveryInformationChannel.send(AddEditDeliveryInformationEvent.NavigateBackWithResult(DELETE_DELIVERY_INFO_RESULT_ERR))
             }
         }
     }
 
-    fun onSubmitClicked(deliveryInfo: DeliveryInformation) = appScope.launch {
+    fun onSubmitClicked(deliveryInfo: DeliveryInformation, isEditing: Boolean) = appScope.launch {
         _userId.value?.let {
             if (it.isNotBlank()) {
-                if (deliveryInformationRepository.upsert(it, deliveryInfo)) {
-                    deliveryInformationDao.insert(deliveryInfo)
-                    _deliveryInformationChannel.send(AddEditDeliveryInformationEvent.ShowMessage("Delivery Information Added Successfully."))
+
+                if (isEditing) {
+                    if (deliveryInformationRepository.upsert(it, deliveryInfo)) {
+                        deliveryInformationDao.insert(deliveryInfo)
+                        _deliveryInformationChannel.send(
+                            AddEditDeliveryInformationEvent.NavigateBackWithResult(
+                                EDIT_DELIVERY_INFO_RESULT_OK
+                            )
+                        )
+                    } else {
+                        _deliveryInformationChannel.send(
+                            AddEditDeliveryInformationEvent.NavigateBackWithResult(
+                                EDIT_DELIVERY_INFO_RESULT_ERR
+                            )
+                        )
+                    }
                 } else {
-                    _deliveryInformationChannel.send(AddEditDeliveryInformationEvent.ShowMessage("Failed to add delivery information."))
+                    if (deliveryInformationRepository.upsert(it, deliveryInfo)) {
+                        deliveryInformationDao.insert(deliveryInfo)
+                        _deliveryInformationChannel.send(
+                            AddEditDeliveryInformationEvent.NavigateBackWithResult(
+                                ADD_DELIVERY_INFO_RESULT_OK
+                            )
+                        )
+                    } else {
+                        _deliveryInformationChannel.send(
+                            AddEditDeliveryInformationEvent.NavigateBackWithResult(
+                                ADD_DELIVERY_INFO_RESULT_ERR
+                            )
+                        )
+                    }
                 }
-            } else {
-                _deliveryInformationChannel.send(AddEditDeliveryInformationEvent.ShowMessage("Failed to add delivery information."))
             }
         }
     }
 
     sealed class AddEditDeliveryInformationEvent {
-        data class ShowMessage(val msg: String) : AddEditDeliveryInformationEvent()
+        data class NavigateBackWithResult(val result: Int) : AddEditDeliveryInformationEvent()
     }
 }

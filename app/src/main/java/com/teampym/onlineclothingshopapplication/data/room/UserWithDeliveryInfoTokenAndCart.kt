@@ -1,9 +1,7 @@
-package com.teampym.onlineclothingshopapplication.data.db
+package com.teampym.onlineclothingshopapplication.data.room
 
 import androidx.room.Embedded
 import androidx.room.Relation
-import com.teampym.onlineclothingshopapplication.data.models.Cart
-import com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.models.NotificationToken
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 

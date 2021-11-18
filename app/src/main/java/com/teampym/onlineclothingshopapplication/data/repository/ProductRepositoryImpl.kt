@@ -6,7 +6,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
-import com.teampym.onlineclothingshopapplication.data.db.SortOrder
+import com.teampym.onlineclothingshopapplication.data.room.Product
+import com.teampym.onlineclothingshopapplication.data.room.SortOrder
 import com.teampym.onlineclothingshopapplication.data.models.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.util.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.presentation.client.products.ProductPagingSource

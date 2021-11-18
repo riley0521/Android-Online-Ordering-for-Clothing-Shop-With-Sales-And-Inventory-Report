@@ -1,14 +1,16 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.cart
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.teampym.onlineclothingshopapplication.R
-import com.teampym.onlineclothingshopapplication.data.models.Cart
+import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.databinding.CartItemBinding
 
 class CartAdapter(
@@ -44,16 +46,14 @@ class CartAdapter(
             binding.apply {
                 btnAdd.setOnClickListener {
                     val position = absoluteAdapterPosition
-                    if(position != RecyclerView.NO_POSITION && btnAdd.isEnabled) {
+                    if (position != RecyclerView.NO_POSITION && btnAdd.isEnabled) {
                         val item = getItem(position)
                         val isMaximum = item.quantity + 1 > item.inventory.stock
-                        if(isMaximum) {
+                        if (isMaximum) {
                             listener.onFailure("You have reached the maximum stocks available for this item.")
-                        }
-                        else if(item.quantity + 1 == 100.toLong()) {
+                        } else if (item.quantity + 1 == 100.toLong()) {
                             listener.onFailure("You can only have 99 pieces per item.")
-                        }
-                        else {
+                        } else {
                             listener.onAddQuantity(item.id, position)
                         }
                     }
@@ -61,18 +61,16 @@ class CartAdapter(
 
                 btnRemove.setOnClickListener {
                     val position = absoluteAdapterPosition
-                    if(position != RecyclerView.NO_POSITION && btnRemove.isEnabled) {
+                    if (position != RecyclerView.NO_POSITION && btnRemove.isEnabled) {
                         val item = getItem(position)
                         val isMinimum = item.quantity - 1 < 1
-                        if(isMinimum) {
+                        if (isMinimum) {
                             listener.onFailure("1 is the minimum quantity.")
-                        }
-                        else {
+                        } else {
                             listener.onRemoveQuantity(item.id, position)
                         }
                     }
                 }
-
             }
         }
 
@@ -96,9 +94,13 @@ class CartAdapter(
                 val isMax = cart.inventory.stock == cart.quantity || cart.quantity == 99.toLong()
                 btnAdd.isEnabled = !isMax
                 btnRemove.isEnabled = cart.quantity > 1.toLong()
+
+                if (cart.inventory.stock == 0L) {
+                    tvOutOfStock.isVisible = true
+                    layoutAddRemoveStock.visibility = View.INVISIBLE
+                }
             }
         }
-
     }
 
     interface OnItemCartListener {

@@ -1,4 +1,4 @@
-package com.teampym.onlineclothingshopapplication.data.models
+package com.teampym.onlineclothingshopapplication.data.room
 
 import android.os.Parcelable
 import androidx.room.Embedded

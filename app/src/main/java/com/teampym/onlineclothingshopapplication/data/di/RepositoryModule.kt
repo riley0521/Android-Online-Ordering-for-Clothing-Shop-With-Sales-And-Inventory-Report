@@ -3,7 +3,7 @@ package com.teampym.onlineclothingshopapplication.data.di
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.teampym.onlineclothingshopapplication.data.db.*
+import com.teampym.onlineclothingshopapplication.data.room.*
 import com.teampym.onlineclothingshopapplication.data.repository.*
 import dagger.Module
 import dagger.Provides

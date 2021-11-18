@@ -3,7 +3,7 @@ package com.teampym.onlineclothingshopapplication.data.repository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
-import com.teampym.onlineclothingshopapplication.data.models.Inventory
+import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.data.util.INVENTORIES_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import kotlinx.coroutines.tasks.await

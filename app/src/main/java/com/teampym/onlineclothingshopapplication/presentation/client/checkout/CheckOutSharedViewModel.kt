@@ -1,8 +1,8 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.checkout
 
 import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
-import com.teampym.onlineclothingshopapplication.data.db.* // ktlint-disable no-wildcard-imports
-import com.teampym.onlineclothingshopapplication.data.models.Cart
+import com.teampym.onlineclothingshopapplication.data.room.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.OrderRepositoryImpl
@@ -24,7 +24,7 @@ class CheckOutSharedViewModel @Inject constructor(
 
     private val _selectedPaymentMethod = MutableLiveData<PaymentMethod>()
 
-    private val _cartFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
+    private val _checkOutCartFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
         _selectedPaymentMethod.value = sessionPref.paymentMethod
 
         _userWithDeliveryInfo.value = userInformationDao.getUserWithDeliveryInfo()
@@ -43,9 +43,9 @@ class CheckOutSharedViewModel @Inject constructor(
     // I think I will remove this because what I need is the notification token of admins to notify them.
     val userWithNotificationTokens: LiveData<UserWithNotificationTokens?> get() = _userWithNotificationsTokens
 
-    val cartList = _cartFlow.asLiveData()
+    val finalCartList = _checkOutCartFlow.asLiveData()
 
-    val order = MutableLiveData<Order>()
+    val order = MutableLiveData<Order?>()
 
     fun placeOrder(
         userInformation: UserInformation,
@@ -61,6 +61,8 @@ class CheckOutSharedViewModel @Inject constructor(
     }
 
     //region For Select Payment Fragment
-
+    fun onPaymentMethodSelected(paymentMethod: PaymentMethod) = viewModelScope.launch {
+        preferencesManager.updatePaymentMethod(paymentMethod)
+    }
     //endregion
 }

@@ -5,6 +5,8 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.firebase.firestore.Exclude
+import com.teampym.onlineclothingshopapplication.data.room.Cart
+import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import kotlinx.android.parcel.Parcelize
 import java.text.SimpleDateFormat

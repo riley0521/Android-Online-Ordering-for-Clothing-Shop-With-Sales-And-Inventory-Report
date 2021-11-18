@@ -29,8 +29,9 @@
             android:layout_alignParentEnd="true"
             android:background="@android:color/transparent"
             android:gravity="right"
-            android:hint="@string/full_name"
+            android:hint="@string/set_full_name"
             android:importantForAutofill="no"
+            android:inputType="textPersonName"
             android:maxLength="35" />
 
     </RelativeLayout>
@@ -70,7 +71,7 @@
                 android:layout_marginStart="4dp"
                 android:background="@android:color/transparent"
                 android:gravity="right"
-                android:hint="@string/phone_number"
+                android:hint="@string/set_phone_number"
                 android:maxLength="10" />
 
         </LinearLayout>
@@ -181,7 +182,7 @@
             android:layout_alignParentEnd="true"
             android:background="@android:color/transparent"
             android:gravity="right"
-            android:hint="@string/postal_code"
+            android:hint="@string/set_postal_code"
             android:inputType="number"
             android:maxLength="7" />
 
@@ -216,7 +217,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:background="@android:color/transparent"
-            android:hint="@string/enter_your_detailed_address_here"
+            android:hint="@string/set_detailed_address"
+            android:inputType="textLongMessage"
             android:maxLines="3" />
 
     </LinearLayout>

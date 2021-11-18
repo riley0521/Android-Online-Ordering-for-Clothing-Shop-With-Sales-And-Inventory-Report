@@ -4,12 +4,12 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
-import com.teampym.onlineclothingshopapplication.data.db.CartDao
-import com.teampym.onlineclothingshopapplication.data.db.InventoryDao
-import com.teampym.onlineclothingshopapplication.data.db.ProductDao
-import com.teampym.onlineclothingshopapplication.data.models.Cart
-import com.teampym.onlineclothingshopapplication.data.models.Inventory
-import com.teampym.onlineclothingshopapplication.data.models.Product
+import com.teampym.onlineclothingshopapplication.data.room.Cart
+import com.teampym.onlineclothingshopapplication.data.room.CartDao
+import com.teampym.onlineclothingshopapplication.data.room.Inventory
+import com.teampym.onlineclothingshopapplication.data.room.InventoryDao
+import com.teampym.onlineclothingshopapplication.data.room.Product
+import com.teampym.onlineclothingshopapplication.data.room.ProductDao
 import com.teampym.onlineclothingshopapplication.data.util.* // ktlint-disable no-wildcard-imports
 import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
 import kotlinx.coroutines.channels.awaitClose
@@ -47,8 +47,10 @@ class CartRepositoryImpl @Inject constructor(
 
                         // loop all items in cart
                         for (document in snapshot.documents) {
-                            var cartItem = document.toObject(Cart::class.java)!!.copy(id = document.id)
-                            val foundProduct = cartItem.product.copy(roomId = cartItem.id, cartId = cartItem.id)
+                            var cartItem =
+                                document.toObject(Cart::class.java)!!.copy(id = document.id)
+                            val foundProduct =
+                                cartItem.product.copy(roomId = cartItem.id, cartId = cartItem.id)
                             val foundInventory = cartItem.inventory.copy(pCartId = cartItem.id)
 
                             cartItem.product = foundProduct
@@ -79,12 +81,13 @@ class CartRepositoryImpl @Inject constructor(
                                         .await()
 
                                     if (inventoryQuery.data != null) {
-                                        val updatedInventoryToFetch = inventoryQuery.toObject<Inventory>()!!
-                                            .copy(
-                                                inventoryId = inventoryQuery.id,
-                                                pid = cartItem.product.productId,
-                                                pCartId = cartItem.id
-                                            )
+                                        val updatedInventoryToFetch =
+                                            inventoryQuery.toObject<Inventory>()!!
+                                                .copy(
+                                                    inventoryId = inventoryQuery.id,
+                                                    pid = cartItem.product.productId,
+                                                    pCartId = cartItem.id
+                                                )
 
                                         // create update map.
                                         val updatePriceOfProductInCart = mapOf<String, Any>(
@@ -263,6 +266,27 @@ class CartRepositoryImpl @Inject constructor(
         return Resource.Error("Failed", false)
     }
 
+    suspend fun deleteOutOfStockItems(
+        userId: String,
+        cartList: List<Cart>
+    ): Boolean {
+
+        for (cartItem in cartList) {
+            userCartCollectionRef
+                .document(userId)
+                .collection(CART_SUB_COLLECTION)
+                .document(cartItem.id)
+                .delete()
+                .addOnSuccessListener {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        cartDao.delete(cartItem.id)
+                    }
+                }.addOnFailureListener {
+                }
+        }
+        return true
+    }
+
     suspend fun deleteAll(
         userId: String
     ): Resource {
@@ -283,7 +307,7 @@ class CartRepositoryImpl @Inject constructor(
                     }.addOnFailureListener {
                     }
             }
-            cartDao.deleteAll()
+            cartDao.deleteAll(userId)
             return Resource.Success("Success", true)
         }
         return Resource.Error("Failed", false)

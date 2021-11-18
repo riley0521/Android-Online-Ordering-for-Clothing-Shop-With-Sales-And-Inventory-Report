@@ -2,7 +2,8 @@ package com.teampym.onlineclothingshopapplication.data.models
 
 import android.os.Parcelable
 import com.google.firebase.firestore.Exclude
-import com.teampym.onlineclothingshopapplication.data.db.PaymentMethod
+import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
+import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
 import com.teampym.onlineclothingshopapplication.data.util.Status
 import kotlinx.android.parcel.Parcelize
 

@@ -61,7 +61,10 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
 
             tvProductName.text = product.name
             tvPrice.text = "$${product.price}"
-            tvDescription.text = product.description
+            val descStr =
+                if (product.description.isNotBlank()) product.description else "No Available Description."
+
+            tvDescription.text = descStr
             btnAddToCart.setOnClickListener {
                 val action =
                     ProductDetailFragmentDirections.actionProductDetailFragmentToInventoryModalFragment(
@@ -71,16 +74,19 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             }
 
             // submit list to the adapter if the reviewList is not empty.
-            if (product.reviewList.isNotEmpty()) {
-                adapter.submitList(product.reviewList)
+            product.let { p ->
+                adapter.submitList(p.reviewList)
 
-                val rate = viewModel.getAvgRate(productId!!)
+                val rate = viewModel.getAvgRate(p.productId)
 
                 if (rate == 0.0) {
-                    tvRate.text = rate.toString()
+                    labelRate.text = getString(R.string.no_available_rating)
+
+                    tvRate.visibility = View.INVISIBLE
                     labelNoReviews.isVisible = true
                 } else {
-                    tvRate.text = rate.toString()
+                    val rateStr = "- $rate"
+                    tvRate.text = rateStr
 
                     // Load Reviews here.
                     recyclerReviews.setHasFixedSize(true)

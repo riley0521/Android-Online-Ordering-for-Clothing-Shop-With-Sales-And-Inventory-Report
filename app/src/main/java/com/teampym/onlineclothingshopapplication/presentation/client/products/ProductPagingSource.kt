@@ -5,10 +5,10 @@ import androidx.paging.PagingState
 import com.bumptech.glide.load.HttpException
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
-import com.teampym.onlineclothingshopapplication.data.db.MOST_POPULAR
-import com.teampym.onlineclothingshopapplication.data.db.NEWEST
-import com.teampym.onlineclothingshopapplication.data.db.SortOrder
-import com.teampym.onlineclothingshopapplication.data.models.Product
+import com.teampym.onlineclothingshopapplication.data.room.MOST_POPULAR
+import com.teampym.onlineclothingshopapplication.data.room.NEWEST
+import com.teampym.onlineclothingshopapplication.data.room.SortOrder
+import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.repository.ProductImageRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.repository.ProductInventoryRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.repository.ReviewRepositoryImpl

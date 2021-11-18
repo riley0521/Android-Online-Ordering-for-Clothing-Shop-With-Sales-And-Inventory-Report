@@ -108,9 +108,8 @@
         tools:layout="@layout/fragment_product_detail">
         <argument
             android:name="product"
-            app:argType="com.teampym.onlineclothingshopapplication.data.models.Product"
-            app:nullable="true"
-            android:defaultValue="@null" />
+            app:argType="com.teampym.onlineclothingshopapplication.data.room.Product"
+            app:nullable="true" />
         <argument
             android:name="name"
             app:argType="string"
@@ -134,7 +133,7 @@
         tools:layout="@layout/fragment_inventory_modal">
         <argument
             android:name="product"
-            app:argType="com.teampym.onlineclothingshopapplication.data.models.Product" />
+            app:argType="com.teampym.onlineclothingshopapplication.data.room.Product" />
     </dialog>
     <fragment
         android:id="@+id/checkOutFragment"
@@ -149,6 +148,9 @@
             app:destination="@id/categoryFragment"
             app:popUpTo="@id/checkOutFragment"
             app:popUpToInclusive="true"/>
+        <action
+            android:id="@+id/action_checkOutFragment_to_selectPaymentMethodFragment"
+            app:destination="@id/selectPaymentMethodFragment" />
     </fragment>
     <fragment
         android:id="@+id/deliveryInformationFragment"
@@ -166,8 +168,7 @@
         tools:layout="@layout/fragment_add_edit_delivery_information">
         <argument
             android:name="deliveryInfo"
-            android:defaultValue="@null"
-            app:argType="com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation"
+            app:argType="com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation"
             app:nullable="true" />
         <action
             android:id="@+id/action_addEditDeliveryInformationFragment_to_selectRegionProvinceCityFragment"
@@ -195,5 +196,14 @@
             android:name="title"
             app:argType="string"
             android:defaultValue="Select Region" />
+    </fragment>
+    <fragment
+        android:id="@+id/selectPaymentMethodFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.checkout.SelectPaymentMethodFragment"
+        android:label="Change Payment Method"
+        tools:layout="@layout/fragment_select_payment_method">
+        <argument
+            android:name="paymentMethod"
+            app:argType="string" />
     </fragment>
 </navigation>

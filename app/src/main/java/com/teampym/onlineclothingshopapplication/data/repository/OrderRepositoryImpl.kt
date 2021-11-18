@@ -3,8 +3,8 @@ package com.teampym.onlineclothingshopapplication.data.repository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
-import com.teampym.onlineclothingshopapplication.data.models.Cart
-import com.teampym.onlineclothingshopapplication.data.models.DeliveryInformation
+import com.teampym.onlineclothingshopapplication.data.room.Cart
+import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
@@ -66,7 +66,7 @@ class OrderRepositoryImpl @Inject constructor(
         cartList: List<Cart>,
         deliveryInformation: DeliveryInformation,
         paymentMethod: String
-    ): Order {
+    ): Order? {
 
         val newOrder = Order(
             userId = userId,
@@ -90,7 +90,7 @@ class OrderRepositoryImpl @Inject constructor(
                 }
             }.addOnFailureListener {
             }
-        return Order()
+        return null
     }
 
     suspend fun updateOrderStatus(userId: String, orderId: String, status: String): Boolean {

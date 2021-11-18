@@ -1,8 +1,7 @@
-package com.teampym.onlineclothingshopapplication.data.db
+package com.teampym.onlineclothingshopapplication.data.room
 
 import androidx.room.* // ktlint-disable no-wildcard-imports
 import androidx.room.OnConflictStrategy.REPLACE
-import com.teampym.onlineclothingshopapplication.data.models.Cart
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -22,8 +21,8 @@ interface CartDao {
     suspend fun update(cart: Cart)
 
     @Query("DELETE FROM table_cart WHERE userId = :userId")
-    suspend fun delete(userId: String)
+    suspend fun deleteAll(userId: String)
 
-    @Query("DELETE FROM table_cart")
-    suspend fun deleteAll()
+    @Query("DELETE FROM table_cart WHERE id = :id")
+    suspend fun delete(id: String)
 }

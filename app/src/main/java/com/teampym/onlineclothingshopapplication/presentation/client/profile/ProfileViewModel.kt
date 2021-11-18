@@ -4,10 +4,10 @@ import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.teampym.onlineclothingshopapplication.VERIFICATION_SPAN
-import com.teampym.onlineclothingshopapplication.data.db.DeliveryInformationDao
-import com.teampym.onlineclothingshopapplication.data.db.NotificationTokenDao
-import com.teampym.onlineclothingshopapplication.data.db.PreferencesManager
-import com.teampym.onlineclothingshopapplication.data.db.UserInformationDao
+import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformationDao
+import com.teampym.onlineclothingshopapplication.data.room.NotificationTokenDao
+import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
+import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -69,6 +69,11 @@ class ProfileViewModel @Inject constructor(
             if (currentUser.firstName.isBlank()) {
                 profileEventChannel.send(ProfileEvent.NotRegistered)
             }
+        }
+
+        user.phoneNumber?.let {
+            if (it.isNotBlank())
+                return@launch
         }
 
         when {

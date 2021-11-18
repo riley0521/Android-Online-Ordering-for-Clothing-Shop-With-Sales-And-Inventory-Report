@@ -2,6 +2,7 @@ package com.teampym.onlineclothingshopapplication.data.models
 
 import android.os.Parcelable
 import com.google.firebase.firestore.Exclude
+import com.teampym.onlineclothingshopapplication.data.room.Product
 import kotlinx.android.parcel.Parcelize
 import java.math.BigDecimal
 
