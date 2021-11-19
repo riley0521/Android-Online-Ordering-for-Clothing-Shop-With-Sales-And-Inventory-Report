@@ -16,6 +16,7 @@ import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.util.CartFlag
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCartBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.android.synthetic.main.fragment_cart.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
 import java.math.BigDecimal
@@ -91,6 +92,7 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
         viewModel.cart.observe(viewLifecycleOwner) { cart ->
             adapter.submitList(cart)
+            btnCheckOut.isEnabled = cart.isNotEmpty()
 
             cartList = cart
 
@@ -106,7 +108,7 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
         lifecycleScope.launchWhenStarted {
             viewModel.cartEvent.collectLatest { event ->
-                when(event) {
+                when (event) {
                     is CartViewModel.CartEvent.ShowMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
                     }

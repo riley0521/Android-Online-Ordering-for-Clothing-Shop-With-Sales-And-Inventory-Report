@@ -1,8 +1,8 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
+import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.ORDER_DETAILS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
@@ -10,7 +10,7 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class OrderDetailRepositoryImpl @Inject constructor(
-    private val db: FirebaseFirestore
+    db: FirebaseFirestore
 ) {
 
     private val orderCollectionRef = db.collection(ORDERS_COLLECTION)
@@ -27,18 +27,13 @@ class OrderDetailRepositoryImpl @Inject constructor(
         if (userType == UserType.CUSTOMER.toString()) {
             val ordersQuery = orderCollectionRef
                 .document(orderId)
+                .collection(ORDER_DETAILS_SUB_COLLECTION)
                 .get()
                 .await()
 
-            if (ordersQuery.data != null) {
-                if (userId == ordersQuery["userId"]) {
-                    val orderDetailCustomerQuery = orderCollectionRef
-                        .document(orderId)
-                        .collection(ORDER_DETAILS_SUB_COLLECTION)
-                        .get()
-                        .await()
-
-                    for (document in orderDetailCustomerQuery.documents) {
+            if (ordersQuery.documents.isNotEmpty()) {
+                if (userId == ordersQuery.documents[0]["userId"]) {
+                    for (document in ordersQuery.documents) {
                         val orderDetail = document
                             .toObject(OrderDetail::class.java)!!.copy(id = document.id)
 
@@ -68,14 +63,15 @@ class OrderDetailRepositoryImpl @Inject constructor(
         return orderDetailList
     }
 
-    suspend fun insertAll(
+    fun insertAll(
         orderId: String,
         userId: String,
         cart: List<Cart>
-    ): Boolean {
-        var isCreated = false
+    ): List<OrderDetail> {
+
+        val orderDetailList = mutableListOf<OrderDetail>()
         for (cartItem in cart) {
-            val newProd = OrderDetail(
+            val newOrderDetail = OrderDetail(
                 userId = userId,
                 orderId = orderId,
                 inventoryId = cartItem.inventory.inventoryId,
@@ -88,14 +84,14 @@ class OrderDetailRepositoryImpl @Inject constructor(
             orderCollectionRef
                 .document(orderId)
                 .collection(ORDER_DETAILS_SUB_COLLECTION)
-                .add(newProd)
+                .document()
+                .set(newOrderDetail)
                 .addOnSuccessListener {
-                    isCreated = true
+                    orderDetailList.add(newOrderDetail)
                 }.addOnFailureListener {
-
+                    return@addOnFailureListener
                 }
         }
-        return isCreated
+        return orderDetailList
     }
-
 }

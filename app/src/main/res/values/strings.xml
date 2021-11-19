@@ -14,7 +14,8 @@
     <string name="label_category" translatable="false">Category</string>
     <string name="label_browse_products" translatable="false">Browse Products</string>
     <string name="action_menu_profile" translatable="false">Profile</string>
-    <string name="btn_sign_out" translatable="false">Sign out</string>
+    <string name="btn_sign_in" translatable="false">Sign In</string>
+    <string name="btn_sign_out" translatable="false">Sign Out</string>
     <string name="label_address" translatable="false">Addresses</string>
     <string name="label_favorites" translatable="false">Favorites</string>
     <string name="label_change_profile" translatable="false">Change Profile</string>
@@ -26,12 +27,12 @@
     <string name="label_rate" translatable="false">Rating </string>
     <string name="label_reviews" translatable="false">Reviews</string>
     <string name="label_no_reviews_yet" translatable="false">No Reviews Yet.</string>
-    <string name="label_uncrowned_guest" translatable="false">Uncrowned Guest</string>
+    <string name="label_guest" translatable="false">Guest</string>
     <string name="action_menu_cart" translatable="false">Cart</string>
     <string name="action_sort" translatable="false">Sort</string>
     <string name="action_search" translatable="false">Search</string>
-    <string name="action_no_sort" translatable="false">No Sort</string>
-    <string name="sort_best_seller" translatable="false">Sort By Best Seller</string>
+    <string name="action_sort_best_seller" translatable="false">Sort By Best Seller</string>
+    <string name="action_sort_name" translatable="false">Sort By Name</string>
     <string name="action_sort_new" translatable="false">Sort By New</string>
     <string name="label_merchandise_total" translatable="false">Merchandise Total \n(Shipping fee not yet included)</string>
     <string name="label_shipping_total" translatable="false">Shipping Total</string>

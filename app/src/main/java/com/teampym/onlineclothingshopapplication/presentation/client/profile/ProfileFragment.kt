@@ -21,7 +21,7 @@ import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProfileBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 
 private const val RC_SIGN_IN = 699
 
@@ -39,7 +39,9 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         binding = FragmentProfileBinding.bind(view)
 
-        binding.cardViewBanner.isVisible = getCurrentUser() != null
+        val currentUser = getFirebaseUser()
+
+        binding.cardViewBanner.isVisible = currentUser != null && !currentUser.isEmailVerified
 
         binding.apply {
 
@@ -56,23 +58,26 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             }
 
             btnSendVerification.setOnClickListener {
-                viewModel.sendVerificationAgain(FirebaseAuth.getInstance().currentUser!!)
+                FirebaseAuth.getInstance().currentUser?.let { user ->
+                    viewModel.sendVerificationAgain(
+                        user
+                    )
+                }
             }
 
             FirebaseAuth.getInstance().addAuthStateListener { auth ->
                 if (auth.currentUser == null) {
                     binding.cardViewBanner.isVisible = false
 
-                    btnSignOut.text = "Sign In"
-                    btnSignOut.setOnClickListener {
+                    btnSignInAndOut.text = getString(R.string.btn_sign_in)
+                    btnSignInAndOut.setOnClickListener {
                         showSignInMethods()
                     }
-                    return@addAuthStateListener
-                }
-
-                btnSignOut.text = "Sign Out"
-                btnSignOut.setOnClickListener {
-                    showSignOutDialog(auth)
+                } else {
+                    btnSignInAndOut.text = getString(R.string.btn_sign_out)
+                    btnSignInAndOut.setOnClickListener {
+                        showSignOutDialog(auth)
+                    }
                 }
             }
         }
@@ -81,24 +86,24 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             binding.btnSendVerification.isVisible = it > 0 && System.currentTimeMillis() > it
         }
 
-        viewModel.user.observe(viewLifecycleOwner) { userInfo ->
-            if (userInfo != null) {
-                Log.d(TAG, "${userInfo?.firstName}")
+        viewModel.user.observe(viewLifecycleOwner) { userInformation ->
+            userInformation?.let { user ->
+                Log.d(TAG, user.firstName)
 
                 Glide.with(requireView())
-                    .load(userInfo.avatarUrl)
+                    .load(user.avatarUrl)
                     .centerCrop()
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .error(R.drawable.ic_user)
                     .into(binding.imgAvatar)
 
-                val fullName = "${userInfo.firstName} ${userInfo.lastName}"
+                val fullName = "${user.firstName} ${user.lastName}"
                 binding.tvUsername.text = fullName
             }
         }
 
         lifecycleScope.launchWhenStarted {
-            viewModel.profileEvent.collect { event ->
+            viewModel.profileEvent.collectLatest { event ->
                 when (event) {
                     is ProfileViewModel.ProfileEvent.NotRegistered -> {
                         findNavController().navigate(R.id.action_profileFragment_to_registrationFragment)
@@ -121,17 +126,16 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             }
 
             while (true) {
-                if (getCurrentUser() != null) {
-                    val it = getCurrentUser()
-                    it?.reload()
-                    binding.cardViewBanner.isVisible = !it?.isEmailVerified!!
-                    delay(3000)
+                getFirebaseUser()?.let {
+                    it.reload()
+                    binding.cardViewBanner.isVisible = !it.isEmailVerified
+                    delay(1500)
                 }
             }
         }
     }
 
-    private fun getCurrentUser() = FirebaseAuth.getInstance().currentUser
+    private fun getFirebaseUser() = FirebaseAuth.getInstance().currentUser
 
     private fun showSignOutDialog(auth: FirebaseAuth) {
         AlertDialog.Builder(requireContext())
@@ -156,10 +160,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
     private fun resetInformation() {
         binding.apply {
-            tvUsername.text = resources.getString(R.string.label_uncrowned_guest)
+            tvUsername.text = resources.getString(R.string.label_guest)
             imgAvatar.setImageResource(R.drawable.ic_user)
 
-            btnSignOut.text = "SIGN IN"
+            btnSignInAndOut.text = getString(R.string.btn_sign_in)
             cardViewBanner.isVisible = false
         }
     }
@@ -192,7 +196,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         if (requestCode == RC_SIGN_IN && resultCode == Activity.RESULT_OK) {
             // Successfully signed in
-            val user = getCurrentUser()
+            val user = getFirebaseUser()
             if (user != null) {
                 // Try to send email verification for the first time the user uses the app.
                 if (user.isEmailVerified.not())

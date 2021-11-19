@@ -105,9 +105,8 @@ object RepositoryModule {
     fun provideOrderRepository(
         db: FirebaseFirestore,
         orderDetailRepository: OrderDetailRepositoryImpl,
-        cartRepository: CartRepositoryImpl,
         productRepository: ProductRepositoryImpl
-    ) = OrderRepositoryImpl(db, orderDetailRepository, cartRepository, productRepository)
+    ) = OrderRepositoryImpl(db, orderDetailRepository, productRepository)
 
     @Provides
     @Singleton

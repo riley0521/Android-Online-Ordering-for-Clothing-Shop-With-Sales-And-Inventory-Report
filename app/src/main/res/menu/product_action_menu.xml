@@ -18,11 +18,11 @@
         <menu>
             <item
                 android:id="@+id/action_no_sort"
-                android:title="@string/action_no_sort" />
+                android:title="@string/action_sort_name" />
 
             <item
                 android:id="@+id/action_sort_best_seller"
-                android:title="@string/sort_best_seller" />
+                android:title="@string/action_sort_best_seller" />
 
             <item
                 android:id="@+id/action_sort_by_new"

@@ -4,11 +4,11 @@ import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.teampym.onlineclothingshopapplication.VERIFICATION_SPAN
+import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformationDao
 import com.teampym.onlineclothingshopapplication.data.room.NotificationTokenDao
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
-import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
@@ -22,7 +22,7 @@ class ProfileViewModel @Inject constructor(
     private val userInformationDao: UserInformationDao,
     private val deliveryInformationDao: DeliveryInformationDao,
     private val notificationTokenDao: NotificationTokenDao,
-    private val state: SavedStateHandle,
+    state: SavedStateHandle,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
@@ -68,23 +68,16 @@ class ProfileViewModel @Inject constructor(
         currentUser?.let {
             if (currentUser.firstName.isBlank()) {
                 profileEventChannel.send(ProfileEvent.NotRegistered)
-            }
-        }
-
-        user.phoneNumber?.let {
-            if (it.isNotBlank())
                 return@launch
+            }
         }
 
-        when {
-            user.isEmailVerified.not() -> {
-                updateUserId(user.uid)
-                profileEventChannel.send(ProfileEvent.NotVerified)
-            }
-            user.isEmailVerified -> {
-                updateUserId(user.uid)
-                profileEventChannel.send(ProfileEvent.Verified)
-            }
+        if (!user.isEmailVerified) {
+            updateUserId(user.uid)
+            profileEventChannel.send(ProfileEvent.NotVerified)
+        } else {
+            updateUserId(user.uid)
+            profileEventChannel.send(ProfileEvent.Verified)
         }
     }
 

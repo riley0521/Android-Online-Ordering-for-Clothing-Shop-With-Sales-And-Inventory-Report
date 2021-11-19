@@ -19,7 +19,7 @@ data class Order(
     val deliveryInformation: DeliveryInformation = DeliveryInformation(),
 
     @get:Exclude
-    val orderDetails: List<OrderDetail> = emptyList()
+    val orderDetailList: List<OrderDetail> = emptyList()
 ) : Parcelable {
     constructor() : this("", 0.0, "")
 }

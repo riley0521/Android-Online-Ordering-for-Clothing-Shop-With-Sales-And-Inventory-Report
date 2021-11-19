@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
@@ -15,6 +16,7 @@ import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCheckOutBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 
 private const val TAG = "CheckOutFragment"
 
@@ -73,6 +75,9 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                 // check if the user is verified, get the final info and cartList. Then,
                 // Place Order
                 val currentUser = getFirebaseUser()
+                currentUser?.let {
+                    Log.d(TAG, it.toString())
+                }
                 // Check if the user is signed based on the documentation.
                 if (currentUser != null) {
                     if (currentUser.isEmailVerified) {
@@ -101,6 +106,21 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
             tvMerchandiseTotal.text = totalCostStr
             tvTotalPayment.text = totalCostStr
             tvTotalPaymentAgain.text = totalCostStr
+        }
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.checkOutEvent.collectLatest { event ->
+                when (event) {
+                    is CheckOutSharedViewModel.CheckOutEvent.ShowSuccessfulMessage -> {
+                        Toast.makeText(requireContext(), event.msg, Toast.LENGTH_SHORT)
+                            .show()
+                        findNavController().navigate(R.id.action_checkOutFragment_to_categoryFragment)
+                    }
+                    is CheckOutSharedViewModel.CheckOutEvent.ShowFailedMessage -> {
+                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
+                    }
+                }
+            }
         }
 
         viewModel.selectedPaymentMethod.observe(viewLifecycleOwner) { paymentMethod ->
@@ -149,14 +169,6 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                         tvNoAddressYet.visibility = View.INVISIBLE
                     }
                 }
-            }
-        }
-
-        viewModel.order.observe(viewLifecycleOwner) { placedOrder ->
-            placedOrder?.let {
-                Toast.makeText(requireContext(), "Your order has been placed.", Toast.LENGTH_SHORT)
-                    .show()
-                findNavController().navigate(R.id.action_checkOutFragment_to_categoryFragment)
             }
         }
     }

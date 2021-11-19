@@ -1,13 +1,18 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.checkout
 
 import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
-import com.teampym.onlineclothingshopapplication.data.room.* // ktlint-disable no-wildcard-imports
-import com.teampym.onlineclothingshopapplication.data.room.Cart
+import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
+import com.teampym.onlineclothingshopapplication.data.repository.CartRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.repository.OrderRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.room.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.room.Cart
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -16,7 +21,9 @@ class CheckOutSharedViewModel @Inject constructor(
     private val userInformationDao: UserInformationDao,
     private val cartDao: CartDao,
     private val orderRepository: OrderRepositoryImpl,
-    private val preferencesManager: PreferencesManager
+    private val cartRepository: CartRepositoryImpl,
+    private val preferencesManager: PreferencesManager,
+    @ApplicationScope val appScope: CoroutineScope
 ) : ViewModel() {
 
     private var _userWithDeliveryInfo = MutableLiveData<UserWithDeliveryInfo?>()
@@ -24,17 +31,21 @@ class CheckOutSharedViewModel @Inject constructor(
 
     private val _selectedPaymentMethod = MutableLiveData<PaymentMethod>()
 
-    private val _checkOutCartFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
-        _selectedPaymentMethod.value = sessionPref.paymentMethod
+    private val _checkOutChannel = Channel<CheckOutEvent>()
+    val checkOutEvent = _checkOutChannel.receiveAsFlow()
 
-        _userWithDeliveryInfo.value = userInformationDao.getUserWithDeliveryInfo()
-            .firstOrNull { it.user.userId == sessionPref.userId }
+    private val _checkOutCartFlow =
+        preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
+            _selectedPaymentMethod.value = sessionPref.paymentMethod
 
-        _userWithNotificationsTokens.value = userInformationDao.getUserWithNotificationTokens()
-            .firstOrNull { it.user.userId == sessionPref.userId }
+            _userWithDeliveryInfo.value = userInformationDao.getUserWithDeliveryInfo()
+                .firstOrNull { it.user.userId == sessionPref.userId }
 
-        cartDao.getAll(sessionPref.userId)
-    }
+            _userWithNotificationsTokens.value = userInformationDao.getUserWithNotificationTokens()
+                .firstOrNull { it.user.userId == sessionPref.userId }
+
+            cartDao.getAll(sessionPref.userId)
+        }
 
     val selectedPaymentMethod: LiveData<PaymentMethod> get() = _selectedPaymentMethod
 
@@ -45,19 +56,31 @@ class CheckOutSharedViewModel @Inject constructor(
 
     val finalCartList = _checkOutCartFlow.asLiveData()
 
-    val order = MutableLiveData<Order?>()
-
     fun placeOrder(
         userInformation: UserInformation,
         cartList: List<Cart>,
         paymentMethod: String
-    ) = viewModelScope.launch {
-        order.value = orderRepository.create(
+    ) = appScope.launch {
+        val orderResult = orderRepository.create(
             userInformation.userId,
             cartList,
             userInformation.deliveryInformationList.first { it.isPrimary },
             paymentMethod
         )
+        orderResult?.let {
+            _checkOutChannel.send(CheckOutEvent.ShowSuccessfulMessage("Thank you for placing your order!"))
+
+            // Delete all items from cart in remote and local db
+            cartRepository.deleteAll(userInformation.userId)
+            cartDao.deleteAll(userInformation.userId)
+        } ?: run {
+            _checkOutChannel.send(CheckOutEvent.ShowFailedMessage("Failed to place order. Please try again later."))
+        }
+    }
+
+    sealed class CheckOutEvent {
+        data class ShowSuccessfulMessage(val msg: String) : CheckOutEvent()
+        data class ShowFailedMessage(val msg: String) : CheckOutEvent()
     }
 
     //region For Select Payment Fragment
