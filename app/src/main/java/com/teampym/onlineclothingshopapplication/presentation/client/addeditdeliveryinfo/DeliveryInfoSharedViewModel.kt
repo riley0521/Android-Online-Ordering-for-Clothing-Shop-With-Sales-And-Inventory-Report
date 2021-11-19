@@ -2,13 +2,14 @@ package com.teampym.onlineclothingshopapplication.presentation.client.addeditdel
 
 import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.* // ktlint-disable no-wildcard-imports
-import com.teampym.onlineclothingshopapplication.data.room.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
-import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.models.Selector
 import com.teampym.onlineclothingshopapplication.data.repository.DeliveryInformationRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.room.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -17,12 +18,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DeliveryInfoSharedViewModel @Inject constructor(
-    private val regionDao: RegionDao,
+    regionDao: RegionDao,
     private val provinceDao: ProvinceDao,
     private val cityDao: CityDao,
     private val deliveryInformationRepository: DeliveryInformationRepositoryImpl,
     private val deliveryInformationDao: DeliveryInformationDao,
-    private val preferencesManager: PreferencesManager,
+    preferencesManager: PreferencesManager,
     @ApplicationScope val appScope: CoroutineScope
 ) : ViewModel() {
 
@@ -32,11 +33,13 @@ class DeliveryInfoSharedViewModel @Inject constructor(
     private val _deliveryInformationChannel = Channel<AddEditDeliveryInformationEvent>()
     val event = _deliveryInformationChannel.receiveAsFlow()
 
+    @ExperimentalCoroutinesApi
     private val _userDeliveryInfoList = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
         _userId.value = sessionPref.userId
         deliveryInformationDao.getAll(sessionPref.userId)
     }
 
+    @ExperimentalCoroutinesApi
     val userDeliveryInfoList = _userDeliveryInfoList.asLiveData()
 
     private val _regionId = MutableLiveData(0L)
@@ -108,8 +111,10 @@ class DeliveryInfoSharedViewModel @Inject constructor(
             if (it.isNotBlank()) {
 
                 if (isEditing) {
-                    if (deliveryInformationRepository.upsert(it, deliveryInfo)) {
-                        deliveryInformationDao.insert(deliveryInfo)
+                    if (deliveryInformationRepository.update(it, deliveryInfo)) {
+                        insertToLocalDbAndChangeDefault(deliveryInfo)
+
+                        // Send signal to other fragment
                         _deliveryInformationChannel.send(
                             AddEditDeliveryInformationEvent.NavigateBackWithResult(
                                 EDIT_DELIVERY_INFO_RESULT_OK
@@ -123,8 +128,10 @@ class DeliveryInfoSharedViewModel @Inject constructor(
                         )
                     }
                 } else {
-                    if (deliveryInformationRepository.upsert(it, deliveryInfo)) {
-                        deliveryInformationDao.insert(deliveryInfo)
+                    if (deliveryInformationRepository.create(it, deliveryInfo)) {
+                        insertToLocalDbAndChangeDefault(deliveryInfo)
+
+                        // Send signal to other fragment
                         _deliveryInformationChannel.send(
                             AddEditDeliveryInformationEvent.NavigateBackWithResult(
                                 ADD_DELIVERY_INFO_RESULT_OK
@@ -139,6 +146,13 @@ class DeliveryInfoSharedViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    private suspend fun insertToLocalDbAndChangeDefault(deliveryInfo: DeliveryInformation) {
+        deliveryInformationDao.insert(deliveryInfo)
+        if (deliveryInfo.isPrimary) {
+            deliveryInformationRepository.changeDefault(deliveryInfo.userId, deliveryInfo)
         }
     }
 

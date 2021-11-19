@@ -44,7 +44,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         binding.apply {
 
             tvAddress.setOnClickListener {
-                Toast.makeText(requireContext(), tvAddress.text, Toast.LENGTH_SHORT).show()
+                findNavController().navigate(R.id.action_profileFragment_to_deliveryInformationFragment)
             }
 
             tvProfile.setOnClickListener {

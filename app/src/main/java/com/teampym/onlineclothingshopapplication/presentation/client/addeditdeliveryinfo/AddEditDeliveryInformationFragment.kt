@@ -128,7 +128,7 @@ class AddEditDeliveryInformationFragment :
                         editDeliveryInformation?.postalCode = edtPostalCode.text.toString()
                         editDeliveryInformation?.userId = userId
                         editDeliveryInformation?.isPrimary = switchDefaultAddress.isChecked
-                        viewModel.onSubmitClicked(newDeliveryInformation, true)
+                        editDeliveryInformation?.let { edited -> viewModel.onSubmitClicked(edited, true) }
                     }
                     else -> {
                         when {
@@ -249,6 +249,9 @@ class AddEditDeliveryInformationFragment :
         AlertDialog.Builder(requireContext())
             .setTitle("WARNING")
             .setMessage(msg)
+            .setNegativeButton("OK") { dialog, _ ->
+                dialog.dismiss()
+            }
             .show()
     }
 

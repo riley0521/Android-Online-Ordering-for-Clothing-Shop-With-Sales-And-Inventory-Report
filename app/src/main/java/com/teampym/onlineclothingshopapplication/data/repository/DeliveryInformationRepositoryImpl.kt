@@ -33,6 +33,7 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
                 val deliveryInformation = document
                     .toObject(DeliveryInformation::class.java)!!.copy(
                     id = document.id,
+                    userId = userId,
                     isPrimary = document["isPrimary"].toString().toBoolean()
                 )
 
@@ -44,6 +45,7 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
         return emptyList()
     }
 
+    @ExperimentalCoroutinesApi
     fun getFlow(userId: String): Flow<List<DeliveryInformation>> = callbackFlow {
         val deliveryInformationListener = userCollectionRef
             .document(userId)
@@ -80,27 +82,45 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
         }
     }
 
-    suspend fun upsert(
+    suspend fun create(
         userId: String,
         deliveryInformation: DeliveryInformation
     ): Boolean {
+        var isSuccessful = true
+        userCollectionRef
+            .document(userId)
+            .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
+            .add(deliveryInformation)
+            .addOnSuccessListener {
+            }.addOnFailureListener {
+                isSuccessful = false
+                return@addOnFailureListener
+            }
+        return isSuccessful
+    }
+
+    suspend fun update(
+        userId: String,
+        deliveryInformation: DeliveryInformation
+    ): Boolean {
+        var isSuccessful = true
         val isDeliveryInformationExistingQuery = userCollectionRef
             .document(userId)
             .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
             .get()
             .await()
 
-        if (isDeliveryInformationExistingQuery.documents.isNotEmpty()) {
-            for (document in isDeliveryInformationExistingQuery.documents) {
-                val deliveryInformationFromDb = document
-                    .toObject(DeliveryInformation::class.java)!!.copy(id = document.id)
+        isDeliveryInformationExistingQuery.documents.let { querySnapshot ->
+            querySnapshot.forEach { doc ->
+                val deliveryInformationFromDb = doc
+                    .toObject(DeliveryInformation::class.java)!!.copy(
+                    id = doc.id,
+                    userId = userId,
+                    isPrimary = doc["isPrimary"].toString().toBoolean()
+                )
 
-                if (deliveryInformation.contactNo == deliveryInformationFromDb.contactNo &&
-                    deliveryInformation.region == deliveryInformationFromDb.region &&
-                    deliveryInformation.streetNumber == deliveryInformationFromDb.streetNumber
-                ) {
-                    return false
-                } else {
+                if (deliveryInformation.id.isNotBlank() && deliveryInformation.id == deliveryInformationFromDb.id) {
+
                     val updateDeliveryInfoMap = mapOf<String, Any>(
                         "name" to deliveryInformation.name,
                         "contactNo" to deliveryInformation.contactNo,
@@ -112,60 +132,34 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
                         "isPrimary" to deliveryInformation.isPrimary
                     )
 
-                    var isUpdated = false
-                    userCollectionRef
-                        .document(userId)
-                        .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
-                        .document(deliveryInformation.id)
-                        .update(updateDeliveryInfoMap)
+                    doc.reference.update(updateDeliveryInfoMap)
                         .addOnSuccessListener {
-                            isUpdated = true
-
-                            CoroutineScope(Dispatchers.IO).launch {
-                                deliveryInformationDao.insert(deliveryInformation)
-                            }
                         }.addOnFailureListener {
+                            isSuccessful = false
+                            return@addOnFailureListener
                         }
-                    return isUpdated
                 }
             }
-        } else {
-            var isCreated = false
-            userCollectionRef
-                .document(userId)
-                .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
-                .add(deliveryInformation)
-                .addOnSuccessListener {
-                    isCreated = true
-
-                    if (deliveryInformation.isPrimary) {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            changeDefault(userId, deliveryInformation)
-                            deliveryInformationDao.insert(deliveryInformation)
-                        }
-                    }
-                }.addOnFailureListener {
-                }
-            return isCreated
         }
-        return false
+        return isSuccessful
     }
 
-    suspend fun changeDefault(
+    fun changeDefault(
         userId: String,
         new: DeliveryInformation
     ): Boolean {
-        var isCompleted = false
+        var isSuccessful = true
         userCollectionRef.document(userId).collection(DELIVERY_INFORMATION_SUB_COLLECTION)
             .whereEqualTo("isPrimary", true)
             .limit(1)
             .get()
             .addOnSuccessListener { querySnapshot ->
-                isCompleted = switchDefaultAddressInFirestore(querySnapshot, userId, new)
+                isSuccessful = switchDefaultAddressInFirestore(querySnapshot, userId, new)
             }.addOnFailureListener {
+                isSuccessful = false
+                return@addOnFailureListener
             }
-
-        return isCompleted
+        return isSuccessful
     }
 
     private fun switchDefaultAddressInFirestore(
@@ -173,7 +167,7 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
         userId: String,
         new: DeliveryInformation
     ): Boolean {
-        var isSuccess = false
+        var isSuccessful = true
 
         querySnapshot.forEach { doc ->
             doc.reference.update(
@@ -191,26 +185,30 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
                     .document(new.id)
                     .update(updateNewInfoMap)
                     .addOnSuccessListener {
-                        isSuccess = true
                     }.addOnFailureListener {
+                        isSuccessful = false
+                        return@addOnFailureListener
                     }
             }.addOnFailureListener {
+                isSuccessful = false
+                return@addOnFailureListener
             }
         }
-        return isSuccess
+        return isSuccessful
     }
 
-    suspend fun delete(userId: String, deliveryInformation: DeliveryInformation): Boolean {
-        var isDeleted = false
+    fun delete(userId: String, deliveryInformation: DeliveryInformation): Boolean {
+        var isSuccessful = true
 
         userCollectionRef.document(userId)
             .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
             .document(deliveryInformation.id)
             .delete()
             .addOnSuccessListener {
-                isDeleted = true
             }.addOnCanceledListener {
+                isSuccessful = false
+                return@addOnCanceledListener
             }
-        return isDeleted
+        return isSuccessful
     }
 }

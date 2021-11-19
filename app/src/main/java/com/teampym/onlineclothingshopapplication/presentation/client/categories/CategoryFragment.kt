@@ -25,9 +25,9 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
 
         binding = FragmentCategoryBinding.bind(view)
 
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        if (currentUser != null)
-            categoryViewModel.updateUserId(currentUser.uid)
+        FirebaseAuth.getInstance().currentUser?.let {
+            categoryViewModel.updateUserId(it.uid)
+        }
 
         adapter = CategoryAdapter(this)
 

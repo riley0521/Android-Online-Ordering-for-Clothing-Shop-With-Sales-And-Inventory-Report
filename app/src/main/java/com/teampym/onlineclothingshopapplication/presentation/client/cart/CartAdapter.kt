@@ -71,6 +71,14 @@ class CartAdapter(
                         }
                     }
                 }
+
+                btnDelete.setOnClickListener {
+                    val position = absoluteAdapterPosition
+                    if(position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+                        listener.onDeleteItemClicked(item.id, position)
+                    }
+                }
             }
         }
 
@@ -106,6 +114,7 @@ class CartAdapter(
     interface OnItemCartListener {
         fun onAddQuantity(cartId: String, pos: Int)
         fun onRemoveQuantity(cartId: String, pos: Int)
+        fun onDeleteItemClicked(cartId: String, pos: Int)
         fun onFailure(msg: String)
     }
 }

@@ -3,12 +3,13 @@ package com.teampym.onlineclothingshopapplication.presentation.client.deliveryin
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import com.teampym.onlineclothingshopapplication.*
+import com.teampym.onlineclothingshopapplication.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.repository.DeliveryInformationRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformationDao
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
-import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
-import com.teampym.onlineclothingshopapplication.data.repository.DeliveryInformationRepositoryImpl
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -19,7 +20,7 @@ import javax.inject.Inject
 class DeliveryInformationViewModel @Inject constructor(
     private val deliveryInformationRepository: DeliveryInformationRepositoryImpl,
     private val deliveryInformationDao: DeliveryInformationDao,
-    private val preferencesManager: PreferencesManager
+    preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private var userId = ""
@@ -27,12 +28,14 @@ class DeliveryInformationViewModel @Inject constructor(
     private val _deliveryInformationChannel = Channel<DeliveryInfoEvent>()
     val deliveryInformationEvent = _deliveryInformationChannel.receiveAsFlow()
 
+    @ExperimentalCoroutinesApi
     private val _deliveryInformationFlow =
         preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
             userId = sessionPref.userId
             deliveryInformationRepository.getFlow(sessionPref.userId)
         }
 
+    @ExperimentalCoroutinesApi
     val deliveryInformation = _deliveryInformationFlow.asLiveData()
 
     fun onDeliveryInformationDefaultChanged(

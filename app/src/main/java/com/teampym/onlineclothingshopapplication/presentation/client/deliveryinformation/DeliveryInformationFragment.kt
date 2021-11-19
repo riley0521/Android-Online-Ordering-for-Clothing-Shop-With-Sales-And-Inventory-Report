@@ -3,6 +3,7 @@ package com.teampym.onlineclothingshopapplication.presentation.client.deliveryin
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
@@ -15,6 +16,7 @@ import com.teampym.onlineclothingshopapplication.databinding.FragmentDeliveryInf
 import com.teampym.onlineclothingshopapplication.presentation.client.addeditdeliveryinfo.ADD_EDIT_DELETE_REQUEST
 import com.teampym.onlineclothingshopapplication.presentation.client.addeditdeliveryinfo.ADD_EDIT_DELETE_RESULT
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
 
 @AndroidEntryPoint
@@ -28,6 +30,8 @@ class DeliveryInformationFragment :
 
     private lateinit var adapter: DeliveryInformationAdapter
 
+    // I added this to remove the lint
+    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -43,7 +47,7 @@ class DeliveryInformationFragment :
                 binding.recyclerDeliveryInformation.visibility = View.VISIBLE
                 binding.recyclerDeliveryInformation.adapter = adapter
 
-                binding.tvDeliveryAddressTitle.visibility = View.VISIBLE
+                binding.tvDeliveryAddressTitle.isVisible = deliveryInfoList.size > 1
                 binding.tvNoAddressYet.visibility = View.GONE
 
                 deliveryInfoList.firstOrNull { it.isPrimary }?.let { info ->
@@ -69,18 +73,7 @@ class DeliveryInformationFragment :
                         tvAddress.text = completeAddress
 
                         btnDelete.setOnClickListener {
-                            AlertDialog.Builder(requireContext())
-                                .setTitle("DELETE DELIVERY INFORMATION")
-                                .setMessage(
-                                    "Are you sure you want to delete this delivery information?\n" +
-                                        "Reminder: You cannot reverse this action"
-                                )
-                                .setPositiveButton("Yes") { dialog, _ ->
-                                    viewModel.onDeleteClicked(info)
-                                    dialog.dismiss()
-                                }.setNegativeButton("No") { dialog, _ ->
-                                    dialog.dismiss()
-                                }.show()
+                            showDeleteDeliveryInformationDialog(info)
                         }
 
                         btnEdit.setOnClickListener {
@@ -123,6 +116,21 @@ class DeliveryInformationFragment :
         }
     }
 
+    private fun showDeleteDeliveryInformationDialog(info: DeliveryInformation) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("DELETE DELIVERY INFORMATION")
+            .setMessage(
+                "Are you sure you want to delete this delivery information?\n" +
+                    "Reminder: You cannot reverse this action"
+            )
+            .setPositiveButton("Yes") { dialog, _ ->
+                viewModel.onDeleteClicked(info)
+                dialog.dismiss()
+            }.setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }.show()
+    }
+
     override fun onMakeDefaultClicked(deliveryInfo: DeliveryInformation) {
         AlertDialog.Builder(requireContext())
             .setTitle("Set Default Delivery Information")
@@ -147,5 +155,9 @@ class DeliveryInformationFragment :
                 "Edit Address"
             )
         findNavController().navigate(action)
+    }
+
+    override fun onDeleteClicked(deliveryInfo: DeliveryInformation) {
+        showDeleteDeliveryInformationDialog(deliveryInfo)
     }
 }

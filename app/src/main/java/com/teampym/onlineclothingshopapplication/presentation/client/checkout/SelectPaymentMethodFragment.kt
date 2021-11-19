@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
 import com.teampym.onlineclothingshopapplication.databinding.FragmentSelectPaymentMethodBinding
@@ -33,6 +34,18 @@ class SelectPaymentMethodFragment : Fragment(R.layout.fragment_select_payment_me
                 getString(R.string.rb_gcash) -> rbGCash.isChecked = true
                 getString(R.string.rb_paymaya) -> rbPaymaya.isChecked = true
                 getString(R.string.rb_credit_debit_card) -> rbCreditDebit.isChecked = true
+            }
+            // I don't know if this will work.
+            rbGroupPaymentMethods.jumpDrawablesToCurrentState()
+
+            rbGCash.setOnCheckedChangeListener { btn, _ ->
+                btn.isChecked = false
+                rbCod.isChecked = true
+                Snackbar.make(
+                    requireView(),
+                    "G-Cash Payment is not yet implemented. Please stick to COD for now.",
+                    Snackbar.LENGTH_LONG
+                ).show()
             }
 
             btnChoosePaymentMethod.isEnabled = rbGroupPaymentMethods.checkedRadioButtonId != -1

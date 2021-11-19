@@ -56,6 +56,15 @@ class DeliveryInformationAdapter(
 
         init {
             binding.apply {
+
+                btnDelete.setOnClickListener {
+                    val position = absoluteAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+                        listener.onDeleteClicked(item)
+                    }
+                }
+
                 btnMakeDefault.setOnClickListener {
                     val position = absoluteAdapterPosition
                     if (position != RecyclerView.NO_POSITION) {
@@ -98,5 +107,6 @@ class DeliveryInformationAdapter(
     interface OnDeliveryInformationListener {
         fun onMakeDefaultClicked(deliveryInfo: DeliveryInformation)
         fun onEditClicked(deliveryInfo: DeliveryInformation)
+        fun onDeleteClicked(deliveryInfo: DeliveryInformation)
     }
 }

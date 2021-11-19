@@ -1,5 +1,6 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
@@ -19,7 +20,7 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class CartRepositoryImpl @Inject constructor(
-    private val db: FirebaseFirestore,
+    db: FirebaseFirestore,
     private val cartDao: CartDao,
     private val productDao: ProductDao,
     private val inventoryDao: InventoryDao
@@ -29,6 +30,7 @@ class CartRepositoryImpl @Inject constructor(
     private val productsCollectionRef = db.collection(PRODUCTS_COLLECTION)
 
     // TODO("Use a flow to get updates in cart collection instantly")
+    @ExperimentalCoroutinesApi
     fun getAll(userId: String?): Flow<MutableList<Cart>> = callbackFlow {
 
         var cartListener: ListenerRegistration? = null
@@ -58,64 +60,7 @@ class CartRepositoryImpl @Inject constructor(
 
                             CoroutineScope(Dispatchers.IO).launch {
                                 // get corresponding product (cartItem.id == product.id)
-                                val productQuery = productsCollectionRef
-                                    .document(cartItem.product.productId)
-                                    .get()
-                                    .await()
-
-                                if (productQuery.data != null) {
-
-                                    val updatedProductToFetch = productQuery.toObject<Product>()!!
-                                        .copy(
-                                            productId = productQuery.id,
-                                            roomId = cartItem.id,
-                                            cartId = cartItem.id
-                                        )
-
-                                    // get corresponding inventory of a single product (product.id == inventory.productId)
-                                    val inventoryQuery = productsCollectionRef
-                                        .document(updatedProductToFetch.productId)
-                                        .collection(INVENTORIES_SUB_COLLECTION)
-                                        .document(cartItem.inventory.inventoryId)
-                                        .get()
-                                        .await()
-
-                                    if (inventoryQuery.data != null) {
-                                        val updatedInventoryToFetch =
-                                            inventoryQuery.toObject<Inventory>()!!
-                                                .copy(
-                                                    inventoryId = inventoryQuery.id,
-                                                    pid = cartItem.product.productId,
-                                                    pCartId = cartItem.id
-                                                )
-
-                                        // create update map.
-                                        val updatePriceOfProductInCart = mapOf<String, Any>(
-                                            "product.price" to updatedProductToFetch.price,
-                                            "inventory.stock" to updatedInventoryToFetch.stock,
-                                            "subTotal" to cartItem.quantity * updatedProductToFetch.price,
-                                        )
-
-                                        userCartCollectionRef
-                                            .document(userId)
-                                            .collection(CART_SUB_COLLECTION)
-                                            .document(document.id)
-                                            .update(updatePriceOfProductInCart)
-                                            .addOnSuccessListener {
-                                                CoroutineScope(Dispatchers.IO).launch {
-                                                    // TODO("INSERT PRODUCT AND INVENTORY TO ROOM DB BECAUSE IT IS NOT LOADING IN CHECK OUT")
-                                                    cartItem = cartItem.copy(
-                                                        product = updatedProductToFetch,
-                                                        inventory = updatedInventoryToFetch
-                                                    )
-
-                                                    productDao.insert(updatedProductToFetch)
-                                                    inventoryDao.insert(updatedInventoryToFetch)
-                                                }
-                                            }.addOnFailureListener {
-                                            }
-                                    }
-                                }
+                                cartItem = getUpdatedPriceAndStock(cartItem, userId, document)
                             }
                             cartList.add(cartItem)
                         }
@@ -131,25 +76,95 @@ class CartRepositoryImpl @Inject constructor(
         }
     }
 
+    private suspend fun getUpdatedPriceAndStock(
+        cartItem: Cart,
+        userId: String?,
+        document: DocumentSnapshot
+    ): Cart {
+        var finalCartItem = cartItem
+        val productQuery = productsCollectionRef
+            .document(finalCartItem.product.productId)
+            .get()
+            .await()
+
+        if (productQuery.data != null) {
+
+            val fetchedUpdatedProduct = productQuery.toObject<Product>()!!
+                .copy(
+                    productId = productQuery.id,
+                    roomId = finalCartItem.id,
+                    cartId = finalCartItem.id
+                )
+
+            // get corresponding inventory of a single product (product.id == inventory.productId)
+            val inventoryQuery = productsCollectionRef
+                .document(fetchedUpdatedProduct.productId)
+                .collection(INVENTORIES_SUB_COLLECTION)
+                .document(finalCartItem.inventory.inventoryId)
+                .get()
+                .await()
+
+            if (inventoryQuery.data != null) {
+                val fetchedUpdatedInventory =
+                    inventoryQuery.toObject<Inventory>()!!
+                        .copy(
+                            inventoryId = inventoryQuery.id,
+                            pid = finalCartItem.product.productId,
+                            pCartId = finalCartItem.id
+                        )
+
+                // create update map.
+                val updatePriceOfProductInCart = mapOf<String, Any>(
+                    "product.price" to fetchedUpdatedProduct.price,
+                    "inventory.stock" to fetchedUpdatedInventory.stock,
+                    "subTotal" to finalCartItem.quantity * fetchedUpdatedProduct.price,
+                )
+
+                userId?.let {
+                    userCartCollectionRef
+                        .document(it)
+                        .collection(CART_SUB_COLLECTION)
+                        .document(document.id)
+                        .update(updatePriceOfProductInCart)
+                        .addOnSuccessListener {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                // TODO("INSERT PRODUCT AND INVENTORY TO ROOM DB BECAUSE IT IS NOT LOADING IN CHECK OUT")
+                                finalCartItem = finalCartItem.copy(
+                                    product = fetchedUpdatedProduct,
+                                    inventory = fetchedUpdatedInventory
+                                )
+
+                                productDao.insert(fetchedUpdatedProduct)
+                                inventoryDao.insert(fetchedUpdatedInventory)
+                            }
+                        }.addOnFailureListener {
+                        }
+                }
+            }
+        }
+        return finalCartItem
+    }
+
     suspend fun insert(
         userId: String,
-        product: Product,
-        inventory: Inventory
-    ): Resource {
+        cartItem: Cart
+    ): Boolean {
+
+        var isSuccessful = true
 
         val cartQuery = userCartCollectionRef
             .document(userId)
-            .collection("cart")
-            .document(inventory.inventoryId)
+            .collection(CART_SUB_COLLECTION)
+            .document(cartItem.inventory.inventoryId)
             .get()
             .await()
 
         // check if the productId is existing in the user's cart. if true then update, if false then just add it.
         if (cartQuery.data != null) {
-            val cartItem = cartQuery.toObject(Cart::class.java)?.copy(id = cartQuery.id)
+            val cartItemFromDb = cartQuery.toObject(Cart::class.java)?.copy(id = cartQuery.id)
 
-            cartItem?.let { obj ->
-                if (obj.inventory.inventoryId == inventory.inventoryId && obj.userId == userId) {
+            cartItemFromDb?.let { obj ->
+                if (obj.inventory.inventoryId == cartItem.inventory.inventoryId && obj.userId == userId) {
 
                     obj.quantity += 1
                     // every time you get calculatedTotalPrice in Cart data class.
@@ -160,49 +175,35 @@ class CartRepositoryImpl @Inject constructor(
                         "subTotal" to obj.subTotal
                     )
 
-                    var isUpdated = false
                     userCartCollectionRef
                         .document(userId)
                         .collection(CART_SUB_COLLECTION)
                         .document(obj.id)
                         .set(updateQuantityOfItemInCart, SetOptions.merge())
                         .addOnSuccessListener {
-                            isUpdated = true
-                            CoroutineScope(Dispatchers.IO).launch {
-                                cartDao.insert(obj)
-                            }
                         }.addOnFailureListener {
+                            isSuccessful = false
+                            return@addOnFailureListener
                         }
-                    return Resource.Success("Success", isUpdated)
+                    return isSuccessful
                 }
             }
         } else {
-            val newItem = Cart(
-                id = inventory.inventoryId,
-                userId = userId,
-                product = product,
-                quantity = 1,
-                inventory = inventory,
-                subTotal = 0.0
-            )
-            newItem.subTotal = newItem.calculatedTotalPrice.toDouble()
+            cartItem.subTotal = cartItem.calculatedTotalPrice.toDouble()
 
-            var isCreated = false
             userCartCollectionRef
                 .document(userId)
                 .collection(CART_SUB_COLLECTION)
-                .document(inventory.inventoryId)
-                .set(newItem)
+                .document(cartItem.inventory.inventoryId)
+                .set(cartItem)
                 .addOnSuccessListener {
-                    isCreated = true
-                    CoroutineScope(Dispatchers.IO).launch {
-                        cartDao.insert(newItem)
-                    }
                 }.addOnFailureListener {
+                    isSuccessful = false
+                    return@addOnFailureListener
                 }
-            return Resource.Success("Success", isCreated)
+            return isSuccessful
         }
-        return Resource.Error("Failed", false)
+        return isSuccessful
     }
 
     suspend fun update(
@@ -210,7 +211,7 @@ class CartRepositoryImpl @Inject constructor(
         cart: List<Cart>
     ): Boolean {
 
-        var isUpdated = false
+        var isSuccessful = true
         for (item in cart) {
             val cartQuery = userCartCollectionRef
                 .document(userId)
@@ -231,18 +232,20 @@ class CartRepositoryImpl @Inject constructor(
                     .document(item.id)
                     .update(updateCartQty)
                     .addOnSuccessListener {
-                        isUpdated = true
                     }.addOnFailureListener {
+                        isSuccessful = false
+                        return@addOnFailureListener
                     }
             }
         }
-        return isUpdated
+        return isSuccessful
     }
 
     suspend fun delete(
         userId: String,
         cartId: String
-    ): Resource {
+    ): Boolean {
+        var isSuccessful = true
         val cartItemQuery = userCartCollectionRef
             .document(userId)
             .collection(CART_SUB_COLLECTION)
@@ -251,19 +254,19 @@ class CartRepositoryImpl @Inject constructor(
             .await()
 
         if (cartItemQuery.data != null) {
-            var isDeleted = false
             userCartCollectionRef
                 .document(userId)
                 .collection(CART_SUB_COLLECTION)
                 .document(cartId)
                 .delete()
                 .addOnSuccessListener {
-                    isDeleted = true
                 }.addOnFailureListener {
+                    isSuccessful = false
+                    return@addOnFailureListener
                 }
-            return Resource.Success("Success", isDeleted)
+            return isSuccessful
         }
-        return Resource.Error("Failed", false)
+        return isSuccessful
     }
 
     suspend fun deleteOutOfStockItems(
@@ -271,6 +274,7 @@ class CartRepositoryImpl @Inject constructor(
         cartList: List<Cart>
     ): Boolean {
 
+        var isSuccessful = true
         for (cartItem in cartList) {
             userCartCollectionRef
                 .document(userId)
@@ -278,18 +282,18 @@ class CartRepositoryImpl @Inject constructor(
                 .document(cartItem.id)
                 .delete()
                 .addOnSuccessListener {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        cartDao.delete(cartItem.id)
-                    }
                 }.addOnFailureListener {
+                    isSuccessful = false
+                    return@addOnFailureListener
                 }
         }
-        return true
+        return isSuccessful
     }
 
     suspend fun deleteAll(
         userId: String
-    ): Resource {
+    ): Boolean {
+        var isSuccessful = true
         val cartQuery = userCartCollectionRef
             .document(userId)
             .collection(CART_SUB_COLLECTION)
@@ -305,11 +309,12 @@ class CartRepositoryImpl @Inject constructor(
                     .delete()
                     .addOnSuccessListener {
                     }.addOnFailureListener {
+                        isSuccessful = false
+                        return@addOnFailureListener
                     }
             }
-            cartDao.deleteAll(userId)
-            return Resource.Success("Success", true)
+            return isSuccessful
         }
-        return Resource.Error("Failed", false)
+        return isSuccessful
     }
 }

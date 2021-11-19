@@ -8,10 +8,11 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
-import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
+import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCheckOutBinding
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -29,6 +30,8 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
     private lateinit var adapter: CheckOutAdapter
 
     private var finalUser: UserInformation = UserInformation()
+
+    private lateinit var paymentMethodEnum: PaymentMethod
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -50,17 +53,48 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
             }
 
             labelPaymentMethod.setOnClickListener {
-                val action = CheckOutFragmentDirections.actionCheckOutFragmentToSelectPaymentMethodFragment(
-                    tvPaymentMethod.text.toString()
-                )
+                val action =
+                    CheckOutFragmentDirections.actionCheckOutFragmentToSelectPaymentMethodFragment(
+                        tvPaymentMethod.text.toString()
+                    )
                 findNavController().navigate(action)
             }
 
             labelPaymentMethod2.setOnClickListener {
-                val action = CheckOutFragmentDirections.actionCheckOutFragmentToSelectPaymentMethodFragment(
-                    tvPaymentMethod.text.toString()
-                )
+                val action =
+                    CheckOutFragmentDirections.actionCheckOutFragmentToSelectPaymentMethodFragment(
+                        tvPaymentMethod.text.toString()
+                    )
                 findNavController().navigate(action)
+            }
+
+            btnPlaceOrder.setOnClickListener {
+                Log.d(TAG, "TITE")
+                // check if the user is verified, get the final info and cartList. Then,
+                // Place Order
+                val currentUser = getFirebaseUser()
+                // Check if the user is signed based on the documentation.
+                if (currentUser != null) {
+                    if (currentUser.isEmailVerified) {
+                        viewModel.placeOrder(
+                            finalUser,
+                            finalUser.cartList,
+                            paymentMethodEnum.name
+                        )
+                    } else {
+                        Snackbar.make(
+                            requireView(),
+                            "Please verify your email first to place your order.",
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                    }
+                } else {
+                    Snackbar.make(
+                        requireView(),
+                        "Please sign in first.",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                }
             }
 
             val totalCostStr = "$" + String.format("%.2f", args.cart.totalCost)
@@ -71,6 +105,7 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
         viewModel.selectedPaymentMethod.observe(viewLifecycleOwner) { paymentMethod ->
             paymentMethod?.let { pm ->
+                paymentMethodEnum = pm
                 val paymentMethodStr = when (pm) {
                     PaymentMethod.GCASH -> R.string.rb_gcash
                     PaymentMethod.PAYMAYA -> R.string.rb_paymaya
@@ -79,10 +114,6 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                 }
 
                 binding.tvPaymentMethod.text = getString(paymentMethodStr)
-                binding.btnPlaceOrder.setOnClickListener {
-                    // get the final cart and place order
-                    viewModel.placeOrder(finalUser, finalUser.cartList, pm.name)
-                }
             }
         }
 

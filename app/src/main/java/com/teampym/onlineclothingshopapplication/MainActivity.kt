@@ -30,11 +30,9 @@ class MainActivity : AppCompatActivity() {
 
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
         bottomNav.visibility = View.GONE
-        supportActionBar?.hide()
 
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.splashFragment,
                 R.id.categoryFragment,
                 R.id.newsFragment,
                 R.id.orderFragment,
@@ -58,9 +56,6 @@ class MainActivity : AppCompatActivity() {
                 bottomNav.visibility = View.VISIBLE
             } else
                 bottomNav.visibility = View.GONE
-
-            if (controller.currentDestination?.id != R.id.splashFragment)
-                supportActionBar?.show()
         }
 
         // set up app bar with current destination's label.
