@@ -40,8 +40,7 @@ interface UserInformationDao {
     @Query("SELECT * FROM table_users")
     suspend fun getUserWithNotificationTokens(): List<UserWithNotificationTokens>
 
-    // I don't know if this necessary in the future. but I will leave it here for now.
     @Transaction
     @Query("SELECT * FROM table_users")
-    suspend fun getUserWithCart(): List<UserWithCart>
+    suspend fun getUserWithWishList(): List<UserWithWishList>
 }

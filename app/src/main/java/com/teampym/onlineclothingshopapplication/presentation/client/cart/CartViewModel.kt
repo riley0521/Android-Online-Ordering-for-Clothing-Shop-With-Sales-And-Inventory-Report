@@ -1,8 +1,10 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.cart
 
 import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
+import com.google.firebase.auth.FirebaseUser
 import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
+import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.repository.CartRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.room.CartDao
@@ -20,6 +22,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CartViewModel @Inject constructor(
+    private val accountRepository: AccountRepositoryImpl,
     private val cartRepository: CartRepositoryImpl,
     private val userInformationDao: UserInformationDao,
     private val cartDao: CartDao,
@@ -39,6 +42,9 @@ class CartViewModel @Inject constructor(
     }
 
     val userInformation: LiveData<UserInformation?> get() = _userInformation
+
+    private val _isRegistered = MutableLiveData(true)
+    val isRegistered: LiveData<Boolean> get() = _isRegistered
 
     @ExperimentalCoroutinesApi
     val cart = cartFlow.asLiveData() as MutableLiveData<MutableList<Cart>>
@@ -76,6 +82,16 @@ class CartViewModel @Inject constructor(
         if (cartRepository.delete(userId, cartId)) {
             cartDao.delete(cartId)
             _cartChannel.send(CartEvent.ShowMessage("Item deleted successfully!"))
+        }
+    }
+
+    fun checkIfUserIsRegistered(user: FirebaseUser) = viewModelScope.launch {
+        val currentUser = accountRepository.get(user.uid)
+
+        currentUser?.let {
+            if (currentUser.firstName.isBlank()) {
+                _isRegistered.value = false
+            }
         }
     }
 

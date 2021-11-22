@@ -4,6 +4,7 @@ import androidx.room.Embedded
 import androidx.room.Relation
 import com.teampym.onlineclothingshopapplication.data.models.NotificationToken
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
+import com.teampym.onlineclothingshopapplication.data.models.WishItem
 
 data class UserWithDeliveryInfo(
     @Embedded val user: UserInformation,
@@ -23,12 +24,11 @@ data class UserWithNotificationTokens(
     val notificationTokens: List<NotificationToken>
 )
 
-// I don't know if this is necessary for now.
-data class UserWithCart(
+data class UserWithWishList(
     @Embedded val user: UserInformation,
     @Relation(
         parentColumn = "userId",
         entityColumn = "userId"
     )
-    val cart: List<Cart>
+    val wishList: List<WishItem>
 )

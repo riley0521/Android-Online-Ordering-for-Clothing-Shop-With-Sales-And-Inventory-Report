@@ -2,7 +2,6 @@ package com.teampym.onlineclothingshopapplication.presentation.client.checkout
 
 import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
-import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.CartRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.repository.OrderRepositoryImpl
@@ -69,6 +68,9 @@ class CheckOutSharedViewModel @Inject constructor(
         )
         orderResult?.let {
             _checkOutChannel.send(CheckOutEvent.ShowSuccessfulMessage("Thank you for placing your order!"))
+
+            // TODO("Notify all admins about the new order")
+            val orderId = it.id
 
             // Delete all items from cart in remote and local db
             cartRepository.deleteAll(userInformation.userId)

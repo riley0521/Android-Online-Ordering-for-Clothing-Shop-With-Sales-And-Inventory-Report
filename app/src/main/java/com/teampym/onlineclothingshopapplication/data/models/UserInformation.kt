@@ -31,6 +31,9 @@ data class UserInformation(
     var notificationTokenList: List<NotificationToken> = emptyList(),
     @Ignore
     @get:Exclude
+    var wishList: List<WishItem> = emptyList(),
+    @Ignore
+    @get:Exclude
     var cartList: List<Cart> = emptyList()
 ) : Parcelable {
     constructor() : this(

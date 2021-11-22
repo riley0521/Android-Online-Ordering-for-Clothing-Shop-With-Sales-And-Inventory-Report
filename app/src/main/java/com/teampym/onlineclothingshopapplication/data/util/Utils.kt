@@ -11,6 +11,7 @@ const val USERS_COLLECTION = "Users"
 const val DELIVERY_INFORMATION_SUB_COLLECTION = "deliveryInformation"
 const val NOTIFICATION_TOKENS_SUB_COLLECTION = "notificationTokens"
 const val CART_SUB_COLLECTION = "cart"
+const val WISH_LIST_SUB_COLLECTION = "wishList"
 
 const val ORDERS_COLLECTION = "Orders"
 const val ORDER_DETAILS_SUB_COLLECTION = "orderDetails"
@@ -19,10 +20,7 @@ const val POSTS_COLLECTION = "Posts"
 const val LIKES_SUB_COLLECTION = "likes"
 const val COMMENTS_SUB_COLLECTION = "comments"
 
-sealed class Resource {
-    data class Success(val msg: String, val res: Any) : Resource()
-    data class Error(val msg: String, val ex: Any?) : Resource()
-}
+const val AUDIT_TRAILS_COLLECTION = "AuditTrails"
 
 enum class Status {
     SHIPPING,

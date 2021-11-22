@@ -4,10 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseUser
+import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
-import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
-import com.teampym.onlineclothingshopapplication.data.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
@@ -22,8 +21,8 @@ class RegistrationViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
-    private val registrationEventChannel = Channel<RegistrationEvent>()
-    val registrationEvent = registrationEventChannel.receiveAsFlow()
+    private val _registrationEventChannel = Channel<RegistrationEvent>()
+    val registrationEvent = _registrationEventChannel.receiveAsFlow()
 
     private val userFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
         userInformationDao.getUserFlow(sessionPref.userId)
@@ -37,21 +36,14 @@ class RegistrationViewModel @Inject constructor(
         birthDate: String,
         user: FirebaseUser
     ) = viewModelScope.launch {
-        when (
-            accountRepository.create(
-                user.uid,
-                firstName,
-                lastName,
-                birthDate,
-                user.photoUrl?.toString() ?: ""
-            )
-        ) {
-            is Resource.Error -> {
-                registrationEventChannel.send(RegistrationEvent.ShowErrorMessage("Failed to register user."))
-            }
-            is Resource.Success -> {
-                registrationEventChannel.send(RegistrationEvent.ShowSuccessfulMessage("Registered user successfully!"))
-            }
+        accountRepository.create(
+            user.uid,
+            firstName,
+            lastName,
+            birthDate,
+            user.photoUrl?.toString() ?: ""
+        )?.let {
+            _registrationEventChannel.send(RegistrationEvent.ShowSuccessfulMessage("Created user successfully!"))
         }
     }
 
@@ -61,13 +53,10 @@ class RegistrationViewModel @Inject constructor(
         lastName: String,
         birthDate: String
     ) = viewModelScope.launch {
-        when (accountRepository.update(userId, firstName, lastName, birthDate)) {
-            is Resource.Error -> {
-                registrationEventChannel.send(RegistrationEvent.ShowErrorMessage("Failed to update user."))
-            }
-            is Resource.Success -> {
-                registrationEventChannel.send(RegistrationEvent.ShowSuccessfulMessage("Updated user successfully!"))
-            }
+        if (accountRepository.update(userId, firstName, lastName, birthDate)) {
+            _registrationEventChannel.send(RegistrationEvent.ShowSuccessfulMessage("Updated user successfully!"))
+        } else {
+            _registrationEventChannel.send(RegistrationEvent.ShowErrorMessage("Failed to update user. Please try again later."))
         }
     }
 

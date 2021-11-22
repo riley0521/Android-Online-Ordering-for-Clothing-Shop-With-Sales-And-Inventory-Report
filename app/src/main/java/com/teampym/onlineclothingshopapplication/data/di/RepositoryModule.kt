@@ -31,13 +31,13 @@ object RepositoryModule {
         db: FirebaseFirestore,
         deliveryInformationRepository: DeliveryInformationRepositoryImpl,
         notificationTokenRepository: NotificationTokenRepositoryImpl,
-        cartRepository: CartRepositoryImpl,
+        wishItemRepository: WishItemRepositoryImpl,
         userInformationDao: UserInformationDao
     ) = AccountRepositoryImpl(
         db,
         deliveryInformationRepository,
         notificationTokenRepository,
-        cartRepository,
+        wishItemRepository,
         userInformationDao
     )
 
@@ -55,11 +55,19 @@ object RepositoryModule {
     @Singleton
     fun provideNotificationTokenRepository(
         db: FirebaseFirestore,
-        notificationTokenDao: NotificationTokenDao
+        notificationTokenDao: NotificationTokenDao,
+        preferencesManager: PreferencesManager
     ) = NotificationTokenRepositoryImpl(
         db,
-        notificationTokenDao
+        notificationTokenDao,
+        preferencesManager
     )
+
+    @Provides
+    @Singleton
+    fun provideWishListRepository(
+        db: FirebaseFirestore
+    ) = WishItemRepositoryImpl(db)
 
     @Provides
     @Singleton

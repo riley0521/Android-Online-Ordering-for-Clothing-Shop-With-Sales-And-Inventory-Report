@@ -95,6 +95,9 @@
     <string name="no_available_rating">No Available Rating.</string>
     <string name="choose_payment_method">Choose Payment Method</string>
     <string name="out_of_stock">(Out Of Stock)</string>
+    <string name="msg_subscribed">Message Subscribed</string>
+    <string name="msg_subscribe_failed">Message Subscribing Failed</string>
+    <string name="add_to_wish_list">Add To Wish List</string>
 
 
 </resources>

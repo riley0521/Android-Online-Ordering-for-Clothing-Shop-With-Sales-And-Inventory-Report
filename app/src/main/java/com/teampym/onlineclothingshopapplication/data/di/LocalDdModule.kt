@@ -56,6 +56,10 @@ object LocalDbModule {
 
     @Provides
     @Singleton
+    fun provideWishItemDao(db: MyDatabase) = db.wishItemDao()
+
+    @Provides
+    @Singleton
     fun provideProductDao(db: MyDatabase) = db.productDao()
 
     @Provides

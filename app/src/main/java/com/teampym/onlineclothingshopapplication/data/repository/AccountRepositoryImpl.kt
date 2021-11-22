@@ -4,7 +4,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.* // ktlint-disable no-wildcard-imports
-import com.teampym.onlineclothingshopapplication.data.util.Resource
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,10 +14,10 @@ import java.util.* // ktlint-disable no-wildcard-imports
 import javax.inject.Inject
 
 class AccountRepositoryImpl @Inject constructor(
-    private val db: FirebaseFirestore,
+    db: FirebaseFirestore,
     private val deliveryInformationRepository: DeliveryInformationRepositoryImpl,
     private val notificationTokenRepository: NotificationTokenRepositoryImpl,
-    private val cartRepository: CartRepositoryImpl,
+    private val wishItemRepository: WishItemRepositoryImpl,
     private val userInformationDao: UserInformationDao
 ) {
 
@@ -39,9 +38,12 @@ class AccountRepositoryImpl @Inject constructor(
 
             val notificationTokenList = notificationTokenRepository.getAll(userQuery.id)
 
+            val wishList = wishItemRepository.getAll(userQuery.id)
+
             val finalUser = userInfo.copy(
                 deliveryInformationList = deliveryInformationList,
-                notificationTokenList = notificationTokenList
+                notificationTokenList = notificationTokenList,
+                wishList = wishList
             )
             userInformationDao.insert(finalUser)
 
@@ -57,8 +59,8 @@ class AccountRepositoryImpl @Inject constructor(
         lastName: String,
         birthDate: String,
         avatarUrl: String
-    ): Resource {
-        val newUser = UserInformation(
+    ): UserInformation? {
+        var newUser: UserInformation? = UserInformation(
             firstName = firstName,
             lastName = lastName,
             birthDate = birthDate,
@@ -66,17 +68,20 @@ class AccountRepositoryImpl @Inject constructor(
             userId = userId
         )
 
-        val result = userCollectionRef
-            .document(userId)
-            .set(newUser)
-            .await()
-
-        return if (result != null) {
-            userInformationDao.insert(newUser)
-            Resource.Success("Success", newUser)
-        } else {
-            Resource.Error("Failed", UserInformation())
+        newUser?.let { user ->
+            userCollectionRef
+                .document(userId)
+                .set(user)
+                .addOnSuccessListener {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        userInformationDao.insert(user)
+                    }
+                }.addOnFailureListener {
+                    newUser = null
+                    return@addOnFailureListener
+                }
         }
+        return newUser
     }
 
     suspend fun update(
@@ -84,7 +89,7 @@ class AccountRepositoryImpl @Inject constructor(
         firstName: String,
         lastName: String,
         birthDate: String
-    ): Resource {
+    ): Boolean {
 
         val userMapToUpdate = mutableMapOf<String, Any>()
 
@@ -104,12 +109,11 @@ class AccountRepositoryImpl @Inject constructor(
 
                 val userQuery = userCollectionRef.document(userId).get().await()
                 if (userQuery.exists()) {
-                    var isUpdated = false
+                    var isUpdated = true
                     userCollectionRef
                         .document(userId)
                         .set(userMapToUpdate, SetOptions.merge())
                         .addOnSuccessListener {
-                            isUpdated = true
                             CoroutineScope(Dispatchers.IO).launch {
                                 userInformationDao.updateBasicInfo(
                                     firstName,
@@ -119,12 +123,14 @@ class AccountRepositoryImpl @Inject constructor(
                                 )
                             }
                         }.addOnFailureListener {
+                            isUpdated = false
+                            return@addOnFailureListener
                         }
 
-                    return Resource.Success("Success", isUpdated)
+                    return isUpdated
                 }
             }
         }
-        return Resource.Error("Failed", false)
+        return false
     }
 }

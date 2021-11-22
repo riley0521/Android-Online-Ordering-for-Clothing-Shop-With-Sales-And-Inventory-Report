@@ -14,6 +14,7 @@ import javax.inject.Provider
     entities = [
         Region::class, Province::class, City::class,
         UserInformation::class, DeliveryInformation::class, NotificationToken::class,
+        WishItem::class,
         Cart::class, Product::class, Inventory::class
     ],
     version = 1,
@@ -28,8 +29,9 @@ abstract class MyDatabase : RoomDatabase() {
     abstract fun userInformationDao(): UserInformationDao
     abstract fun deliveryInformationDao(): DeliveryInformationDao
     abstract fun notificationTokenDao(): NotificationTokenDao
-
     abstract fun cartDao(): CartDao
+    abstract fun wishItemDao(): WishItemDao
+
     abstract fun productDao(): ProductDao
     abstract fun inventoryDao(): InventoryDao
 

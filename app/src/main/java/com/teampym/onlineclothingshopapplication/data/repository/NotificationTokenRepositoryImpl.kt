@@ -1,17 +1,18 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.teampym.onlineclothingshopapplication.data.room.NotificationTokenDao
 import com.teampym.onlineclothingshopapplication.data.models.NotificationToken
+import com.teampym.onlineclothingshopapplication.data.room.NotificationTokenDao
+import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.util.NOTIFICATION_TOKENS_SUB_COLLECTION
-import com.teampym.onlineclothingshopapplication.data.util.Resource
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class NotificationTokenRepositoryImpl @Inject constructor(
-    private val db: FirebaseFirestore,
-    private val notificationTokenDao: NotificationTokenDao
+    db: FirebaseFirestore,
+    private val notificationTokenDao: NotificationTokenDao,
+    private val preferencesManager: PreferencesManager
 ) {
 
     private val userCollectionRef = db.collection(USERS_COLLECTION)
@@ -36,10 +37,18 @@ class NotificationTokenRepositoryImpl @Inject constructor(
         return notificationTokenList
     }
 
-    suspend fun upsert(
+    suspend fun insert(
         userId: String,
-        notificationToken: NotificationToken
-    ): Resource {
+        userType: String,
+        token: String
+    ): NotificationToken? {
+        var createdToken: NotificationToken? = NotificationToken(
+            userId = userId,
+            token = token,
+            dateModified = System.currentTimeMillis(),
+            userType = userType
+        )
+
         val isNotificationTokenExistingQuery = userCollectionRef
             .document(userId)
             .collection(NOTIFICATION_TOKENS_SUB_COLLECTION)
@@ -48,22 +57,23 @@ class NotificationTokenRepositoryImpl @Inject constructor(
 
         if (isNotificationTokenExistingQuery.documents.isNotEmpty()) {
             for (document in isNotificationTokenExistingQuery.documents) {
-                if (document["token"].toString() == notificationToken.token) {
-                    return Resource.Error("Failed", false)
+                if (document["token"].toString() == createdToken?.token) {
+                    createdToken = null
                 }
             }
         } else {
-            var isCreated = false
-            userCollectionRef
-                .document(userId)
-                .collection(NOTIFICATION_TOKENS_SUB_COLLECTION)
-                .add(notificationToken)
-                .addOnSuccessListener {
-                    isCreated = true
-                }.addOnFailureListener {
-                }
-            return Resource.Success("Success", isCreated)
+            createdToken?.let {
+                userCollectionRef
+                    .document(userId)
+                    .collection(NOTIFICATION_TOKENS_SUB_COLLECTION)
+                    .add(it)
+                    .addOnSuccessListener {
+                    }.addOnFailureListener {
+                        createdToken = null
+                        return@addOnFailureListener
+                    }
+            }
         }
-        return Resource.Error("Failed", false)
+        return createdToken
     }
 }

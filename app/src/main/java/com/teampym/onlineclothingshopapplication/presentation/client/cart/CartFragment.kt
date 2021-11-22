@@ -42,6 +42,15 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
         binding = FragmentCartBinding.bind(view)
 
+        val currentUser = getFirebaseUser()
+
+        currentUser?.let { viewModel.checkIfUserIsRegistered(it) }
+        viewModel.isRegistered.observe(viewLifecycleOwner) {
+            if (!it) {
+                findNavController().navigate(R.id.action_profileFragment_to_registrationFragment)
+            }
+        }
+
         adapter = CartAdapter(this)
 
         if (getFirebaseUser() == null) {
