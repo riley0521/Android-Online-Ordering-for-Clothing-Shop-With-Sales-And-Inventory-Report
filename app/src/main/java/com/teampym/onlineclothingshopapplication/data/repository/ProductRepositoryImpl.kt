@@ -41,26 +41,25 @@ class ProductRepositoryImpl @Inject constructor(
         }
 
     // TODO("CRUD Operations for Product Collection")
-    suspend fun getOne(productId: String): Product {
+    suspend fun getOne(productId: String): Product? {
+        var foundProduct: Product? = null
+
         val productQuery = productCollectionRef.document(productId).get().await()
-        if (productQuery.data != null) {
-
-            val product = productQuery.toObject<Product>()!!.copy(productId = productQuery.id)
-
+        productQuery?.let { doc ->
             val productImageList = productImageRepository.getAll(productId)
 
             val inventoryList = productInventoryRepository.getAll(productId)
 
             val reviewList = reviewRepository.getFive(productId)
 
-            return product.copy(
-                productId = productQuery.id,
+            foundProduct = doc.toObject<Product>()!!.copy(
+                productId = doc.id,
                 productImageList = productImageList,
                 inventoryList = inventoryList,
                 reviewList = reviewList
             )
         }
-        return Product()
+        return foundProduct
     }
 
     suspend fun create(product: Product): Product {
@@ -87,6 +86,39 @@ class ProductRepositoryImpl @Inject constructor(
             return result != null
         }
         return false
+    }
+
+    suspend fun submitReview(
+        userInformation: UserInformation,
+        rate: Double,
+        desc: String,
+        productId: String,
+    ): Product? {
+        var updatedProduct: Product? = getOne(productId)
+
+        reviewRepository.insert(
+            userInformation,
+            rate,
+            desc,
+            productId
+        )?.let {
+            updatedProduct?.let {
+                val updateProductMap = mapOf<String, Any>(
+                    "totalRate" to it.totalRate + rate,
+                    "numberOfReviews" to it.numberOfReviews + 1
+                )
+
+                productCollectionRef
+                    .document(productId)
+                    .update(updateProductMap)
+                    .addOnSuccessListener {
+                    }.addOnFailureListener {
+                        updatedProduct = null
+                        return@addOnFailureListener
+                    }
+            }
+        }
+        return updatedProduct
     }
 
     suspend fun delete(productId: String): Boolean {

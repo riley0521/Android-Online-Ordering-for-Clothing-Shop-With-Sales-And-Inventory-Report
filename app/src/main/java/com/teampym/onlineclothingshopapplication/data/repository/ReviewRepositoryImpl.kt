@@ -1,15 +1,17 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.models.Review
+import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.REVIEWS_SUB_COLLECTION
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class ReviewRepositoryImpl @Inject constructor(
-    private val db: FirebaseFirestore
+    db: FirebaseFirestore
 ) {
 
     private val reviewCollectionRef = db.collection(PRODUCTS_COLLECTION)
@@ -19,13 +21,14 @@ class ReviewRepositoryImpl @Inject constructor(
         val reviewsQuery = reviewCollectionRef
             .document(productId)
             .collection(REVIEWS_SUB_COLLECTION)
+            .orderBy("dateReview", Query.Direction.DESCENDING)
             .limit(5)
             .get()
             .await()
 
         val reviewList = mutableListOf<Review>()
-        if(reviewsQuery.documents.isNotEmpty()) {
-            for(document in reviewsQuery.documents) {
+        if (reviewsQuery.documents.isNotEmpty()) {
+            for (document in reviewsQuery.documents) {
                 val review = document.toObject<Review>()!!.copy(id = document.id, productId = productId)
                 reviewList.add(review)
             }
@@ -33,20 +36,35 @@ class ReviewRepositoryImpl @Inject constructor(
         return reviewList
     }
 
-    suspend fun getAvgRate(productId: String): Double {
-        var avgRate = 0.0
+    suspend fun insert(
+        userInformation: UserInformation,
+        rate: Double,
+        desc: String,
+        productId: String,
+    ): Review? {
+        var createdReview: Review? = Review(
+            userId = userInformation.userId,
+            productId = productId,
+            userAvatar = userInformation.avatarUrl ?: "",
+            username = "${userInformation.firstName} ${userInformation.lastName}",
+            rate = rate,
+            description = desc,
+            dateReview = System.currentTimeMillis()
+        )
 
-        val reviewsQuery = reviewCollectionRef
-            .document(productId)
-            .collection(REVIEWS_SUB_COLLECTION)
-            .get()
-            .await()
-
-        if(reviewsQuery.documents.isNotEmpty()) {
-            avgRate = reviewsQuery
-                .documents.sumOf { it["rate"].toString().toDouble() } / reviewsQuery.documents.size
+        createdReview?.let {
+            reviewCollectionRef
+                .document(productId)
+                .collection(REVIEWS_SUB_COLLECTION)
+                .document(productId)
+                .set(it)
+                .addOnSuccessListener {
+                }.addOnFailureListener {
+                    createdReview = null
+                    return@addOnFailureListener
+                }
         }
-        return avgRate
-    }
 
+        return createdReview
+    }
 }

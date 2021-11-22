@@ -77,7 +77,7 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             product.let { p ->
                 adapter.submitList(p.reviewList)
 
-                val rate = viewModel.getAvgRate(p.productId)
+                val rate = p.avgRate
 
                 if (rate == 0.0) {
                     labelRate.text = getString(R.string.no_available_rating)

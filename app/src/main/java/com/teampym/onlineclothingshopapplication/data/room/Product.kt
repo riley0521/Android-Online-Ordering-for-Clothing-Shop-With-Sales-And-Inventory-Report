@@ -27,6 +27,8 @@ data class Product(
     var type: String = ProductType.HOODIES.name,
     var dateAdded: Long = System.currentTimeMillis(),
     var dateModified: Long = 0,
+    var totalRate: Double = 0.0,
+    var numberOfReviews: Long = 0,
     @get:Exclude
     @Ignore
     var inventoryList: List<Inventory> = emptyList(),
@@ -48,4 +50,8 @@ data class Product(
     @get:Exclude
     @Ignore
     var flag: String = ""
+
+    @get:Exclude
+    @Ignore
+    var avgRate: Double = totalRate / numberOfReviews
 }

@@ -48,11 +48,11 @@ enum class ProductType {
     HOODIES
 }
 
-enum class LogType {
+enum class AuditType {
     CATEGORY,
     PRODUCT,
-    PRODUCT_IMAGE,
     INVENTORY,
+    STOCK,
     ORDER,
     POST
 }

@@ -3,8 +3,8 @@ package com.teampym.onlineclothingshopapplication.data.di
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.teampym.onlineclothingshopapplication.data.room.*
-import com.teampym.onlineclothingshopapplication.data.repository.*
+import com.teampym.onlineclothingshopapplication.data.repository.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.room.* // ktlint-disable no-wildcard-imports
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -124,4 +124,39 @@ object RepositoryModule {
         db
     )
 
+    @Provides
+    @Singleton
+    fun providePostRepository(
+        db: FirebaseFirestore,
+        likeRepository: LikeRepositoryImpl,
+        commentRepository: CommentRepositoryImpl
+    ) = PostRepositoryImpl(
+        db,
+        likeRepository,
+        commentRepository
+    )
+
+    @Provides
+    @Singleton
+    fun provideLikeRepository(
+        db: FirebaseFirestore
+    ) = LikeRepositoryImpl(
+        db
+    )
+
+    @Provides
+    @Singleton
+    fun provideCommentRepository(
+        db: FirebaseFirestore
+    ) = CommentRepositoryImpl(
+        db
+    )
+
+    @Provides
+    @Singleton
+    fun provideAuditTrailRepository(
+        db: FirebaseFirestore
+    ) = AuditTrailRepositoryImpl(
+        db
+    )
 }

@@ -1,10 +1,7 @@
 package com.teampym.onlineclothingshopapplication.data.models
 
 import android.os.Parcelable
-import com.google.gson.annotations.SerializedName
 import kotlinx.android.parcel.Parcelize
-import java.math.BigDecimal
-import java.util.*
 
 @Parcelize
 data class Review(
@@ -16,6 +13,6 @@ data class Review(
     val description: String,
     val id: String = "",
     val dateReview: Long = System.currentTimeMillis()
-): Parcelable {
-    constructor(): this("", "", "", "", 0.0, "")
+) : Parcelable {
+    constructor() : this("", "", "", "", 0.0, "")
 }

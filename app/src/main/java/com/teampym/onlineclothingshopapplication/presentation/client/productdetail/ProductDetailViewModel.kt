@@ -20,18 +20,11 @@ class ProductDetailViewModel @Inject constructor(
     fun getProductById(productId: String): Product {
         var selectedProduct = Product()
         viewModelScope.launch {
-            selectedProduct = productRepository.getOne(productId)
+            productRepository.getOne(productId)?.let {
+                selectedProduct = it
+            }
         }
         return selectedProduct
-    }
-
-
-    fun getAvgRate(productId: String): Double {
-        var avgRate = 0.0
-        viewModelScope.launch {
-            avgRate = reviewRepository.getAvgRate(productId)
-        }
-        return avgRate
     }
 
 }

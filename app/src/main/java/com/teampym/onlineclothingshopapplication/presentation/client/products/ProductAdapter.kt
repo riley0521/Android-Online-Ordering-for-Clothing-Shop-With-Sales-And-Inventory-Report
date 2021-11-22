@@ -82,11 +82,8 @@ class ProductAdapter(
                     labelNumberOfSold.text = totalTxt
                 }
 
-                product.reviewList.let { reviews ->
-                    val avgRate: Double = reviews.sumOf { it.rate }.div(reviews.size)
-                    labelRate.isVisible = avgRate > 0
-                    labelRate.text = avgRate.toString()
-                }
+                labelRate.isVisible = product.avgRate > 0
+                labelRate.text = product.avgRate.toString()
 
                 btnShare.setOnClickListener {
                     listener.onShareClicked(product)
