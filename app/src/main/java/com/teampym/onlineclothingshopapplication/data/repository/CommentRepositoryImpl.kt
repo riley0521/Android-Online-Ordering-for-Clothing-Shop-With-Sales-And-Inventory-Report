@@ -36,12 +36,13 @@ class CommentRepositoryImpl @Inject constructor(
     suspend fun insert(postId: String, comment: Comment?): Comment? {
         var createdComment = comment
 
-        comment?.let {
+        comment?.let { c ->
             postCollectionRef
                 .document(postId)
                 .collection(COMMENTS_SUB_COLLECTION)
-                .add(it)
+                .add(c)
                 .addOnSuccessListener {
+                    createdComment?.id = it.id
                 }.addOnFailureListener {
                     createdComment = null
                     return@addOnFailureListener

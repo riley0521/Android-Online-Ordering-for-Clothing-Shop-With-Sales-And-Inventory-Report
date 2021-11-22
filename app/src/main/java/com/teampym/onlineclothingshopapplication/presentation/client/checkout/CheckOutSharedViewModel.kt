@@ -58,13 +58,15 @@ class CheckOutSharedViewModel @Inject constructor(
     fun placeOrder(
         userInformation: UserInformation,
         cartList: List<Cart>,
-        paymentMethod: String
+        paymentMethod: String,
+        additionalNote: String,
     ) = appScope.launch {
         val orderResult = orderRepository.create(
             userInformation.userId,
             cartList,
             userInformation.deliveryInformationList.first { it.isPrimary },
-            paymentMethod
+            paymentMethod,
+            additionalNote
         )
         orderResult?.let {
             _checkOutChannel.send(CheckOutEvent.ShowSuccessfulMessage("Thank you for placing your order!"))

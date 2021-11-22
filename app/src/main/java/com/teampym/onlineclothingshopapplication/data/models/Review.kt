@@ -5,14 +5,14 @@ import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 data class Review(
-    val userId: String,
-    val productId: String,
-    val userAvatar: String,
-    val username: String,
-    val rate: Double,
-    val description: String,
-    val id: String = "",
-    val dateReview: Long = System.currentTimeMillis()
+    var userId: String,
+    var productId: String,
+    var userAvatar: String,
+    var username: String,
+    var rate: Double,
+    var description: String,
+    var id: String = "",
+    var dateReview: Long = System.currentTimeMillis()
 ) : Parcelable {
     constructor() : this("", "", "", "", 0.0, "")
 }

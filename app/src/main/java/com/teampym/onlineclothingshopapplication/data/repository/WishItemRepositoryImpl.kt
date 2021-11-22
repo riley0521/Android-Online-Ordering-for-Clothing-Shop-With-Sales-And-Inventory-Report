@@ -40,6 +40,29 @@ class WishItemRepositoryImpl @Inject constructor(
         userId: String,
         product: Product
     ): WishItem? {
-        return null
+        var createdWishItem: WishItem? = WishItem(
+            categoryId = product.categoryId,
+            name = product.name,
+            description = product.description,
+            imageUrl = product.imageUrl,
+            price = product.price,
+            productId = product.productId,
+            userId = userId,
+            cartId = "",
+            type = product.type,
+        )
+
+        createdWishItem?.let { w ->
+            userWishListRef.document(userId)
+                .collection(WISH_LIST_SUB_COLLECTION)
+                .document(w.productId)
+                .set(w)
+                .addOnSuccessListener {
+                }.addOnFailureListener {
+                    createdWishItem = null
+                    return@addOnFailureListener
+                }
+        }
+        return createdWishItem
     }
 }

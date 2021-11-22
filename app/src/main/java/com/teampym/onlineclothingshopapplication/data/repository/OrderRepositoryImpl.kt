@@ -64,29 +64,31 @@ class OrderRepositoryImpl @Inject constructor(
         userId: String,
         cartList: List<Cart>,
         deliveryInformation: DeliveryInformation,
-        paymentMethod: String
+        paymentMethod: String,
+        additionalNote: String
     ): Order? {
 
         var newOrder: Order? = Order(
             userId = userId,
             totalCost = cartList.sumOf { it.subTotal },
             paymentMethod = paymentMethod,
-            deliveryInformation = deliveryInformation
+            deliveryInformation = deliveryInformation,
+            suggestedShippingFee = 0.0,
+            additionalNote = additionalNote
         )
 
         newOrder?.let {
             orderCollectionRef
                 .add(it)
                 .addOnSuccessListener { doc ->
-                    newOrder = it.copy(id = doc.id)
-
                     val orderDetailList = orderDetailRepository.insertAll(
                         doc.id,
                         userId,
                         cartList
                     )
 
-                    newOrder = it.copy(orderDetailList = orderDetailList)
+                    newOrder?.id = doc.id
+                    newOrder?.orderDetailList = orderDetailList
                 }.addOnFailureListener {
                     newOrder = null
                     return@addOnFailureListener

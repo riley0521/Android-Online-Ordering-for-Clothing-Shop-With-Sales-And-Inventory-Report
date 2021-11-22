@@ -59,10 +59,11 @@ class PostRepositoryImpl @Inject constructor(
     suspend fun insert(post: Post?): Post? {
         var createdPost: Post? = post
 
-        post?.let {
+        post?.let { p ->
             postCollectionRef
-                .add(it)
+                .add(p)
                 .addOnSuccessListener {
+                    createdPost?.id = it.id
                 }.addOnFailureListener {
                     createdPost = null
                     return@addOnFailureListener

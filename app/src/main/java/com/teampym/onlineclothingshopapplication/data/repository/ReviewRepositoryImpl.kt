@@ -52,13 +52,13 @@ class ReviewRepositoryImpl @Inject constructor(
             dateReview = System.currentTimeMillis()
         )
 
-        createdReview?.let {
+        createdReview?.let { r ->
             reviewCollectionRef
                 .document(productId)
                 .collection(REVIEWS_SUB_COLLECTION)
-                .document(productId)
-                .set(it)
+                .add(r)
                 .addOnSuccessListener {
+                    createdReview?.id = it.id
                 }.addOnFailureListener {
                     createdReview = null
                     return@addOnFailureListener

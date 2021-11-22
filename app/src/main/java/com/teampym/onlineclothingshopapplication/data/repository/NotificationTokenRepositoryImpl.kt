@@ -68,6 +68,7 @@ class NotificationTokenRepositoryImpl @Inject constructor(
                     .collection(NOTIFICATION_TOKENS_SUB_COLLECTION)
                     .add(it)
                     .addOnSuccessListener {
+                        createdToken?.id = it.id
                     }.addOnFailureListener {
                         createdToken = null
                         return@addOnFailureListener

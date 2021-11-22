@@ -43,12 +43,48 @@ class ProductAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         init {
-            binding.root.setOnClickListener {
-                val position = bindingAdapterPosition
-                if (position != RecyclerView.NO_POSITION) {
-                    val item = getItem(position)
-                    if (item != null)
-                        listener.onItemClicked(item)
+            binding.apply {
+                root.setOnClickListener {
+                    val position = bindingAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+                        if (item != null)
+                            listener.onItemClicked(item)
+                    }
+                }
+
+                btnShare.setOnClickListener {
+                    val position = bindingAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+                        if (item != null)
+                            listener.onShareClicked(item)
+                    }
+                }
+
+                btnAddToCart.setOnClickListener {
+                    val position = bindingAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+                        if (item != null)
+                            listener.onAddToCartClicked(item)
+                    }
+                }
+
+                btnAddToWishList.setOnClickListener {
+                    val position = bindingAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+                        if (item != null) {
+                            if (!item.isWishListedByUser) {
+                                btnAddToWishList.setImageResource(R.drawable.ic_fav_checked)
+                            } else {
+                                btnAddToWishList.setImageResource(R.drawable.ic_fav_unchecked)
+                            }
+
+                            listener.onAddToWishListClicked(item)
+                        }
+                    }
                 }
             }
         }
@@ -85,12 +121,8 @@ class ProductAdapter(
                 labelRate.isVisible = product.avgRate > 0
                 labelRate.text = product.avgRate.toString()
 
-                btnShare.setOnClickListener {
-                    listener.onShareClicked(product)
-                }
-
-                btnAddToCart.setOnClickListener {
-                    listener.onAddToCartClicked(product)
+                if (product.isWishListedByUser) {
+                    btnAddToWishList.setImageResource(R.drawable.ic_fav_checked)
                 }
             }
         }
@@ -100,5 +132,6 @@ class ProductAdapter(
         fun onItemClicked(product: Product)
         fun onShareClicked(product: Product)
         fun onAddToCartClicked(product: Product)
+        fun onAddToWishListClicked(product: Product)
     }
 }

@@ -34,10 +34,11 @@ class DeliveryInfoSharedViewModel @Inject constructor(
     val event = _deliveryInformationChannel.receiveAsFlow()
 
     @ExperimentalCoroutinesApi
-    private val _userDeliveryInfoList = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
-        _userId.value = sessionPref.userId
-        deliveryInformationDao.getAll(sessionPref.userId)
-    }
+    private val _userDeliveryInfoList =
+        preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
+            _userId.value = sessionPref.userId
+            deliveryInformationDao.getAll(sessionPref.userId)
+        }
 
     @ExperimentalCoroutinesApi
     val userDeliveryInfoList = _userDeliveryInfoList.asLiveData()
@@ -73,12 +74,14 @@ class DeliveryInfoSharedViewModel @Inject constructor(
     }
 
     fun onSelectedProvince(selector: Selector) = viewModelScope.launch {
-        _selectedProvince.value = Province(id = selector.id, regionId = selector.parentId, name = selector.name)
+        _selectedProvince.value =
+            Province(id = selector.id, regionId = selector.parentId, name = selector.name)
         _provinceId.value = selector.id
     }
 
     fun onSelectedCity(selector: Selector) = viewModelScope.launch {
-        _selectedCity.value = City(id = selector.id, provinceId = selector.parentId, name = selector.name)
+        _selectedCity.value =
+            City(id = selector.id, provinceId = selector.parentId, name = selector.name)
     }
 
     fun onDeleteAddressClicked(deliveryInfo: DeliveryInformation?) = appScope.launch {
@@ -101,7 +104,11 @@ class DeliveryInfoSharedViewModel @Inject constructor(
                     }
                 }
             } else {
-                _deliveryInformationChannel.send(AddEditDeliveryInformationEvent.NavigateBackWithResult(DELETE_DELIVERY_INFO_RESULT_ERR))
+                _deliveryInformationChannel.send(
+                    AddEditDeliveryInformationEvent.NavigateBackWithResult(
+                        DELETE_DELIVERY_INFO_RESULT_ERR
+                    )
+                )
             }
         }
     }
@@ -128,7 +135,7 @@ class DeliveryInfoSharedViewModel @Inject constructor(
                         )
                     }
                 } else {
-                    if (deliveryInformationRepository.create(it, deliveryInfo)) {
+                    deliveryInformationRepository.create(it, deliveryInfo)?.let {
                         insertToLocalDbAndChangeDefault(deliveryInfo)
 
                         // Send signal to other fragment
@@ -137,13 +144,13 @@ class DeliveryInfoSharedViewModel @Inject constructor(
                                 ADD_DELIVERY_INFO_RESULT_OK
                             )
                         )
-                    } else {
-                        _deliveryInformationChannel.send(
-                            AddEditDeliveryInformationEvent.NavigateBackWithResult(
-                                ADD_DELIVERY_INFO_RESULT_ERR
-                            )
-                        )
+                        return@launch
                     }
+                    _deliveryInformationChannel.send(
+                        AddEditDeliveryInformationEvent.NavigateBackWithResult(
+                            ADD_DELIVERY_INFO_RESULT_ERR
+                        )
+                    )
                 }
             }
         }

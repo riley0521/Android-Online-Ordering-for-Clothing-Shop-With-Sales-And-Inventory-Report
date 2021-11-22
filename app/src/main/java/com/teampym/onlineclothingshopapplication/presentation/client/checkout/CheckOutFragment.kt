@@ -54,21 +54,22 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                 findNavController().navigate(R.id.action_global_deliveryInformationFragment)
             }
 
-            labelPaymentMethod.setOnClickListener {
-                val action =
-                    CheckOutFragmentDirections.actionCheckOutFragmentToSelectPaymentMethodFragment(
-                        tvPaymentMethod.text.toString()
-                    )
-                findNavController().navigate(action)
-            }
-
-            labelPaymentMethod2.setOnClickListener {
-                val action =
-                    CheckOutFragmentDirections.actionCheckOutFragmentToSelectPaymentMethodFragment(
-                        tvPaymentMethod.text.toString()
-                    )
-                findNavController().navigate(action)
-            }
+            // TODO ("Will update soon if I find a way to integrate gcash and paymaya to app.")
+//            labelPaymentMethod.setOnClickListener {
+//                val action =
+//                    CheckOutFragmentDirections.actionCheckOutFragmentToSelectPaymentMethodFragment(
+//                        tvPaymentMethod.text.toString()
+//                    )
+//                findNavController().navigate(action)
+//            }
+//
+//            labelPaymentMethod2.setOnClickListener {
+//                val action =
+//                    CheckOutFragmentDirections.actionCheckOutFragmentToSelectPaymentMethodFragment(
+//                        tvPaymentMethod.text.toString()
+//                    )
+//                findNavController().navigate(action)
+//            }
 
             btnPlaceOrder.setOnClickListener {
                 Log.d(TAG, "TITE")
@@ -79,12 +80,14 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                     Log.d(TAG, it.toString())
                 }
                 // Check if the user is signed based on the documentation.
+                // TODO("No additional note yet.")
                 if (currentUser != null) {
                     if (currentUser.isEmailVerified) {
                         viewModel.placeOrder(
                             finalUser,
                             finalUser.cartList,
-                            paymentMethodEnum.name
+                            paymentMethodEnum.name,
+                            ""
                         )
                     } else {
                         Snackbar.make(

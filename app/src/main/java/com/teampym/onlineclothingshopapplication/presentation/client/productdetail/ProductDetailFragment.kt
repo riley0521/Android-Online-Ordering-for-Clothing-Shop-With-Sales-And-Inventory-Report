@@ -77,7 +77,11 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             product.let { p ->
                 adapter.submitList(p.reviewList)
 
-                val rate = p.avgRate
+                var rate = 0.0
+                if(p.totalRate > 0.0 || p.numberOfReviews > 0L) {
+                    rate = p.avgRate
+                }
+
 
                 if (rate == 0.0) {
                     labelRate.text = getString(R.string.no_available_rating)

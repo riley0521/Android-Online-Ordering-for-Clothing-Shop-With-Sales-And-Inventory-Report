@@ -9,11 +9,13 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.paging.map
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.R
-import com.teampym.onlineclothingshopapplication.data.room.SortOrder
 import com.teampym.onlineclothingshopapplication.data.room.Product
+import com.teampym.onlineclothingshopapplication.data.room.SortOrder
+import com.teampym.onlineclothingshopapplication.data.room.UserWithWishList
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -35,6 +37,8 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
     @Inject
     lateinit var db: FirebaseFirestore
 
+    private lateinit var wishList: UserWithWishList
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -54,9 +58,19 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
             }
         }
 
+        viewModel.userWithWishList.observe(viewLifecycleOwner) {
+            wishList = it
+        }
+
         lifecycleScope.launchWhenStarted {
             viewModel.productsFlow.collectLatest {
-                adapter.submitData(it)
+                val paging = it.map { p ->
+                    wishList.wishList.forEach { w ->
+                        p.isWishListedByUser = p.productId == w.productId
+                    }
+                    p
+                }
+                adapter.submitData(paging)
             }
         }
 
@@ -80,6 +94,10 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
         val action =
             ProductFragmentDirections.actionProductFragmentToInventoryModalFragment(product)
         findNavController().navigate(action)
+    }
+
+    override fun onAddToWishListClicked(product: Product) {
+        viewModel.addToWishList(wishList.user.userId, product)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

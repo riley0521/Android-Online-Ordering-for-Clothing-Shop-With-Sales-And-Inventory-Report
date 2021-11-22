@@ -9,17 +9,19 @@ import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 data class Order(
-    val userId: String,
-    val totalCost: Double,
-    val id: String = "",
-    val paymentMethod: String = PaymentMethod.COD.name,
-    val isPaid: Boolean = false,
-    val status: String = Status.SHIPPING.toString(),
-    val orderDate: Long = System.currentTimeMillis(),
-    val deliveryInformation: DeliveryInformation = DeliveryInformation(),
+    var userId: String,
+    var totalCost: Double,
+    var suggestedShippingFee: Double,
+    var additionalNote: String,
+    var id: String = "",
+    var paymentMethod: String = PaymentMethod.COD.name,
+    var hasAgreedToShippingFee: Boolean = false,
+    var status: String = Status.SHIPPING.toString(),
+    var orderDate: Long = System.currentTimeMillis(),
+    var deliveryInformation: DeliveryInformation = DeliveryInformation(),
 
     @get:Exclude
-    val orderDetailList: List<OrderDetail> = emptyList()
+    var orderDetailList: List<OrderDetail> = emptyList()
 ) : Parcelable {
-    constructor() : this("", 0.0, "")
+    constructor() : this("", 0.0, 0.0, "")
 }

@@ -84,19 +84,23 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
 
     suspend fun create(
         userId: String,
-        deliveryInformation: DeliveryInformation
-    ): Boolean {
-        var isSuccessful = true
-        userCollectionRef
-            .document(userId)
-            .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
-            .add(deliveryInformation)
-            .addOnSuccessListener {
-            }.addOnFailureListener {
-                isSuccessful = false
-                return@addOnFailureListener
-            }
-        return isSuccessful
+        deliveryInformation: DeliveryInformation?
+    ): DeliveryInformation? {
+        var createdDeliveryInfo = deliveryInformation
+
+        deliveryInformation?.let {
+            userCollectionRef
+                .document(userId)
+                .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
+                .add(it)
+                .addOnSuccessListener {
+                    createdDeliveryInfo?.id = it.id
+                }.addOnFailureListener {
+                    createdDeliveryInfo = null
+                    return@addOnFailureListener
+                }
+        }
+        return createdDeliveryInfo
     }
 
     suspend fun update(

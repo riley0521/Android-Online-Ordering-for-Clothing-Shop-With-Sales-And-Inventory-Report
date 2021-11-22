@@ -9,12 +9,12 @@ import kotlinx.android.parcel.Parcelize
 @Entity(tableName = "table_tokens")
 @Parcelize
 data class NotificationToken(
-    val userId: String,
-    val token: String,
+    var userId: String,
+    var token: String,
     @PrimaryKey
-    val id: String = "",
-    val dateModified: Long = 0,
-    val userType: String = UserType.CUSTOMER.name
+    var id: String = "",
+    var dateModified: Long = 0,
+    var userType: String = UserType.CUSTOMER.name
 ) : Parcelable {
     constructor() : this("", "")
 }

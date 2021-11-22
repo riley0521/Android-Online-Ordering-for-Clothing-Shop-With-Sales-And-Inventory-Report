@@ -41,10 +41,11 @@ class AuditTrailRepositoryImpl @Inject constructor(
     suspend fun insert(audit: AuditTrail?): AuditTrail? {
         var createdAudit = audit
 
-        audit?.let {
+        audit?.let { a ->
             auditCollectionRef
-                .add(it)
+                .add(a)
                 .addOnSuccessListener {
+                    createdAudit?.id = it.id
                 }.addOnFailureListener {
                     createdAudit = null
                     return@addOnFailureListener

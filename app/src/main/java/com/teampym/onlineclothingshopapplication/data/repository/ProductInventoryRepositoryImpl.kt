@@ -10,7 +10,7 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class ProductInventoryRepositoryImpl @Inject constructor(
-    private val db: FirebaseFirestore
+    db: FirebaseFirestore
 ) {
 
     private val productCollectionRef = db.collection(PRODUCTS_COLLECTION)
@@ -37,15 +37,15 @@ class ProductInventoryRepositoryImpl @Inject constructor(
     }
 
     suspend fun create(inventory: Inventory): Boolean {
-        var isCreated = false
+        var isCreated = true
         productCollectionRef
             .document(inventory.pid)
             .collection(INVENTORIES_SUB_COLLECTION)
             .add(inventory)
             .addOnSuccessListener {
-                isCreated = true
             }.addOnFailureListener {
-
+                isCreated = false
+                return@addOnFailureListener
             }
         return isCreated
     }
@@ -55,6 +55,8 @@ class ProductInventoryRepositoryImpl @Inject constructor(
         inventoryId: String,
         stockToAdd: Long
     ): Boolean {
+        var isSuccessful = true
+
         val inventoryQuery = productCollectionRef
             .document(productId)
             .collection(INVENTORIES_SUB_COLLECTION)
@@ -66,36 +68,33 @@ class ProductInventoryRepositoryImpl @Inject constructor(
             val updateStockMap = mapOf<String, Any>(
                 "stock" to inventoryQuery["stock"].toString().toLong() + stockToAdd
             )
-
-            var isUpdated = false
             productCollectionRef
                 .document(productId)
                 .collection(INVENTORIES_SUB_COLLECTION)
                 .document(inventoryId)
                 .set(updateStockMap, SetOptions.merge())
                 .addOnSuccessListener {
-                    isUpdated = true
                 }.addOnFailureListener {
-
+                    isSuccessful = false
+                    return@addOnFailureListener
                 }
-            return isUpdated
+            return isSuccessful
         }
         return false
     }
 
     suspend fun delete(productId: String, inventoryId: String): Boolean {
-        var isDeleted = false
+        var isDeleted = true
         productCollectionRef
             .document(productId)
             .collection(INVENTORIES_SUB_COLLECTION)
             .document(inventoryId)
             .delete()
             .addOnSuccessListener {
-                isDeleted = true
             }.addOnFailureListener {
-
+                isDeleted = false
+                return@addOnFailureListener
             }
         return isDeleted
     }
-
 }

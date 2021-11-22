@@ -6,9 +6,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
+import com.teampym.onlineclothingshopapplication.data.models.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.SortOrder
-import com.teampym.onlineclothingshopapplication.data.models.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.util.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.presentation.client.products.ProductPagingSource
 import kotlinx.coroutines.tasks.await
@@ -62,30 +62,43 @@ class ProductRepositoryImpl @Inject constructor(
         return foundProduct
     }
 
-    suspend fun create(product: Product): Product {
-        val result = productCollectionRef.add(product).await()
-        if (result != null)
-            return product.copy(productId = result.id)
-        return Product()
+    suspend fun create(product: Product?): Product? {
+        var createdProduct = product
+
+        product?.let { p ->
+            productCollectionRef
+                .add(p)
+                .addOnSuccessListener {
+                    createdProduct?.productId = it.id
+                }.addOnFailureListener {
+                    createdProduct = null
+                    return@addOnFailureListener
+                }
+        }
+        return createdProduct
     }
 
     suspend fun update(product: Product): Boolean {
-        val productQuery = productCollectionRef.document(product.productId).get().await()
-        if (productQuery != null) {
-            val productToUpdateMap = mapOf<String, Any>(
-                "name" to product.name,
-                "description" to product.description,
-                "imageUrl" to product.imageUrl,
-                "price" to product.price
-            )
 
-            val result = productCollectionRef
-                .document(product.productId)
-                .set(productToUpdateMap, SetOptions.merge())
-                .await()
-            return result != null
-        }
-        return false
+        var isSuccessful = true
+
+        val productToUpdateMap = mapOf<String, Any>(
+            "name" to product.name,
+            "description" to product.description,
+            "imageUrl" to product.imageUrl,
+            "price" to product.price
+        )
+
+        productCollectionRef
+            .document(product.productId)
+            .set(productToUpdateMap, SetOptions.merge())
+            .addOnSuccessListener {
+            }.addOnFailureListener {
+                isSuccessful = false
+                return@addOnFailureListener
+            }
+
+        return isSuccessful
     }
 
     suspend fun submitReview(

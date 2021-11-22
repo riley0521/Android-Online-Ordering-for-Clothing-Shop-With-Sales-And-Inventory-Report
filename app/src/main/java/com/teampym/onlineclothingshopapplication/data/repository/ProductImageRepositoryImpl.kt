@@ -36,33 +36,31 @@ class ProductImageRepositoryImpl @Inject constructor(
     }
 
     suspend fun create(productImage: ProductImage): Boolean {
-
-        var isCreated = false
+        var isCreated = true
         productCollectionRef
             .document(productImage.productId)
             .collection(PRODUCT_IMAGES_SUB_COLLECTION)
             .add(productImage)
             .addOnSuccessListener {
-                isCreated = true
             }.addOnFailureListener {
-                // Add crashlytics later on
+                isCreated = false
+                return@addOnFailureListener
             }
         return isCreated
     }
 
     suspend fun delete(productImage: ProductImage): Boolean {
-        var isDeleted = false
-            productCollectionRef
-                .document(productImage.productId)
-                .collection(PRODUCT_IMAGES_SUB_COLLECTION)
-                .document(productImage.id)
-                .delete()
-                .addOnSuccessListener {
-                    isDeleted = true
-                }.addOnFailureListener {
-                    // Add crashlytics later on
-                }
+        var isDeleted = true
+        productCollectionRef
+            .document(productImage.productId)
+            .collection(PRODUCT_IMAGES_SUB_COLLECTION)
+            .document(productImage.id)
+            .delete()
+            .addOnSuccessListener {
+            }.addOnFailureListener {
+                isDeleted = false
+                return@addOnFailureListener
+            }
         return isDeleted
     }
-
 }

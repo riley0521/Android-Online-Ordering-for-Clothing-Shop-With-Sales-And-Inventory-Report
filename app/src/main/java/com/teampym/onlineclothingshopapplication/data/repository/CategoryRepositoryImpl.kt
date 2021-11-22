@@ -19,33 +19,54 @@ class CategoryRepositoryImpl @Inject constructor(
     }
 
     // TODO("CRUD Operation for Categories collection")
-    suspend fun createCategory(category: Category): Category? {
-        val result = categoriesCollectionRef.add(category).await()
-        if(result != null)
-            return category.copy(id = result.id)
-        return null
+    suspend fun createCategory(category: Category?): Category? {
+        var createdCategory = category
+
+        category?.let { c ->
+            categoriesCollectionRef
+                .add(c)
+                .addOnSuccessListener {
+                    createdCategory?.id = it.id
+                }.addOnFailureListener {
+                    createdCategory = null
+                    return@addOnFailureListener
+                }
+        }
+        return createdCategory
     }
 
-    suspend fun updateCategory(category: Category): Category? {
-        val categoryQuery = categoriesCollectionRef.document(category.id).get().await()
-        if(categoryQuery != null) {
+    suspend fun updateCategory(category: Category?): Category? {
+        var updatedCategory = category
+
+        val categoryQuery = category?.id?.let { categoriesCollectionRef.document(it).get().await() }
+        if (categoryQuery != null) {
             val categoryUpdateMap = mapOf<String, Any>(
                 "name" to category.name,
                 "imageUrl" to category.imageUrl
             )
 
-            val result = categoriesCollectionRef
+            categoriesCollectionRef
                 .document(category.id)
                 .set(categoryUpdateMap, SetOptions.merge())
-                .await()
-            if(result != null)
-                return category
+                .addOnSuccessListener {
+                }.addOnFailureListener {
+                    updatedCategory = null
+                    return@addOnFailureListener
+                }
         }
-        return null
+        return updatedCategory
     }
 
     suspend fun deleteCategory(categoryId: String): Boolean {
-        val result = categoriesCollectionRef.document(categoryId).delete().await()
-        return result != null
+        var isSuccessful = true
+        categoriesCollectionRef
+            .document(categoryId)
+            .delete()
+            .addOnSuccessListener {
+            }.addOnFailureListener {
+                isSuccessful = false
+                return@addOnFailureListener
+            }
+        return isSuccessful
     }
 }

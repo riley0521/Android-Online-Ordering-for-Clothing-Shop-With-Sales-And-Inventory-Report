@@ -54,4 +54,8 @@ data class Product(
     @get:Exclude
     @Ignore
     var avgRate: Double = totalRate / numberOfReviews
+
+    @get:Exclude
+    @Ignore
+    var isWishListedByUser = false
 }
