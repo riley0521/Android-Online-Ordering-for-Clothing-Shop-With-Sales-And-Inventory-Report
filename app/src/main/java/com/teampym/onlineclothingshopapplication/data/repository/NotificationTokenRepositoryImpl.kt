@@ -11,8 +11,8 @@ import javax.inject.Inject
 
 class NotificationTokenRepositoryImpl @Inject constructor(
     db: FirebaseFirestore,
-    private val notificationTokenDao: NotificationTokenDao,
-    private val preferencesManager: PreferencesManager
+    val notificationTokenDao: NotificationTokenDao,
+    val preferencesManager: PreferencesManager
 ) {
 
     private val userCollectionRef = db.collection(USERS_COLLECTION)

@@ -36,7 +36,6 @@
     <string name="action_sort_new" translatable="false">Sort By New</string>
     <string name="label_merchandise_total" translatable="false">Merchandise Total \n(Shipping fee not yet included)</string>
     <string name="label_shipping_total" translatable="false">Shipping Total</string>
-    <string name="label_total_payment" translatable="false">Total Payment</string>
     <string name="button_check_out" translatable="false">Check Out</string>
     <string name="label_no_items_yet" translatable="false">No items yet.</string>
     <string name="button_place_order" translatable="false">Place Order</string>
@@ -98,6 +97,8 @@
     <string name="msg_subscribed">Message Subscribed</string>
     <string name="msg_subscribe_failed">Message Subscribing Failed</string>
     <string name="add_to_wish_list">Add To Wish List</string>
+    <string name="ph_number_format">(+63)</string>
+    <string name="total_payment">Total Payment</string>
 
 
 </resources>

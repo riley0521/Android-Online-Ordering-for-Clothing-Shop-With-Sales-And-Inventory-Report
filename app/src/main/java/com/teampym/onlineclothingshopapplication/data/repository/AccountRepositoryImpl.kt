@@ -2,8 +2,8 @@ package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.models.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +18,7 @@ class AccountRepositoryImpl @Inject constructor(
     private val deliveryInformationRepository: DeliveryInformationRepositoryImpl,
     private val notificationTokenRepository: NotificationTokenRepositoryImpl,
     private val wishItemRepository: WishItemRepositoryImpl,
-    private val userInformationDao: UserInformationDao
+    val userInformationDao: UserInformationDao
 ) {
 
     private val userCollectionRef = db.collection(USERS_COLLECTION)

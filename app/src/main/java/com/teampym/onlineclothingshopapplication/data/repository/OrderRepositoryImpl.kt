@@ -2,13 +2,21 @@ package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.ktx.toObject
+import com.teampym.onlineclothingshopapplication.data.models.NotificationToken
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
+import com.teampym.onlineclothingshopapplication.data.network.FCMService
+import com.teampym.onlineclothingshopapplication.data.network.NotificationData
+import com.teampym.onlineclothingshopapplication.data.network.NotificationSingle
 import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
+import com.teampym.onlineclothingshopapplication.data.util.NOTIFICATION_TOKENS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.Status
+import com.teampym.onlineclothingshopapplication.data.util.UserType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -17,22 +25,26 @@ import java.util.* // ktlint-disable no-wildcard-imports
 import javax.inject.Inject
 
 class OrderRepositoryImpl @Inject constructor(
-    private val db: FirebaseFirestore,
+    val db: FirebaseFirestore,
+    private val accountRepository: AccountRepositoryImpl,
+    private val notificationTokenRepository: NotificationTokenRepositoryImpl,
     private val orderDetailRepository: OrderDetailRepositoryImpl,
-    private val productRepository: ProductRepositoryImpl
+    private val productRepository: ProductRepositoryImpl,
+    private val service: FCMService<Any>
 ) {
 
     private val orderCollectionRef = db.collection(ORDERS_COLLECTION)
 
     // get all orders if you are an admin
-    suspend fun getAll(orderBy: String): List<Order>? {
+    suspend fun getAll(orderBy: String): List<Order> {
+        val orderList = mutableListOf<Order>()
+
         val ordersQuery = orderCollectionRef
             .whereEqualTo("status", orderBy)
             .orderBy("orderDate", Query.Direction.DESCENDING)
             .get()
             .await()
 
-        val orderList = mutableListOf<Order>()
         if (ordersQuery.documents.isNotEmpty()) {
             // loop all order based on the status selected by the admin
             for (document in ordersQuery.documents) {
@@ -41,7 +53,7 @@ class OrderRepositoryImpl @Inject constructor(
             }
             return orderList
         }
-        return null
+        return orderList
     }
 
     suspend fun getByUserId(userId: String, orderId: String): Order {
@@ -97,7 +109,13 @@ class OrderRepositoryImpl @Inject constructor(
         return newOrder
     }
 
-    suspend fun updateOrderStatus(userId: String, orderId: String, status: String): Boolean {
+    suspend fun updateOrderStatus(
+        userId: String,
+        orderId: String,
+        status: String,
+        suggestedShippingFee: Double?,
+        isUserAgreedToShippingFee: Boolean?
+    ): Boolean {
 
         // SHIPPED = Use Product Repository to update the deduct number of stock and add it to committed
         // DELIVERY = Simply update the status field in db and notify specific user with notificationToken
@@ -109,33 +127,49 @@ class OrderRepositoryImpl @Inject constructor(
         var isSuccessful = true
 
         if (status == Status.SHIPPED.toString()) {
-            val updateOrderStatus = mapOf<String, Any>(
-                "status" to status
-            )
+            var sf = 0.0
+            suggestedShippingFee?.let {
+                sf = it
+            }
 
-            orderCollectionRef.document(orderId).set(updateOrderStatus, SetOptions.merge())
+            orderCollectionRef
+                .document(orderId)
+                .get()
                 .addOnSuccessListener {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        val orderDetailQuery =
-                            orderCollectionRef.document(orderId).collection("orderDetails").get()
-                                .await()
-                        if (orderDetailQuery != null) {
+                    val updatedOrder = it.toObject<Order>()!!.copy(id = it.id)
+                    val updateOrderStatus = mapOf<String, Any>(
+                        "status" to status,
+                        "suggestedShippingFee" to sf
+                    )
 
-                            val orderDetailList = mutableListOf<OrderDetail>()
-                            for (document in orderDetailQuery.documents) {
-                                val orderDetailItem = document.toObject(OrderDetail::class.java)
-                                orderDetailItem?.let {
-                                    orderDetailList.add(it)
+                    it.reference.set(updateOrderStatus)
+                        .addOnSuccessListener {
+                            updatedOrder.status = status
+                            updatedOrder.suggestedShippingFee = sf
+
+                            CoroutineScope(Dispatchers.IO).launch {
+
+                                val orderDetailQuery = orderCollectionRef
+                                    .document(orderId)
+                                    .collection("orderDetails")
+                                    .get()
+                                    .await()
+
+                                if (orderDetailQuery != null) {
+                                    changeInventoryShipped(
+                                        orderDetailQuery,
+                                        userId,
+                                        updatedOrder,
+                                        suggestedShippingFee
+                                    )
+                                } else {
+                                    isSuccessful = false
                                 }
                             }
-                            CoroutineScope(Dispatchers.IO).launch {
-                                productRepository.deductStockToCommittedCount(
-                                    userId,
-                                    orderDetailList
-                                )
-                            }
+                        }.addOnFailureListener {
+                            isSuccessful = false
+                            return@addOnFailureListener
                         }
-                    }
                 }.addOnFailureListener {
                     isSuccessful = false
                     return@addOnFailureListener
@@ -145,7 +179,9 @@ class OrderRepositoryImpl @Inject constructor(
                 "status" to status
             )
 
-            orderCollectionRef.document(orderId).set(updateOrderStatus, SetOptions.merge())
+            orderCollectionRef
+                .document(orderId)
+                .set(updateOrderStatus, SetOptions.merge())
                 .addOnSuccessListener {
                     // TODO("Notify by getting the notification token of the user and then send it.")
                 }.addOnFailureListener {
@@ -157,7 +193,9 @@ class OrderRepositoryImpl @Inject constructor(
                 "status" to status
             )
 
-            orderCollectionRef.document(orderId).set(updateOrderStatus, SetOptions.merge())
+            orderCollectionRef
+                .document(orderId)
+                .set(updateOrderStatus, SetOptions.merge())
                 .addOnSuccessListener {
                     CoroutineScope(Dispatchers.IO).launch {
                         isSuccessful = updateOrderDetailsToSold(orderId, userId, isSuccessful)
@@ -171,26 +209,33 @@ class OrderRepositoryImpl @Inject constructor(
                 "status" to status
             )
 
-            val result =
-                orderCollectionRef.document(orderId).set(updateOrderStatus, SetOptions.merge())
-                    .await()
-            if (result != null) {
-                val orderDetailQuery =
-                    orderCollectionRef.document(orderId).collection("orderDetails").get().await()
-                if (orderDetailQuery != null) {
+            orderCollectionRef
+                .document(orderId)
+                .set(updateOrderStatus, SetOptions.merge())
+                .addOnSuccessListener {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val orderDetailQuery = orderCollectionRef
+                            .document(orderId)
+                            .collection("orderDetails")
+                            .get()
+                            .await()
 
-                    val orderDetailList = mutableListOf<OrderDetail>()
-                    for (document in orderDetailQuery.documents) {
-                        val orderDetailItem = document.toObject(OrderDetail::class.java)
-                        orderDetailItem?.let {
-                            orderDetailList.add(it)
+                        if (orderDetailQuery != null) {
+                            val orderDetailList = mutableListOf<OrderDetail>()
+                            for (document in orderDetailQuery.documents) {
+                                val orderDetailItem = document.toObject(OrderDetail::class.java)
+                                orderDetailItem?.let {
+                                    orderDetailList.add(it)
+                                }
+                            }
+
+                            productRepository.deductSoldToReturnedCount(userId, orderDetailList)
                         }
                     }
-
-                    productRepository.deductSoldToReturnedCount(userId, orderDetailList)
-                    return true
+                }.addOnFailureListener {
+                    isSuccessful = false
+                    return@addOnFailureListener
                 }
-            }
         } else if (status == Status.CANCELED.toString()) {
             // Both user and admin can execute this..
             val updateOrderStatus = mapOf<String, Any>(
@@ -204,14 +249,137 @@ class OrderRepositoryImpl @Inject constructor(
                     // TODO("Notify all admins. Maybe I can create topic that admins can listen to.")
                     // TODO("Vice Versa admin can notify specific user if there are no more stocks, that is the reason why it is cancelled")
                 }.addOnFailureListener {
+                    isSuccessful = false
+                    return@addOnFailureListener
                 }
         } else if (status == Status.SHIPPING.toString()) {
             // Both user and admin can execute this..
             // TODO("Simply update the status field in db")
             // TODO("Notify all admins. Maybe I can create topic that admins can listen to.")
-            return isSuccessful
         }
-        return false
+        return isSuccessful
+    }
+
+    private fun changeInventoryShipped(
+        orderDetailQuery: QuerySnapshot,
+        userId: String,
+        order: Order,
+        suggestedShippingFee: Double?
+    ) {
+        val orderDetailList = mutableListOf<OrderDetail>()
+        for (document in orderDetailQuery.documents) {
+            val orderDetailItem = document.toObject(OrderDetail::class.java)
+            orderDetailItem?.let {
+                orderDetailList.add(it)
+            }
+        }
+        CoroutineScope(Dispatchers.IO).launch {
+            if (productRepository.deductStockToCommittedCount(
+                    userId,
+                    orderDetailList
+                )
+            ) {
+                notifySingleUser(userId, order, suggestedShippingFee, null)
+            }
+        }
+    }
+
+    private suspend fun notifySingleUser(
+        userId: String,
+        order: Order,
+        suggestedShippingFee: Double?,
+        isUserAgreedToShippingFee: Boolean?
+    ) {
+        var sf = 0.0
+        suggestedShippingFee?.let {
+            sf = it
+        }
+
+        var isAgree = false
+        isUserAgreedToShippingFee?.let {
+            isAgree = it
+        }
+
+        when {
+            sf > 0.0 -> {
+                val data = NotificationData<Any>(
+                    title = "Order (${order.id})",
+                    body = "Admin suggests that the order fee should be $sf",
+                    obj = order
+                )
+
+                val notificationTokenList = notificationTokenRepository.getAll(userId)
+                val tokenList: List<String> = notificationTokenList.map {
+                    it.token
+                }
+
+                val notificationSingle = NotificationSingle<Any>(
+                    data = data,
+                    tokenList = tokenList
+                )
+
+                service.notifySingleUser(notificationSingle)
+            }
+            isAgree -> {
+                db.collectionGroup(NOTIFICATION_TOKENS_SUB_COLLECTION)
+                    .whereEqualTo("userType", UserType.ADMIN.name)
+                    .get()
+                    .addOnSuccessListener { querySnapshot ->
+                        val tokenList = mutableListOf<String>()
+                        for (doc in querySnapshot.documents) {
+                            val token = doc.toObject<NotificationToken>()!!.copy(id = doc.id)
+                            tokenList.add(token.token)
+                        }
+
+                        val data = NotificationData<Any>(
+                            title = "Order (${order.id})",
+                            body = "User ($userId) agreed to the suggested shipping fee.",
+                            obj = order
+                        )
+
+                        val notificationSingle = NotificationSingle<Any>(
+                            data = data,
+                            tokenList = tokenList
+                        )
+
+                        CoroutineScope(Dispatchers.IO).launch {
+                            service.notifySingleUser(notificationSingle)
+                        }
+                    }.addOnFailureListener {
+                        return@addOnFailureListener
+                    }
+            }
+        }
+    }
+
+    // TODO("Create isUserAgreedToShippingFee function.")
+    private suspend fun agreeToShippingFee(userId: String, orderId: String): Boolean {
+        var isSuccessful = true
+        orderCollectionRef
+            .document(orderId)
+            .get()
+            .addOnSuccessListener {
+                val updatedOrder = it.toObject<Order>()!!.copy(id = it.id)
+                val agreeMap = mapOf<String, Any>(
+                    "isUserAgreedToShippingFee" to true
+                )
+
+                it.reference.set(agreeMap, SetOptions.merge())
+                    .addOnSuccessListener {
+                        updatedOrder.isUserAgreedToShippingFee = true
+
+                        CoroutineScope(Dispatchers.IO).launch {
+                            notifySingleUser(userId, updatedOrder, null, true)
+                        }
+                    }.addOnFailureListener {
+                        isSuccessful = false
+                        return@addOnFailureListener
+                    }
+            }.addOnFailureListener {
+                isSuccessful = false
+                return@addOnFailureListener
+            }
+        return isSuccessful
     }
 
     private suspend fun updateOrderDetailsToSold(
@@ -219,26 +387,26 @@ class OrderRepositoryImpl @Inject constructor(
         userId: String,
         currentStatus: Boolean
     ): Boolean {
-
         var isSuccessful = currentStatus
+
         val updateOrderDetailDateSold = mapOf<String, Any>(
             "dateSold" to Calendar.getInstance().time
         )
 
-        val orderDetailQuery =
-            db.collectionGroup("orderDetails").whereEqualTo("orderId", orderId)
-                .get()
-                .await()
-        if (orderDetailQuery != null) {
+        val orderDetailQuery = db.collectionGroup("orderDetails")
+            .whereEqualTo("orderId", orderId)
+            .get()
+            .await()
 
+        if (orderDetailQuery != null) {
             val orderDetailList = mutableListOf<OrderDetail>()
             for (document in orderDetailQuery.documents) {
 
                 val orderDetailItem = document.toObject(OrderDetail::class.java)
-                orderDetailItem?.let {
-                    orderDetailList.add(it)
+                orderDetailItem?.let { o ->
+                    orderDetailList.add(o)
                     orderCollectionRef.document(orderId).collection("orderDetails")
-                        .document(it.id)
+                        .document(o.id)
                         .set(updateOrderDetailDateSold, SetOptions.merge())
                         .addOnSuccessListener {
                             CoroutineScope(Dispatchers.IO).launch {
@@ -253,6 +421,8 @@ class OrderRepositoryImpl @Inject constructor(
                         }
                 }
             }
+        } else {
+            isSuccessful = false
         }
         return isSuccessful
     }

@@ -56,7 +56,8 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textAppearance="?attr/textAppearanceHeadline6"
+                android:textStyle="bold"
+                android:textAppearance="?attr/textAppearanceBody1"
                 tools:text="Product Name" />
 
             <TextView

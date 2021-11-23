@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 class DeliveryInformationRepositoryImpl @Inject constructor(
     db: FirebaseFirestore,
-    private val deliveryInformationDao: DeliveryInformationDao
+    val deliveryInformationDao: DeliveryInformationDao
 ) {
 
     private val userCollectionRef = db.collection(USERS_COLLECTION)

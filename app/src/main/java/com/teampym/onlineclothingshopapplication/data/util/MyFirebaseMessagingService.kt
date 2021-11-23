@@ -3,6 +3,10 @@ package com.teampym.onlineclothingshopapplication.data.util
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
+import com.teampym.onlineclothingshopapplication.data.models.Order
+import com.teampym.onlineclothingshopapplication.data.room.Product
 import dagger.hilt.android.AndroidEntryPoint
 
 private const val TAG = "MyFCMService"
@@ -17,14 +21,22 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         Log.d(TAG, "From: ${remoteMessage.from}")
 
-        // Check if message contains a data payload.
-        if (remoteMessage.data.isNotEmpty()) {
-            Log.d(TAG, "Message data payload: ${remoteMessage.data}")
-        }
+        remoteMessage.data.let {
+            // Create notification handler here.
 
-        // Check if message contains a notification payload.
-        remoteMessage.notification?.let {
-            Log.d(TAG, "Message Notification Body: ${it.body}")
+            try {
+                val order = Gson().fromJson(it["obj"], Order::class.java)
+                Log.d(TAG, "onMessageReceived: $order")
+            } catch (e: JsonSyntaxException) {
+                return
+            }
+
+            try {
+                val product = Gson().fromJson(it["obj"], Product::class.java)
+                Log.d(TAG, "onMessageReceived: $product")
+            } catch (e: JsonSyntaxException) {
+                return
+            }
         }
     }
 }

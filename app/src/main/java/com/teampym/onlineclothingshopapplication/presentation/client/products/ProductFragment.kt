@@ -72,6 +72,14 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
                 }
                 adapter.submitData(paging)
             }
+
+            viewModel.productEvent.collectLatest { event ->
+                when (event) {
+                    is ProductViewModel.ProductEvent.ShowMessage -> {
+                        Toast.makeText(requireContext(), event.msg, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
         }
 
         setHasOptionsMenu(true)
@@ -124,11 +132,6 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
                 return true
             }
         })
-
-//        viewLifecycleOwner.lifecycleScope.launch {
-//            menu.findItem(R.id.action_hide_completed_tasks).isChecked =
-//                tasksViewModel.preferencesFlow.first().hideCompleted
-//        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

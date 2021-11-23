@@ -5,11 +5,13 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.teampym.onlineclothingshopapplication.data.repository.ProductRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.repository.WishItemRepositoryImpl
-import com.teampym.onlineclothingshopapplication.data.room.*
+import com.teampym.onlineclothingshopapplication.data.room.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,6 +30,9 @@ class ProductViewModel @Inject constructor(
 
     private val _userWithWishList = MutableLiveData<UserWithWishList>()
     val userWithWishList: LiveData<UserWithWishList> get() = _userWithWishList
+
+    private val _productChannel = Channel<ProductEvent>()
+    val productEvent = _productChannel.receiveAsFlow()
 
     var productsFlow = combine(
         searchQuery.asFlow(),
@@ -97,6 +102,7 @@ class ProductViewModel @Inject constructor(
     fun addToWishList(userId: String, product: Product) = viewModelScope.launch {
         wishListRepository.insert(userId, product)?.let {
             wishListDao.insert(it)
+            _productChannel.send(ProductEvent.ShowMessage("Added product to wish list."))
         }
     }
 
@@ -106,5 +112,9 @@ class ProductViewModel @Inject constructor(
 
     fun updateSortOrder(sortOrder: SortOrder) = viewModelScope.launch {
         preferencesManager.updateSortOrder(sortOrder)
+    }
+
+    sealed class ProductEvent {
+        data class ShowMessage(val msg: String) : ProductEvent()
     }
 }

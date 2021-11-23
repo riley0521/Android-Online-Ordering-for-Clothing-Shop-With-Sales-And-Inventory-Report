@@ -9,7 +9,7 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class CategoryRepositoryImpl @Inject constructor(
-    private val db: FirebaseFirestore
+    db: FirebaseFirestore
 ) {
 
     private val categoriesCollectionRef = db.collection(CATEGORIES_COLLECTION)

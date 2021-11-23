@@ -21,9 +21,9 @@ import javax.inject.Inject
 
 class CartRepositoryImpl @Inject constructor(
     db: FirebaseFirestore,
-    private val cartDao: CartDao,
-    private val productDao: ProductDao,
-    private val inventoryDao: InventoryDao
+    val cartDao: CartDao,
+    val productDao: ProductDao,
+    val inventoryDao: InventoryDao
 ) {
 
     private val userCartCollectionRef = db.collection(USERS_COLLECTION)

@@ -15,11 +15,11 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class ProductRepositoryImpl @Inject constructor(
-    private val db: FirebaseFirestore,
+    db: FirebaseFirestore,
     private val productImageRepository: ProductImageRepositoryImpl,
     private val productInventoryRepository: ProductInventoryRepositoryImpl,
     private val reviewRepository: ReviewRepositoryImpl,
-    private val accountRepository: AccountRepositoryImpl
+    val accountRepository: AccountRepositoryImpl
 ) {
 
     // READ Operation
@@ -135,8 +135,16 @@ class ProductRepositoryImpl @Inject constructor(
     }
 
     suspend fun delete(productId: String): Boolean {
-        val result = productCollectionRef.document(productId).delete().await()
-        return result != null
+        var isSuccessful = true
+        productCollectionRef
+            .document(productId)
+            .delete()
+            .addOnSuccessListener {
+            }.addOnFailureListener {
+                isSuccessful = false
+                return@addOnFailureListener
+            }
+        return isSuccessful
     }
 
     // SHIPPED
@@ -144,38 +152,48 @@ class ProductRepositoryImpl @Inject constructor(
         userId: String,
         orderDetailList: List<OrderDetail>
     ): Boolean {
+        var isSuccessful = true
         val foundUser = accountRepository.get(userId)
 
         foundUser?.let { userInfo ->
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
-                        productCollectionRef.document(orderDetail.product.productId).collection(
-                            INVENTORIES_SUB_COLLECTION
-                        )
-                            .document(orderDetail.inventoryId).get().await()
+                        productCollectionRef
+                            .document(orderDetail.product.productId)
+                            .collection(INVENTORIES_SUB_COLLECTION)
+                            .document(orderDetail.inventoryId)
+                            .get()
+                            .await()
+
                     if (inventoryQuery != null) {
                         val stockNewCount =
                             inventoryQuery["stock"].toString().toLong() - orderDetail.quantity
                         val committedNewCount =
                             inventoryQuery["committed"].toString().toLong() + orderDetail.quantity
+
                         val updateProductsInventoryMap = mapOf<String, Any>(
                             "stock" to stockNewCount,
                             "committed" to committedNewCount
                         )
 
-                        productCollectionRef.document(orderDetail.product.productId).collection(
-                            INVENTORIES_SUB_COLLECTION
-                        )
+                        productCollectionRef
+                            .document(orderDetail.product.productId)
+                            .collection(INVENTORIES_SUB_COLLECTION)
                             .document(orderDetail.inventoryId)
-                            .set(updateProductsInventoryMap, SetOptions.merge()).await()
+                            .set(updateProductsInventoryMap, SetOptions.merge())
+                            .addOnSuccessListener {
+                            }.addOnFailureListener {
+                                isSuccessful = false
+                                return@addOnFailureListener
+                            }
+                    } else {
+                        isSuccessful = false
                     }
                 }
-                return true
             }
-            return false
         }
-        return false
+        return isSuccessful
     }
 
     // CANCELED
@@ -183,39 +201,48 @@ class ProductRepositoryImpl @Inject constructor(
         userId: String,
         orderDetailList: List<OrderDetail>
     ): Boolean {
-
+        var isSuccessful = true
         val foundUser = accountRepository.get(userId)
 
         foundUser?.let { userInfo ->
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
-                        productCollectionRef.document(orderDetail.product.productId).collection(
-                            INVENTORIES_SUB_COLLECTION
-                        )
-                            .document(orderDetail.inventoryId).get().await()
+                        productCollectionRef
+                            .document(orderDetail.product.productId)
+                            .collection(INVENTORIES_SUB_COLLECTION)
+                            .document(orderDetail.inventoryId)
+                            .get()
+                            .await()
+
                     if (inventoryQuery != null) {
                         val committedNewCount =
                             inventoryQuery["committed"].toString().toLong() - orderDetail.quantity
                         val stockNewCount =
                             inventoryQuery["stock"].toString().toLong() + orderDetail.quantity
+
                         val updateProductsInventoryMap = mapOf<String, Any>(
                             "stock" to stockNewCount,
                             "committed" to committedNewCount
                         )
 
-                        productCollectionRef.document(orderDetail.product.productId).collection(
-                            INVENTORIES_SUB_COLLECTION
-                        )
+                        productCollectionRef
+                            .document(orderDetail.product.productId)
+                            .collection(INVENTORIES_SUB_COLLECTION)
                             .document(orderDetail.inventoryId)
-                            .set(updateProductsInventoryMap, SetOptions.merge()).await()
+                            .set(updateProductsInventoryMap, SetOptions.merge())
+                            .addOnSuccessListener {
+                            }.addOnFailureListener {
+                                isSuccessful = false
+                                return@addOnFailureListener
+                            }
+                    } else {
+                        isSuccessful = false
                     }
                 }
-                return true
             }
-            return false
         }
-        return false
+        return isSuccessful
     }
 
     // COMPLETED
@@ -223,39 +250,48 @@ class ProductRepositoryImpl @Inject constructor(
         userId: String,
         orderDetailList: List<OrderDetail>
     ): Boolean {
-
+        var isSuccessful = true
         val foundUser = accountRepository.get(userId)
 
         foundUser?.let { userInfo ->
             if (userId == userInfo.userId && userInfo.userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
-                        productCollectionRef.document(orderDetail.product.productId).collection(
-                            INVENTORIES_SUB_COLLECTION
-                        )
-                            .document(orderDetail.inventoryId).get().await()
+                        productCollectionRef
+                            .document(orderDetail.product.productId)
+                            .collection(INVENTORIES_SUB_COLLECTION)
+                            .document(orderDetail.inventoryId)
+                            .get()
+                            .await()
+
                     if (inventoryQuery != null) {
                         val committedNewCount =
                             inventoryQuery["committed"].toString().toLong() - orderDetail.quantity
                         val soldNewCount =
                             inventoryQuery["sold"].toString().toLong() + orderDetail.quantity
+
                         val updateProductsInventoryMap = mapOf<String, Any>(
                             "committed" to committedNewCount,
                             "sold" to soldNewCount
                         )
 
-                        productCollectionRef.document(orderDetail.product.productId).collection(
-                            INVENTORIES_SUB_COLLECTION
-                        )
+                        productCollectionRef
+                            .document(orderDetail.product.productId)
+                            .collection(INVENTORIES_SUB_COLLECTION)
                             .document(orderDetail.inventoryId)
-                            .set(updateProductsInventoryMap, SetOptions.merge()).await()
+                            .set(updateProductsInventoryMap, SetOptions.merge())
+                            .addOnSuccessListener {
+                            }.addOnFailureListener {
+                                isSuccessful = false
+                                return@addOnFailureListener
+                            }
+                    } else {
+                        isSuccessful = false
                     }
                 }
-                return true
             }
-            return false
         }
-        return false
+        return isSuccessful
     }
 
     // RETURNED
@@ -263,6 +299,7 @@ class ProductRepositoryImpl @Inject constructor(
         userId: String,
         orderDetailList: List<OrderDetail>
     ): Boolean {
+        var isSuccessful = true
 
         val foundUser = accountRepository.get(userId)
 
@@ -270,31 +307,40 @@ class ProductRepositoryImpl @Inject constructor(
             if (userId == it.userId && it.userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryQuery =
-                        productCollectionRef.document(orderDetail.product.productId).collection(
-                            INVENTORIES_SUB_COLLECTION
-                        )
-                            .document(orderDetail.inventoryId).get().await()
+                        productCollectionRef
+                            .document(orderDetail.product.productId)
+                            .collection(INVENTORIES_SUB_COLLECTION)
+                            .document(orderDetail.inventoryId)
+                            .get()
+                            .await()
+
                     if (inventoryQuery != null) {
                         val soldNewCount =
                             inventoryQuery["sold"].toString().toLong() - orderDetail.quantity
                         val returnedNewCount =
                             inventoryQuery["returned"].toString().toLong() + orderDetail.quantity
+
                         val updateProductsInventoryMap = mapOf<String, Any>(
                             "sold" to soldNewCount,
                             "returned" to returnedNewCount
                         )
 
-                        productCollectionRef.document(orderDetail.product.productId).collection(
-                            INVENTORIES_SUB_COLLECTION
-                        )
+                        productCollectionRef
+                            .document(orderDetail.product.productId)
+                            .collection(INVENTORIES_SUB_COLLECTION)
                             .document(orderDetail.inventoryId)
-                            .set(updateProductsInventoryMap, SetOptions.merge()).await()
+                            .set(updateProductsInventoryMap, SetOptions.merge())
+                            .addOnSuccessListener {
+                            }.addOnFailureListener {
+                                isSuccessful = false
+                                return@addOnFailureListener
+                            }
+                    } else {
+                        isSuccessful = false
                     }
                 }
-                return true
             }
-            return false
         }
-        return false
+        return isSuccessful
     }
 }

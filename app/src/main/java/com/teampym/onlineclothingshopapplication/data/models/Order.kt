@@ -11,11 +11,11 @@ import kotlinx.android.parcel.Parcelize
 data class Order(
     var userId: String,
     var totalCost: Double,
-    var suggestedShippingFee: Double,
     var additionalNote: String,
     var id: String = "",
+    var suggestedShippingFee: Double = 0.0,
+    var isUserAgreedToShippingFee: Boolean = false,
     var paymentMethod: String = PaymentMethod.COD.name,
-    var hasAgreedToShippingFee: Boolean = false,
     var status: String = Status.SHIPPING.toString(),
     var orderDate: Long = System.currentTimeMillis(),
     var deliveryInformation: DeliveryInformation = DeliveryInformation(),
@@ -23,5 +23,8 @@ data class Order(
     @get:Exclude
     var orderDetailList: List<OrderDetail> = emptyList()
 ) : Parcelable {
-    constructor() : this("", 0.0, 0.0, "")
+    constructor() : this("", 0.0, "", "")
+
+    @get:Exclude
+    val totalPaymentWithShippingFee: Double get() = totalCost * suggestedShippingFee
 }

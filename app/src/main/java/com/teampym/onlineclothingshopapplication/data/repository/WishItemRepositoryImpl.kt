@@ -13,7 +13,7 @@ class WishItemRepositoryImpl @Inject constructor(
     db: FirebaseFirestore
 ) {
 
-    var userWishListRef = db.collection(USERS_COLLECTION)
+    private val userWishListRef = db.collection(USERS_COLLECTION)
 
     suspend fun getAll(
         userId: String

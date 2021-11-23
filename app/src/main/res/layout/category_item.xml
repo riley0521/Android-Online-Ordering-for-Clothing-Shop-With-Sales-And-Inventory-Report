@@ -28,7 +28,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAllCaps="true"
-                android:textAppearance="?attr/textAppearanceHeadline5"
+                android:textAppearance="?attr/textAppearanceHeadline6"
                 tools:text="Category" />
 
         </LinearLayout>

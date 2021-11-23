@@ -3,6 +3,7 @@ package com.teampym.onlineclothingshopapplication.data.di
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.teampym.onlineclothingshopapplication.data.network.FCMService
 import com.teampym.onlineclothingshopapplication.data.repository.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.room.* // ktlint-disable no-wildcard-imports
 import dagger.Module
@@ -71,7 +72,12 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideCartRepository(db: FirebaseFirestore, cartDao: CartDao, productDao: ProductDao, inventoryDao: InventoryDao) =
+    fun provideCartRepository(
+        db: FirebaseFirestore,
+        cartDao: CartDao,
+        productDao: ProductDao,
+        inventoryDao: InventoryDao
+    ) =
         CartRepositoryImpl(db, cartDao, productDao, inventoryDao)
 
     @Provides
@@ -112,9 +118,19 @@ object RepositoryModule {
     @Singleton
     fun provideOrderRepository(
         db: FirebaseFirestore,
+        accountRepository: AccountRepositoryImpl,
+        notificationTokenRepository: NotificationTokenRepositoryImpl,
         orderDetailRepository: OrderDetailRepositoryImpl,
-        productRepository: ProductRepositoryImpl
-    ) = OrderRepositoryImpl(db, orderDetailRepository, productRepository)
+        productRepository: ProductRepositoryImpl,
+        service: FCMService<Any>
+    ) = OrderRepositoryImpl(
+        db,
+        accountRepository,
+        notificationTokenRepository,
+        orderDetailRepository,
+        productRepository,
+        service
+    )
 
     @Provides
     @Singleton
