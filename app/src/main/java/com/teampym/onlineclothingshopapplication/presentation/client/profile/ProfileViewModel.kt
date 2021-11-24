@@ -4,15 +4,17 @@ import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.teampym.onlineclothingshopapplication.VERIFICATION_SPAN
+import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.repository.NotificationTokenRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.room.CartDao
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformationDao
 import com.teampym.onlineclothingshopapplication.data.room.NotificationTokenDao
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
+import com.teampym.onlineclothingshopapplication.data.room.WishItemDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -24,6 +26,8 @@ class ProfileViewModel @Inject constructor(
     private val userInformationDao: UserInformationDao,
     private val deliveryInformationDao: DeliveryInformationDao,
     private val notificationTokenDao: NotificationTokenDao,
+    private val cartDao: CartDao,
+    private val wishListDao: WishItemDao,
     state: SavedStateHandle,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
@@ -33,27 +37,31 @@ class ProfileViewModel @Inject constructor(
 
     val verificationSpan = state.getLiveData<Long>(VERIFICATION_SPAN, 0)
 
-    private val userFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
-        userInformationDao.getUserFlow(sessionPref.userId)
-    }
+    val userSession = preferencesManager.preferencesFlow.asLiveData()
 
-    val user = userFlow.asLiveData()
+    private val _user = MutableLiveData<UserInformation>()
+    val user: LiveData<UserInformation> get() = _user
 
     private val _isRegistered = MutableLiveData(true)
     val isRegistered: LiveData<Boolean> get() = _isRegistered
 
-    fun onNotificationTokenInserted(userId: String, userType: String, token: String) = viewModelScope.launch {
-        notificationTokenRepository.insert(userId, userType, token)?.let {
-            notificationTokenDao.insert(it)
+    fun onNotificationTokenInserted(userId: String, userType: String, token: String) =
+        viewModelScope.launch {
+            notificationTokenRepository.insert(userId, userType, token)?.let {
+                notificationTokenDao.insert(it)
+            }
         }
-    }
 
     // Remove the FirebaseAuth cache and in the room db.
     fun signOut(user: FirebaseAuth) = viewModelScope.launch {
-        user.let {
-            userInformationDao.deleteAll(it.uid!!)
-            deliveryInformationDao.deleteAll(it.uid!!)
-            notificationTokenDao.deleteAll(it.uid!!)
+        user.let { u ->
+            u.uid?.let {
+                userInformationDao.deleteAll(it)
+                deliveryInformationDao.deleteAll(it)
+                notificationTokenDao.deleteAll(it)
+                cartDao.deleteAll(it)
+                wishListDao.deleteAll(it)
+            }
         }
 
         // I think I need to use dataStore to replace Sorting Mechanism
@@ -70,10 +78,23 @@ class ProfileViewModel @Inject constructor(
         preferencesManager.updateUserId(userId)
     }
 
+    fun fetchNotificationTokensAndWishList(userId: String) = viewModelScope.launch {
+        val mainUser = userInformationDao.getCurrentUser(userId)
+        val userWithNotificationTokens = userInformationDao.getUserWithNotificationTokens()
+            .firstOrNull { it.user.userId == userId }
+        val userWithWishList = userInformationDao.getUserWithWishList()
+            .firstOrNull { it.user.userId == userId }
+        _user.value = mainUser?.copy(
+            notificationTokenList = userWithNotificationTokens?.notificationTokens ?: emptyList(),
+            wishList = userWithWishList?.wishList ?: emptyList()
+        )
+    }
+
     fun checkIfUserIsRegistered(user: FirebaseUser) = viewModelScope.launch {
         val currentUser = accountRepository.get(user.uid)
 
         currentUser?.let {
+            updateUserId(it.userId)
             if (currentUser.firstName.isBlank()) {
                 _isRegistered.value = false
             }

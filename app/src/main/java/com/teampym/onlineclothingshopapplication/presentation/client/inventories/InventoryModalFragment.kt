@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
@@ -16,8 +17,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.data.room.Product
+import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentInventoryModalBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 
 @AndroidEntryPoint
 class InventoryModalFragment : BottomSheetDialogFragment() {
@@ -32,6 +35,8 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
 
     private var selectedInv: Inventory? = null
 
+    private lateinit var loadingDialog: LoadingDialog
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -44,6 +49,8 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentInventoryModalBinding.bind(view)
+
+        loadingDialog = LoadingDialog(requireActivity())
 
         val currentUser = FirebaseAuth.getInstance().currentUser
         var userId = ""
@@ -64,20 +71,18 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
             tvProductName.text = product.name
 
             binding.btnAddToCart.setOnClickListener {
+                loadingDialog.show()
                 viewModel.addToCart(
                     userId,
                     product,
                     selectedInv!!
                 )
-                Toast.makeText(requireContext(), "Adding ${product.name}(${selectedInv!!.size}) to your cart", Toast.LENGTH_LONG).show()
-                findNavController().popBackStack()
             }
         }
 
         if (product.inventoryList.size == 1) {
+            loadingDialog.show()
             viewModel.addToCart(userId, product, product.inventoryList[0])
-            Toast.makeText(requireContext(), "Adding ${product.name}(${product.inventoryList[0].size}) to your cart", Toast.LENGTH_LONG).show()
-            findNavController().popBackStack()
         }
 
         if (product.inventoryList.isNotEmpty()) {
@@ -89,7 +94,8 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
                 chip.isCheckable = true
                 chip.isEnabled = inventory.stock > 0
                 chip.setOnClickListener {
-                    binding.btnAddToCart.isEnabled = binding.chipSizeGroup.checkedChipIds.count() == 1 && userId.isNotEmpty()
+                    binding.btnAddToCart.isEnabled =
+                        binding.chipSizeGroup.checkedChipIds.count() == 1 && userId.isNotEmpty()
                     selectedInv = inventory
 
                     val numberOfAvailableStocksForSize = "(Available: ${selectedInv?.stock ?: 0})"
@@ -98,6 +104,21 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
                 binding.chipSizeGroup.addView(chip)
             }
             binding.chipSizeGroup.isSingleSelection = true
+        }
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.inventoryEvent.collectLatest { event ->
+                when (event) {
+                    is InventoryViewModel.InventoryModalEvent.AddedToCart -> {
+                        if (loadingDialog.isActive()) {
+                            loadingDialog.dismiss()
+                        }
+
+                        Toast.makeText(requireContext(), event.msg, Toast.LENGTH_SHORT).show()
+                        findNavController().popBackStack()
+                    }
+                }
+            }
         }
     }
 }

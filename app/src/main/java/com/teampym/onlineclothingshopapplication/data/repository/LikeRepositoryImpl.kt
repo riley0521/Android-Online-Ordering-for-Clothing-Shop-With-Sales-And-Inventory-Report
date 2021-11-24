@@ -5,11 +5,15 @@ import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.models.Like
 import com.teampym.onlineclothingshopapplication.data.util.LIKES_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.POSTS_COLLECTION
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class LikeRepositoryImpl @Inject constructor(
-    db: FirebaseFirestore
+    db: FirebaseFirestore,
+    private val postRepository: PostRepositoryImpl
 ) {
 
     private val postCollectionRef = db.collection(POSTS_COLLECTION)
@@ -34,38 +38,50 @@ class LikeRepositoryImpl @Inject constructor(
     }
 
     suspend fun add(postId: String, like: Like): Boolean {
-        var isSuccessful = true
-
-        postCollectionRef
-            .document(postId)
-            .collection(LIKES_SUB_COLLECTION)
-            .add(like)
-            .addOnSuccessListener {
-            }.addOnFailureListener {
-                isSuccessful = false
-                return@addOnFailureListener
-            }
+        val isSuccessful = withContext(Dispatchers.IO) {
+            var isCompleted = true
+            postCollectionRef
+                .document(postId)
+                .collection(LIKES_SUB_COLLECTION)
+                .add(like)
+                .addOnSuccessListener {
+                    runBlocking {
+                        isCompleted = postRepository.updateLikeCount(postId, 1)
+                    }
+                }.addOnFailureListener {
+                    isCompleted = false
+                    return@addOnFailureListener
+                }
+            return@withContext isCompleted
+        }
         return isSuccessful
     }
 
     suspend fun remove(postId: String, userId: String): Boolean {
-        var isSuccessful = true
-
-        postCollectionRef
-            .document(postId)
-            .collection(LIKES_SUB_COLLECTION)
-            .whereEqualTo("userId", userId)
-            .get()
-            .addOnSuccessListener {
-                it.documents[0].reference.delete().addOnSuccessListener {
+        val isSuccessful = withContext(Dispatchers.IO) {
+            var isCompleted = true
+            postCollectionRef
+                .document(postId)
+                .collection(LIKES_SUB_COLLECTION)
+                .whereEqualTo("userId", userId)
+                .limit(1)
+                .get()
+                .addOnSuccessListener {
+                    it.documents[0].reference.delete()
+                        .addOnSuccessListener {
+                            runBlocking {
+                                isCompleted = postRepository.updateLikeCount(postId, -1)
+                            }
+                        }.addOnFailureListener {
+                            isCompleted = false
+                            return@addOnFailureListener
+                        }
                 }.addOnFailureListener {
-                    isSuccessful = false
+                    isCompleted = false
                     return@addOnFailureListener
                 }
-            }.addOnFailureListener {
-                isSuccessful = false
-                return@addOnFailureListener
-            }
+            return@withContext isCompleted
+        }
         return isSuccessful
     }
 }

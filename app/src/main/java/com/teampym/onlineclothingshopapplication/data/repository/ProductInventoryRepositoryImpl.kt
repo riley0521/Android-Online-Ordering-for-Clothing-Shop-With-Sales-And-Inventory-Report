@@ -6,7 +6,9 @@ import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.data.util.INVENTORIES_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class ProductInventoryRepositoryImpl @Inject constructor(
@@ -16,7 +18,6 @@ class ProductInventoryRepositoryImpl @Inject constructor(
     private val productCollectionRef = db.collection(PRODUCTS_COLLECTION)
 
     // TODO("Inventory Collection operation - Add Stock, Create Inventory(size), Delete Inventory")
-
     suspend fun getAll(productId: String): List<Inventory> {
         val inventoriesQuery = productCollectionRef
             .document(productId)
@@ -37,17 +38,20 @@ class ProductInventoryRepositoryImpl @Inject constructor(
     }
 
     suspend fun create(inventory: Inventory): Boolean {
-        var isCreated = true
-        productCollectionRef
-            .document(inventory.pid)
-            .collection(INVENTORIES_SUB_COLLECTION)
-            .add(inventory)
-            .addOnSuccessListener {
-            }.addOnFailureListener {
-                isCreated = false
-                return@addOnFailureListener
-            }
-        return isCreated
+        val isSuccessful = withContext(Dispatchers.IO) {
+            var isCompleted = true
+            productCollectionRef
+                .document(inventory.pid)
+                .collection(INVENTORIES_SUB_COLLECTION)
+                .add(inventory)
+                .addOnSuccessListener {
+                }.addOnFailureListener {
+                    isCompleted = false
+                    return@addOnFailureListener
+                }
+            return@withContext isCompleted
+        }
+        return isSuccessful
     }
 
     suspend fun addStock(
@@ -84,17 +88,20 @@ class ProductInventoryRepositoryImpl @Inject constructor(
     }
 
     suspend fun delete(productId: String, inventoryId: String): Boolean {
-        var isDeleted = true
-        productCollectionRef
-            .document(productId)
-            .collection(INVENTORIES_SUB_COLLECTION)
-            .document(inventoryId)
-            .delete()
-            .addOnSuccessListener {
-            }.addOnFailureListener {
-                isDeleted = false
-                return@addOnFailureListener
-            }
-        return isDeleted
+        val isSuccessful = withContext(Dispatchers.IO) {
+            var isCompleted = true
+            productCollectionRef
+                .document(productId)
+                .collection(INVENTORIES_SUB_COLLECTION)
+                .document(inventoryId)
+                .delete()
+                .addOnSuccessListener {
+                }.addOnFailureListener {
+                    isCompleted = false
+                    return@addOnFailureListener
+                }
+            return@withContext isCompleted
+        }
+        return isSuccessful
     }
 }

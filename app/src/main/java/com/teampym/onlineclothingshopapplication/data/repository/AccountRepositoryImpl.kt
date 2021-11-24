@@ -5,18 +5,16 @@ import com.google.firebase.firestore.SetOptions
 import com.teampym.onlineclothingshopapplication.data.models.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.* // ktlint-disable no-wildcard-imports
 import javax.inject.Inject
 
 class AccountRepositoryImpl @Inject constructor(
     db: FirebaseFirestore,
-    private val deliveryInformationRepository: DeliveryInformationRepositoryImpl,
-    private val notificationTokenRepository: NotificationTokenRepositoryImpl,
     private val wishItemRepository: WishItemRepositoryImpl,
     val userInformationDao: UserInformationDao
 ) {
@@ -30,19 +28,14 @@ class AccountRepositoryImpl @Inject constructor(
             .get()
             .await()
 
-        if (userQuery.data != null) {
+        userQuery?.let { doc ->
 
-            val userInfo = userQuery.toObject(UserInformation::class.java)!!.copy(userId = userId)
+            val userInfo =
+                doc.toObject(UserInformation::class.java)!!.copy(userId = doc.id)
 
-            val deliveryInformationList = deliveryInformationRepository.getAll(userQuery.id)
-
-            val notificationTokenList = notificationTokenRepository.getAll(userQuery.id)
-
-            val wishList = wishItemRepository.getAll(userQuery.id)
+            val wishList = wishItemRepository.getAll(doc.id)
 
             val finalUser = userInfo.copy(
-                deliveryInformationList = deliveryInformationList,
-                notificationTokenList = notificationTokenList,
                 wishList = wishList
             )
             userInformationDao.insert(finalUser)
@@ -52,7 +45,6 @@ class AccountRepositoryImpl @Inject constructor(
         return null
     }
 
-    // TODO("Should get firebase token as well while we're at it.")
     suspend fun create(
         userId: String,
         firstName: String,
@@ -60,28 +52,31 @@ class AccountRepositoryImpl @Inject constructor(
         birthDate: String,
         avatarUrl: String
     ): UserInformation? {
-        var newUser: UserInformation? = UserInformation(
-            firstName = firstName,
-            lastName = lastName,
-            birthDate = birthDate,
-            avatarUrl = avatarUrl,
-            userId = userId
-        )
+        val createdUser = withContext(Dispatchers.IO) {
+            var newUser: UserInformation? = UserInformation(
+                firstName = firstName,
+                lastName = lastName,
+                birthDate = birthDate,
+                avatarUrl = avatarUrl,
+                userId = userId
+            )
 
-        newUser?.let { user ->
-            userCollectionRef
-                .document(userId)
-                .set(user)
-                .addOnSuccessListener {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        userInformationDao.insert(user)
+            newUser?.let { user ->
+                userCollectionRef
+                    .document(userId)
+                    .set(user)
+                    .addOnSuccessListener {
+                        runBlocking {
+                            userInformationDao.insert(user)
+                        }
+                    }.addOnFailureListener {
+                        newUser = null
+                        return@addOnFailureListener
                     }
-                }.addOnFailureListener {
-                    newUser = null
-                    return@addOnFailureListener
-                }
+            }
+            newUser
         }
-        return newUser
+        return createdUser
     }
 
     suspend fun update(
@@ -90,31 +85,30 @@ class AccountRepositoryImpl @Inject constructor(
         lastName: String,
         birthDate: String
     ): Boolean {
+        val isSuccessful = withContext(Dispatchers.IO) {
+            var isCompleted = true
 
-        val userMapToUpdate = mutableMapOf<String, Any>()
+            if (firstName.isNotEmpty() && birthDate.isNotEmpty()) {
 
-        if (firstName.isNotEmpty() && birthDate.isNotEmpty()) {
+                val date = SimpleDateFormat("MM/dd/yyyy", Locale.ENGLISH).parse(birthDate)
+                val calendarDate = Calendar.getInstance()
+                calendarDate.time = date!!
 
-            val date = SimpleDateFormat("MM/dd/yyyy", Locale.ENGLISH).parse(birthDate)
-            val calendarDate = Calendar.getInstance()
-            calendarDate.time = date!!
+                // Check if the user is in the right age to use the application
+                if (Calendar.getInstance().get(Calendar.YEAR)
+                    .minus(calendarDate.get(Calendar.YEAR)) >= 12
+                ) {
+                    val userMapToUpdate = mapOf<String, Any>(
+                        "firstName" to firstName,
+                        "lastName" to lastName,
+                        "birthDate" to birthDate
+                    )
 
-            // Check if the user is in the right age to use the application
-            if (Calendar.getInstance().get(Calendar.YEAR)
-                .minus(calendarDate.get(Calendar.YEAR)) >= 12
-            ) {
-                userMapToUpdate["firstName"] = firstName
-                userMapToUpdate["lastName"] = lastName
-                userMapToUpdate["birthDate"] = birthDate
-
-                val userQuery = userCollectionRef.document(userId).get().await()
-                if (userQuery.exists()) {
-                    var isUpdated = true
                     userCollectionRef
                         .document(userId)
                         .set(userMapToUpdate, SetOptions.merge())
                         .addOnSuccessListener {
-                            CoroutineScope(Dispatchers.IO).launch {
+                            runBlocking {
                                 userInformationDao.updateBasicInfo(
                                     firstName,
                                     lastName,
@@ -123,14 +117,13 @@ class AccountRepositoryImpl @Inject constructor(
                                 )
                             }
                         }.addOnFailureListener {
-                            isUpdated = false
+                            isCompleted = false
                             return@addOnFailureListener
                         }
-
-                    return isUpdated
                 }
             }
+            return@withContext isCompleted
         }
-        return false
+        return isSuccessful
     }
 }

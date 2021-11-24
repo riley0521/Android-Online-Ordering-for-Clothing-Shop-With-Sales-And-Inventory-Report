@@ -11,7 +11,9 @@ import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.SortOrder
 import com.teampym.onlineclothingshopapplication.data.util.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.presentation.client.products.ProductPagingSource
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class ProductRepositoryImpl @Inject constructor(
@@ -40,7 +42,6 @@ class ProductRepositoryImpl @Inject constructor(
             )
         }
 
-    // TODO("CRUD Operations for Product Collection")
     suspend fun getOne(productId: String): Product? {
         var foundProduct: Product? = null
 
@@ -63,41 +64,43 @@ class ProductRepositoryImpl @Inject constructor(
     }
 
     suspend fun create(product: Product?): Product? {
-        var createdProduct = product
-
-        product?.let { p ->
-            productCollectionRef
-                .add(p)
-                .addOnSuccessListener {
-                    createdProduct?.productId = it.id
-                }.addOnFailureListener {
-                    createdProduct = null
-                    return@addOnFailureListener
-                }
+        val createdProduct = withContext(Dispatchers.IO) {
+            var createdProductTemp = product
+            createdProductTemp?.let { p ->
+                productCollectionRef
+                    .add(p)
+                    .addOnSuccessListener {
+                        p.productId = it.id
+                    }.addOnFailureListener {
+                        createdProductTemp = null
+                        return@addOnFailureListener
+                    }
+            }
+            return@withContext createdProductTemp
         }
         return createdProduct
     }
 
     suspend fun update(product: Product): Boolean {
+        val isSuccessful = withContext(Dispatchers.IO) {
+            var isCompleted = true
+            val productToUpdateMap = mapOf<String, Any>(
+                "name" to product.name,
+                "description" to product.description,
+                "imageUrl" to product.imageUrl,
+                "price" to product.price
+            )
 
-        var isSuccessful = true
-
-        val productToUpdateMap = mapOf<String, Any>(
-            "name" to product.name,
-            "description" to product.description,
-            "imageUrl" to product.imageUrl,
-            "price" to product.price
-        )
-
-        productCollectionRef
-            .document(product.productId)
-            .set(productToUpdateMap, SetOptions.merge())
-            .addOnSuccessListener {
-            }.addOnFailureListener {
-                isSuccessful = false
-                return@addOnFailureListener
-            }
-
+            productCollectionRef
+                .document(product.productId)
+                .set(productToUpdateMap, SetOptions.merge())
+                .addOnSuccessListener {
+                }.addOnFailureListener {
+                    isCompleted = false
+                    return@addOnFailureListener
+                }
+            return@withContext isCompleted
+        }
         return isSuccessful
     }
 
@@ -135,15 +138,18 @@ class ProductRepositoryImpl @Inject constructor(
     }
 
     suspend fun delete(productId: String): Boolean {
-        var isSuccessful = true
-        productCollectionRef
-            .document(productId)
-            .delete()
-            .addOnSuccessListener {
-            }.addOnFailureListener {
-                isSuccessful = false
-                return@addOnFailureListener
-            }
+        val isSuccessful = withContext(Dispatchers.IO) {
+            var isCompleted = true
+            productCollectionRef
+                .document(productId)
+                .delete()
+                .addOnSuccessListener {
+                }.addOnFailureListener {
+                    isCompleted = false
+                    return@addOnFailureListener
+                }
+            return@withContext isCompleted
+        }
         return isSuccessful
     }
 

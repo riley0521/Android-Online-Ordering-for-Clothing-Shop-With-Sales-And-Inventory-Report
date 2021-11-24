@@ -99,6 +99,8 @@
     <string name="add_to_wish_list">Add To Wish List</string>
     <string name="ph_number_format">(+63)</string>
     <string name="total_payment">Total Payment</string>
+    <string name="loading_please_wait">Loading. Please wait…</string>
+    <string name="update_information">Update Information</string>
 
 
 </resources>

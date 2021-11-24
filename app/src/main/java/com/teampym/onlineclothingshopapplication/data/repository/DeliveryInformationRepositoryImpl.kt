@@ -1,7 +1,9 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.SetOptions
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.DELIVERY_INFORMATION_SUB_COLLECTION
@@ -86,19 +88,21 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
         userId: String,
         deliveryInformation: DeliveryInformation?
     ): DeliveryInformation? {
-        var createdDeliveryInfo = deliveryInformation
-
-        deliveryInformation?.let {
-            userCollectionRef
-                .document(userId)
-                .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
-                .add(it)
-                .addOnSuccessListener {
-                    createdDeliveryInfo?.id = it.id
-                }.addOnFailureListener {
-                    createdDeliveryInfo = null
-                    return@addOnFailureListener
-                }
+        val createdDeliveryInfo = withContext(Dispatchers.IO) {
+            var createdDeliveryInfoTemp = deliveryInformation
+            createdDeliveryInfoTemp?.let { d ->
+                userCollectionRef
+                    .document(userId)
+                    .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
+                    .add(d)
+                    .addOnSuccessListener {
+                        d.id = it.id
+                    }.addOnFailureListener {
+                        createdDeliveryInfoTemp = null
+                        return@addOnFailureListener
+                    }
+            }
+            return@withContext createdDeliveryInfoTemp
         }
         return createdDeliveryInfo
     }
@@ -148,71 +152,81 @@ class DeliveryInformationRepositoryImpl @Inject constructor(
         return isSuccessful
     }
 
-    fun changeDefault(
+    suspend fun changeDefault(
         userId: String,
         new: DeliveryInformation
     ): Boolean {
-        var isSuccessful = true
-        userCollectionRef.document(userId).collection(DELIVERY_INFORMATION_SUB_COLLECTION)
-            .whereEqualTo("isPrimary", true)
-            .limit(1)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                isSuccessful = switchDefaultAddressInFirestore(querySnapshot, userId, new)
-            }.addOnFailureListener {
-                isSuccessful = false
-                return@addOnFailureListener
-            }
-        return isSuccessful
-    }
-
-    private fun switchDefaultAddressInFirestore(
-        querySnapshot: QuerySnapshot,
-        userId: String,
-        new: DeliveryInformation
-    ): Boolean {
-        var isSuccessful = true
-
-        querySnapshot.forEach { doc ->
-            doc.reference.update(
-                mutableMapOf<String, Any>(
-                    "isPrimary" to false
-                )
-            ).addOnSuccessListener {
-                val updateNewInfoMap = mapOf<String, Any>(
-                    "isPrimary" to true
-                )
-
-                userCollectionRef
-                    .document(userId)
-                    .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
-                    .document(new.id)
-                    .update(updateNewInfoMap)
-                    .addOnSuccessListener {
-                    }.addOnFailureListener {
-                        isSuccessful = false
-                        return@addOnFailureListener
+        val isSuccessful = withContext(Dispatchers.IO) {
+            var isCompleted = true
+            userCollectionRef.document(userId).collection(DELIVERY_INFORMATION_SUB_COLLECTION)
+                .whereEqualTo("isPrimary", true)
+                .limit(1)
+                .get()
+                .addOnSuccessListener { querySnapshot ->
+                    runBlocking {
+                        isCompleted = switchDefaultAddressInFirestore(querySnapshot.documents[0], userId, new)
                     }
-            }.addOnFailureListener {
-                isSuccessful = false
-                return@addOnFailureListener
-            }
+                }.addOnFailureListener {
+                    isCompleted = false
+                    return@addOnFailureListener
+                }
+            return@withContext isCompleted
         }
         return isSuccessful
     }
 
-    fun delete(userId: String, deliveryInformation: DeliveryInformation): Boolean {
-        var isSuccessful = true
+    private suspend fun switchDefaultAddressInFirestore(
+        doc: DocumentSnapshot,
+        userId: String,
+        new: DeliveryInformation
+    ): Boolean {
+        val isSuccessful = withContext(Dispatchers.IO) {
+            var isCompleted = true
+            doc.let {
+                it.reference.set(
+                    mutableMapOf<String, Any>(
+                        "isPrimary" to false
+                    ),
+                    SetOptions.merge()
+                ).addOnSuccessListener {
+                    val updateNewInfoMap = mapOf<String, Any>(
+                        "isPrimary" to true
+                    )
 
-        userCollectionRef.document(userId)
-            .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
-            .document(deliveryInformation.id)
-            .delete()
-            .addOnSuccessListener {
-            }.addOnCanceledListener {
-                isSuccessful = false
-                return@addOnCanceledListener
+                    userCollectionRef
+                        .document(userId)
+                        .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
+                        .document(new.id)
+                        .set(updateNewInfoMap, SetOptions.merge())
+                        .addOnSuccessListener {
+                        }.addOnFailureListener {
+                            isCompleted = false
+                            return@addOnFailureListener
+                        }
+                }.addOnFailureListener {
+                    isCompleted = false
+                    return@addOnFailureListener
+                }
             }
+            return@withContext isCompleted
+        }
+        return isSuccessful
+    }
+
+    suspend fun delete(userId: String, deliveryInformation: DeliveryInformation): Boolean {
+        val isSuccessful = withContext(Dispatchers.IO) {
+            var isCompleted = true
+            userCollectionRef.document(userId)
+                .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
+                .document(deliveryInformation.id)
+                .delete()
+                .addOnSuccessListener {
+                }.addOnCanceledListener {
+                    isCompleted = false
+                    return@addOnCanceledListener
+                }
+            return@withContext isCompleted
+        }
         return isSuccessful
     }
 }

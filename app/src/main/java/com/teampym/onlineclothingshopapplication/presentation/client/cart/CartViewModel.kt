@@ -38,7 +38,7 @@ class CartViewModel @Inject constructor(
     @ExperimentalCoroutinesApi
     private val cartFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
         _userInformation.value = userInformationDao.getCurrentUser(sessionPref.userId)
-        cartRepository.getAll(if (sessionPref.userId.isNotBlank()) sessionPref.userId else null)
+        cartRepository.getAll(sessionPref.userId)
     }
 
     val userInformation: LiveData<UserInformation?> get() = _userInformation

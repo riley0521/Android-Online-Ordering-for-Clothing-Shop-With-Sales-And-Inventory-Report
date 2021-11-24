@@ -16,10 +16,12 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
+import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentRegistrationBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_registration.*
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,15 +38,30 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
     private var userInfo: UserInformation? = null
 
+    private lateinit var loadingDialog: LoadingDialog
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentRegistrationBinding.bind(view)
+        loadingDialog = LoadingDialog(requireActivity())
+        loadingDialog.show()
 
         val currentUser = FirebaseAuth.getInstance().currentUser
 
+        viewModel.userSession.observe(viewLifecycleOwner) { sessionPref ->
+            if (sessionPref.userId.isNotBlank()) {
+                viewModel.fetchNotificationTokensAndWishList(sessionPref.userId)
+            }
+        }
+
         // Reuse this fragment when the user is editing his firstName, lastName, and birthDate
         val editMode = args.editMode
+        if (!editMode) {
+            if (loadingDialog.isActive()) {
+                loadingDialog.dismiss()
+            }
+        }
 
         binding.apply {
             btnSelectDate.setOnClickListener {
@@ -89,8 +106,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                         currentUser.uid
                     )
                     return@setOnClickListener
-                }
-                else {
+                } else {
                     if (currentUser != null) {
                         viewModel.registerUser(
                             edtFirstName.text.toString(),
@@ -139,14 +155,16 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                     // Nothing to do here
                 }
             })
-
         }
 
         viewModel.user.observe(viewLifecycleOwner) {
-            if(it != null && editMode) {
+            if (it != null && editMode) {
+                if (loadingDialog.isActive()) {
+                    loadingDialog.dismiss()
+                }
 
                 tvInstruction.isVisible = false
-                btnRegister.text = "Update Information"
+                btnRegister.text = getString(R.string.update_information)
 
                 userInfo = it
                 binding.edtFirstName.text.apply { it.firstName }
@@ -156,7 +174,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         }
 
         lifecycleScope.launchWhenStarted {
-            viewModel.registrationEvent.collect { event ->
+            viewModel.registrationEvent.collectLatest { event ->
                 when (event) {
                     is RegistrationViewModel.RegistrationEvent.ShowSuccessfulMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
@@ -174,7 +192,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
     fun checkDataIfValid(editMode: Boolean): Boolean {
         if (editMode) {
             return !userInfo!!.firstName.equals(edtFirstName.text.toString(), true) or
-                    !userInfo!!.lastName.equals(edtLastName.text.toString(), true)
+                !userInfo!!.lastName.equals(edtLastName.text.toString(), true)
         }
         return edtFirstName.text!!.isNotBlank() && edtLastName.text!!.isNotBlank() && selectedBirthDate.isNotBlank()
     }

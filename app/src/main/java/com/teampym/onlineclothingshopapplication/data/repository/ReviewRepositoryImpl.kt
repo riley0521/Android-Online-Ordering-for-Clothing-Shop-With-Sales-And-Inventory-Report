@@ -7,7 +7,9 @@ import com.teampym.onlineclothingshopapplication.data.models.Review
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.REVIEWS_SUB_COLLECTION
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class ReviewRepositoryImpl @Inject constructor(
@@ -42,29 +44,31 @@ class ReviewRepositoryImpl @Inject constructor(
         desc: String,
         productId: String,
     ): Review? {
-        var createdReview: Review? = Review(
-            userId = userInformation.userId,
-            productId = productId,
-            userAvatar = userInformation.avatarUrl ?: "",
-            username = "${userInformation.firstName} ${userInformation.lastName}",
-            rate = rate,
-            description = desc,
-            dateReview = System.currentTimeMillis()
-        )
+        val createdReview = withContext(Dispatchers.IO) {
+            var createdReviewTemp: Review? = Review(
+                userId = userInformation.userId,
+                productId = productId,
+                userAvatar = userInformation.avatarUrl ?: "",
+                username = "${userInformation.firstName} ${userInformation.lastName}",
+                rate = rate,
+                description = desc,
+                dateReview = System.currentTimeMillis()
+            )
 
-        createdReview?.let { r ->
-            reviewCollectionRef
-                .document(productId)
-                .collection(REVIEWS_SUB_COLLECTION)
-                .add(r)
-                .addOnSuccessListener {
-                    createdReview?.id = it.id
-                }.addOnFailureListener {
-                    createdReview = null
-                    return@addOnFailureListener
-                }
+            createdReviewTemp?.let { r ->
+                reviewCollectionRef
+                    .document(productId)
+                    .collection(REVIEWS_SUB_COLLECTION)
+                    .add(r)
+                    .addOnSuccessListener {
+                        r.id = it.id
+                    }.addOnFailureListener {
+                        createdReviewTemp = null
+                        return@addOnFailureListener
+                    }
+            }
+            return@withContext createdReviewTemp
         }
-
         return createdReview
     }
 }

@@ -5,7 +5,9 @@ import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.models.ProductImage
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCT_IMAGES_SUB_COLLECTION
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class ProductImageRepositoryImpl @Inject constructor(
@@ -15,7 +17,6 @@ class ProductImageRepositoryImpl @Inject constructor(
     private val productCollectionRef = db.collection(PRODUCTS_COLLECTION)
 
     // TODO("ProductImages Collection operation - Add and Delete")
-
     suspend fun getAll(productId: String): List<ProductImage> {
         val productImagesQuery = productCollectionRef
             .document(productId)
@@ -36,31 +37,37 @@ class ProductImageRepositoryImpl @Inject constructor(
     }
 
     suspend fun create(productImage: ProductImage): Boolean {
-        var isCreated = true
-        productCollectionRef
-            .document(productImage.productId)
-            .collection(PRODUCT_IMAGES_SUB_COLLECTION)
-            .add(productImage)
-            .addOnSuccessListener {
-            }.addOnFailureListener {
-                isCreated = false
-                return@addOnFailureListener
-            }
-        return isCreated
+        var isSuccessful = withContext(Dispatchers.IO) {
+            var isCompleted = true
+            productCollectionRef
+                .document(productImage.productId)
+                .collection(PRODUCT_IMAGES_SUB_COLLECTION)
+                .add(productImage)
+                .addOnSuccessListener {
+                }.addOnFailureListener {
+                    isCompleted = false
+                    return@addOnFailureListener
+                }
+            return@withContext isCompleted
+        }
+        return isSuccessful
     }
 
     suspend fun delete(productImage: ProductImage): Boolean {
-        var isDeleted = true
-        productCollectionRef
-            .document(productImage.productId)
-            .collection(PRODUCT_IMAGES_SUB_COLLECTION)
-            .document(productImage.id)
-            .delete()
-            .addOnSuccessListener {
-            }.addOnFailureListener {
-                isDeleted = false
-                return@addOnFailureListener
-            }
-        return isDeleted
+        val isSuccessful = withContext(Dispatchers.IO) {
+            var isCompleted = true
+            productCollectionRef
+                .document(productImage.productId)
+                .collection(PRODUCT_IMAGES_SUB_COLLECTION)
+                .document(productImage.id)
+                .delete()
+                .addOnSuccessListener {
+                }.addOnFailureListener {
+                    isCompleted = false
+                    return@addOnFailureListener
+                }
+            return@withContext isCompleted
+        }
+        return isSuccessful
     }
 }

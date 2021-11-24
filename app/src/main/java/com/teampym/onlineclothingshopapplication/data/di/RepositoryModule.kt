@@ -3,9 +3,15 @@ package com.teampym.onlineclothingshopapplication.data.di
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.teampym.onlineclothingshopapplication.data.network.FCMService
 import com.teampym.onlineclothingshopapplication.data.repository.* // ktlint-disable no-wildcard-imports
-import com.teampym.onlineclothingshopapplication.data.room.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.room.CartDao
+import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformationDao
+import com.teampym.onlineclothingshopapplication.data.room.InventoryDao
+import com.teampym.onlineclothingshopapplication.data.room.NotificationTokenDao
+import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
+import com.teampym.onlineclothingshopapplication.data.room.ProductDao
+import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
+import com.teampym.onlineclothingshopapplication.data.room.WishItemDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,14 +36,10 @@ object RepositoryModule {
     @Singleton
     fun provideAccountRepository(
         db: FirebaseFirestore,
-        deliveryInformationRepository: DeliveryInformationRepositoryImpl,
-        notificationTokenRepository: NotificationTokenRepositoryImpl,
         wishItemRepository: WishItemRepositoryImpl,
         userInformationDao: UserInformationDao
     ) = AccountRepositoryImpl(
         db,
-        deliveryInformationRepository,
-        notificationTokenRepository,
         wishItemRepository,
         userInformationDao
     )
@@ -67,18 +69,16 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideWishListRepository(
-        db: FirebaseFirestore
-    ) = WishItemRepositoryImpl(db)
+        db: FirebaseFirestore,
+        wishItemDao: WishItemDao
+    ) = WishItemRepositoryImpl(db, wishItemDao)
 
     @Provides
     @Singleton
     fun provideCartRepository(
         db: FirebaseFirestore,
-        cartDao: CartDao,
-        productDao: ProductDao,
-        inventoryDao: InventoryDao
-    ) =
-        CartRepositoryImpl(db, cartDao, productDao, inventoryDao)
+        cartDao: CartDao
+    ) = CartRepositoryImpl(db, cartDao)
 
     @Provides
     @Singleton
@@ -118,18 +118,14 @@ object RepositoryModule {
     @Singleton
     fun provideOrderRepository(
         db: FirebaseFirestore,
-        accountRepository: AccountRepositoryImpl,
         notificationTokenRepository: NotificationTokenRepositoryImpl,
         orderDetailRepository: OrderDetailRepositoryImpl,
-        productRepository: ProductRepositoryImpl,
-        service: FCMService<Any>
+        productRepository: ProductRepositoryImpl
     ) = OrderRepositoryImpl(
         db,
-        accountRepository,
         notificationTokenRepository,
         orderDetailRepository,
-        productRepository,
-        service
+        productRepository
     )
 
     @Provides
@@ -143,29 +139,29 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun providePostRepository(
-        db: FirebaseFirestore,
-        likeRepository: LikeRepositoryImpl,
-        commentRepository: CommentRepositoryImpl
+        db: FirebaseFirestore
     ) = PostRepositoryImpl(
-        db,
-        likeRepository,
-        commentRepository
+        db
     )
 
     @Provides
     @Singleton
     fun provideLikeRepository(
-        db: FirebaseFirestore
+        db: FirebaseFirestore,
+        postRepository: PostRepositoryImpl
     ) = LikeRepositoryImpl(
-        db
+        db,
+        postRepository
     )
 
     @Provides
     @Singleton
     fun provideCommentRepository(
-        db: FirebaseFirestore
+        db: FirebaseFirestore,
+        postRepository: PostRepositoryImpl
     ) = CommentRepositoryImpl(
-        db
+        db,
+        postRepository
     )
 
     @Provides

@@ -14,6 +14,7 @@ import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Checkout
 import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.util.CartFlag
+import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCartBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_cart.*
@@ -36,11 +37,16 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
     private var total: BigDecimal = 0.toBigDecimal()
 
+    private lateinit var loadingDialog: LoadingDialog
+
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentCartBinding.bind(view)
+
+        loadingDialog = LoadingDialog(requireActivity())
+        loadingDialog.show()
 
         val currentUser = getFirebaseUser()
 
@@ -100,6 +106,10 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
         }
 
         viewModel.cart.observe(viewLifecycleOwner) { cart ->
+            if (loadingDialog.isActive()) {
+                loadingDialog.dismiss()
+            }
+
             adapter.submitList(cart)
             btnCheckOut.isEnabled = cart.isNotEmpty()
 

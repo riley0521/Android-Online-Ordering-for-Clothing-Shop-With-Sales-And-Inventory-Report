@@ -1,15 +1,17 @@
 package com.teampym.onlineclothingshopapplication.presentation.registration
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseUser
+import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -24,11 +26,10 @@ class RegistrationViewModel @Inject constructor(
     private val _registrationEventChannel = Channel<RegistrationEvent>()
     val registrationEvent = _registrationEventChannel.receiveAsFlow()
 
-    private val userFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
-        userInformationDao.getUserFlow(sessionPref.userId)
-    }
+    val userSession = preferencesManager.preferencesFlow.asLiveData()
 
-    val user = userFlow.asLiveData()
+    private val _user = MutableLiveData<UserInformation>()
+    val user: LiveData<UserInformation> get() = _user
 
     fun registerUser(
         firstName: String,
@@ -45,6 +46,17 @@ class RegistrationViewModel @Inject constructor(
         )?.let {
             _registrationEventChannel.send(RegistrationEvent.ShowSuccessfulMessage("Created user successfully!"))
         }
+    }
+
+    fun fetchNotificationTokensAndWishList(userId: String) = viewModelScope.launch {
+        val userWithNotificationTokens = userInformationDao.getUserWithNotificationTokens()
+            .firstOrNull { it.user.userId == userId }
+        val userWithWishList = userInformationDao.getUserWithWishList()
+            .firstOrNull { it.user.userId == userId }
+        _user.value = userWithNotificationTokens?.user?.copy(
+            notificationTokenList = userWithNotificationTokens.notificationTokens,
+            wishList = userWithWishList?.wishList ?: emptyList()
+        )
     }
 
     fun updateBasicInformation(

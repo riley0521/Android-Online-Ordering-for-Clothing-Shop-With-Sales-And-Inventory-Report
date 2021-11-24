@@ -4,10 +4,12 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.models.AuditTrail
 import com.teampym.onlineclothingshopapplication.data.util.AUDIT_TRAILS_COLLECTION
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class AuditTrailRepositoryImpl @Inject constructor(
@@ -16,6 +18,7 @@ class AuditTrailRepositoryImpl @Inject constructor(
 
     private val auditCollectionRef = db.collection(AUDIT_TRAILS_COLLECTION)
 
+    // TODO("Convert this into a paging source.")
     suspend fun getAll(): Flow<List<AuditTrail>> = callbackFlow {
         val auditTrailListener = auditCollectionRef
             .addSnapshotListener { value, error ->
@@ -39,19 +42,20 @@ class AuditTrailRepositoryImpl @Inject constructor(
     }
 
     suspend fun insert(audit: AuditTrail?): AuditTrail? {
-        var createdAudit = audit
-
-        audit?.let { a ->
-            auditCollectionRef
-                .add(a)
-                .addOnSuccessListener {
-                    createdAudit?.id = it.id
-                }.addOnFailureListener {
-                    createdAudit = null
-                    return@addOnFailureListener
-                }
+        val createdAudit = withContext(Dispatchers.IO) {
+            var createdAuditTemp: AuditTrail? = audit
+            audit?.let { a ->
+                auditCollectionRef
+                    .add(a)
+                    .addOnSuccessListener {
+                        createdAuditTemp?.id = it.id
+                    }.addOnFailureListener {
+                        createdAuditTemp = null
+                        return@addOnFailureListener
+                    }
+            }
+            return@withContext createdAuditTemp
         }
-
         return createdAudit
     }
 }

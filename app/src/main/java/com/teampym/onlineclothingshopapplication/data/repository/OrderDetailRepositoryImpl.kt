@@ -6,7 +6,9 @@ import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.ORDER_DETAILS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class OrderDetailRepositoryImpl @Inject constructor(
@@ -63,34 +65,36 @@ class OrderDetailRepositoryImpl @Inject constructor(
         return orderDetailList
     }
 
-    fun insertAll(
+    suspend fun insertAll(
         orderId: String,
         userId: String,
         cart: List<Cart>
     ): List<OrderDetail> {
+        val orderDetailList = withContext(Dispatchers.IO) {
+            val orderDetailListTemp = mutableListOf<OrderDetail>()
+            for (cartItem in cart) {
+                val newOrderDetail = OrderDetail(
+                    userId = userId,
+                    orderId = orderId,
+                    inventoryId = cartItem.inventory.inventoryId,
+                    size = cartItem.inventory.size,
+                    quantity = cartItem.quantity,
+                    product = cartItem.product,
+                    subTotal = cartItem.subTotal,
+                )
 
-        val orderDetailList = mutableListOf<OrderDetail>()
-        for (cartItem in cart) {
-            val newOrderDetail = OrderDetail(
-                userId = userId,
-                orderId = orderId,
-                inventoryId = cartItem.inventory.inventoryId,
-                size = cartItem.inventory.size,
-                quantity = cartItem.quantity,
-                product = cartItem.product,
-                subTotal = cartItem.subTotal,
-            )
-
-            orderCollectionRef
-                .document(orderId)
-                .collection(ORDER_DETAILS_SUB_COLLECTION)
-                .document()
-                .set(newOrderDetail)
-                .addOnSuccessListener {
-                    orderDetailList.add(newOrderDetail)
-                }.addOnFailureListener {
-                    return@addOnFailureListener
-                }
+                orderCollectionRef
+                    .document(orderId)
+                    .collection(ORDER_DETAILS_SUB_COLLECTION)
+                    .document()
+                    .set(newOrderDetail)
+                    .addOnSuccessListener {
+                        orderDetailListTemp.add(newOrderDetail)
+                    }.addOnFailureListener {
+                        return@addOnFailureListener
+                    }
+            }
+            return@withContext orderDetailListTemp
         }
         return orderDetailList
     }

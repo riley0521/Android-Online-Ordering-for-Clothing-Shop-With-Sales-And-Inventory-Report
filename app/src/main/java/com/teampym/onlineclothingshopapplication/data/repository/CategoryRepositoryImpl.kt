@@ -1,11 +1,13 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
-import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.models.Category
 import com.teampym.onlineclothingshopapplication.data.util.CATEGORIES_COLLECTION
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class CategoryRepositoryImpl @Inject constructor(
@@ -14,23 +16,39 @@ class CategoryRepositoryImpl @Inject constructor(
 
     private val categoriesCollectionRef = db.collection(CATEGORIES_COLLECTION)
 
-    fun getCategories(): CollectionReference {
-        return categoriesCollectionRef
+    suspend fun getCategories(): List<Category> {
+        val categoryList = withContext(Dispatchers.IO) {
+            val categoriesQuery = categoriesCollectionRef
+                .get()
+                .await()
+
+            val categoryListTemp = mutableListOf<Category>()
+            categoriesQuery.documents.let { docs ->
+                for (doc in docs) {
+                    val category = doc.toObject<Category>()!!.copy(id = doc.id)
+                    categoryListTemp.add(category)
+                }
+            }
+            return@withContext categoryListTemp
+        }
+        return categoryList
     }
 
-    // TODO("CRUD Operation for Categories collection")
     suspend fun createCategory(category: Category?): Category? {
-        var createdCategory = category
-
-        category?.let { c ->
-            categoriesCollectionRef
-                .add(c)
-                .addOnSuccessListener {
-                    createdCategory?.id = it.id
-                }.addOnFailureListener {
-                    createdCategory = null
-                    return@addOnFailureListener
-                }
+        val createdCategory = withContext(Dispatchers.IO) {
+            var createdCategoryTemp: Category? = category
+            createdCategoryTemp?.let { c ->
+                categoriesCollectionRef
+                    .add(c)
+                    .addOnSuccessListener {
+                        c.id = it.id
+                    }.addOnFailureListener {
+                        createdCategoryTemp = null
+                        return@addOnFailureListener
+                    }
+                return@withContext createdCategoryTemp
+            }
+            null
         }
         return createdCategory
     }
@@ -58,15 +76,18 @@ class CategoryRepositoryImpl @Inject constructor(
     }
 
     suspend fun deleteCategory(categoryId: String): Boolean {
-        var isSuccessful = true
-        categoriesCollectionRef
-            .document(categoryId)
-            .delete()
-            .addOnSuccessListener {
-            }.addOnFailureListener {
-                isSuccessful = false
-                return@addOnFailureListener
-            }
+        val isSuccessful = withContext(Dispatchers.IO) {
+            var isCompleted = true
+            categoriesCollectionRef
+                .document(categoryId)
+                .delete()
+                .addOnSuccessListener {
+                }.addOnFailureListener {
+                    isCompleted = false
+                    return@addOnFailureListener
+                }
+            return@withContext isCompleted
+        }
         return isSuccessful
     }
 }

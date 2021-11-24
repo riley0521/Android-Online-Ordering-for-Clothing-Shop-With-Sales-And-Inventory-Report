@@ -13,6 +13,8 @@ data class Post(
     var imageUrl: String?,
     var id: String = "",
     var dateCreated: Long = System.currentTimeMillis(),
+    var numberOfLikes: Long = 0,
+    var numberOfComments: Long = 0,
     @get:Exclude
     var likeList: List<Like> = emptyList(),
     @get:Exclude

@@ -1,27 +1,27 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.util.POSTS_COLLECTION
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class PostRepositoryImpl @Inject constructor(
     db: FirebaseFirestore,
-    private val likeRepository: LikeRepositoryImpl,
-    private val commentRepository: CommentRepositoryImpl
 ) {
 
     private val postCollectionRef = db.collection(POSTS_COLLECTION)
 
+    // TODO("Should be changed to paging source")
     fun getAll(): Flow<List<Post>> = callbackFlow {
         val postListener = postCollectionRef
             .addSnapshotListener { value, error ->
@@ -33,18 +33,10 @@ class PostRepositoryImpl @Inject constructor(
                 val postList = mutableListOf<Post>()
                 value?.let { querySnapshot ->
                     for (doc in querySnapshot.documents) {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            // get like and comment list here
-                            val likeList = likeRepository.getAll(doc.id)
-
-                            val commentList = commentRepository.getAll(doc.id)
-
+                        runBlocking {
                             val post = doc.toObject<Post>()!!.copy(
                                 id = doc.id,
-                                likeList = likeList,
-                                commentList = commentList
                             )
-
                             postList.add(post)
                         }
                     }
@@ -57,19 +49,20 @@ class PostRepositoryImpl @Inject constructor(
     }
 
     suspend fun insert(post: Post?): Post? {
-        var createdPost: Post? = post
-
-        post?.let { p ->
-            postCollectionRef
-                .add(p)
-                .addOnSuccessListener {
-                    createdPost?.id = it.id
-                }.addOnFailureListener {
-                    createdPost = null
-                    return@addOnFailureListener
-                }
+        val createdPost = withContext(Dispatchers.IO) {
+            var createdPostTemp = post
+            createdPostTemp?.let { p ->
+                postCollectionRef
+                    .add(p)
+                    .addOnSuccessListener {
+                        p.id = it.id
+                    }.addOnFailureListener {
+                        createdPostTemp = null
+                        return@addOnFailureListener
+                    }
+            }
+            return@withContext createdPostTemp
         }
-
         return createdPost
     }
 
@@ -107,6 +100,60 @@ class PostRepositoryImpl @Inject constructor(
                 }
         } else {
             isSuccessful = false
+        }
+        return isSuccessful
+    }
+
+    suspend fun updateLikeCount(postId: String, count: Long): Boolean {
+        val isSuccessful = withContext(Dispatchers.IO) {
+            var isCompleted = true
+
+            val postQuery = postCollectionRef
+                .document(postId)
+                .get()
+                .await()
+
+            postQuery?.let { doc ->
+                val post = doc.toObject<Post>()!!.copy(id = doc.id)
+                val updateLikeCountMap = mapOf<String, Any>(
+                    "numberOfLikes" to post.numberOfLikes + count
+                )
+
+                doc.reference.set(updateLikeCountMap, SetOptions.merge())
+                    .addOnSuccessListener {
+                    }.addOnFailureListener {
+                        isCompleted = false
+                        return@addOnFailureListener
+                    }
+            }
+            return@withContext isCompleted
+        }
+        return isSuccessful
+    }
+
+    suspend fun updateCommentCount(postId: String, count: Long): Boolean {
+        val isSuccessful = withContext(Dispatchers.IO) {
+            var isCompleted = true
+
+            val postQuery = postCollectionRef
+                .document(postId)
+                .get()
+                .await()
+
+            postQuery?.let { doc ->
+                val post = doc.toObject<Post>()!!.copy(id = doc.id)
+                val updateLikeCountMap = mapOf<String, Any>(
+                    "numberOfComments" to post.numberOfComments + count
+                )
+
+                doc.reference.set(updateLikeCountMap, SetOptions.merge())
+                    .addOnSuccessListener {
+                    }.addOnFailureListener {
+                        isCompleted = false
+                        return@addOnFailureListener
+                    }
+            }
+            return@withContext isCompleted
         }
         return isSuccessful
     }
