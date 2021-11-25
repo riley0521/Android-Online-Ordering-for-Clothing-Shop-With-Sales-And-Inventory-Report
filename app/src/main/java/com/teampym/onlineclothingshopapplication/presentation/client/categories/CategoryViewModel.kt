@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.models.Category
-import com.teampym.onlineclothingshopapplication.data.repository.CategoryRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.CategoryRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CategoryViewModel @Inject constructor(
-    private val categoryRepository: CategoryRepositoryImpl,
+    private val categoryRepository: CategoryRepository,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 

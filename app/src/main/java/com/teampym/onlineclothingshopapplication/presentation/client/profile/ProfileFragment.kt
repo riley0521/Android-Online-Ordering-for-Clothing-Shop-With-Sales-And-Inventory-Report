@@ -17,20 +17,11 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.firebase.ui.auth.AuthUI
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.messaging.FirebaseMessaging
-import com.google.firebase.messaging.ktx.messaging
 import com.teampym.onlineclothingshopapplication.R
-import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
-import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProfileBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 private const val RC_SIGN_IN = 699
 
@@ -52,17 +43,6 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         loadingDialog = LoadingDialog(requireActivity())
 
-        val currentUser = getFirebaseUser()
-
-        currentUser?.let { viewModel.checkIfUserIsRegistered(it) }
-        viewModel.isRegistered.observe(viewLifecycleOwner) {
-            if (!it) {
-                findNavController().navigate(R.id.action_profileFragment_to_registrationFragment)
-            }
-        }
-
-        binding.cardViewBanner.isVisible = currentUser != null && !currentUser.isEmailVerified
-
         binding.apply {
 
             tvAddress.setOnClickListener {
@@ -78,17 +58,12 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             }
 
             btnSendVerification.setOnClickListener {
-                FirebaseAuth.getInstance().currentUser?.let { user ->
-                    viewModel.sendVerificationAgain(
-                        user
-                    )
-                }
+                getFirebaseUser()?.sendEmailVerification()
+                viewModel.sendVerificationAgain()
             }
 
             FirebaseAuth.getInstance().addAuthStateListener { auth ->
                 if (auth.currentUser == null) {
-                    binding.cardViewBanner.isVisible = false
-
                     btnSignInAndOut.text = getString(R.string.btn_sign_in)
                     btnSignInAndOut.setOnClickListener {
                         showSignInMethods()
@@ -102,15 +77,11 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             }
         }
 
-        viewModel.verificationSpan.observe(viewLifecycleOwner) {
-            binding.btnSendVerification.isVisible = it > 0 && System.currentTimeMillis() > it
-        }
-
         viewModel.userSession.observe(viewLifecycleOwner) { sessionPref ->
             if (sessionPref.userId.isNotBlank()) {
                 Log.d(TAG, sessionPref.userId)
                 loadingDialog.show()
-                viewModel.fetchNotificationTokensAndWishList(sessionPref.userId)
+                viewModel.fetchUserFromLocalDb(sessionPref.userId)
             }
         }
 
@@ -120,9 +91,14 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     loadingDialog.dismiss()
                 }
 
-                // Get New Token and Insert in Firestore
-                CoroutineScope(Dispatchers.IO).launch {
-                    getNewTokenAndSubscribeToTopics(user)
+                // Check if the user is already registered in the remote db
+                if (userInformation.firstName.isBlank()) {
+                    viewModel.navigateUserToRegistrationModule()
+                }
+
+                // check if the user is already verified in email
+                getFirebaseUser()?.let {
+                    binding.cardViewBanner.isVisible = !it.isEmailVerified
                 }
 
                 // Instantiate view
@@ -141,46 +117,21 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         lifecycleScope.launchWhenStarted {
             viewModel.profileEvent.collectLatest { event ->
                 when (event) {
-                    is ProfileViewModel.ProfileVerificationEvent.NotVerified -> {
-                        binding.cardViewBanner.isVisible = true
-                        if (loadingDialog.isActive()) {
-                            loadingDialog.dismiss()
-                        }
-                    }
-                    is ProfileViewModel.ProfileVerificationEvent.VerificationSent -> {
+                    is ProfileViewModel.ProfileEvent.VerificationSent -> {
                         Snackbar.make(
                             requireView(),
                             "Verification sent to your email. Please check it.",
                             Snackbar.LENGTH_LONG
                         ).show()
-                        viewModel.verificationSpan.value = System.currentTimeMillis() + 3600
-                        if (loadingDialog.isActive()) {
-                            loadingDialog.dismiss()
-                        }
                     }
-                    is ProfileViewModel.ProfileVerificationEvent.Verified -> {
-                        binding.cardViewBanner.isVisible = false
-                        if (loadingDialog.isActive()) {
-                            loadingDialog.dismiss()
-                        }
+                    ProfileViewModel.ProfileEvent.NotRegistered -> {
+                        val action = ProfileFragmentDirections.actionProfileFragmentToRegistrationFragment(false)
+                        findNavController().navigate(action)
                     }
+                    ProfileViewModel.ProfileEvent.SignedIn -> TODO()
+                    ProfileViewModel.ProfileEvent.SignedOut -> TODO()
                 }
             }
-        }
-    }
-
-    private suspend fun getNewTokenAndSubscribeToTopics(user: UserInformation) {
-        val result = FirebaseMessaging.getInstance().token.await()
-
-        // Get new FCM registration token
-        Log.d(TAG, result)
-        viewModel.onNotificationTokenInserted(user.userId, user.userType, result)
-
-        // Subscribe to news or else navigate to admin view
-        if (user.userType == UserType.CUSTOMER.name) {
-            val resultOfSubscription = Firebase.messaging.subscribeToTopic("news").await()
-        } else {
-            // TODO("Navigate to admin view")
         }
     }
 
@@ -252,7 +203,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     user.sendEmailVerification()
 
                 loadingDialog.show()
-                viewModel.checkIfUserIsEmailVerified(user)
+                viewModel.fetchUserInformation(user)
             }
         }
     }

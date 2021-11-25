@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.* // ktlint-disable no-wildcard-imports
-import com.teampym.onlineclothingshopapplication.data.repository.DeliveryInformationRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.DeliveryInformationRepository
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformationDao
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DeliveryInformationViewModel @Inject constructor(
-    private val deliveryInformationRepository: DeliveryInformationRepositoryImpl,
+    private val deliveryInformationRepository: DeliveryInformationRepository,
     private val deliveryInformationDao: DeliveryInformationDao,
     preferencesManager: PreferencesManager
 ) : ViewModel() {

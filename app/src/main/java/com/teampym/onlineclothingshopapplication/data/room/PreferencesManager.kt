@@ -79,6 +79,14 @@ class PreferencesManager @Inject constructor(
         }
     }
 
+    suspend fun resetAllFields() {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.USER_ID] = ""
+            preferences[PreferencesKeys.PAYMENT_METHOD] = PaymentMethod.COD.name
+            preferences[PreferencesKeys.SORT_ORDER] = SortOrder.BY_NAME.name
+        }
+    }
+
     private object PreferencesKeys {
         val SORT_ORDER = preferencesKey<String>("sort_order")
         val PAYMENT_METHOD = preferencesKey<String>("payment_method")

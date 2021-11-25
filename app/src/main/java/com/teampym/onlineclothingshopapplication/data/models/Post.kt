@@ -12,7 +12,7 @@ data class Post(
     var avatarUrl: String?,
     var imageUrl: String?,
     var id: String = "",
-    var dateCreated: Long = System.currentTimeMillis(),
+    var dateCreated: Long = 0,
     var numberOfLikes: Long = 0,
     var numberOfComments: Long = 0,
     @get:Exclude

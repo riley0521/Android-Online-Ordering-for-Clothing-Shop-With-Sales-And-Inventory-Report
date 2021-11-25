@@ -2,21 +2,23 @@ package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.ktx.toObject
+import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.* // ktlint-disable no-wildcard-imports
-import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.* // ktlint-disable no-wildcard-imports
 import javax.inject.Inject
+import javax.inject.Singleton
 
-class AccountRepositoryImpl @Inject constructor(
+@Singleton
+class AccountRepository @Inject constructor(
     db: FirebaseFirestore,
-    private val wishItemRepository: WishItemRepositoryImpl,
-    val userInformationDao: UserInformationDao
+    @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
     private val userCollectionRef = db.collection(USERS_COLLECTION)
@@ -24,25 +26,21 @@ class AccountRepositoryImpl @Inject constructor(
     suspend fun get(
         userId: String
     ): UserInformation? {
-        val userQuery = userCollectionRef.document(userId)
-            .get()
-            .await()
+        return withContext(dispatcher) {
+            var fetchedUser: UserInformation? = null
+            val userQuery = userCollectionRef.document(userId)
+                .get()
+                .await()
 
-        userQuery?.let { doc ->
+            userQuery?.let { doc ->
 
-            val userInfo =
-                doc.toObject(UserInformation::class.java)!!.copy(userId = doc.id)
+                val userInfo =
+                    doc.toObject(UserInformation::class.java)!!.copy(userId = doc.id)
 
-            val wishList = wishItemRepository.getAll(doc.id)
-
-            val finalUser = userInfo.copy(
-                wishList = wishList
-            )
-            userInformationDao.insert(finalUser)
-
-            return finalUser
+                fetchedUser = userInfo.copy()
+            }
+            fetchedUser
         }
-        return null
     }
 
     suspend fun create(
@@ -52,7 +50,7 @@ class AccountRepositoryImpl @Inject constructor(
         birthDate: String,
         avatarUrl: String
     ): UserInformation? {
-        val createdUser = withContext(Dispatchers.IO) {
+        return withContext(dispatcher) {
             var newUser: UserInformation? = UserInformation(
                 firstName = firstName,
                 lastName = lastName,
@@ -66,9 +64,6 @@ class AccountRepositoryImpl @Inject constructor(
                     .document(userId)
                     .set(user)
                     .addOnSuccessListener {
-                        runBlocking {
-                            userInformationDao.insert(user)
-                        }
                     }.addOnFailureListener {
                         newUser = null
                         return@addOnFailureListener
@@ -76,7 +71,6 @@ class AccountRepositoryImpl @Inject constructor(
             }
             newUser
         }
-        return createdUser
     }
 
     suspend fun update(
@@ -85,45 +79,42 @@ class AccountRepositoryImpl @Inject constructor(
         lastName: String,
         birthDate: String
     ): Boolean {
-        val isSuccessful = withContext(Dispatchers.IO) {
-            var isCompleted = true
+        return withContext(dispatcher) {
+            var isSuccessful = true
 
             if (firstName.isNotEmpty() && birthDate.isNotEmpty()) {
 
                 val date = SimpleDateFormat("MM/dd/yyyy", Locale.ENGLISH).parse(birthDate)
                 val calendarDate = Calendar.getInstance()
-                calendarDate.time = date!!
+                date?.let { calendarDate.time = it }
 
                 // Check if the user is in the right age to use the application
                 if (Calendar.getInstance().get(Calendar.YEAR)
                     .minus(calendarDate.get(Calendar.YEAR)) >= 12
                 ) {
-                    val userMapToUpdate = mapOf<String, Any>(
-                        "firstName" to firstName,
-                        "lastName" to lastName,
-                        "birthDate" to birthDate
-                    )
+                    val userDocument = userCollectionRef
+                        .document(userId)
+                        .get()
+                        .await()
+                    val fetchedUser = userDocument
+                        .toObject<UserInformation>()!!.copy(userId = userDocument.id)
+
+                    fetchedUser.firstName = firstName
+                    fetchedUser.lastName = lastName
+                    fetchedUser.birthDate = birthDate
+                    fetchedUser.dateModified = System.currentTimeMillis()
 
                     userCollectionRef
                         .document(userId)
-                        .set(userMapToUpdate, SetOptions.merge())
+                        .set(fetchedUser, SetOptions.merge())
                         .addOnSuccessListener {
-                            runBlocking {
-                                userInformationDao.updateBasicInfo(
-                                    firstName,
-                                    lastName,
-                                    birthDate,
-                                    userId
-                                )
-                            }
                         }.addOnFailureListener {
-                            isCompleted = false
+                            isSuccessful = false
                             return@addOnFailureListener
                         }
                 }
             }
-            return@withContext isCompleted
+            isSuccessful
         }
-        return isSuccessful
     }
 }

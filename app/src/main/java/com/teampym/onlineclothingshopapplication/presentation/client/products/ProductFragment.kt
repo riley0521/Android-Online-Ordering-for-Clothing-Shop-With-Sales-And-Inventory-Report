@@ -16,9 +16,13 @@ import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.SortOrder
 import com.teampym.onlineclothingshopapplication.data.room.UserWithWishList
+import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -39,10 +43,14 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
 
     private lateinit var wishList: UserWithWishList
 
+    private lateinit var loadingDialog: LoadingDialog
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentProductBinding.bind(view)
+
+        loadingDialog = LoadingDialog(requireActivity())
 
         viewModel.updateCategory(args.categoryId)
 

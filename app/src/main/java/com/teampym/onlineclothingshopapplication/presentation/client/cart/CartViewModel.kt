@@ -1,19 +1,14 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.cart
 
 import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
-import com.google.firebase.auth.FirebaseUser
 import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
-import com.teampym.onlineclothingshopapplication.data.models.UserInformation
-import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
-import com.teampym.onlineclothingshopapplication.data.repository.CartRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.CartRepository
 import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.room.CartDao
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
-import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.CartFlag
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -22,44 +17,36 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CartViewModel @Inject constructor(
-    private val accountRepository: AccountRepositoryImpl,
-    private val cartRepository: CartRepositoryImpl,
-    private val userInformationDao: UserInformationDao,
+    private val cartRepository: CartRepository,
     private val cartDao: CartDao,
-    private val preferencesManager: PreferencesManager,
+    preferencesManager: PreferencesManager,
     @ApplicationScope val appScope: CoroutineScope
 ) : ViewModel() {
 
-    private val _userInformation = MutableLiveData<UserInformation?>()
+    private var _userId = MutableLiveData("")
+    val userId: LiveData<String> get() = _userId
 
     private val _cartChannel = Channel<CartEvent>()
     val cartEvent = _cartChannel.receiveAsFlow()
 
-    @ExperimentalCoroutinesApi
-    private val cartFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
-        _userInformation.value = userInformationDao.getCurrentUser(sessionPref.userId)
+    private val _cartFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
         cartRepository.getAll(sessionPref.userId)
     }
 
-    val userInformation: LiveData<UserInformation?> get() = _userInformation
+    val cart = _cartFlow.asLiveData() as MutableLiveData<MutableList<Cart>>
 
-    private val _isRegistered = MutableLiveData(true)
-    val isRegistered: LiveData<Boolean> get() = _isRegistered
-
-    @ExperimentalCoroutinesApi
-    val cart = cartFlow.asLiveData() as MutableLiveData<MutableList<Cart>>
-
-    @ExperimentalCoroutinesApi
     fun onQuantityUpdated(cartId: String, flag: String) = viewModelScope.launch {
-        cart.value?.first { it.id == cartId }?.let {
-            when (flag) {
-                CartFlag.ADDING.toString() -> {
-                    it.quantity += 1
-                    it.subTotal = it.calculatedTotalPrice.toDouble()
-                }
-                CartFlag.REMOVING.toString() -> {
-                    it.quantity -= 1
-                    it.subTotal = it.calculatedTotalPrice.toDouble()
+        cart.value?.forEach {
+            if (it.id == cartId) {
+                when (flag) {
+                    CartFlag.ADDING.toString() -> {
+                        it.quantity += 1
+                        it.subTotal = it.calculatedTotalPrice.toDouble()
+                    }
+                    CartFlag.REMOVING.toString() -> {
+                        it.quantity -= 1
+                        it.subTotal = it.calculatedTotalPrice.toDouble()
+                    }
                 }
             }
         }
@@ -71,7 +58,7 @@ class CartViewModel @Inject constructor(
     }
 
     fun onDeleteOutOfStockItems(cartList: List<Cart>) = appScope.launch {
-        userInformation.value?.userId?.let {
+        _userId.value?.let {
             if (cartRepository.deleteOutOfStockItems(it, cartList)) {
                 cartDao.deleteAll(it)
             }
@@ -82,16 +69,6 @@ class CartViewModel @Inject constructor(
         if (cartRepository.delete(userId, cartId)) {
             cartDao.delete(cartId)
             _cartChannel.send(CartEvent.ShowMessage("Item deleted successfully!"))
-        }
-    }
-
-    fun checkIfUserIsRegistered(user: FirebaseUser) = viewModelScope.launch {
-        val currentUser = accountRepository.get(user.uid)
-
-        currentUser?.let {
-            if (currentUser.firstName.isBlank()) {
-                _isRegistered.value = false
-            }
         }
     }
 

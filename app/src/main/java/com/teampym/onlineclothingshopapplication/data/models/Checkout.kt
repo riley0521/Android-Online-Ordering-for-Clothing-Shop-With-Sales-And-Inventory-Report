@@ -10,4 +10,4 @@ data class Checkout(
     val userId: String,
     val cart: List<Cart> = emptyList(),
     val totalCost: BigDecimal
-): Parcelable
+) : Parcelable

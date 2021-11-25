@@ -7,7 +7,7 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseUser
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
-import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.AccountRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RegistrationViewModel @Inject constructor(
-    private val accountRepository: AccountRepositoryImpl,
+    private val accountRepository: AccountRepository,
     private val userInformationDao: UserInformationDao,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {

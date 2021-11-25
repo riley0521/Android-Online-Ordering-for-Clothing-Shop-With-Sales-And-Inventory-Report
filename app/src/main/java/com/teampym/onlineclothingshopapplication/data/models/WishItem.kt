@@ -23,8 +23,7 @@ data class WishItem(
     @get:Exclude
     var roomId: String = "",
     var type: String = ProductType.HOODIES.name,
-    var dateAdded: Long = System.currentTimeMillis(),
-    var dateModified: Long = 0
+    var dateAdded: Long = 0
 ) : Parcelable {
     constructor() : this(
         "",

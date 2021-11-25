@@ -72,13 +72,9 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 //            }
 
             btnPlaceOrder.setOnClickListener {
-                Log.d(TAG, "TITE")
                 // check if the user is verified, get the final info and cartList. Then,
                 // Place Order
                 val currentUser = getFirebaseUser()
-                currentUser?.let {
-                    Log.d(TAG, it.toString())
-                }
                 // Check if the user is signed based on the documentation.
                 // TODO("No additional note yet.")
                 if (currentUser != null) {

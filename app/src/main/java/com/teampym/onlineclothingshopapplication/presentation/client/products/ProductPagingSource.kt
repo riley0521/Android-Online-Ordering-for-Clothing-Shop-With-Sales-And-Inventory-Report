@@ -9,9 +9,9 @@ import com.teampym.onlineclothingshopapplication.data.room.MOST_POPULAR
 import com.teampym.onlineclothingshopapplication.data.room.NEWEST
 import com.teampym.onlineclothingshopapplication.data.room.SortOrder
 import com.teampym.onlineclothingshopapplication.data.room.Product
-import com.teampym.onlineclothingshopapplication.data.repository.ProductImageRepositoryImpl
-import com.teampym.onlineclothingshopapplication.data.repository.ProductInventoryRepositoryImpl
-import com.teampym.onlineclothingshopapplication.data.repository.ReviewRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.ProductImageRepository
+import com.teampym.onlineclothingshopapplication.data.repository.ProductInventoryRepository
+import com.teampym.onlineclothingshopapplication.data.repository.ReviewRepository
 import kotlinx.coroutines.tasks.await
 import java.io.IOException
 
@@ -20,9 +20,9 @@ private const val DEFAULT_PAGE_INDEX = 1
 class ProductPagingSource(
     private val queryProducts: Query,
     private val sortOrder: SortOrder,
-    private val productImageRepository: ProductImageRepositoryImpl,
-    private val productInventoryRepository: ProductInventoryRepositoryImpl,
-    private val reviewRepository: ReviewRepositoryImpl
+    private val productImageRepository: ProductImageRepository,
+    private val productInventoryRepository: ProductInventoryRepository,
+    private val reviewRepository: ReviewRepository
 ) : PagingSource<QuerySnapshot, Product>() {
 
     override fun getRefreshKey(state: PagingState<QuerySnapshot, Product>): QuerySnapshot? {

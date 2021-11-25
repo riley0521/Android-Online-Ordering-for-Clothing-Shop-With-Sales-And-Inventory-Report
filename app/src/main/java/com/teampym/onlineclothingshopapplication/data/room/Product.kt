@@ -25,7 +25,7 @@ data class Product(
     @get:Exclude
     var cartId: String = "",
     var type: String = ProductType.HOODIES.name,
-    var dateAdded: Long = System.currentTimeMillis(),
+    var dateAdded: Long = 0,
     var dateModified: Long = 0,
     var totalRate: Double = 0.0,
     var numberOfReviews: Long = 0,

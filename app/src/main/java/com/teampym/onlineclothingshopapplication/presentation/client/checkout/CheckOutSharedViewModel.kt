@@ -3,8 +3,8 @@ package com.teampym.onlineclothingshopapplication.presentation.client.checkout
 import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
-import com.teampym.onlineclothingshopapplication.data.repository.CartRepositoryImpl
-import com.teampym.onlineclothingshopapplication.data.repository.OrderRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.CartRepository
+import com.teampym.onlineclothingshopapplication.data.repository.OrderRepository
 import com.teampym.onlineclothingshopapplication.data.room.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.room.Cart
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,8 +19,8 @@ import javax.inject.Inject
 class CheckOutSharedViewModel @Inject constructor(
     private val userInformationDao: UserInformationDao,
     private val cartDao: CartDao,
-    private val orderRepository: OrderRepositoryImpl,
-    private val cartRepository: CartRepositoryImpl,
+    private val orderRepository: OrderRepository,
+    private val cartRepository: CartRepository,
     private val preferencesManager: PreferencesManager,
     @ApplicationScope val appScope: CoroutineScope
 ) : ViewModel() {

@@ -4,8 +4,7 @@ import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
 import com.teampym.onlineclothingshopapplication.data.models.Selector
-import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl_Factory
-import com.teampym.onlineclothingshopapplication.data.repository.DeliveryInformationRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.DeliveryInformationRepository
 import com.teampym.onlineclothingshopapplication.data.room.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +21,7 @@ class DeliveryInfoSharedViewModel @Inject constructor(
     regionDao: RegionDao,
     private val provinceDao: ProvinceDao,
     private val cityDao: CityDao,
-    private val deliveryInformationRepository: DeliveryInformationRepositoryImpl,
+    private val deliveryInformationRepository: DeliveryInformationRepository,
     private val deliveryInformationDao: DeliveryInformationDao,
     preferencesManager: PreferencesManager,
     @ApplicationScope val appScope: CoroutineScope

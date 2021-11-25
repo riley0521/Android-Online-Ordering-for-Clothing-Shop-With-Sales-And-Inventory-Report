@@ -1,11 +1,20 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.products
 
-import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.teampym.onlineclothingshopapplication.data.repository.ProductRepositoryImpl
-import com.teampym.onlineclothingshopapplication.data.repository.WishItemRepositoryImpl
-import com.teampym.onlineclothingshopapplication.data.room.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.repository.ProductRepository
+import com.teampym.onlineclothingshopapplication.data.repository.WishItemRepository
+import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
+import com.teampym.onlineclothingshopapplication.data.room.Product
+import com.teampym.onlineclothingshopapplication.data.room.SortOrder
+import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
+import com.teampym.onlineclothingshopapplication.data.room.UserWithWishList
+import com.teampym.onlineclothingshopapplication.data.room.WishItemDao
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -18,8 +27,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ProductViewModel @Inject constructor(
     private val db: FirebaseFirestore,
-    private val productRepository: ProductRepositoryImpl,
-    private val wishListRepository: WishItemRepositoryImpl,
+    private val productRepository: ProductRepository,
+    private val wishListRepository: WishItemRepository,
     private val userInformationDao: UserInformationDao,
     private val wishListDao: WishItemDao,
     private val preferencesManager: PreferencesManager
@@ -34,14 +43,13 @@ class ProductViewModel @Inject constructor(
     private val _productChannel = Channel<ProductEvent>()
     val productEvent = _productChannel.receiveAsFlow()
 
-    var productsFlow = combine(
+    val productsFlow = combine(
         searchQuery.asFlow(),
         preferencesManager.preferencesFlow
     ) { search, sessionPref ->
         Pair(search, sessionPref)
     }.flatMapLatest { (search, sessionPref) ->
-
-        var queryProducts: Query?
+        val queryProducts: Query?
         val categoryId = _categoryQuery.value
 
         queryProducts = when (sessionPref.sortOrder) {

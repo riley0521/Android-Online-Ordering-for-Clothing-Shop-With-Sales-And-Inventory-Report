@@ -9,7 +9,7 @@ data class Comment(
     var description: String,
     var commentBy: String,
     var id: String = "",
-    var dateCommented: Long = System.currentTimeMillis()
+    var dateCommented: Long = 0
 ) : Parcelable {
     constructor() : this(
         "",

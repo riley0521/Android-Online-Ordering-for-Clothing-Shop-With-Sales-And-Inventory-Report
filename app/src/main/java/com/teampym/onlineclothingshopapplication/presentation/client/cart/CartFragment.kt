@@ -22,14 +22,16 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
 import java.math.BigDecimal
 
+private const val TAG = "CartFragment"
+
 @AndroidEntryPoint
 class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartListener {
 
     private lateinit var binding: FragmentCartBinding
 
-    private val viewModel: CartViewModel by viewModels()
-
     private lateinit var adapter: CartAdapter
+
+    private val viewModel: CartViewModel by viewModels()
 
     private var userId = ""
 
@@ -39,33 +41,27 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
     private lateinit var loadingDialog: LoadingDialog
 
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentCartBinding.bind(view)
 
         loadingDialog = LoadingDialog(requireActivity())
-        loadingDialog.show()
-
-        val currentUser = getFirebaseUser()
-
-        currentUser?.let { viewModel.checkIfUserIsRegistered(it) }
-        viewModel.isRegistered.observe(viewLifecycleOwner) {
-            if (!it) {
-                findNavController().navigate(R.id.action_profileFragment_to_registrationFragment)
-            }
-        }
-
         adapter = CartAdapter(this)
 
         if (getFirebaseUser() == null) {
+            if (loadingDialog.isActive()) {
+                loadingDialog.dismiss()
+            }
             Toast.makeText(
                 requireContext(),
                 "Please log in first to view your cart.",
                 Toast.LENGTH_LONG
             ).show()
             findNavController().navigate(R.id.action_cartFragment_to_categoryFragment)
+        } else {
+            userId = getFirebaseUser()?.uid!!
+            loadingDialog.show()
         }
 
         binding.apply {
@@ -79,9 +75,10 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
                         .setPositiveButton("YES") { _, _ ->
                             viewModel.onDeleteOutOfStockItems(outOfStockList)
 
-                            val action = CartFragmentDirections.actionCartFragmentToCheckOutFragment(
-                                cart = Checkout(getFirebaseUser()?.uid!!, cartList, total)
-                            )
+                            val action =
+                                CartFragmentDirections.actionCartFragmentToCheckOutFragment(
+                                    cart = Checkout(userId, cartList, total)
+                                )
                             findNavController().navigate(action)
                         }.setNegativeButton("NO") { dialog, _ ->
                             dialog.dismiss()
@@ -89,7 +86,7 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
                         .show()
                 } else {
                     val action = CartFragmentDirections.actionCartFragmentToCheckOutFragment(
-                        cart = Checkout(getFirebaseUser()?.uid!!, cartList, total)
+                        cart = Checkout(userId, cartList, total)
                     )
                     findNavController().navigate(action)
                 }
@@ -97,12 +94,6 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
             recyclerViewCart.setHasFixedSize(true)
             recyclerViewCart.adapter = adapter
-        }
-
-        viewModel.userInformation.observe(viewLifecycleOwner) {
-            if (it != null) {
-                userId = it.userId
-            }
         }
 
         viewModel.cart.observe(viewLifecycleOwner) { cart ->

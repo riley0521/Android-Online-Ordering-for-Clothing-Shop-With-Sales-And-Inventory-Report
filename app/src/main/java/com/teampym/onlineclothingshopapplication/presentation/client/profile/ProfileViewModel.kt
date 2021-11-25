@@ -1,12 +1,17 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.profile
 
-import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.teampym.onlineclothingshopapplication.VERIFICATION_SPAN
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
-import com.teampym.onlineclothingshopapplication.data.repository.AccountRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.AccountRepository
+import com.teampym.onlineclothingshopapplication.data.repository.DeliveryInformationRepository
 import com.teampym.onlineclothingshopapplication.data.repository.NotificationTokenRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.WishItemRepository
 import com.teampym.onlineclothingshopapplication.data.room.CartDao
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformationDao
 import com.teampym.onlineclothingshopapplication.data.room.NotificationTokenDao
@@ -21,33 +26,29 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val accountRepository: AccountRepositoryImpl,
+    private val accountRepository: AccountRepository,
+    private val wishListRepository: WishItemRepository,
     private val notificationTokenRepository: NotificationTokenRepositoryImpl,
+    private val deliveryInformationRepository: DeliveryInformationRepository,
     private val userInformationDao: UserInformationDao,
     private val deliveryInformationDao: DeliveryInformationDao,
     private val notificationTokenDao: NotificationTokenDao,
     private val cartDao: CartDao,
     private val wishListDao: WishItemDao,
-    state: SavedStateHandle,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
-    private val profileEventChannel = Channel<ProfileVerificationEvent>()
-    val profileEvent = profileEventChannel.receiveAsFlow()
-
-    val verificationSpan = state.getLiveData<Long>(VERIFICATION_SPAN, 0)
+    private val _profileChannel = Channel<ProfileEvent>()
+    val profileEvent = _profileChannel.receiveAsFlow()
 
     val userSession = preferencesManager.preferencesFlow.asLiveData()
 
     private val _user = MutableLiveData<UserInformation>()
     val user: LiveData<UserInformation> get() = _user
 
-    private val _isRegistered = MutableLiveData(true)
-    val isRegistered: LiveData<Boolean> get() = _isRegistered
-
-    fun onNotificationTokenInserted(userId: String, userType: String, token: String) =
+    private fun onNotificationTokenInserted(userInformation: UserInformation) =
         viewModelScope.launch {
-            notificationTokenRepository.insert(userId, userType, token)?.let {
+            notificationTokenRepository.getNewAndSubscribeToTopics(userInformation)?.let {
                 notificationTokenDao.insert(it)
             }
         }
@@ -66,63 +67,60 @@ class ProfileViewModel @Inject constructor(
 
         // I think I need to use dataStore to replace Sorting Mechanism
         // And this user Id to store session.
-        removeUserIdFromSession()
+        resetSession()
         user.signOut()
     }
 
-    private fun removeUserIdFromSession() = viewModelScope.launch {
-        preferencesManager.updateUserId("")
+    private fun resetSession() = viewModelScope.launch {
+        preferencesManager.resetAllFields()
     }
 
     private fun updateUserId(userId: String) = viewModelScope.launch {
         preferencesManager.updateUserId(userId)
     }
 
-    fun fetchNotificationTokensAndWishList(userId: String) = viewModelScope.launch {
+    fun fetchUserInformation(user: FirebaseUser) = viewModelScope.launch {
+        val fetchedUser = accountRepository.get(user.uid)
+        if (fetchedUser != null) {
+            val fetchedWishList = wishListRepository.getAll(fetchedUser.userId)
+            val fetchedDeliveryInfoList = deliveryInformationRepository.getAll(fetchedUser.userId)
+
+            // Get Notification Based on the device
+            onNotificationTokenInserted(fetchedUser)
+
+            // Update preferences session
+            updateUserId(fetchedUser.userId)
+
+            // insert data to local db
+            userInformationDao.insert(fetchedUser)
+            wishListDao.insertAll(fetchedWishList)
+            deliveryInformationDao.insertAll(fetchedDeliveryInfoList)
+        }
+    }
+
+    fun fetchUserFromLocalDb(userId: String) = viewModelScope.launch {
         val mainUser = userInformationDao.getCurrentUser(userId)
-        val userWithNotificationTokens = userInformationDao.getUserWithNotificationTokens()
-            .firstOrNull { it.user.userId == userId }
         val userWithWishList = userInformationDao.getUserWithWishList()
             .firstOrNull { it.user.userId == userId }
         _user.value = mainUser?.copy(
-            notificationTokenList = userWithNotificationTokens?.notificationTokens ?: emptyList(),
             wishList = userWithWishList?.wishList ?: emptyList()
         )
     }
 
-    fun checkIfUserIsRegistered(user: FirebaseUser) = viewModelScope.launch {
-        val currentUser = accountRepository.get(user.uid)
-
-        currentUser?.let {
-            updateUserId(it.userId)
-            if (currentUser.firstName.isBlank()) {
-                _isRegistered.value = false
-            }
-        }
-    }
-
-    // Check if the user is registered and/or verified then save
-    // the userId in UI State.
-    fun checkIfUserIsEmailVerified(user: FirebaseUser) = viewModelScope.launch {
-        if (!user.isEmailVerified) {
-            updateUserId(user.uid)
-            profileEventChannel.send(ProfileVerificationEvent.NotVerified)
-        } else {
-            updateUserId(user.uid)
-            profileEventChannel.send(ProfileVerificationEvent.Verified)
-        }
+    fun navigateUserToRegistrationModule() = viewModelScope.launch {
+        _profileChannel.send(ProfileEvent.NotRegistered)
     }
 
     // Send the verification again if it expired.
-    fun sendVerificationAgain(user: FirebaseUser) = viewModelScope.launch {
-        user.sendEmailVerification()
-        profileEventChannel.send(ProfileVerificationEvent.VerificationSent)
+    fun sendVerificationAgain() = viewModelScope.launch {
+        _profileChannel.send(ProfileEvent.VerificationSent)
     }
 
     // Events used to notify the UI about what's happening.
-    sealed class ProfileVerificationEvent {
-        object NotVerified : ProfileVerificationEvent()
-        object Verified : ProfileVerificationEvent()
-        object VerificationSent : ProfileVerificationEvent()
+    sealed class ProfileEvent {
+        object VerificationSent : ProfileEvent()
+        object SignedIn : ProfileEvent()
+        object SignedOut : ProfileEvent()
+        object NotRegistered : ProfileEvent()
     }
 }

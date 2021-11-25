@@ -9,7 +9,7 @@ data class AuditTrail(
     var userId: String,
     var description: String,
     var type: String = AuditType.CATEGORY.name,
-    var dateOfLog: Long = System.currentTimeMillis(),
+    var dateOfLog: Long = 0,
     var id: String = ""
 ) : Parcelable {
     constructor() : this("", "", "")

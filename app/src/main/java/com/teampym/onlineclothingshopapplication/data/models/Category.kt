@@ -8,6 +8,8 @@ data class Category(
     var id: String,
     var name: String,
     var imageUrl: String,
+    var dateAdded: Long = 0,
+    var dateModified: Long = 0
 ) : Parcelable {
     constructor() : this("", "", "")
 }

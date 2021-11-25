@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.teampym.onlineclothingshopapplication.data.repository.CartRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.CartRepository
 import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.room.CartDao
 import com.teampym.onlineclothingshopapplication.data.room.Inventory
@@ -17,7 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class InventoryViewModel @Inject constructor(
-    private val cartRepository: CartRepositoryImpl,
+    private val cartRepository: CartRepository,
     private val cartDao: CartDao
 ) : ViewModel() {
 

@@ -4,18 +4,13 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.teampym.onlineclothingshopapplication.data.repository.* // ktlint-disable no-wildcard-imports
-import com.teampym.onlineclothingshopapplication.data.room.CartDao
-import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformationDao
-import com.teampym.onlineclothingshopapplication.data.room.InventoryDao
-import com.teampym.onlineclothingshopapplication.data.room.NotificationTokenDao
-import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
-import com.teampym.onlineclothingshopapplication.data.room.ProductDao
-import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
-import com.teampym.onlineclothingshopapplication.data.room.WishItemDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
 @Module
@@ -27,148 +22,147 @@ object RepositoryModule {
     fun provideDbInstance() =
         Firebase.firestore
 
+    @IoDispatcher
     @Provides
-    @Singleton
-    fun provideCategoryRepository(db: FirebaseFirestore) =
-        CategoryRepositoryImpl(db)
+    fun provideIODispatcher(): CoroutineDispatcher = Dispatchers.IO
 
     @Provides
-    @Singleton
+    fun provideCategoryRepository(
+        db: FirebaseFirestore,
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = CategoryRepository(db, dispatcher)
+
+    @Provides
     fun provideAccountRepository(
         db: FirebaseFirestore,
-        wishItemRepository: WishItemRepositoryImpl,
-        userInformationDao: UserInformationDao
-    ) = AccountRepositoryImpl(
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = AccountRepository(
         db,
-        wishItemRepository,
-        userInformationDao
+        dispatcher
     )
 
     @Provides
-    @Singleton
     fun provideDeliveryInformationRepository(
         db: FirebaseFirestore,
-        deliveryInformationDao: DeliveryInformationDao
-    ) = DeliveryInformationRepositoryImpl(
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = DeliveryInformationRepository(
         db,
-        deliveryInformationDao
+        dispatcher
     )
 
     @Provides
-    @Singleton
     fun provideNotificationTokenRepository(
         db: FirebaseFirestore,
-        notificationTokenDao: NotificationTokenDao,
-        preferencesManager: PreferencesManager
+        @IoDispatcher dispatcher: CoroutineDispatcher
     ) = NotificationTokenRepositoryImpl(
         db,
-        notificationTokenDao,
-        preferencesManager
+        dispatcher
     )
 
     @Provides
-    @Singleton
     fun provideWishListRepository(
         db: FirebaseFirestore,
-        wishItemDao: WishItemDao
-    ) = WishItemRepositoryImpl(db, wishItemDao)
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = WishItemRepository(db, dispatcher)
 
     @Provides
-    @Singleton
     fun provideCartRepository(
         db: FirebaseFirestore,
-        cartDao: CartDao
-    ) = CartRepositoryImpl(db, cartDao)
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = CartRepository(db, dispatcher)
 
     @Provides
-    @Singleton
     fun provideProductRepository(
         db: FirebaseFirestore,
-        productImageRepository: ProductImageRepositoryImpl,
-        productInventoryRepository: ProductInventoryRepositoryImpl,
-        reviewRepository: ReviewRepositoryImpl,
-        accountRepository: AccountRepositoryImpl
-    ) = ProductRepositoryImpl(
+        productImageRepository: ProductImageRepository,
+        productInventoryRepository: ProductInventoryRepository,
+        reviewRepository: ReviewRepository,
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = ProductRepository(
         db,
         productImageRepository,
         productInventoryRepository,
         reviewRepository,
-        accountRepository
+        dispatcher
     )
 
     @Provides
-    @Singleton
     fun provideProductImageRepository(
-        db: FirebaseFirestore
-    ) = ProductImageRepositoryImpl(db)
+        db: FirebaseFirestore,
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = ProductImageRepository(db, dispatcher)
 
     @Provides
-    @Singleton
     fun provideProductInventoryRepository(
-        db: FirebaseFirestore
-    ) = ProductInventoryRepositoryImpl(db)
+        db: FirebaseFirestore,
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = ProductInventoryRepository(db, dispatcher)
 
     @Provides
-    @Singleton
     fun provideReviewRepository(
-        db: FirebaseFirestore
-    ) = ReviewRepositoryImpl(db)
+        db: FirebaseFirestore,
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = ReviewRepository(db, dispatcher)
 
     @Provides
-    @Singleton
     fun provideOrderRepository(
         db: FirebaseFirestore,
+        productRepository: ProductRepository,
         notificationTokenRepository: NotificationTokenRepositoryImpl,
-        orderDetailRepository: OrderDetailRepositoryImpl,
-        productRepository: ProductRepositoryImpl
-    ) = OrderRepositoryImpl(
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = OrderRepository(
         db,
+        productRepository,
         notificationTokenRepository,
-        orderDetailRepository,
-        productRepository
+        dispatcher
     )
 
     @Provides
-    @Singleton
     fun provideOrderDetailRepository(
-        db: FirebaseFirestore
-    ) = OrderDetailRepositoryImpl(
-        db
+        db: FirebaseFirestore,
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = OrderDetailRepository(
+        db,
+        dispatcher
     )
 
     @Provides
-    @Singleton
     fun providePostRepository(
-        db: FirebaseFirestore
-    ) = PostRepositoryImpl(
-        db
+        db: FirebaseFirestore,
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = PostRepository(
+        db,
+        dispatcher
     )
 
     @Provides
-    @Singleton
     fun provideLikeRepository(
         db: FirebaseFirestore,
-        postRepository: PostRepositoryImpl
-    ) = LikeRepositoryImpl(
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = LikeRepository(
         db,
-        postRepository
+        dispatcher
     )
 
     @Provides
-    @Singleton
     fun provideCommentRepository(
         db: FirebaseFirestore,
-        postRepository: PostRepositoryImpl
-    ) = CommentRepositoryImpl(
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = CommentRepository(
         db,
-        postRepository
+        dispatcher
     )
 
     @Provides
-    @Singleton
     fun provideAuditTrailRepository(
-        db: FirebaseFirestore
-    ) = AuditTrailRepositoryImpl(
-        db
+        db: FirebaseFirestore,
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = AuditTrailRepository(
+        db,
+        dispatcher
     )
 }
+
+@Retention(AnnotationRetention.RUNTIME)
+@Qualifier
+annotation class IoDispatcher

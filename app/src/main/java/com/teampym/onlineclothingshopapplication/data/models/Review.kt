@@ -12,7 +12,7 @@ data class Review(
     var rate: Double,
     var description: String,
     var id: String = "",
-    var dateReview: Long = System.currentTimeMillis()
+    var dateReview: Long = 0
 ) : Parcelable {
     constructor() : this("", "", "", "", 0.0, "")
 }

@@ -2,19 +2,21 @@ package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.toObject
+import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.WishItem
 import com.teampym.onlineclothingshopapplication.data.room.Product
-import com.teampym.onlineclothingshopapplication.data.room.WishItemDao
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.WISH_LIST_SUB_COLLECTION
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import javax.inject.Singleton
 
-class WishItemRepositoryImpl @Inject constructor(
+@Singleton
+class WishItemRepository @Inject constructor(
     db: FirebaseFirestore,
-    private val wishItemDao: WishItemDao
+    @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
     private val userWishListRef = db.collection(USERS_COLLECTION)
@@ -22,29 +24,30 @@ class WishItemRepositoryImpl @Inject constructor(
     suspend fun getAll(
         userId: String
     ): List<WishItem> {
-        val wishListTemp = mutableListOf<WishItem>()
-        val wishListQuery = userWishListRef
-            .document(userId)
-            .collection(WISH_LIST_SUB_COLLECTION)
-            .get()
-            .await()
+        return withContext(dispatcher) {
+            val wishList = mutableListOf<WishItem>()
+            val wishListQuery = userWishListRef
+                .document(userId)
+                .collection(WISH_LIST_SUB_COLLECTION)
+                .get()
+                .await()
 
-        wishListQuery?.let { querySnapshot ->
-            for (doc in querySnapshot.documents) {
-                val wishItem = doc.toObject<WishItem>()!!.copy(productId = doc.id)
-                wishListTemp.add(wishItem)
-                wishItemDao.insert(wishItem)
+            wishListQuery?.let { querySnapshot ->
+                for (doc in querySnapshot.documents) {
+                    val wishItem = doc.toObject<WishItem>()!!.copy(productId = doc.id)
+                    wishList.add(wishItem)
+                }
             }
+            wishList
         }
-        return wishListTemp
     }
 
     suspend fun insert(
         userId: String,
         product: Product
     ): WishItem? {
-        val createdWishItem = withContext(Dispatchers.IO) {
-            var createdWishItemTemp: WishItem? = WishItem(
+        return withContext(dispatcher) {
+            var createdWishItem: WishItem? = WishItem(
                 categoryId = product.categoryId,
                 name = product.name,
                 description = product.description,
@@ -54,21 +57,21 @@ class WishItemRepositoryImpl @Inject constructor(
                 userId = userId,
                 cartId = "",
                 type = product.type,
+                dateAdded = System.currentTimeMillis()
             )
 
-            createdWishItemTemp?.let { w ->
+            createdWishItem?.let { w ->
                 userWishListRef.document(userId)
                     .collection(WISH_LIST_SUB_COLLECTION)
                     .document(w.productId)
                     .set(w)
                     .addOnSuccessListener {
                     }.addOnFailureListener {
-                        createdWishItemTemp = null
+                        createdWishItem = null
                         return@addOnFailureListener
                     }
             }
-            return@withContext createdWishItemTemp
+            createdWishItem
         }
-        return createdWishItem
     }
 }

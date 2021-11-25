@@ -17,7 +17,7 @@ data class Order(
     var isUserAgreedToShippingFee: Boolean = false,
     var paymentMethod: String = PaymentMethod.COD.name,
     var status: String = Status.SHIPPING.toString(),
-    var orderDate: Long = System.currentTimeMillis(),
+    var dateOrdered: Long = 0,
     var deliveryInformation: DeliveryInformation = DeliveryInformation(),
 
     @get:Exclude

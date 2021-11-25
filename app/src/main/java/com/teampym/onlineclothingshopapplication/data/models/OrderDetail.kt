@@ -15,7 +15,7 @@ data class OrderDetail(
     val quantity: Long,
     val subTotal: Double,
     val id: String = "",
-    val dateSold: Long = 0,
+    var dateSold: Long = 0,
     val product: Product = Product(),
     val isExchangeable: Boolean = false
 ) : Parcelable {
