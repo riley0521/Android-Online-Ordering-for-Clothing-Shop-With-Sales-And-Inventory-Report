@@ -6,15 +6,10 @@ import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
-import com.teampym.onlineclothingshopapplication.data.models.NotificationToken
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
-import com.teampym.onlineclothingshopapplication.data.network.FCMService
-import com.teampym.onlineclothingshopapplication.data.network.NotificationData
-import com.teampym.onlineclothingshopapplication.data.network.NotificationSingle
 import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
-import com.teampym.onlineclothingshopapplication.data.util.NOTIFICATION_TOKENS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.ORDER_DETAILS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.Status
@@ -30,6 +25,7 @@ import javax.inject.Singleton
 @Singleton
 class OrderRepository @Inject constructor(
     val db: FirebaseFirestore,
+    private val orderDetailRepository: OrderDetailRepository,
     private val productRepository: ProductRepository,
     private val notificationTokenRepository: NotificationTokenRepositoryImpl,
     @IoDispatcher val dispatcher: CoroutineDispatcher
@@ -37,37 +33,36 @@ class OrderRepository @Inject constructor(
 
     private val orderCollectionRef = db.collection(ORDERS_COLLECTION)
 
-    @Inject
-    lateinit var service: FCMService<Any>
-
     // TODO("Create a paging source.")
-
     // get all orders if you are an admin
-    suspend fun getAll(orderBy: String): List<Order> {
+    suspend fun getAll(userType: String, orderBy: String): List<Order> {
         return withContext(dispatcher) {
             val orderList = mutableListOf<Order>()
 
-            val orderDocuments = orderCollectionRef
-                .whereEqualTo("status", orderBy)
-                .orderBy("orderDate", Query.Direction.DESCENDING)
-                .get()
-                .await()
+            if (userType == UserType.ADMIN.name) {
+                val orderDocuments = orderCollectionRef
+                    .whereEqualTo("status", orderBy)
+                    .orderBy("orderDate", Query.Direction.DESCENDING)
+                    .get()
+                    .await()
 
-            if (orderDocuments.documents.isNotEmpty()) {
-                for (document in orderDocuments.documents) {
-                    val order = document.toObject(Order::class.java)!!.copy(id = document.id)
-                    orderList.add(order.copy(id = document.id))
+                if (orderDocuments.documents.isNotEmpty()) {
+                    for (document in orderDocuments.documents) {
+                        val order = document.toObject(Order::class.java)!!.copy(id = document.id)
+                        orderList.add(order.copy(id = document.id))
+                    }
                 }
             }
             orderList
         }
     }
 
-    suspend fun getAllByUserId(userId: String): List<Order> {
+    suspend fun getAllByUserId(userId: String, status: String): List<Order> {
         return withContext(dispatcher) {
             val orderList = mutableListOf<Order>()
             val orderDocuments = orderCollectionRef
                 .whereEqualTo("userId", userId)
+                .whereEqualTo("status", status)
                 .get()
                 .await()
 
@@ -81,7 +76,10 @@ class OrderRepository @Inject constructor(
         }
     }
 
-    // TODO("Submit order for processing and delete all items in cart.")
+    // This will notify all admins about new order (SHIPPING).
+    // This will return a new created order
+    // Insert the order details
+    // Then you can finally notify all admins in the viewModel.
     suspend fun create(
         userId: String,
         cartList: List<Cart>,
@@ -97,27 +95,126 @@ class OrderRepository @Inject constructor(
                 deliveryInformation = deliveryInformation,
                 suggestedShippingFee = 0.0,
                 additionalNote = additionalNote,
-                dateOrdered = System.currentTimeMillis()
+                dateOrdered = System.currentTimeMillis(),
+                numberOfItems = cartList.size.toLong()
             )
 
             newOrder?.let { o ->
-                orderCollectionRef
+                val result = orderCollectionRef
                     .add(o)
-                    .addOnSuccessListener { doc ->
-                        newOrder?.id = doc.id
-                    }.addOnFailureListener {
-                        newOrder = null
-                        return@addOnFailureListener
-                    }
+                    .await()
+                if (result != null) {
+                    newOrder?.id = result.id
+
+                    // Insert all items in the cart after adding order in database
+                    newOrder?.orderDetailList = orderDetailRepository.insertAll(
+                        result.id,
+                        userId,
+                        cartList
+                    )
+                } else {
+                    newOrder = null
+                }
             }
             newOrder
         }
     }
 
+    // Notify all admins about the items that the user wants to return.
+    suspend fun returnItems(
+        username: String,
+        orderDetailList: List<OrderDetail>
+    ): Boolean {
+        return withContext(dispatcher) {
+            val isSuccessful: Boolean
+
+            val body = ""
+            var count = 1
+
+            // The output should like this
+            // John Doe wants to return:
+            // 1. Product1(S)
+            // 2. Product2(M)
+            // 3. Product3(L)
+            for (item in orderDetailList) {
+                body.plus("$count. ${item.product.name}(${item.size})\n")
+                count++
+            }
+
+            isSuccessful = notificationTokenRepository.notifyAllAdmins(
+                null,
+                "$username wants to return:",
+                body
+            )
+
+            isSuccessful
+        }
+    }
+
+    // Notify all admins about cancellation of order.
+    suspend fun cancelOrder(
+        username: String,
+        orderId: String,
+        orderDetailList: List<OrderDetail>
+    ): Boolean {
+        return withContext(dispatcher) {
+            var isSuccessful = true
+
+            isSuccessful = productRepository.deductCommittedToStockCount(
+                orderDetailList
+            )
+
+            isSuccessful = notificationTokenRepository.notifyAllAdmins(
+                null,
+                "Order (${orderId.take(orderId.length / 2)}...) is cancelled by $username",
+                "I'm sorry but I changed my mind about ordering."
+            )
+
+            isSuccessful
+        }
+    }
+
+    // This will notify all admins that the user agreed to suggested shipping fee.
+    suspend fun agreeToShippingFee(userId: String, orderId: String): Boolean {
+        return withContext(dispatcher) {
+            var isCompleted = true
+            val orderDocument = orderCollectionRef
+                .document(orderId)
+                .get()
+                .await()
+            if (orderDocument != null) {
+                val updatedOrder = orderDocument.toObject<Order>()!!.copy(id = orderDocument.id)
+                val agreeMap = mapOf<String, Any>(
+                    "isUserAgreedToShippingFee" to true
+                )
+
+                orderDocument.reference.set(agreeMap, SetOptions.merge())
+                    .addOnSuccessListener {
+                        runBlocking {
+                            updatedOrder.isUserAgreedToShippingFee = true
+                            isCompleted = notifyUserAboutShippingFeeOrMadeADeal(
+                                userId,
+                                updatedOrder,
+                                null,
+                                true
+                            )
+                        }
+                    }.addOnFailureListener {
+                        isCompleted = false
+                        return@addOnFailureListener
+                    }
+            }
+            isCompleted
+        }
+    }
+
+    // This will be executed by admins only.
     suspend fun updateOrderStatus(
+        userId: String,
         userType: String,
         orderId: String,
         status: String,
+        cancelReason: String?,
         suggestedShippingFee: Double?
     ): Boolean {
 
@@ -132,6 +229,7 @@ class OrderRepository @Inject constructor(
             var isCompleted = true
             when (status) {
                 Status.SHIPPED.toString() -> {
+                    // This is a nested method that will eventually notify the customer in the end.
                     isCompleted = changeStatusToShipped(
                         suggestedShippingFee,
                         orderId,
@@ -142,46 +240,86 @@ class OrderRepository @Inject constructor(
                 }
                 Status.DELIVERY.toString() -> {
                     isCompleted = changeStatusToDelivery(status, orderId, isCompleted)
+                    isCompleted = notificationTokenRepository.notifyCustomer(
+                        obj = null,
+                        userId = userId,
+                        title = "Order (${orderId.take(orderId.length / 2)}...) is on it's way.",
+                        body = "Buckle up because your order is on it's way to your home!"
+                    )
                 }
                 Status.COMPLETED.toString() -> {
-                    isCompleted = changeStatusToCompleted(status, orderId, isCompleted, userType)
+                    isCompleted = changeStatusToCompleted(userType, orderId, status, isCompleted)
+                    isCompleted = notificationTokenRepository.notifyCustomer(
+                        obj = null,
+                        userId = userId,
+                        title = "Order (${orderId.take(orderId.length / 2)}...) is completed!",
+                        body = "Yey! Now you can enjoy your newly bought items!"
+                    )
                 }
                 Status.RETURNED.toString() -> {
-                    isCompleted = changeStatusToReturned(status, orderId, userType, isCompleted)
+                    isCompleted = changeStatusToReturned(userType, orderId, status, isCompleted)
                 }
                 Status.CANCELED.toString() -> {
-                    // Both user and admin can execute this..
-                    val updateOrderStatus = mapOf<String, Any>(
-                        "status" to status
+                    isCompleted = changeStatusToCancelled(orderId, status, isCompleted)
+                    isCompleted = notificationTokenRepository.notifyCustomer(
+                        obj = null,
+                        userId = userId,
+                        title = "Order (${orderId.take(orderId.length / 2)}...) is cancelled by admin.",
+                        body = cancelReason ?: ""
                     )
-
-                    orderCollectionRef
-                        .document(orderId)
-                        .set(updateOrderStatus, SetOptions.merge())
-                        .addOnSuccessListener {
-                            // Both user and admin can execute this..
-                            // TODO("Simply update the status field in db")
-                            // TODO("Notify all admins. Maybe I can create topic that admins can listen to.")
-                            // TODO("Vice Versa admin can notify specific user if there are no more stocks, that is the reason why it is cancelled")
-                        }.addOnFailureListener {
-                            isCompleted = false
-                            return@addOnFailureListener
-                        }
-                }
-                Status.SHIPPING.toString() -> {
-                    // Both user and admin can execute this..
-                    // TODO("Simply update the status field in db")
-                    // TODO("Notify all admins. Maybe I can create topic that admins can listen to.")
                 }
             }
             isCompleted
         }
     }
 
-    private fun changeStatusToReturned(
-        status: String,
+    private fun changeStatusToCancelled(
         orderId: String,
+        status: String,
+        isCompleted: Boolean
+    ): Boolean {
+        var isSuccess = isCompleted
+        val orderDetailList = mutableListOf<OrderDetail>()
+        val updateOrderStatus = mapOf<String, Any>(
+            "status" to status
+        )
+
+        orderCollectionRef
+            .document(orderId)
+            .set(updateOrderStatus, SetOptions.merge())
+            .addOnSuccessListener {
+                orderCollectionRef
+                    .document(orderId)
+                    .collection(ORDER_DETAILS_SUB_COLLECTION)
+                    .get()
+                    .addOnSuccessListener {
+                        runBlocking {
+                            for (document in it.documents) {
+                                val orderDetailItem = document
+                                    .toObject(OrderDetail::class.java)!!.copy(id = document.id)
+
+                                orderDetailList.add(orderDetailItem)
+                            }
+                            isSuccess =
+                                productRepository.deductCommittedToStockCount(
+                                    orderDetailList
+                                )
+                        }
+                    }.addOnFailureListener {
+                        isSuccess = false
+                        return@addOnFailureListener
+                    }
+            }.addOnFailureListener {
+                isSuccess = false
+                return@addOnFailureListener
+            }
+        return isSuccess
+    }
+
+    private fun changeStatusToReturned(
         userType: String,
+        orderId: String,
+        status: String,
         isCompleted: Boolean
     ): Boolean {
         var isSuccess = isCompleted
@@ -224,10 +362,10 @@ class OrderRepository @Inject constructor(
     }
 
     private fun changeStatusToCompleted(
-        status: String,
+        userType: String,
         orderId: String,
-        isCompleted: Boolean,
-        userType: String
+        status: String,
+        isCompleted: Boolean
     ): Boolean {
         var isSuccess = isCompleted
         val updateOrderStatus = mapOf<String, Any>(
@@ -262,7 +400,6 @@ class OrderRepository @Inject constructor(
             .document(orderId)
             .set(updateOrderStatus, SetOptions.merge())
             .addOnSuccessListener {
-                // TODO("Notify by getting the notification token of the user and then send it.")
             }.addOnFailureListener {
                 isSuccess = false
                 return@addOnFailureListener
@@ -383,17 +520,17 @@ class OrderRepository @Inject constructor(
 
             when {
                 sf > 0.0 -> {
-                    isCompleted = notifyCustomer(
+                    isCompleted = notificationTokenRepository.notifyCustomer(
                         order,
                         userId,
-                        "Order (${order.id})",
+                        "Order (${order.id.take(order.id.length / 2)}...)",
                         "Admin suggests that the order fee should be $sf"
                     )
                 }
                 isAgree -> {
-                    isCompleted = notifyAllAdmins(
+                    isCompleted = notificationTokenRepository.notifyAllAdmins(
                         order,
-                        "Order (${order.id})",
+                        "Order (${order.id.take(order.id.length / 2)}...)",
                         "User ($userId) has agreed to the suggested shipping fee."
                     )
                 }
@@ -401,109 +538,6 @@ class OrderRepository @Inject constructor(
             return@withContext isCompleted
         }
         return isSuccessful
-    }
-
-    private suspend fun notifyCustomer(
-        order: Order,
-        userId: String,
-        title: String,
-        body: String
-    ): Boolean {
-        val isSuccessful = withContext(dispatcher) {
-            val data = NotificationData<Any>(
-                title = title,
-                body = body,
-                obj = order
-            )
-
-            val notificationTokenList = notificationTokenRepository.getAll(userId)
-            val tokenList: List<String> = notificationTokenList.map {
-                it.token
-            }
-
-            val notificationSingle = NotificationSingle(
-                data = data,
-                tokenList = tokenList
-            )
-
-            service.notifySingleUser(notificationSingle)
-            true
-        }
-        return isSuccessful
-    }
-
-    private suspend fun notifyAllAdmins(
-        order: Order,
-        title: String,
-        body: String
-    ): Boolean {
-        val isSuccessful = withContext(dispatcher) {
-            var isCompleted = true
-            db.collectionGroup(NOTIFICATION_TOKENS_SUB_COLLECTION)
-                .whereEqualTo("userType", UserType.ADMIN.name)
-                .get()
-                .addOnSuccessListener { querySnapshot ->
-                    runBlocking {
-
-                        val tokenList = mutableListOf<String>()
-                        for (doc in querySnapshot.documents) {
-                            val token = doc.toObject<NotificationToken>()!!.copy(id = doc.id)
-                            tokenList.add(token.token)
-                        }
-
-                        val data = NotificationData<Any>(
-                            title = title,
-                            body = body,
-                            obj = order
-                        )
-
-                        val notificationSingle = NotificationSingle(
-                            data = data,
-                            tokenList = tokenList
-                        )
-
-                        service.notifySingleUser(notificationSingle)
-                    }
-                }.addOnFailureListener {
-                    isCompleted = false
-                    return@addOnFailureListener
-                }
-            return@withContext isCompleted
-        }
-        return isSuccessful
-    }
-
-    suspend fun agreeToShippingFee(userId: String, orderId: String): Boolean {
-        return withContext(dispatcher) {
-            var isCompleted = true
-            val orderDocument = orderCollectionRef
-                .document(orderId)
-                .get()
-                .await()
-            if (orderDocument != null) {
-                val updatedOrder = orderDocument.toObject<Order>()!!.copy(id = orderDocument.id)
-                val agreeMap = mapOf<String, Any>(
-                    "isUserAgreedToShippingFee" to true
-                )
-
-                orderDocument.reference.set(agreeMap, SetOptions.merge())
-                    .addOnSuccessListener {
-                        runBlocking {
-                            updatedOrder.isUserAgreedToShippingFee = true
-                            isCompleted = notifyUserAboutShippingFeeOrMadeADeal(
-                                userId,
-                                updatedOrder,
-                                null,
-                                true
-                            )
-                        }
-                    }.addOnFailureListener {
-                        isCompleted = false
-                        return@addOnFailureListener
-                    }
-            }
-            isCompleted
-        }
     }
 
     private suspend fun updateOrderDetailsToSold(

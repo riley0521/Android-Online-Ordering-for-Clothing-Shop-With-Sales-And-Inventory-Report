@@ -14,6 +14,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
+import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCheckOutBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -35,10 +36,13 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
     private lateinit var paymentMethodEnum: PaymentMethod
 
+    private lateinit var loadingDialog: LoadingDialog
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentCheckOutBinding.bind(view)
+        loadingDialog = LoadingDialog(requireActivity())
 
         adapter = CheckOutAdapter()
 
@@ -79,6 +83,7 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                 // TODO("No additional note yet.")
                 if (currentUser != null) {
                     if (currentUser.isEmailVerified) {
+                        loadingDialog.show()
                         viewModel.placeOrder(
                             finalUser,
                             finalUser.cartList,
@@ -111,11 +116,13 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
             viewModel.checkOutEvent.collectLatest { event ->
                 when (event) {
                     is CheckOutSharedViewModel.CheckOutEvent.ShowSuccessfulMessage -> {
+                        loadingDialog.dismiss()
                         Toast.makeText(requireContext(), event.msg, Toast.LENGTH_SHORT)
                             .show()
                         findNavController().navigate(R.id.action_checkOutFragment_to_categoryFragment)
                     }
                     is CheckOutSharedViewModel.CheckOutEvent.ShowFailedMessage -> {
+                        loadingDialog.dismiss()
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
                     }
                 }

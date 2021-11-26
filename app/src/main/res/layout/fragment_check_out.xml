@@ -273,7 +273,7 @@
                         app:layout_constraintHorizontal_bias="0.0"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/tvDeliveryAddTitle"
-                        tools:text="@string/test_name_contact"
+                        tools:text="@string/label_name_with_contact"
                         tools:visibility="visible" />
 
                     <TextView

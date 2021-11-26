@@ -16,6 +16,7 @@ import javax.inject.Singleton
 @Singleton
 class CommentRepository @Inject constructor(
     db: FirebaseFirestore,
+    private val notificationTokenRepository: NotificationTokenRepositoryImpl,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 

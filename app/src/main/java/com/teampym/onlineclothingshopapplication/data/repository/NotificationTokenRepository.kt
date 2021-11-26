@@ -7,12 +7,16 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.ktx.messaging
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.NotificationToken
+import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
+import com.teampym.onlineclothingshopapplication.data.network.FCMService
+import com.teampym.onlineclothingshopapplication.data.network.NotificationData
+import com.teampym.onlineclothingshopapplication.data.network.NotificationSingle
 import com.teampym.onlineclothingshopapplication.data.util.NOTIFICATION_TOKENS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -20,11 +24,14 @@ import javax.inject.Singleton
 
 @Singleton
 class NotificationTokenRepositoryImpl @Inject constructor(
-    db: FirebaseFirestore,
+    private val db: FirebaseFirestore,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
     private val userCollectionRef = db.collection(USERS_COLLECTION)
+
+    @Inject
+    lateinit var service: FCMService<Any>
 
     suspend fun getAll(userId: String): List<NotificationToken> {
         return withContext(dispatcher) {
@@ -104,6 +111,85 @@ class NotificationTokenRepositoryImpl @Inject constructor(
                 }
             }
             createdToken
+        }
+    }
+
+    suspend fun notifyCustomer(
+        obj: Any?,
+        userId: String,
+        title: String,
+        body: String
+    ): Boolean {
+        return withContext(dispatcher) {
+            val isCompleted = true
+            var objNotNull = Any()
+            obj?.let {
+                objNotNull = it
+            }
+
+            val data = NotificationData(
+                title = title,
+                body = body,
+                obj = objNotNull
+            )
+
+            val notificationTokenList = getAll(userId)
+            val tokenList: List<String> = notificationTokenList.map {
+                it.token
+            }
+
+            val notificationSingle = NotificationSingle(
+                data = data,
+                tokenList = tokenList
+            )
+
+            service.notifySingleUser(notificationSingle)
+            isCompleted
+        }
+    }
+
+    suspend fun notifyAllAdmins(
+        obj: Any?,
+        title: String,
+        body: String
+    ): Boolean {
+        return withContext(dispatcher) {
+            var isCompleted = true
+            var objNotNull = Any()
+            obj?.let {
+                objNotNull = it
+            }
+
+            db.collectionGroup(NOTIFICATION_TOKENS_SUB_COLLECTION)
+                .whereEqualTo("userType", UserType.ADMIN.name)
+                .get()
+                .addOnSuccessListener { querySnapshot ->
+                    runBlocking {
+
+                        val tokenList = mutableListOf<String>()
+                        for (doc in querySnapshot.documents) {
+                            val token = doc.toObject<NotificationToken>()!!.copy(id = doc.id)
+                            tokenList.add(token.token)
+                        }
+
+                        val data = NotificationData(
+                            title = title,
+                            body = body,
+                            obj = objNotNull
+                        )
+
+                        val notificationSingle = NotificationSingle(
+                            data = data,
+                            tokenList = tokenList
+                        )
+
+                        service.notifySingleUser(notificationSingle)
+                    }
+                }.addOnFailureListener {
+                    isCompleted = false
+                    return@addOnFailureListener
+                }
+            isCompleted
         }
     }
 }

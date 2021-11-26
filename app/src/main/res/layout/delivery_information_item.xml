@@ -79,7 +79,7 @@
             android:layout_marginEnd="4dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="@string/test_name_contact"
+            android:text="@string/label_name_with_contact"
             android:textAppearance="?attr/textAppearanceBody1"
             app:layout_constraintEnd_toStartOf="@+id/btnEdit"
             app:layout_constraintStart_toStartOf="parent"

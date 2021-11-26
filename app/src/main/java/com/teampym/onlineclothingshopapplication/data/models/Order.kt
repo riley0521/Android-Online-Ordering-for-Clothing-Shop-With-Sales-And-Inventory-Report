@@ -11,6 +11,7 @@ import kotlinx.android.parcel.Parcelize
 data class Order(
     var userId: String,
     var totalCost: Double,
+    var numberOfItems: Long,
     var additionalNote: String,
     var id: String = "",
     var suggestedShippingFee: Double = 0.0,
@@ -23,7 +24,7 @@ data class Order(
     @get:Exclude
     var orderDetailList: List<OrderDetail> = emptyList()
 ) : Parcelable {
-    constructor() : this("", 0.0, "", "")
+    constructor() : this("", 0.0, 0, "")
 
     @get:Exclude
     val totalPaymentWithShippingFee: Double get() = totalCost * suggestedShippingFee

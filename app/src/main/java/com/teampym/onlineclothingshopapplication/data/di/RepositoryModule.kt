@@ -77,12 +77,14 @@ object RepositoryModule {
         productImageRepository: ProductImageRepository,
         productInventoryRepository: ProductInventoryRepository,
         reviewRepository: ReviewRepository,
+        notificationTokenRepository: NotificationTokenRepositoryImpl,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = ProductRepository(
         db,
         productImageRepository,
         productInventoryRepository,
         reviewRepository,
+        notificationTokenRepository,
         dispatcher
     )
 
@@ -107,11 +109,13 @@ object RepositoryModule {
     @Provides
     fun provideOrderRepository(
         db: FirebaseFirestore,
+        orderDetailRepository: OrderDetailRepository,
         productRepository: ProductRepository,
         notificationTokenRepository: NotificationTokenRepositoryImpl,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = OrderRepository(
         db,
+        orderDetailRepository,
         productRepository,
         notificationTokenRepository,
         dispatcher
@@ -129,9 +133,11 @@ object RepositoryModule {
     @Provides
     fun providePostRepository(
         db: FirebaseFirestore,
+        notificationTokenRepository: NotificationTokenRepositoryImpl,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = PostRepository(
         db,
+        notificationTokenRepository,
         dispatcher
     )
 
@@ -147,9 +153,11 @@ object RepositoryModule {
     @Provides
     fun provideCommentRepository(
         db: FirebaseFirestore,
+        notificationTokenRepository: NotificationTokenRepositoryImpl,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = CommentRepository(
         db,
+        notificationTokenRepository,
         dispatcher
     )
 

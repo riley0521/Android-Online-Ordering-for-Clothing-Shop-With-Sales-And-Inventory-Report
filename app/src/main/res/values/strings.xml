@@ -59,9 +59,13 @@
     <string name="txt_date_picker" translatable="false">Date Picker</string>
     <string name="btn_change_payment_method">Change</string>
     <string name="product_name">Product Name</string>
-    <string name="long_sentence">Hmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm</string>
+    <string name="long_sentence">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam luctus, elit sed consequat iaculis, tellus dui dapibus sapien, ut malesuada lectus magna rutrum ex. Nulla a vehicula enim, nec ornare purus. Morbi id commodo dolor. Nulla hendrerit posuere dapibus. Nunc condimentum molestie neque et ornare. Duis cursus consequat augue at ultrices. Nullam aliquam lorem nisi, sit amet malesuada nibh commodo sit amet. Sed libero nibh, mattis sit amet condimentum in, lacinia sed risus. Suspendisse ac mauris id nunc tincidunt iaculis eu ut velit. Phasellus accumsan, nibh eu tempor rutrum, nisi elit eleifend ipsum, ut suscipit enim risus quis turpis.</string>
     <string name="test_address">#300 11th Avenue Justice Lourdes Paredes Cubao Quezon City \nQuezon City, Metro Manila, Metro Manila, 1109</string>
-    <string name="test_name_contact">John Doe | (+63) 912 345 6789</string>
+    <string name="label_name_with_contact">John Doe | (+63) 912 345 6789</string>
+    <string name="label_name_example">John Doe</string>
+    <string name="label_date_example">11/26/2021 07:11 PM</string>
+    <string name="label_title_example">This is a title</string>
+    <string name="label_description_example">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam luctus, elit sed consequat iaculis, tellus dui dapibus sapien, ut malesuada lectus magna rutrum ex. Nulla a vehicula enim, nec ornare purus. Morbi id commodo dolor. Nulla hendrerit posuere dapibus. Nunc condimentum molestie neque et ornare. Duis cursus consequat augue at ultrices. Nullam aliquam lorem nisi, sit amet malesuada nibh commodo sit amet. Sed libero nibh, mattis sit amet condimentum in, lacinia sed risus. Suspendisse ac mauris id nunc tincidunt iaculis eu ut velit. Phasellus accumsan, nibh eu tempor rutrum, nisi elit eleifend ipsum, ut suscipit enim risus quis turpis.</string>
     <string name="default_text">Default</string>
     <string name="add_new_delivery_information">Add New Delivery Information</string>
     <string name="full_name">Full Name</string>
@@ -101,6 +105,27 @@
     <string name="total_payment">Total Payment</string>
     <string name="loading_please_wait">Loading. Please wait…</string>
     <string name="update_information">Update Information</string>
+    <string name="label_price">Price:</string>
+    <string name="label_size">Size:</string>
+    <string name="label_like">Like</string>
+    <string name="label_like_description">You, and 1000 others like this post.</string>
+    <string name="label_comment">Comment</string>
+    <string name="label_view_shipping_orders">View Shipping Orders</string>
+    <string name="label_view_shipped_orders">View Shipped Orders</string>
+    <string name="label_view_ready_to_deliver_orders">View Ready To Deliver Orders</string>
+    <string name="label_view_cancelled_orders">View Cancelled Orders</string>
+    <string name="label_view_returned_orders_items">View Returned Orders/Items</string>
+    <string name="label_order_id">Order ID:</string>
+    <string name="label_username">Username:</string>
+    <string name="label_total_cost">Total Cost:</string>
+    <string name="label_shipping_fee">Shipping Fee:</string>
+    <string name="label_user_agreed_to_shipping_fee">User Agreed To Shipping Fee:</string>
+    <string name="label_status">Status:</string>
+    <string name="label_number_of_items">Number Of Items:</string>
+    <string name="label_date_ordered">Date Ordered:</string>
+    <string name="label_additional_note_for_admins">Additional Note For Admins:</string>
+    <string name="label_view_completed_orders">View Completed Orders</string>
+    <string name="label_view_items">View Items</string>
 
 
 </resources>

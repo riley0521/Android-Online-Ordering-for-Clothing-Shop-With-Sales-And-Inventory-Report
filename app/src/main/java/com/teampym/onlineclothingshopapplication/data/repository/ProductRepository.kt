@@ -26,6 +26,7 @@ class ProductRepository @Inject constructor(
     private val productImageRepository: ProductImageRepository,
     private val productInventoryRepository: ProductInventoryRepository,
     private val reviewRepository: ReviewRepository,
+    private val notificationTokenRepository: NotificationTokenRepositoryImpl,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
@@ -94,14 +95,14 @@ class ProductRepository @Inject constructor(
         return withContext(dispatcher) {
             var isCompleted = true
 
-            productCollectionRef
+            product.dateModified = System.currentTimeMillis()
+            val result = productCollectionRef
                 .document(product.productId)
                 .set(product, SetOptions.merge())
-                .addOnSuccessListener {
-                }.addOnFailureListener {
-                    isCompleted = false
-                    return@addOnFailureListener
-                }
+                .await()
+            if(result == null) {
+                isCompleted = false
+            }
             isCompleted
         }
     }
@@ -203,43 +204,39 @@ class ProductRepository @Inject constructor(
 
     // CANCELED
     suspend fun deductCommittedToStockCount(
-        userType: String,
         orderDetailList: List<OrderDetail>
     ): Boolean {
         return withContext(dispatcher) {
             var isSuccessful = true
+            for (orderDetail in orderDetailList) {
+                val inventoryDocument =
+                    productCollectionRef
+                        .document(orderDetail.product.productId)
+                        .collection(INVENTORIES_SUB_COLLECTION)
+                        .document(orderDetail.inventoryId)
+                        .get()
+                        .await()
 
-            if (userType == UserType.ADMIN.toString()) {
-                for (orderDetail in orderDetailList) {
-                    val inventoryDocument =
-                        productCollectionRef
-                            .document(orderDetail.product.productId)
-                            .collection(INVENTORIES_SUB_COLLECTION)
-                            .document(orderDetail.inventoryId)
-                            .get()
-                            .await()
+                if (inventoryDocument != null) {
+                    val inventory = inventoryDocument
+                        .toObject<Inventory>()!!.copy(inventoryId = inventoryDocument.id)
+                    inventory.committed -= orderDetail.quantity
+                    inventory.stock += orderDetail.quantity
 
-                    if (inventoryDocument != null) {
-                        val inventory = inventoryDocument
-                            .toObject<Inventory>()!!.copy(inventoryId = inventoryDocument.id)
-                        inventory.committed -= orderDetail.quantity
-                        inventory.stock += orderDetail.quantity
-
-                        productCollectionRef
-                            .document(orderDetail.product.productId)
-                            .collection(INVENTORIES_SUB_COLLECTION)
-                            .document(orderDetail.inventoryId)
-                            .set(inventory, SetOptions.merge())
-                            .addOnSuccessListener {
-                            }.addOnFailureListener {
-                                isSuccessful = false
-                                return@addOnFailureListener
-                            }
-                    } else {
+                    val result = productCollectionRef
+                        .document(orderDetail.product.productId)
+                        .collection(INVENTORIES_SUB_COLLECTION)
+                        .document(orderDetail.inventoryId)
+                        .set(inventory, SetOptions.merge())
+                        .await()
+                    if(result == null) {
                         isSuccessful = false
                     }
+                } else {
+                    isSuccessful = false
                 }
             }
+
             isSuccessful
         }
     }

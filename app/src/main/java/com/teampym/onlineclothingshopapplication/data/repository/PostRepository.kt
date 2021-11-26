@@ -20,6 +20,7 @@ import javax.inject.Singleton
 @Singleton
 class PostRepository @Inject constructor(
     db: FirebaseFirestore,
+    private val notificationTokenRepositoryImpl: NotificationTokenRepositoryImpl,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
