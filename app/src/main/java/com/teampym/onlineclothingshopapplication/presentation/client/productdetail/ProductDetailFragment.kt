@@ -18,6 +18,7 @@ import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductDetailBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import javax.inject.Inject
 
@@ -110,10 +111,23 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
         }
 
         lifecycleScope.launchWhenStarted {
-            viewModel.userFlow.collectLatest { user ->
-                if (user.userType == UserType.CUSTOMER.name) {
-                    myMenu?.let {
-                        it.findItem(R.id.action_add_edit_stock).isVisible = false
+            viewModel.userFlow.collect { user ->
+                when (user.userType) {
+                    UserType.CUSTOMER.name -> {
+                        myMenu?.let {
+                            it.findItem(R.id.action_add_edit_stock).isVisible = false
+                        }
+                    }
+                    UserType.ADMIN.name -> {
+                        myMenu?.let {
+                            it.findItem(R.id.action_add_edit_stock).isVisible = true
+                        }
+                    }
+                    else -> {
+                        myMenu?.let {
+                            it.findItem(R.id.action_add_edit_stock).isVisible = false
+                            it.findItem(R.id.action_cart).isVisible = false
+                        }
                     }
                 }
             }

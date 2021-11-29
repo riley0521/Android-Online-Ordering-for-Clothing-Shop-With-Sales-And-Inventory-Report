@@ -5,12 +5,14 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.util.CANCELLED_ORDERS
@@ -20,7 +22,9 @@ import com.teampym.onlineclothingshopapplication.data.util.RETURNED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.SHIPPED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.SHIPPING_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.Status
+import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentOrderListBinding
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 
 class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapter.OnOrderListener {
@@ -44,7 +48,7 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
         viewModel.statusQuery.value = status
 
         lifecycleScope.launchWhenStarted {
-            viewModel.userFlow.collectLatest {
+            viewModel.userFlow.collect {
                 adapter = OrderListAdapter(it.userType, this@OrderListFragment, requireActivity())
 
                 binding.apply {
@@ -55,6 +59,15 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
 
             viewModel.ordersFlow.collectLatest {
                 adapter.submitData(it)
+            }
+
+            viewModel.orderEvent.collectLatest { event ->
+                when(event) {
+                    is OrderListViewModel.OrderListEvent.ShowMessage -> {
+                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
+                        adapter.notifyItemRemoved(event.positionToRemove)
+                    }
+                }
             }
         }
 
@@ -127,15 +140,41 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
         TODO("Not yet implemented")
     }
 
-    override fun onCancelClicked(item: Order) {
+    override fun onCancelClicked(item: Order, userType: String, position: Int) {
+        when (userType) {
+            UserType.CUSTOMER.name -> {
+                showCancelDialogForCustomer(item, position)
+            }
+            UserType.ADMIN.name -> {
+                showCancelModalForAdmin(item, position)
+            }
+        }
+    }
+
+    override fun onSuggestClicked(item: Order, position: Int) {
+        showSuggestShipFeeModalForAdmin(item, position)
+    }
+
+    override fun onAgreeToSfClicked(item: Order, position: Int) {
         TODO("Not yet implemented")
     }
 
-    override fun onSuggestClicked(item: Order) {
+    private fun showCancelModalForAdmin(item: Order, position: Int) {
         TODO("Not yet implemented")
     }
 
-    override fun onAgreeToSfClicked(item: Order) {
+    private fun showSuggestShipFeeModalForAdmin(item: Order, position: Int) {
         TODO("Not yet implemented")
+    }
+
+    private fun showCancelDialogForCustomer(item: Order, position: Int) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("CANCEL ORDER")
+            .setMessage("Are you sure you want to cancel order?")
+            .setPositiveButton("Yes") { _, _ ->
+                viewModel.cancelOrder(item, position)
+            }.setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }
     }
 }

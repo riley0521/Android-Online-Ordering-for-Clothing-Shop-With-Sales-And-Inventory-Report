@@ -7,14 +7,18 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.repository.OrderRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -27,6 +31,9 @@ class OrderListViewModel @Inject constructor(
 
     val searchQuery = MutableLiveData("")
     val statusQuery = MutableLiveData("")
+
+    private val _orderListChannel = Channel<OrderListEvent>()
+    val orderEvent = _orderListChannel.receiveAsFlow()
 
     val userFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
         userInformationDao.get(sessionPref.userId)
@@ -72,5 +79,20 @@ class OrderListViewModel @Inject constructor(
         orderRepository.getSome(queryProducts, user.userId, user.userType).flow.cachedIn(
             viewModelScope
         )
+    }
+
+    fun cancelOrder(order: Order, position: Int) = viewModelScope.launch {
+        if (orderRepository.cancelOrder(
+                order.deliveryInformation.name,
+                order.id,
+                order.orderDetailList
+            )
+        ) {
+            _orderListChannel.send(OrderListEvent.ShowMessage("Cancelled Order Successfully!", position))
+        }
+    }
+
+    sealed class OrderListEvent {
+        data class ShowMessage(val msg: String, val positionToRemove: Int) : OrderListEvent()
     }
 }

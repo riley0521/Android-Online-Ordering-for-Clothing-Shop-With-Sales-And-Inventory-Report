@@ -117,7 +117,7 @@
     <string name="label_view_returned_orders_items">View Returned Orders/Items</string>
     <string name="label_order_id">Order ID:</string>
     <string name="label_username">Username:</string>
-    <string name="label_total_cost">Total Cost:</string>
+    <string name="label_total_cost">Merchandise Total:</string>
     <string name="label_shipping_fee">Shipping Fee:</string>
     <string name="label_user_agreed_to_shipping_fee">User Agreed To Shipping Fee:</string>
     <string name="label_status">Status:</string>
@@ -139,6 +139,9 @@
     <string name="action_get_by_completed">Action Get By Completed</string>
     <string name="action_get_by_returned">Action Get By Returned</string>
     <string name="action_get_by_cancelled">Action Get By Cancelled</string>
+    <string name="add_new_category">Add New Category</string>
+    <string name="label_grand_total">Grand Total:</string>
+    <string name="delivery_address">Delivery Address:</string>
 
 
 </resources>

@@ -71,7 +71,7 @@ class OrderListAdapter(
                         when (btnAction.text) {
                             CANCEL_BUTTON -> {
                                 if (item != null) {
-                                    listener.onCancelClicked(item)
+                                    listener.onCancelClicked(item, userType, position)
                                 }
                             }
                             CANCEL_OR_SUGGEST -> {
@@ -87,11 +87,11 @@ class OrderListAdapter(
                                     showPopUpMenu.setOnMenuItemClickListener { menuItem ->
                                         when (menuItem.itemId) {
                                             0 -> {
-                                                listener.onCancelClicked(item)
+                                                listener.onCancelClicked(item, userType, position)
                                                 true
                                             }
                                             1 -> {
-                                                listener.onSuggestClicked(item)
+                                                listener.onSuggestClicked(item, position)
                                                 true
                                             }
                                             else -> false
@@ -101,7 +101,7 @@ class OrderListAdapter(
                             }
                             AGREE_TO_SHIPPING_FEE -> {
                                 if (item != null) {
-                                    listener.onAgreeToSfClicked(item)
+                                    listener.onAgreeToSfClicked(item, position)
                                 }
                             }
                         }
@@ -169,6 +169,22 @@ class OrderListAdapter(
                 tvOrderId.text = item.id
                 tvUsername.text = item.deliveryInformation.name
                 tvTotalCost.text = totalCostStr
+
+                if (item.suggestedShippingFee > 0.0) {
+                    val grandTotalStr = "$" + item.totalPaymentWithShippingFee
+                    tvGrandTotal.text = grandTotalStr
+                } else {
+                    labelGrandTotal.isVisible = false
+                    tvGrandTotal.isVisible = false
+                }
+
+                val completeAddress = "${item.deliveryInformation.streetNumber} " +
+                        "${item.deliveryInformation.city}, " +
+                        "${item.deliveryInformation.province}, " +
+                        "${item.deliveryInformation.region}, " +
+                        item.deliveryInformation.postalCode
+                tvDeliveryAddress.text = completeAddress
+
                 tvStatus.text = item.status
                 tvNumberOfItems.text = item.numberOfItems.toString()
 
@@ -185,8 +201,8 @@ class OrderListAdapter(
 
     interface OnOrderListener {
         fun onItemClicked(item: Order)
-        fun onCancelClicked(item: Order)
-        fun onSuggestClicked(item: Order)
-        fun onAgreeToSfClicked(item: Order)
+        fun onCancelClicked(item: Order, userType: String, position: Int)
+        fun onSuggestClicked(item: Order, position: Int)
+        fun onAgreeToSfClicked(item: Order, position: Int)
     }
 }

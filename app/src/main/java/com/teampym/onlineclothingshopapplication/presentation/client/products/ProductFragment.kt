@@ -64,9 +64,22 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
 
         viewModel.userWithWishList.observe(viewLifecycleOwner) { userWithWishList ->
             // Check if the user is customer then hide admin functions when true
-            if (userWithWishList.user.userType == UserType.CUSTOMER.name) {
-                myMenu?.let {
-                    it.findItem(R.id.action_add).isVisible = false
+            when (userWithWishList.user.userType) {
+                UserType.CUSTOMER.name -> {
+                    myMenu?.let {
+                        it.findItem(R.id.action_add).isVisible = false
+                    }
+                }
+                UserType.ADMIN.name -> {
+                    myMenu?.let {
+                        it.findItem(R.id.action_add).isVisible = true
+                    }
+                }
+                else -> {
+                    myMenu?.let {
+                        it.findItem(R.id.action_add).isVisible = false
+                        it.findItem(R.id.action_cart).isVisible = false
+                    }
                 }
             }
             wishList = userWithWishList

@@ -1,6 +1,8 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.addeditdeliveryinfo
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -110,6 +112,82 @@ class AddEditDeliveryInformationFragment :
                     }.show()
             }
 
+            edtFullName.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                    edtFullName.setText(viewModel.fullName)
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    viewModel.fullName = s.toString()
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    // Nothing
+                }
+            })
+
+            edtPhoneNo.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                    edtPhoneNo.setText(viewModel.phoneNumber)
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    viewModel.phoneNumber = s.toString()
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    // Nothing
+                }
+            })
+
+            edtPostalCode.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                    edtPostalCode.setText(viewModel.postalCode)
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    viewModel.postalCode = s.toString()
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    // Nothing
+                }
+            })
+
+            edtDetailedAddress.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                    edtDetailedAddress.setText(viewModel.streetNumber)
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    viewModel.streetNumber = s.toString()
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    // Nothing
+                }
+            })
+
             btnSubmit.setOnClickListener {
                 when {
                     isNewFormValid() -> {
@@ -128,7 +206,12 @@ class AddEditDeliveryInformationFragment :
                         editDeliveryInformation?.postalCode = edtPostalCode.text.toString()
                         editDeliveryInformation?.userId = userId
                         editDeliveryInformation?.isPrimary = switchDefaultAddress.isChecked
-                        editDeliveryInformation?.let { edited -> viewModel.onSubmitClicked(edited, true) }
+                        editDeliveryInformation?.let { edited ->
+                            viewModel.onSubmitClicked(
+                                edited,
+                                true
+                            )
+                        }
                     }
                     else -> {
                         when {

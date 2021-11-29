@@ -24,8 +24,19 @@ class DeliveryInfoSharedViewModel @Inject constructor(
     private val deliveryInformationRepository: DeliveryInformationRepository,
     private val deliveryInformationDao: DeliveryInformationDao,
     preferencesManager: PreferencesManager,
+    private val state: SavedStateHandle,
     @ApplicationScope val appScope: CoroutineScope
 ) : ViewModel() {
+
+    companion object {
+        private const val FULL_NAME = "full_name"
+        private const val PHONE_NUMBER = "phone_number"
+        private const val REGION = "region"
+        private const val PROVINCE = "province"
+        private const val CITY = "city"
+        private const val POSTAL_CODE = "postal_code"
+        private const val STREET_NUMBER = "street_number"
+    }
 
     private val _userId = MutableLiveData("")
     val userId: LiveData<String> get() = _userId
@@ -42,6 +53,30 @@ class DeliveryInfoSharedViewModel @Inject constructor(
 
     @ExperimentalCoroutinesApi
     val userDeliveryInfoList = _userDeliveryInfoList.asLiveData()
+
+    var fullName = state.get<String>(FULL_NAME) ?: ""
+        set(value) {
+            field = value
+            state.set(FULL_NAME, value)
+        }
+
+    var phoneNumber = state.get<String>(PHONE_NUMBER) ?: ""
+        set(value) {
+            field = value
+            state.set(PHONE_NUMBER, value)
+        }
+
+    var postalCode = state.get<String>(POSTAL_CODE) ?: ""
+        set(value) {
+            field = value
+            state.set(POSTAL_CODE, value)
+        }
+
+    var streetNumber = state.get<String>(STREET_NUMBER) ?: ""
+        set(value) {
+            field = value
+            state.set(STREET_NUMBER, value)
+        }
 
     private val _regionId = MutableLiveData(0L)
     val regionId: LiveData<Long> get() = _regionId
@@ -127,6 +162,7 @@ class DeliveryInfoSharedViewModel @Inject constructor(
                                 EDIT_DELIVERY_INFO_RESULT_OK
                             )
                         )
+                        resetAllUiState()
                     } else {
                         _deliveryInformationChannel.send(
                             AddEditDeliveryInformationEvent.NavigateBackWithResult(
@@ -144,6 +180,7 @@ class DeliveryInfoSharedViewModel @Inject constructor(
                                 ADD_DELIVERY_INFO_RESULT_OK
                             )
                         )
+                        resetAllUiState()
                         return@launch
                     }
                     _deliveryInformationChannel.send(
@@ -154,6 +191,13 @@ class DeliveryInfoSharedViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun resetAllUiState() {
+        fullName = ""
+        phoneNumber = ""
+        postalCode = ""
+        streetNumber = ""
     }
 
     private suspend fun insertToLocalDbAndChangeDefault(deliveryInfo: DeliveryInformation) {
