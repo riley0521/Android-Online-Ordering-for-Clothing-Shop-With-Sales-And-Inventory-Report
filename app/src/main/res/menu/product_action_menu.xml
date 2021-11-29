@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <item
         android:id="@+id/action_search"
@@ -27,6 +28,28 @@
             <item
                 android:id="@+id/action_sort_by_new"
                 android:title="@string/action_sort_new" />
+        </menu>
+
+    </item>
+
+    <item
+        android:id="@+id/action_cart"
+        android:icon="@drawable/ic_cart"
+        android:title="@string/view_cart"
+        app:showAsAction="always|collapseActionView" />
+
+    <item
+        android:id="@+id/action_add"
+        android:icon="@drawable/ic_add"
+        android:iconTint="@android:color/black"
+        android:title="@string/actions"
+        app:showAsAction="ifRoom"
+        tools:targetApi="o">
+
+        <menu>
+            <item
+                android:id="@+id/action_new_product"
+                android:title="@string/add_new_product" />
         </menu>
 
     </item>

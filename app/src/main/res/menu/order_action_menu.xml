@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <item
+        android:id="@+id/action_search"
+        android:icon="@drawable/ic_search"
+        android:title="@string/action_search"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="ifRoom|collapseActionView" />
+
+    <item
+        android:id="@+id/action_get_by"
+        android:icon="@drawable/ic_sort"
+        android:title="@string/actions"
+        app:showAsAction="ifRoom">
+
+        <menu>
+            <item
+                android:id="@+id/action_shipping"
+                android:title="@string/action_get_by_shipping" />
+
+            <item
+                android:id="@+id/action_shipped"
+                android:title="@string/action_get_by_shipped" />
+
+            <item
+                android:id="@+id/action_delivery"
+                android:title="@string/action_get_by_delivery" />
+
+            <item
+                android:id="@+id/action_completed"
+                android:title="@string/action_get_by_completed" />
+
+            <item
+                android:id="@+id/action_returned"
+                android:title="@string/action_get_by_returned" />
+
+            <item
+                android:id="@+id/action_cancelled"
+                android:title="@string/action_get_by_cancelled" />
+        </menu>
+
+    </item>
+
+</menu>

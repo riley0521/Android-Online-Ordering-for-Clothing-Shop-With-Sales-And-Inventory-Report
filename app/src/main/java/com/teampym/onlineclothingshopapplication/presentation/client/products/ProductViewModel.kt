@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
+import androidx.paging.cachedIn
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.teampym.onlineclothingshopapplication.data.repository.ProductRepository
@@ -83,6 +84,8 @@ class ProductViewModel @Inject constructor(
                         .limit(30)
                 }
             }
+            // This is not necessary but when you remove this, the compiler
+            // will say it's exhaustive
             SortOrder.BY_POPULARITY -> {
                 if (search.isEmpty()) {
                     db.collection(PRODUCTS_COLLECTION)
@@ -104,7 +107,7 @@ class ProductViewModel @Inject constructor(
             it.user.userId == sessionPref.userId
         }
 
-        productRepository.getSome(queryProducts, sessionPref.sortOrder).flow
+        productRepository.getSome(queryProducts, sessionPref.sortOrder).flow.cachedIn(viewModelScope)
     }
 
     fun addToWishList(userId: String, product: Product) = viewModelScope.launch {

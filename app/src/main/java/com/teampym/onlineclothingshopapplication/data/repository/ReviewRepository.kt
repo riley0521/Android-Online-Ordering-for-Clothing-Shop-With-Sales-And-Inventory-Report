@@ -1,5 +1,7 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
@@ -8,6 +10,7 @@ import com.teampym.onlineclothingshopapplication.data.models.Review
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.REVIEWS_SUB_COLLECTION
+import com.teampym.onlineclothingshopapplication.presentation.client.reviews.ReviewPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -22,7 +25,18 @@ class ReviewRepository @Inject constructor(
 
     private val reviewCollectionRef = db.collection(PRODUCTS_COLLECTION)
 
-    // TODO("Create a paging source.")
+    fun getSome(queryReviews: Query) =
+        Pager(
+            PagingConfig(
+                pageSize = 30,
+                prefetchDistance = 30,
+                enablePlaceholders = false
+            )
+        ) {
+            ReviewPagingSource(
+                queryReviews
+            )
+        }
 
     suspend fun getFive(productId: String): List<Review> {
         return withContext(dispatcher) {

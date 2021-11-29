@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <item
+        android:id="@+id/action_share"
+        android:icon="@drawable/ic_share"
+        android:title="@string/button_share"
+        app:showAsAction="always|collapseActionView" />
+
+    <item
+        android:id="@+id/action_cart"
+        android:icon="@drawable/ic_cart"
+        android:title="@string/view_cart"
+        app:showAsAction="always|collapseActionView" />
+
+    <item
+        android:id="@+id/action_add_edit_stock"
+        android:icon="@drawable/ic_add"
+        android:iconTint="@android:color/black"
+        android:title="@string/actions"
+        app:showAsAction="ifRoom"
+        tools:targetApi="o">
+
+        <menu>
+            <item
+                android:id="@+id/action_edit_product"
+                android:title="@string/edit_product" />
+
+            <item
+                android:id="@+id/action_add_new_inventory"
+                android:title="@string/add_new_inventory" />
+
+            <item
+                android:id="@+id/action_stock_in"
+                android:title="@string/stock_in" />
+        </menu>
+
+    </item>
+
+</menu>

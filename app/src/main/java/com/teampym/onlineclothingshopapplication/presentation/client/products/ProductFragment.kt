@@ -17,12 +17,10 @@ import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.SortOrder
 import com.teampym.onlineclothingshopapplication.data.room.UserWithWishList
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
+import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -45,6 +43,8 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
 
     private lateinit var loadingDialog: LoadingDialog
 
+    private var myMenu: Menu? = null
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -60,14 +60,16 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
             recyclerProducts.setHasFixedSize(true)
             recyclerProducts.layoutManager = GridLayoutManager(requireContext(), 2)
             recyclerProducts.adapter = adapter
-
-            btnCart.setOnClickListener {
-                findNavController().navigate(R.id.action_global_cartFragment)
-            }
         }
 
-        viewModel.userWithWishList.observe(viewLifecycleOwner) {
-            wishList = it
+        viewModel.userWithWishList.observe(viewLifecycleOwner) { userWithWishList ->
+            // Check if the user is customer then hide admin functions when true
+            if (userWithWishList.user.userType == UserType.CUSTOMER.name) {
+                myMenu?.let {
+                    it.findItem(R.id.action_add).isVisible = false
+                }
+            }
+            wishList = userWithWishList
         }
 
         lifecycleScope.launchWhenStarted {
@@ -119,6 +121,9 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.product_action_menu, menu)
 
+        // After inflating the view, you can not set the reference into a global variable
+        myMenu = menu
+
         val searchItem = menu.findItem(R.id.action_search)
         searchView = searchItem.actionView as SearchView
 
@@ -154,6 +159,14 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
             }
             R.id.action_sort_by_new -> {
                 viewModel.updateSortOrder(SortOrder.BY_NEWEST)
+                true
+            }
+            R.id.action_cart -> {
+                findNavController().navigate(R.id.action_global_cartFragment)
+                true
+            }
+            R.id.action_new_product -> {
+                // TODO("Navigate to add/edit product layout when admin")
                 true
             }
             else -> false

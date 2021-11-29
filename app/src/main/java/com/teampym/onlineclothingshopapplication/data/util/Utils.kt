@@ -22,6 +22,18 @@ const val COMMENTS_SUB_COLLECTION = "comments"
 
 const val AUDIT_TRAILS_COLLECTION = "AuditTrails"
 
+const val CANCEL_BUTTON = "Cancel"
+const val SUGGEST_BUTTON = "Suggest Shipping Fee"
+const val CANCEL_OR_SUGGEST = "Cancel | Suggest Shipping Fee"
+const val AGREE_TO_SHIPPING_FEE = "Agree To Shipping Fee"
+
+const val SHIPPING_ORDERS = "Shipping Orders"
+const val SHIPPED_ORDERS = "Shipped Orders"
+const val DELIVERY_ORDERS = "Delivery Orders"
+const val COMPLETED_ORDERS = "Completed Orders"
+const val RETURNED_ORDERS = "Returned Orders"
+const val CANCELLED_ORDERS = "Cancelled Orders"
+
 enum class Status {
     SHIPPING,
     SHIPPED,

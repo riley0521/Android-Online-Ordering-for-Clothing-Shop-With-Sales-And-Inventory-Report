@@ -30,15 +30,14 @@ class ProductRepository @Inject constructor(
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
-    // READ Operation
     private val productCollectionRef = db.collection(PRODUCTS_COLLECTION)
-
-    // TODO("Create a paging source.")
 
     fun getSome(queryProducts: Query, sortOrder: SortOrder) =
         Pager(
             PagingConfig(
-                pageSize = 30
+                pageSize = 30,
+                prefetchDistance = 30,
+                enablePlaceholders = false
             )
         ) {
             ProductPagingSource(
@@ -100,7 +99,7 @@ class ProductRepository @Inject constructor(
                 .document(product.productId)
                 .set(product, SetOptions.merge())
                 .await()
-            if(result == null) {
+            if (result == null) {
                 isCompleted = false
             }
             isCompleted
@@ -229,7 +228,7 @@ class ProductRepository @Inject constructor(
                         .document(orderDetail.inventoryId)
                         .set(inventory, SetOptions.merge())
                         .await()
-                    if(result == null) {
+                    if (result == null) {
                         isSuccessful = false
                     }
                 } else {

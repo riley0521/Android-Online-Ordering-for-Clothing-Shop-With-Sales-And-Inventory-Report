@@ -126,6 +126,19 @@
     <string name="label_additional_note_for_admins">Additional Note For Admins:</string>
     <string name="label_view_completed_orders">View Completed Orders</string>
     <string name="label_view_items">View Items</string>
+    <string name="add_new_product">Add New Product</string>
+    <string name="add">Add</string>
+    <string name="edit_product">Edit Product</string>
+    <string name="add_new_inventory">Add New Inventory</string>
+    <string name="stock_in">Stock In</string>
+    <string name="actions">Actions</string>
+    <string name="view_cart">View Cart</string>
+    <string name="action_get_by_shipping">Action Get By Shipping</string>
+    <string name="action_get_by_shipped">Action Get By Shipped</string>
+    <string name="action_get_by_delivery">Action Get By Delivery</string>
+    <string name="action_get_by_completed">Action Get By Completed</string>
+    <string name="action_get_by_returned">Action Get By Returned</string>
+    <string name="action_get_by_cancelled">Action Get By Cancelled</string>
 
 
 </resources>

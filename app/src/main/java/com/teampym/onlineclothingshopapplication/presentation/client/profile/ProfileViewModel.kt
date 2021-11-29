@@ -19,6 +19,7 @@ import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.room.WishItemDao
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -82,8 +83,9 @@ class ProfileViewModel @Inject constructor(
     fun fetchUserInformation(user: FirebaseUser) = viewModelScope.launch {
         val fetchedUser = accountRepository.get(user.uid)
         if (fetchedUser != null) {
-            val fetchedWishList = wishListRepository.getAll(fetchedUser.userId)
-            val fetchedDeliveryInfoList = deliveryInformationRepository.getAll(fetchedUser.userId)
+            val fetchedWishList = async { wishListRepository.getAll(fetchedUser.userId) }
+            val fetchedDeliveryInfoList =
+                async { deliveryInformationRepository.getAll(fetchedUser.userId) }
 
             // Get Notification Based on the device
             onNotificationTokenInserted(fetchedUser)
@@ -93,8 +95,8 @@ class ProfileViewModel @Inject constructor(
 
             // insert data to local db
             userInformationDao.insert(fetchedUser)
-            wishListDao.insertAll(fetchedWishList)
-            deliveryInformationDao.insertAll(fetchedDeliveryInfoList)
+            wishListDao.insertAll(fetchedWishList.await())
+            deliveryInformationDao.insertAll(fetchedDeliveryInfoList.await())
         }
     }
 

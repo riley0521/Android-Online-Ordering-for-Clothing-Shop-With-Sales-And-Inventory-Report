@@ -5,17 +5,20 @@ import androidx.paging.PagingState
 import com.bumptech.glide.load.HttpException
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
-import com.teampym.onlineclothingshopapplication.data.room.MOST_POPULAR
-import com.teampym.onlineclothingshopapplication.data.room.NEWEST
-import com.teampym.onlineclothingshopapplication.data.room.SortOrder
-import com.teampym.onlineclothingshopapplication.data.room.Product
+import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.repository.ProductImageRepository
 import com.teampym.onlineclothingshopapplication.data.repository.ProductInventoryRepository
 import com.teampym.onlineclothingshopapplication.data.repository.ReviewRepository
+import com.teampym.onlineclothingshopapplication.data.room.MOST_POPULAR
+import com.teampym.onlineclothingshopapplication.data.room.NEWEST
+import com.teampym.onlineclothingshopapplication.data.room.Product
+import com.teampym.onlineclothingshopapplication.data.room.SortOrder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.io.IOException
-
-private const val DEFAULT_PAGE_INDEX = 1
 
 class ProductPagingSource(
     private val queryProducts: Query,
@@ -36,7 +39,6 @@ class ProductPagingSource(
     }
 
     override suspend fun load(params: LoadParams<QuerySnapshot>): LoadResult<QuerySnapshot, Product> {
-
         return try {
 
             val currentPage = params.key ?: queryProducts
@@ -53,22 +55,22 @@ class ProductPagingSource(
             val productList = mutableListOf<Product>()
             for (document in currentPage.documents) {
 
-                val product = document.toObject(Product::class.java)
-                if (product != null) {
-                    val inventoryList = productInventoryRepository.getAll(document.id)
+                var product = document.toObject<Product>()!!.copy(productId = document.id)
+                CoroutineScope(Dispatchers.IO).launch {
+                    val inventoryList = async { productInventoryRepository.getAll(document.id) }
 
-                    val productImageList = productImageRepository.getAll(document.id)
+                    val productImageList = async { productImageRepository.getAll(document.id) }
 
-                    val reviewList = reviewRepository.getFive(document.id)
+                    val reviewList = async { reviewRepository.getFive(document.id) }
 
-                    val productItem = product.copy(
+                    product = product.copy(
                         productId = document.id,
-                        inventoryList = inventoryList,
-                        productImageList = productImageList,
-                        reviewList = reviewList
+                        inventoryList = inventoryList.await(),
+                        productImageList = productImageList.await(),
+                        reviewList = reviewList.await()
                     )
-                    productList.add(productItem)
                 }
+                productList.add(product)
             }
 
             if (sortOrder == SortOrder.BY_POPULARITY) {
@@ -76,20 +78,24 @@ class ProductPagingSource(
                     product.inventoryList.maxOf { it.sold }
                 }
 
-                if(productList.size > 3) {
+                if (productList.size > 5) {
                     productList[0].flag = MOST_POPULAR
                     productList[1].flag = MOST_POPULAR
                     productList[2].flag = MOST_POPULAR
+                    productList[3].flag = MOST_POPULAR
+                    productList[4].flag = MOST_POPULAR
                 }
             } else if (sortOrder == SortOrder.BY_NEWEST) {
                 productList.sortByDescending { product ->
                     product.inventoryList.maxOf { it.sold }
                 }
 
-                if(productList.size > 3) {
+                if (productList.size > 5) {
                     productList[0].flag = NEWEST
                     productList[1].flag = NEWEST
                     productList[2].flag = NEWEST
+                    productList[3].flag = NEWEST
+                    productList[4].flag = NEWEST
                 }
             }
 

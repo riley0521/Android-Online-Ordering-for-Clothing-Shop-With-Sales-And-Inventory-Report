@@ -1,5 +1,7 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
@@ -13,7 +15,7 @@ import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.ORDER_DETAILS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.Status
-import com.teampym.onlineclothingshopapplication.data.util.UserType
+import com.teampym.onlineclothingshopapplication.presentation.client.orderlist.OrderListPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
@@ -33,48 +35,21 @@ class OrderRepository @Inject constructor(
 
     private val orderCollectionRef = db.collection(ORDERS_COLLECTION)
 
-    // TODO("Create a paging source.")
-    // get all orders if you are an admin
-    suspend fun getAll(userType: String, orderBy: String): List<Order> {
-        return withContext(dispatcher) {
-            val orderList = mutableListOf<Order>()
-
-            if (userType == UserType.ADMIN.name) {
-                val orderDocuments = orderCollectionRef
-                    .whereEqualTo("status", orderBy)
-                    .orderBy("orderDate", Query.Direction.DESCENDING)
-                    .get()
-                    .await()
-
-                if (orderDocuments.documents.isNotEmpty()) {
-                    for (document in orderDocuments.documents) {
-                        val order = document.toObject(Order::class.java)!!.copy(id = document.id)
-                        orderList.add(order.copy(id = document.id))
-                    }
-                }
-            }
-            orderList
+    fun getSome(queryOrders: Query, userId: String, userType: String) =
+        Pager(
+            PagingConfig(
+                pageSize = 30,
+                prefetchDistance = 30,
+                enablePlaceholders = false
+            )
+        ) {
+            OrderListPagingSource(
+                userId,
+                userType,
+                queryOrders,
+                orderDetailRepository
+            )
         }
-    }
-
-    suspend fun getAllByUserId(userId: String, status: String): List<Order> {
-        return withContext(dispatcher) {
-            val orderList = mutableListOf<Order>()
-            val orderDocuments = orderCollectionRef
-                .whereEqualTo("userId", userId)
-                .whereEqualTo("status", status)
-                .get()
-                .await()
-
-            if (orderDocuments.documents.isNotEmpty()) {
-                for (doc in orderDocuments.documents) {
-                    val order = doc.toObject<Order>()!!.copy(id = doc.id)
-                    orderList.add(order)
-                }
-            }
-            orderList
-        }
-    }
 
     // This will notify all admins about new order (SHIPPING).
     // This will return a new created order
@@ -158,13 +133,12 @@ class OrderRepository @Inject constructor(
         orderDetailList: List<OrderDetail>
     ): Boolean {
         return withContext(dispatcher) {
-            var isSuccessful = true
 
-            isSuccessful = productRepository.deductCommittedToStockCount(
+            productRepository.deductCommittedToStockCount(
                 orderDetailList
             )
 
-            isSuccessful = notificationTokenRepository.notifyAllAdmins(
+            val isSuccessful = notificationTokenRepository.notifyAllAdmins(
                 null,
                 "Order (${orderId.take(orderId.length / 2)}...) is cancelled by $username",
                 "I'm sorry but I changed my mind about ordering."
@@ -188,21 +162,16 @@ class OrderRepository @Inject constructor(
                     "isUserAgreedToShippingFee" to true
                 )
 
-                orderDocument.reference.set(agreeMap, SetOptions.merge())
-                    .addOnSuccessListener {
-                        runBlocking {
-                            updatedOrder.isUserAgreedToShippingFee = true
-                            isCompleted = notifyUserAboutShippingFeeOrMadeADeal(
-                                userId,
-                                updatedOrder,
-                                null,
-                                true
-                            )
-                        }
-                    }.addOnFailureListener {
-                        isCompleted = false
-                        return@addOnFailureListener
-                    }
+                val result = orderDocument.reference.set(agreeMap, SetOptions.merge()).await()
+                if (result != null) {
+                    updatedOrder.isUserAgreedToShippingFee = true
+                    isCompleted = notifyUserAboutShippingFeeOrMadeADeal(
+                        userId,
+                        updatedOrder,
+                        null,
+                        true
+                    )
+                }
             }
             isCompleted
         }
@@ -228,7 +197,7 @@ class OrderRepository @Inject constructor(
         return withContext(dispatcher) {
             var isCompleted = true
             when (status) {
-                Status.SHIPPED.toString() -> {
+                Status.SHIPPED.name -> {
                     // This is a nested method that will eventually notify the customer in the end.
                     isCompleted = changeStatusToShipped(
                         suggestedShippingFee,
@@ -238,30 +207,30 @@ class OrderRepository @Inject constructor(
                         isCompleted
                     )
                 }
-                Status.DELIVERY.toString() -> {
+                Status.DELIVERY.name -> {
                     isCompleted = changeStatusToDelivery(status, orderId, isCompleted)
-                    isCompleted = notificationTokenRepository.notifyCustomer(
+                    notificationTokenRepository.notifyCustomer(
                         obj = null,
                         userId = userId,
                         title = "Order (${orderId.take(orderId.length / 2)}...) is on it's way.",
                         body = "Buckle up because your order is on it's way to your home!"
                     )
                 }
-                Status.COMPLETED.toString() -> {
+                Status.COMPLETED.name -> {
                     isCompleted = changeStatusToCompleted(userType, orderId, status, isCompleted)
-                    isCompleted = notificationTokenRepository.notifyCustomer(
+                    notificationTokenRepository.notifyCustomer(
                         obj = null,
                         userId = userId,
                         title = "Order (${orderId.take(orderId.length / 2)}...) is completed!",
                         body = "Yey! Now you can enjoy your newly bought items!"
                     )
                 }
-                Status.RETURNED.toString() -> {
+                Status.RETURNED.name -> {
                     isCompleted = changeStatusToReturned(userType, orderId, status, isCompleted)
                 }
-                Status.CANCELED.toString() -> {
+                Status.CANCELED.name -> {
                     isCompleted = changeStatusToCancelled(orderId, status, isCompleted)
-                    isCompleted = notificationTokenRepository.notifyCustomer(
+                    notificationTokenRepository.notifyCustomer(
                         obj = null,
                         userId = userId,
                         title = "Order (${orderId.take(orderId.length / 2)}...) is cancelled by admin.",
