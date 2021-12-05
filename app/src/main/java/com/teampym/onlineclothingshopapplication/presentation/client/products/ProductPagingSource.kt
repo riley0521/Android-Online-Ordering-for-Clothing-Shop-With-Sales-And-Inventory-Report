@@ -65,10 +65,11 @@ class ProductPagingSource(
 
                     product = product.copy(
                         productId = document.id,
-                        inventoryList = inventoryList.await(),
-                        productImageList = productImageList.await(),
-                        reviewList = reviewList.await()
                     )
+
+                    product.inventoryList = inventoryList.await()
+                    product.productImageList = productImageList.await()
+                    product.reviewList = reviewList.await()
                 }
                 productList.add(product)
             }

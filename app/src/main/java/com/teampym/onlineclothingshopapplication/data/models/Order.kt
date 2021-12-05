@@ -20,12 +20,12 @@ data class Order(
     var status: String = Status.SHIPPING.toString(),
     var dateOrdered: Long = 0,
     var deliveryInformation: DeliveryInformation = DeliveryInformation(),
-
-    @get:Exclude
-    var orderDetailList: List<OrderDetail> = emptyList()
 ) : Parcelable {
     constructor() : this("", 0.0, 0, "")
 
     @get:Exclude
     val totalPaymentWithShippingFee: Double get() = totalCost * suggestedShippingFee
+
+    @get:Exclude
+    var orderDetailList: List<OrderDetail> = emptyList()
 }

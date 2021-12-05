@@ -97,8 +97,9 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 }
 
                 // check if the user is already verified in email
-                getFirebaseUser()?.let {
-                    binding.cardViewBanner.isVisible = !it.isEmailVerified
+                val currentUser = getFirebaseUser()
+                if (currentUser != null) {
+                    binding.cardViewBanner.isVisible = !currentUser.isEmailVerified
                 }
 
                 // Instantiate view
@@ -125,7 +126,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         ).show()
                     }
                     ProfileViewModel.ProfileEvent.NotRegistered -> {
-                        val action = ProfileFragmentDirections.actionProfileFragmentToRegistrationFragment(false)
+                        val action =
+                            ProfileFragmentDirections.actionProfileFragmentToRegistrationFragment(
+                                false
+                            )
                         findNavController().navigate(action)
                     }
                     ProfileViewModel.ProfileEvent.SignedIn -> TODO()

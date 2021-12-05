@@ -112,10 +112,7 @@ class CartRepository @Inject constructor(
                     .collection(CART_SUB_COLLECTION)
                     .document(cart.id)
                     .set(cart, SetOptions.merge())
-                    .addOnSuccessListener {
-                    }.addOnFailureListener {
-                        return@addOnFailureListener
-                    }
+                    .await()
             }
         }
         return cart

@@ -104,9 +104,8 @@ class ProfileViewModel @Inject constructor(
         val mainUser = userInformationDao.getCurrentUser(userId)
         val userWithWishList = userInformationDao.getUserWithWishList()
             .firstOrNull { it.user.userId == userId }
-        _user.value = mainUser?.copy(
-            wishList = userWithWishList?.wishList ?: emptyList()
-        )
+        mainUser?.wishList = userWithWishList?.wishList ?: emptyList()
+        _user.value = mainUser!!
     }
 
     fun navigateUserToRegistrationModule() = viewModelScope.launch {

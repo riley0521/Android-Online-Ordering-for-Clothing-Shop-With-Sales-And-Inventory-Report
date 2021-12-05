@@ -134,9 +134,8 @@ class OrderRepository @Inject constructor(
     ): Boolean {
         return withContext(dispatcher) {
 
-            productRepository.deductCommittedToStockCount(
-                orderDetailList
-            )
+            // Change Status to Canceled
+            changeStatusToCancelled(orderId, Status.CANCELED.name, true)
 
             val isSuccessful = notificationTokenRepository.notifyAllAdmins(
                 null,
@@ -262,18 +261,6 @@ class OrderRepository @Inject constructor(
                     .collection(ORDER_DETAILS_SUB_COLLECTION)
                     .get()
                     .addOnSuccessListener {
-                        runBlocking {
-                            for (document in it.documents) {
-                                val orderDetailItem = document
-                                    .toObject(OrderDetail::class.java)!!.copy(id = document.id)
-
-                                orderDetailList.add(orderDetailItem)
-                            }
-                            isSuccess =
-                                productRepository.deductCommittedToStockCount(
-                                    orderDetailList
-                                )
-                        }
                     }.addOnFailureListener {
                         isSuccess = false
                         return@addOnFailureListener
@@ -477,32 +464,19 @@ class OrderRepository @Inject constructor(
         val isSuccessful = withContext(dispatcher) {
             var isCompleted = true
 
-            var sf = 0.0
-            suggestedShippingFee?.let {
-                sf = it
-            }
-
-            var isAgree = false
-            isUserAgreedToShippingFee?.let {
-                isAgree = it
-            }
-
-            when {
-                sf > 0.0 -> {
-                    isCompleted = notificationTokenRepository.notifyCustomer(
-                        order,
-                        userId,
-                        "Order (${order.id.take(order.id.length / 2)}...)",
-                        "Admin suggests that the order fee should be $sf"
-                    )
-                }
-                isAgree -> {
-                    isCompleted = notificationTokenRepository.notifyAllAdmins(
-                        order,
-                        "Order (${order.id.take(order.id.length / 2)}...)",
-                        "User ($userId) has agreed to the suggested shipping fee."
-                    )
-                }
+            if (suggestedShippingFee != null && suggestedShippingFee > 0.0) {
+                isCompleted = notificationTokenRepository.notifyCustomer(
+                    order,
+                    userId,
+                    "Order (${order.id.take(order.id.length / 2)}...)",
+                    "Admin suggests that the order fee should be $suggestedShippingFee"
+                )
+            } else if (isUserAgreedToShippingFee != null && isUserAgreedToShippingFee) {
+                isCompleted = notificationTokenRepository.notifyAllAdmins(
+                    order,
+                    "Order (${order.id.take(order.id.length / 2)}...)",
+                    "User ($userId) has agreed to the suggested shipping fee."
+                )
             }
             return@withContext isCompleted
         }

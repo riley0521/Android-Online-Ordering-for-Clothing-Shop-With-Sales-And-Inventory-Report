@@ -14,11 +14,7 @@ data class Post(
     var imageUrl: String = "",
     var dateCreated: Long = 0,
     var numberOfLikes: Long = 0,
-    var numberOfComments: Long = 0,
-    @get:Exclude
-    var likeList: List<Like> = emptyList(),
-    @get:Exclude
-    var commentList: List<Comment> = emptyList()
+    var numberOfComments: Long = 0
 ) : Parcelable {
     constructor() : this(
         "",
@@ -27,4 +23,9 @@ data class Post(
         "",
         ""
     )
+
+    @get:Exclude
+    val likeList: List<Like> = emptyList()
+    @get:Exclude
+    val commentList: List<Comment> = emptyList()
 }

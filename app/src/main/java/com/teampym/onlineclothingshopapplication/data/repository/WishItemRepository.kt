@@ -1,6 +1,7 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.WishItem
@@ -60,17 +61,18 @@ class WishItemRepository @Inject constructor(
                 dateAdded = System.currentTimeMillis()
             )
 
-            createdWishItem?.let { w ->
-                userWishListRef.document(userId)
+            if (createdWishItem != null) {
+                val result = userWishListRef.document(userId)
                     .collection(WISH_LIST_SUB_COLLECTION)
-                    .document(w.productId)
-                    .set(w)
-                    .addOnSuccessListener {
-                    }.addOnFailureListener {
-                        createdWishItem = null
-                        return@addOnFailureListener
-                    }
+                    .document(createdWishItem.productId)
+                    .set(createdWishItem, SetOptions.merge())
+                    .await()
+
+                if (result == null) {
+                    createdWishItem = null
+                }
             }
+
             createdWishItem
         }
     }

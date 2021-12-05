@@ -62,7 +62,7 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
             }
 
             viewModel.orderEvent.collectLatest { event ->
-                when(event) {
+                when (event) {
                     is OrderListViewModel.OrderListEvent.ShowMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
                         adapter.notifyItemRemoved(event.positionToRemove)

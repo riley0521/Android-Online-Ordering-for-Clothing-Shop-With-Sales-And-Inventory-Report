@@ -9,6 +9,7 @@ import com.teampym.onlineclothingshopapplication.data.models.ProductImage
 import com.teampym.onlineclothingshopapplication.data.models.Review
 import com.teampym.onlineclothingshopapplication.data.util.ProductType
 import kotlinx.android.parcel.Parcelize
+import java.math.BigDecimal
 
 @Entity(tableName = "table_products")
 @Parcelize
@@ -28,16 +29,7 @@ data class Product(
     var dateAdded: Long = 0,
     var dateModified: Long = 0,
     var totalRate: Double = 0.0,
-    var numberOfReviews: Long = 0,
-    @get:Exclude
-    @Ignore
-    var inventoryList: List<Inventory> = emptyList(),
-    @get:Exclude
-    @Ignore
-    var productImageList: List<ProductImage> = emptyList(),
-    @get:Exclude
-    @Ignore
-    var reviewList: List<Review> = emptyList(),
+    var numberOfReviews: Long = 0
 ) : Parcelable {
     constructor() : this(
         "",
@@ -52,10 +44,19 @@ data class Product(
     var flag: String = ""
 
     @get:Exclude
-    @Ignore
-    var avgRate: Double = totalRate / numberOfReviews
+    val avgRate: BigDecimal get() = (totalRate / numberOfReviews).toBigDecimal()
 
     @get:Exclude
     @Ignore
     var isWishListedByUser = false
+
+    @get:Exclude
+    @Ignore
+    var inventoryList: List<Inventory> = emptyList()
+    @get:Exclude
+    @Ignore
+    var productImageList: List<ProductImage> = emptyList()
+    @get:Exclude
+    @Ignore
+    var reviewList: List<Review> = emptyList()
 }

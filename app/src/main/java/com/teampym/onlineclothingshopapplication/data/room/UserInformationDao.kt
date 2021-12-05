@@ -15,7 +15,7 @@ interface UserInformationDao {
     fun getAll(): Flow<List<UserInformation>>
 
     @Query("SELECT * FROM table_users WHERE userId = :userId")
-    suspend fun get(userId: String): Flow<UserInformation>
+    fun get(userId: String): Flow<UserInformation>
 
     @Query("SELECT * FROM table_users WHERE userId = :userId")
     suspend fun getCurrentUser(userId: String): UserInformation?

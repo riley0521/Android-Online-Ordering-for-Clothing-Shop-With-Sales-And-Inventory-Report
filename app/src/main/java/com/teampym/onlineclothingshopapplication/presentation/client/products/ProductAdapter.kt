@@ -118,8 +118,8 @@ class ProductAdapter(
                     labelNumberOfSold.text = totalTxt
                 }
 
-                labelRate.isVisible = product.avgRate > 0
-                labelRate.text = product.avgRate.toString()
+                labelRate.isVisible = product.avgRate > (0).toBigDecimal()
+                labelRate.text = product.avgRate.toDouble().toString()
 
                 if (product.isWishListedByUser) {
                     btnAddToWishList.setImageResource(R.drawable.ic_fav_checked)

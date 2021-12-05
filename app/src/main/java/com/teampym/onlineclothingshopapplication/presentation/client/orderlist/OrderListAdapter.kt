@@ -179,10 +179,10 @@ class OrderListAdapter(
                 }
 
                 val completeAddress = "${item.deliveryInformation.streetNumber} " +
-                        "${item.deliveryInformation.city}, " +
-                        "${item.deliveryInformation.province}, " +
-                        "${item.deliveryInformation.region}, " +
-                        item.deliveryInformation.postalCode
+                    "${item.deliveryInformation.city}, " +
+                    "${item.deliveryInformation.province}, " +
+                    "${item.deliveryInformation.region}, " +
+                    item.deliveryInformation.postalCode
                 tvDeliveryAddress.text = completeAddress
 
                 tvStatus.text = item.status

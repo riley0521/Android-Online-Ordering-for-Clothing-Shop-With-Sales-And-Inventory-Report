@@ -22,25 +22,23 @@ data class UserInformation(
     @PrimaryKey
     var userId: String = "",
     var userType: String = UserType.CUSTOMER.toString(),
-    var dateModified: Long = 0,
-    @Ignore
-    @get:Exclude
-    var deliveryInformationList: List<DeliveryInformation> = emptyList(),
-    @Ignore
-    @get:Exclude
-    var notificationTokenList: List<NotificationToken> = emptyList(),
-    @Ignore
-    @get:Exclude
-    var wishList: List<WishItem> = emptyList(),
-    @Ignore
-    @get:Exclude
-    var cartList: List<Cart> = emptyList()
+    var dateModified: Long = 0
 ) : Parcelable {
     constructor() : this(
         "",
         "",
         ""
     )
+
+    @Ignore
+    @get:Exclude
+    var deliveryInformationList: List<DeliveryInformation> = emptyList()
+    @Ignore
+    @get:Exclude
+    var wishList: List<WishItem> = emptyList()
+    @Ignore
+    @get:Exclude
+    var cartList: List<Cart> = emptyList()
 }
 
 fun getDate(date: Long): String {

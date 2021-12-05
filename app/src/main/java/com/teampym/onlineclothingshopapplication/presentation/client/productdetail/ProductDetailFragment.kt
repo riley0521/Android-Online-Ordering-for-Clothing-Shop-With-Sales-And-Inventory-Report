@@ -91,7 +91,7 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
 
                 var rate = 0.0
                 if (p?.totalRate!! > 0.0 || p.numberOfReviews > 0L) {
-                    rate = p.avgRate
+                    rate = p.avgRate.toDouble()
                 }
 
                 if (rate == 0.0) {
@@ -111,7 +111,7 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
         }
 
         lifecycleScope.launchWhenStarted {
-            viewModel.userFlow.collect { user ->
+            viewModel.userFlow.collectLatest { user ->
                 when (user.userType) {
                     UserType.CUSTOMER.name -> {
                         myMenu?.let {

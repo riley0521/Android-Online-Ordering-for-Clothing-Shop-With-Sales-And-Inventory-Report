@@ -60,7 +60,7 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
         }
 
         lifecycleScope.launchWhenStarted {
-            viewModel.userFlow.collect { user ->
+            viewModel.userFlow.collectLatest { user ->
                 when (user.userType) {
                     UserType.CUSTOMER.name -> {
                         myMenu?.let {
