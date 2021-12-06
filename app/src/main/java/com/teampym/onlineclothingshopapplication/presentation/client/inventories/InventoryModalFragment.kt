@@ -17,7 +17,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.data.room.Product
-import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentInventoryModalBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -35,8 +34,6 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
 
     private var selectedInv: Inventory? = null
 
-    private lateinit var loadingDialog: LoadingDialog
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -49,8 +46,6 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentInventoryModalBinding.bind(view)
-
-        loadingDialog = LoadingDialog(requireActivity())
 
         val currentUser = FirebaseAuth.getInstance().currentUser
         var userId = ""
@@ -71,17 +66,17 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
             tvProductName.text = product.name
 
             binding.btnAddToCart.setOnClickListener {
-                loadingDialog.show()
                 viewModel.addToCart(
                     userId,
                     product,
                     selectedInv!!
                 )
+                Toast.makeText(requireContext(), "Added ${product.name} to cart.", Toast.LENGTH_SHORT).show()
+                findNavController().popBackStack()
             }
         }
 
         if (product.inventoryList.size == 1) {
-            loadingDialog.show()
             viewModel.addToCart(userId, product, product.inventoryList[0])
         }
 
@@ -104,21 +99,6 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
                 binding.chipSizeGroup.addView(chip)
             }
             binding.chipSizeGroup.isSingleSelection = true
-        }
-
-        lifecycleScope.launchWhenStarted {
-            viewModel.inventoryEvent.collectLatest { event ->
-                when (event) {
-                    is InventoryViewModel.InventoryModalEvent.AddedToCart -> {
-                        if (loadingDialog.isActive()) {
-                            loadingDialog.dismiss()
-                        }
-
-                        Toast.makeText(requireContext(), event.msg, Toast.LENGTH_SHORT).show()
-                        findNavController().popBackStack()
-                    }
-                }
-            }
         }
     }
 }

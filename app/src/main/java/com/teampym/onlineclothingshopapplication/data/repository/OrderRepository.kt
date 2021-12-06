@@ -63,6 +63,10 @@ class OrderRepository @Inject constructor(
         additionalNote: String
     ): Order? {
         return withContext(dispatcher) {
+
+            val newDate = Calendar.getInstance()
+            newDate.timeZone = TimeZone.getTimeZone("GMT+8:00")
+
             var newOrder: Order? = Order(
                 userId = userId,
                 totalCost = cartList.sumOf { it.subTotal },
@@ -70,7 +74,7 @@ class OrderRepository @Inject constructor(
                 deliveryInformation = deliveryInformation,
                 suggestedShippingFee = 0.0,
                 additionalNote = additionalNote,
-                dateOrdered = System.currentTimeMillis(),
+                dateOrdered = newDate.timeInMillis,
                 numberOfItems = cartList.size.toLong()
             )
 

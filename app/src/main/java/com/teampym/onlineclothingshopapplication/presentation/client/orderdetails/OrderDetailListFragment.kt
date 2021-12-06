@@ -69,14 +69,23 @@ class OrderDetailListFragment :
             if (order.isUserAgreedToShippingFee) {
                 tvUserAgreedToSf.text = "Yes"
             } else {
-                tvUserAgreedToSf.text = "No"
+                labelUserAgreedToSf.isVisible = false
+                tvUserAgreedToSf.isVisible = false
             }
+
+            val completeAddress = "${order.deliveryInformation.streetNumber} " +
+                "${order.deliveryInformation.city}, " +
+                "${order.deliveryInformation.province}, " +
+                "${order.deliveryInformation.region}, " +
+                order.deliveryInformation.postalCode
+            tvDeliveryAddress.text = completeAddress
 
             tvStatus.text = order.status
             tvNumberOfItems.text = order.orderDetailList.count().toString()
 
             val calendarDate = Calendar.getInstance()
             calendarDate.timeInMillis = order.dateOrdered
+            calendarDate.timeZone = TimeZone.getTimeZone("GMT+8:00")
             val formattedDate =
                 SimpleDateFormat("MM/dd/yyyy hh:mm:ss a").format(calendarDate.time)
 

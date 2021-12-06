@@ -156,7 +156,7 @@ class CartRepository @Inject constructor(
                 val result = userCartCollectionRef
                     .document(userId)
                     .collection(CART_SUB_COLLECTION)
-                    .document(cartItem.inventory.inventoryId)
+                    .document(cartItem.id)
                     .set(cartItem, SetOptions.merge())
                     .await()
 
@@ -247,8 +247,6 @@ class CartRepository @Inject constructor(
 
                     isSuccessful = result != null
                 }
-            } else {
-                isSuccessful = false
             }
             isSuccessful
         }

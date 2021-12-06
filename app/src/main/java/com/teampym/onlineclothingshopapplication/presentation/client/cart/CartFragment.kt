@@ -58,7 +58,7 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
                 "Please log in first to view your cart.",
                 Toast.LENGTH_LONG
             ).show()
-            findNavController().navigate(R.id.action_cartFragment_to_categoryFragment)
+            findNavController().navigate(R.id.action_global_categoryFragment)
         }
 
         binding.apply {

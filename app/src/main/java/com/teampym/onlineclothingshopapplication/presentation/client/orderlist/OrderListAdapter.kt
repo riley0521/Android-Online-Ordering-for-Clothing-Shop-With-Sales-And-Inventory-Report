@@ -195,6 +195,7 @@ class OrderListAdapter(
 
                 val calendarDate = Calendar.getInstance()
                 calendarDate.timeInMillis = item.dateOrdered
+                calendarDate.timeZone = TimeZone.getTimeZone("GMT+8:00")
                 val formattedDate = SimpleDateFormat("MM/dd/yyyy hh:mm:ss a").format(calendarDate.time)
 
                 tvDateOrdered.text = formattedDate

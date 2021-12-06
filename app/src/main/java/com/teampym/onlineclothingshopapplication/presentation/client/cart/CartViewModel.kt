@@ -54,22 +54,21 @@ class CartViewModel @Inject constructor(
     }
 
     fun onCartUpdated(userId: String, cart: List<Cart>) = appScope.launch {
-        if (cartRepository.update(userId, cart)) cartDao.insertAll(cart)
+        cartRepository.update(userId, cart)
+        cartDao.insertAll(cart)
     }
 
     fun onDeleteOutOfStockItems(cartList: List<Cart>) = appScope.launch {
-        _userId.value?.let {
-            if (cartRepository.deleteOutOfStockItems(it, cartList)) {
-                cartDao.deleteAll(it)
-            }
+        if (_userId.value != null) {
+            cartRepository.deleteOutOfStockItems(_userId.value!!, cartList)
+            cartDao.deleteAll(_userId.value!!)
         }
     }
 
     fun onDeleteItemSelected(userId: String, cartId: String) = viewModelScope.launch {
-        if (cartRepository.delete(userId, cartId)) {
-            cartDao.delete(cartId)
-            _cartChannel.send(CartEvent.ShowMessage("Item deleted successfully!"))
-        }
+        cartRepository.delete(userId, cartId)
+        cartDao.delete(cartId)
+        _cartChannel.send(CartEvent.ShowMessage("Item deleted successfully!"))
     }
 
     sealed class CartEvent {

@@ -30,7 +30,7 @@ const val ORDER_COMPLETED = "Complete Order"
 
 const val SHIPPING_ORDERS = "Shipping Orders"
 const val SHIPPED_ORDERS = "Shipped Orders"
-const val DELIVERY_ORDERS = "Delivery Orders"
+const val DELIVERY_ORDERS = "For Delivery Orders"
 const val COMPLETED_ORDERS = "Completed Orders"
 const val RETURNED_ORDERS = "Returned Orders"
 const val CANCELLED_ORDERS = "Cancelled Orders"

@@ -17,10 +17,7 @@ import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCheckOutBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 private const val TAG = "CheckOutFragment"
 
@@ -87,14 +84,12 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                 if (currentUser != null) {
                     if (currentUser.isEmailVerified) {
                         loadingDialog.show()
-                        CoroutineScope(Dispatchers.IO).launch {
-                            viewModel.placeOrder(
-                                finalUser,
-                                finalUser.cartList,
-                                paymentMethodEnum.name,
-                                ""
-                            )
-                        }
+                        viewModel.placeOrder(
+                            finalUser,
+                            finalUser.cartList,
+                            paymentMethodEnum.name,
+                            ""
+                        )
                     } else {
                         Snackbar.make(
                             requireView(),
@@ -115,23 +110,6 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
             tvMerchandiseTotal.text = totalCostStr
             tvTotalPayment.text = totalCostStr
             tvTotalPaymentAgain.text = totalCostStr
-        }
-
-        lifecycleScope.launchWhenStarted {
-            viewModel.checkOutEvent.collectLatest { event ->
-                when (event) {
-                    is CheckOutSharedViewModel.CheckOutEvent.ShowSuccessfulMessage -> {
-                        loadingDialog.dismiss()
-                        Toast.makeText(requireContext(), event.msg, Toast.LENGTH_SHORT)
-                            .show()
-                        findNavController().navigate(R.id.action_checkOutFragment_to_categoryFragment)
-                    }
-                    is CheckOutSharedViewModel.CheckOutEvent.ShowFailedMessage -> {
-                        loadingDialog.dismiss()
-                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
-                    }
-                }
-            }
         }
 
         viewModel.selectedPaymentMethod.observe(viewLifecycleOwner) { paymentMethod ->
@@ -177,6 +155,23 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                         tvCompleteAddress.text = completeAddress
 
                         tvNoAddressYet.visibility = View.INVISIBLE
+                    }
+                }
+            }
+        }
+
+        lifecycleScope.launchWhenCreated {
+            viewModel.checkOutEvent.collectLatest { event ->
+                when (event) {
+                    is CheckOutSharedViewModel.CheckOutEvent.ShowSuccessfulMessage -> {
+                        loadingDialog.dismiss()
+                        Toast.makeText(requireContext(), event.msg, Toast.LENGTH_SHORT)
+                            .show()
+                        findNavController().navigate(R.id.action_global_categoryFragment)
+                    }
+                    is CheckOutSharedViewModel.CheckOutEvent.ShowFailedMessage -> {
+                        loadingDialog.dismiss()
+                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
                     }
                 }
             }

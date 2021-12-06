@@ -1,6 +1,7 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
@@ -41,7 +42,7 @@ class NotificationTokenRepositoryImpl @Inject constructor(
                 .get()
                 .await()
 
-            if (notificationTokenQuery.documents.isNotEmpty()) {
+            if (notificationTokenQuery != null && notificationTokenQuery.documents.isNotEmpty()) {
                 for (document in notificationTokenQuery.documents) {
                     val notificationToken = document
                         .toObject<NotificationToken>()!!.copy(id = document.id)
@@ -159,36 +160,41 @@ class NotificationTokenRepositoryImpl @Inject constructor(
     ): Boolean {
         return withContext(dispatcher) {
             var isCompleted = true
+
             var objNotNull = Any()
             obj?.let {
                 objNotNull = it
             }
 
-            val res = db.collectionGroup(NOTIFICATION_TOKENS_SUB_COLLECTION)
-                .whereEqualTo("userType", UserType.ADMIN.name)
-                .get()
-                .await()
+            try {
+                val res = db.collectionGroup(NOTIFICATION_TOKENS_SUB_COLLECTION)
+                    .whereEqualTo("userType", UserType.ADMIN.name)
+                    .get()
+                    .await()
 
-            if (res.documents.isNotEmpty()) {
-                val tokenList = mutableListOf<String>()
-                for (doc in res.documents) {
-                    val token = doc.toObject<NotificationToken>()!!.copy(id = doc.id)
-                    tokenList.add(token.token)
+                if (res != null && res.documents.isNotEmpty()) {
+                    val tokenList = mutableListOf<String>()
+                    for (doc in res.documents) {
+                        val token = doc.toObject<NotificationToken>()!!.copy(id = doc.id)
+                        tokenList.add(token.token)
+                    }
+
+                    val data = NotificationData(
+                        title = title,
+                        body = body,
+                        obj = objNotNull
+                    )
+
+                    val notificationSingle = NotificationSingle(
+                        data = data,
+                        tokenList = tokenList
+                    )
+
+                    service.notifySingleUser(notificationSingle)
+                } else {
+                    isCompleted = false
                 }
-
-                val data = NotificationData(
-                    title = title,
-                    body = body,
-                    obj = objNotNull
-                )
-
-                val notificationSingle = NotificationSingle(
-                    data = data,
-                    tokenList = tokenList
-                )
-
-                service.notifySingleUser(notificationSingle)
-            } else {
+            } catch (ex: FirebaseFirestoreException) {
                 isCompleted = false
             }
             isCompleted

@@ -2,7 +2,10 @@ package com.teampym.onlineclothingshopapplication.presentation.client.orders
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.util.CANCELLED_ORDERS
@@ -13,10 +16,15 @@ import com.teampym.onlineclothingshopapplication.data.util.SHIPPED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.SHIPPING_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.Status
 import com.teampym.onlineclothingshopapplication.databinding.FragmentOrderBinding
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 
+@AndroidEntryPoint
 class OrderFragment : Fragment(R.layout.fragment_order) {
 
     private lateinit var binding: FragmentOrderBinding
+
+    private val viewModel by viewModels<OrderViewModel>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -70,6 +78,15 @@ class OrderFragment : Fragment(R.layout.fragment_order) {
                     Status.CANCELED.name
                 )
                 findNavController().navigate(action)
+            }
+        }
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.userFlow.collectLatest { user ->
+                if (user == null) {
+                    Toast.makeText(requireContext(), "Please login first.", Toast.LENGTH_SHORT).show()
+                    findNavController().navigate(R.id.action_global_categoryFragment)
+                }
             }
         }
     }

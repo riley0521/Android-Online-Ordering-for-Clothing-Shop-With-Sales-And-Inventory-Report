@@ -9,6 +9,7 @@ import com.teampym.onlineclothingshopapplication.data.room.* // ktlint-disable n
 import com.teampym.onlineclothingshopapplication.data.room.Cart
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -48,29 +49,32 @@ class CheckOutSharedViewModel @Inject constructor(
 
     val finalCartList = _checkOutCartFlow.asLiveData()
 
-    suspend fun placeOrder(
+    fun placeOrder(
         userInformation: UserInformation,
         cartList: List<Cart>,
         paymentMethod: String,
         additionalNote: String,
     ) = appScope.launch {
-        val orderResult = orderRepository.create(
-            userInformation.userId,
-            cartList,
-            userInformation.deliveryInformationList.first { it.isPrimary },
-            paymentMethod,
-            additionalNote
-        )
+        val orderResult = async {
+            orderRepository.create(
+                userInformation.userId,
+                cartList,
+                userInformation.deliveryInformationList.first { it.isPrimary },
+                paymentMethod,
+                additionalNote
+            )
+        }.await()
         if (orderResult != null) {
-            _checkOutChannel.send(CheckOutEvent.ShowSuccessfulMessage("Thank you for placing your order!"))
 
             // Delete all items from cart in remote and local db
-            cartRepository.deleteAll(userInformation.userId)
-            cartDao.deleteAll(userInformation.userId)
+            async { cartRepository.deleteAll(userInformation.userId) }.await()
+            async { cartDao.deleteAll(userInformation.userId) }.await()
+
+            _checkOutChannel.send(CheckOutEvent.ShowSuccessfulMessage("Thank you for placing your order!"))
         } else {
             _checkOutChannel.send(CheckOutEvent.ShowFailedMessage("Failed to place order. Please try again later."))
         }
-    }.join()
+    }
 
     sealed class CheckOutEvent {
         data class ShowSuccessfulMessage(val msg: String) : CheckOutEvent()
