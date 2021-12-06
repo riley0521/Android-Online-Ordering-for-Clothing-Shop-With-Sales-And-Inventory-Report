@@ -47,7 +47,7 @@ class OrderListViewModel @Inject constructor(
         Triple(search, status, user)
     }.flatMapLatest { (search, status, user) ->
         val queryProducts = if (search.isEmpty()) {
-            if (user.userType == UserType.CUSTOMER.name) {
+            if (user!!.userType == UserType.CUSTOMER.name) {
                 db.collection(ORDERS_COLLECTION)
                     .whereEqualTo("status", status)
                     .orderBy("dateOrdered", Query.Direction.DESCENDING)
@@ -59,7 +59,7 @@ class OrderListViewModel @Inject constructor(
                     .limit(30)
             }
         } else {
-            if (user.userType == UserType.CUSTOMER.name) {
+            if (user!!.userType == UserType.CUSTOMER.name) {
                 db.collection(ORDERS_COLLECTION)
                     .whereEqualTo("status", status)
                     .orderBy("dateOrdered", Query.Direction.DESCENDING)
@@ -85,11 +85,28 @@ class OrderListViewModel @Inject constructor(
         if (orderRepository.cancelOrder(
                 order.deliveryInformation.name,
                 order.id,
-                order.orderDetailList
+                false
             )
         ) {
-            _orderListChannel.send(OrderListEvent.ShowMessage("Cancelled Order Successfully!", position))
+            _orderListChannel.send(
+                OrderListEvent.ShowMessage(
+                    "Cancelled Order Successfully!",
+                    position
+                )
+            )
         }
+    }
+
+    fun onAdminCancelResult(result: String, position: Int) = viewModelScope.launch {
+        _orderListChannel.send(OrderListEvent.ShowMessage(result, position))
+    }
+
+    fun onSuggestedShippingFeeResult(result: String, position: Int) = viewModelScope.launch {
+        _orderListChannel.send(OrderListEvent.ShowMessage(result, position))
+    }
+
+    fun onAgreeToSfResult(result: String, position: Int) = viewModelScope.launch {
+        _orderListChannel.send(OrderListEvent.ShowMessage(result, position))
     }
 
     sealed class OrderListEvent {

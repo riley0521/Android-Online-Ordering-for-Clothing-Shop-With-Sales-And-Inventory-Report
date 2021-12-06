@@ -7,7 +7,6 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.ktx.messaging
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.NotificationToken
-import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.network.FCMService
 import com.teampym.onlineclothingshopapplication.data.network.NotificationData
@@ -16,7 +15,6 @@ import com.teampym.onlineclothingshopapplication.data.util.NOTIFICATION_TOKENS_S
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -121,10 +119,11 @@ class NotificationTokenRepositoryImpl @Inject constructor(
         body: String
     ): Boolean {
         return withContext(dispatcher) {
-            val isCompleted = true
+            var isCompleted = true
+
             var objNotNull = Any()
-            obj?.let {
-                objNotNull = it
+            if (obj != null) {
+                objNotNull = obj
             }
 
             val data = NotificationData(
@@ -134,16 +133,21 @@ class NotificationTokenRepositoryImpl @Inject constructor(
             )
 
             val notificationTokenList = getAll(userId)
-            val tokenList: List<String> = notificationTokenList.map {
-                it.token
+
+            if(notificationTokenList.isNotEmpty()) {
+                val tokenList: List<String> = notificationTokenList.map {
+                    it.token
+                }
+
+                val notificationSingle = NotificationSingle(
+                    data = data,
+                    tokenList = tokenList
+                )
+
+                service.notifySingleUser(notificationSingle)
+            } else {
+                isCompleted = false
             }
-
-            val notificationSingle = NotificationSingle(
-                data = data,
-                tokenList = tokenList
-            )
-
-            service.notifySingleUser(notificationSingle)
             isCompleted
         }
     }
@@ -160,35 +164,33 @@ class NotificationTokenRepositoryImpl @Inject constructor(
                 objNotNull = it
             }
 
-            db.collectionGroup(NOTIFICATION_TOKENS_SUB_COLLECTION)
+            val res = db.collectionGroup(NOTIFICATION_TOKENS_SUB_COLLECTION)
                 .whereEqualTo("userType", UserType.ADMIN.name)
                 .get()
-                .addOnSuccessListener { querySnapshot ->
-                    runBlocking {
+                .await()
 
-                        val tokenList = mutableListOf<String>()
-                        for (doc in querySnapshot.documents) {
-                            val token = doc.toObject<NotificationToken>()!!.copy(id = doc.id)
-                            tokenList.add(token.token)
-                        }
-
-                        val data = NotificationData(
-                            title = title,
-                            body = body,
-                            obj = objNotNull
-                        )
-
-                        val notificationSingle = NotificationSingle(
-                            data = data,
-                            tokenList = tokenList
-                        )
-
-                        service.notifySingleUser(notificationSingle)
-                    }
-                }.addOnFailureListener {
-                    isCompleted = false
-                    return@addOnFailureListener
+            if (res.documents.isNotEmpty()) {
+                val tokenList = mutableListOf<String>()
+                for (doc in res.documents) {
+                    val token = doc.toObject<NotificationToken>()!!.copy(id = doc.id)
+                    tokenList.add(token.token)
                 }
+
+                val data = NotificationData(
+                    title = title,
+                    body = body,
+                    obj = objNotNull
+                )
+
+                val notificationSingle = NotificationSingle(
+                    data = data,
+                    tokenList = tokenList
+                )
+
+                service.notifySingleUser(notificationSingle)
+            } else {
+                isCompleted = false
+            }
             isCompleted
         }
     }

@@ -36,7 +36,7 @@
         android:id="@+id/action_cart"
         android:icon="@drawable/ic_cart"
         android:title="@string/view_cart"
-        app:showAsAction="always|collapseActionView" />
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/action_add"

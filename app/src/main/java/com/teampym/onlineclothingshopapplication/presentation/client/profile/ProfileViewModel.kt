@@ -103,7 +103,7 @@ class ProfileViewModel @Inject constructor(
     fun fetchUserFromLocalDb(userId: String) = viewModelScope.launch {
         val mainUser = userInformationDao.getCurrentUser(userId)
         val userWithWishList = userInformationDao.getUserWithWishList()
-            .firstOrNull { it.user.userId == userId }
+            .firstOrNull { it.user?.userId == userId }
         mainUser?.wishList = userWithWishList?.wishList ?: emptyList()
         _user.value = mainUser!!
     }

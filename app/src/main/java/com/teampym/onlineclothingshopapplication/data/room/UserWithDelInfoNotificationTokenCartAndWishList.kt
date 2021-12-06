@@ -25,7 +25,7 @@ data class UserWithNotificationTokens(
 )
 
 data class UserWithWishList(
-    @Embedded val user: UserInformation,
+    @Embedded val user: UserInformation?,
     @Relation(
         parentColumn = "userId",
         entityColumn = "userId"

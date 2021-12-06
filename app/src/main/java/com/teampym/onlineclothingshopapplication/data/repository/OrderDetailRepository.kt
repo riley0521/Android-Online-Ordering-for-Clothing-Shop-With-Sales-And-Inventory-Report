@@ -8,7 +8,6 @@ import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.ORDER_DETAILS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -88,15 +87,15 @@ class OrderDetailRepository @Inject constructor(
                     subTotal = item.subTotal,
                 )
 
-                orderCollectionRef
+                val result = orderCollectionRef
                     .document(orderId)
                     .collection(ORDER_DETAILS_SUB_COLLECTION)
                     .add(newOrderDetail)
-                    .addOnSuccessListener {
-                        orderDetailList.add(newOrderDetail)
-                    }.addOnFailureListener {
-                        return@addOnFailureListener
-                    }
+                    .await()
+
+                if (result != null) {
+                    orderDetailList.add(newOrderDetail)
+                }
             }
             orderDetailList
         }

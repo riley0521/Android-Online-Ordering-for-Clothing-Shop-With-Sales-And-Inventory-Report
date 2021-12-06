@@ -6,8 +6,8 @@
     <item
         android:id="@+id/action_add"
         android:icon="@drawable/ic_add"
-        android:iconTint="@android:color/black"
         android:title="@string/actions"
+        app:iconTint="@android:color/black"
         app:showAsAction="ifRoom"
         tools:targetApi="o">
 

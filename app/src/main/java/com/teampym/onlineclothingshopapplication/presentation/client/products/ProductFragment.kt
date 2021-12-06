@@ -39,11 +39,12 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
     @Inject
     lateinit var db: FirebaseFirestore
 
-    private lateinit var wishList: UserWithWishList
+    private var userAndWishList: UserWithWishList? = null
 
     private lateinit var loadingDialog: LoadingDialog
 
-    private var myMenu: Menu? = null
+    private var addMenu: MenuItem? = null
+    private var cartMenu: MenuItem? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -64,32 +65,33 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
 
         viewModel.userWithWishList.observe(viewLifecycleOwner) { userWithWishList ->
             // Check if the user is customer then hide admin functions when true
-            when (userWithWishList.user.userType) {
-                UserType.CUSTOMER.name -> {
-                    myMenu?.let {
-                        it.findItem(R.id.action_add).isVisible = false
+            if (userWithWishList?.user != null) {
+                when (userWithWishList.user.userType) {
+                    UserType.CUSTOMER.name -> {
+                        addMenu?.isVisible = false
+                    }
+                    UserType.ADMIN.name -> {
+                        addMenu?.isVisible = true
+                    }
+                    else -> {
+                        addMenu?.isVisible = false
+                        cartMenu?.isVisible = false
                     }
                 }
-                UserType.ADMIN.name -> {
-                    myMenu?.let {
-                        it.findItem(R.id.action_add).isVisible = true
-                    }
-                }
-                else -> {
-                    myMenu?.let {
-                        it.findItem(R.id.action_add).isVisible = false
-                        it.findItem(R.id.action_cart).isVisible = false
-                    }
-                }
+                userAndWishList = userWithWishList
+            } else {
+                addMenu?.isVisible = false
+                cartMenu?.isVisible = false
             }
-            wishList = userWithWishList
         }
 
         lifecycleScope.launchWhenStarted {
             viewModel.productsFlow.collectLatest {
                 val paging = it.map { p ->
-                    wishList.wishList.forEach { w ->
-                        p.isWishListedByUser = p.productId == w.productId
+                    if (userAndWishList != null) {
+                        userAndWishList!!.wishList.forEach { w ->
+                            p.isWishListedByUser = p.productId == w.productId
+                        }
                     }
                     p
                 }
@@ -128,14 +130,17 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
     }
 
     override fun onAddToWishListClicked(product: Product) {
-        viewModel.addToWishList(wishList.user.userId, product)
+        if (userAndWishList?.user != null) {
+            viewModel.addToWishList(userAndWishList?.user!!.userId, product)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.product_action_menu, menu)
 
-        // After inflating the view, you can not set the reference into a global variable
-        myMenu = menu
+        // Set action add and cart to hide it whenever needed
+        addMenu = menu.findItem(R.id.action_add)
+        cartMenu = menu.findItem(R.id.action_cart)
 
         val searchItem = menu.findItem(R.id.action_search)
         searchView = searchItem.actionView as SearchView

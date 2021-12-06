@@ -57,6 +57,14 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 Toast.makeText(requireContext(), tvWishList.text, Toast.LENGTH_SHORT).show()
             }
 
+            tvToc.setOnClickListener {
+                findNavController().navigate(R.id.action_profileFragment_to_termsAndConditionFragment)
+            }
+
+            tvSizeChart.setOnClickListener {
+                findNavController().navigate(R.id.action_profileFragment_to_sizeChartFragment)
+            }
+
             btnSendVerification.setOnClickListener {
                 getFirebaseUser()?.sendEmailVerification()
                 viewModel.sendVerificationAgain()
@@ -96,22 +104,29 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     viewModel.navigateUserToRegistrationModule()
                 }
 
-                // check if the user is already verified in email
-                val currentUser = getFirebaseUser()
-                if (currentUser != null) {
-                    binding.cardViewBanner.isVisible = !currentUser.isEmailVerified
+                binding.apply {
+
+                    tvAddress.isVisible = true
+                    tvProfile.isVisible = true
+                    tvWishList.isVisible = true
+
+                    // check if the user is already verified in email
+                    val currentUser = getFirebaseUser()
+                    if (currentUser != null) {
+                        cardViewBanner.isVisible = !currentUser.isEmailVerified
+                    }
+
+                    // Instantiate view
+                    Glide.with(requireView())
+                        .load(user.avatarUrl)
+                        .circleCrop()
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .error(R.drawable.ic_user)
+                        .into(imgAvatar)
+
+                    val fullName = "${user.firstName} ${user.lastName}"
+                    tvUsername.text = fullName
                 }
-
-                // Instantiate view
-                Glide.with(requireView())
-                    .load(user.avatarUrl)
-                    .centerCrop()
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .error(R.drawable.ic_user)
-                    .into(binding.imgAvatar)
-
-                val fullName = "${user.firstName} ${user.lastName}"
-                binding.tvUsername.text = fullName
             }
         }
 
@@ -184,12 +199,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             AuthUI.getInstance()
                 .createSignInIntentBuilder()
                 .setAvailableProviders(providers)
-                .setLogo(R.drawable.crown)
                 .setTheme(R.style.ThemeOverlay_MaterialComponents_Dark)
-                .setTosAndPrivacyPolicyUrls(
-                    "https://example.com/terms.html",
-                    "https://example.com/privacy.html"
-                )
                 .build(),
             RC_SIGN_IN
         )

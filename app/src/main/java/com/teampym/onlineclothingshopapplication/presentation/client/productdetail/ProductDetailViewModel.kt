@@ -2,6 +2,7 @@ package com.teampym.onlineclothingshopapplication.presentation.client.productdet
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
@@ -22,11 +23,19 @@ class ProductDetailViewModel @Inject constructor(
     private val productRepository: ProductRepository,
     private val reviewRepository: ReviewRepository,
     private val preferencesManager: PreferencesManager,
-    private val userInformationDao: UserInformationDao
+    private val userInformationDao: UserInformationDao,
+    private val state: SavedStateHandle
 ) : ViewModel() {
 
-    private val _product = MutableLiveData<Product>()
-    val product: LiveData<Product> get() = _product
+    companion object {
+        const val PRODUCT = "product"
+    }
+
+    var product = state.get<Product>(PRODUCT) ?: Product()
+        set(value) {
+            field = value
+            state.set(PRODUCT, value)
+        }
 
     val userFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
         userInformationDao.get(sessionPref.userId)
@@ -36,9 +45,14 @@ class ProductDetailViewModel @Inject constructor(
         productRepository.getOne(productId)?.let {
             val reviewList = async { reviewRepository.getFive(it.productId) }
 
-            _product.value = it.copy(
-                reviewList = reviewList.await()
-            )
+            val prod = it
+            prod.reviewList = reviewList.await()
+
+            product = prod
         }
+    }
+
+    fun updateProduct(p: Product) {
+        product = p
     }
 }

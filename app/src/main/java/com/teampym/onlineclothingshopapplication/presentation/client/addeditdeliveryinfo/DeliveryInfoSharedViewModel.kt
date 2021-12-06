@@ -84,14 +84,23 @@ class DeliveryInfoSharedViewModel @Inject constructor(
     private val _provinceId = MutableLiveData(0L)
     val provinceId: LiveData<Long> get() = _provinceId
 
-    private val _selectedRegion = MutableLiveData<Region>()
-    val selectedRegion: LiveData<Region> get() = _selectedRegion
+    var selectedRegion = state.get<Region>(REGION) ?: Region()
+        set(value) {
+            field = value
+            state.set(REGION, value)
+        }
 
-    private val _selectedProvince = MutableLiveData<Province>()
-    val selectedProvince: LiveData<Province> get() = _selectedProvince
+    var selectedProvince = state.get<Province>(PROVINCE) ?: Province()
+        set(value) {
+            field = value
+            state.set(PROVINCE, value)
+        }
 
-    private val _selectedCity = MutableLiveData<City>()
-    val selectedCity: LiveData<City> get() = _selectedCity
+    var selectedCity = state.get<City>(CITY) ?: City()
+        set(value) {
+            field = value
+            state.set(CITY, value)
+        }
 
     val regions = regionDao.getAll().asLiveData()
 
@@ -104,18 +113,18 @@ class DeliveryInfoSharedViewModel @Inject constructor(
     }
 
     fun onSelectedRegion(selector: Selector) = viewModelScope.launch {
-        _selectedRegion.value = Region(id = selector.id, name = selector.name)
+        selectedRegion = Region(id = selector.id, name = selector.name)
         _regionId.value = selector.id
     }
 
     fun onSelectedProvince(selector: Selector) = viewModelScope.launch {
-        _selectedProvince.value =
+        selectedProvince =
             Province(id = selector.id, regionId = selector.parentId, name = selector.name)
         _provinceId.value = selector.id
     }
 
     fun onSelectedCity(selector: Selector) = viewModelScope.launch {
-        _selectedCity.value =
+        selectedCity =
             City(id = selector.id, provinceId = selector.parentId, name = selector.name)
     }
 

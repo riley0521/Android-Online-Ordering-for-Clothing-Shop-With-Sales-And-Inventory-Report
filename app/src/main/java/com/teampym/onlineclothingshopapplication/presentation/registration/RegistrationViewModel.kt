@@ -49,14 +49,15 @@ class RegistrationViewModel @Inject constructor(
     }
 
     fun fetchNotificationTokensAndWishList(userId: String) = viewModelScope.launch {
-        val userWithNotificationTokens = userInformationDao.getUserWithNotificationTokens()
-            .firstOrNull { it.user.userId == userId }
         val userWithWishList = userInformationDao.getUserWithWishList()
-            .firstOrNull { it.user.userId == userId }
-        _user.value = userWithNotificationTokens?.user?.copy(
-            notificationTokenList = userWithNotificationTokens.notificationTokens,
-            wishList = userWithWishList?.wishList ?: emptyList()
-        )
+            .firstOrNull { it.user?.userId == userId }
+
+        val finalUser = userWithWishList?.user
+        finalUser?.wishList = userWithWishList?.wishList ?: emptyList()
+
+        if (finalUser != null) {
+            _user.value = finalUser!!
+        }
     }
 
     fun updateBasicInformation(

@@ -38,8 +38,8 @@ class ProductViewModel @Inject constructor(
     val searchQuery = MutableLiveData("")
     private val _categoryQuery = MutableLiveData("")
 
-    private val _userWithWishList = MutableLiveData<UserWithWishList>()
-    val userWithWishList: LiveData<UserWithWishList> get() = _userWithWishList
+    private val _userWithWishList = MutableLiveData<UserWithWishList?>()
+    val userWithWishList: LiveData<UserWithWishList?> get() = _userWithWishList
 
     private val _productChannel = Channel<ProductEvent>()
     val productEvent = _productChannel.receiveAsFlow()
@@ -103,8 +103,8 @@ class ProductViewModel @Inject constructor(
             }
         }
 
-        _userWithWishList.value = userInformationDao.getUserWithWishList().first {
-            it.user.userId == sessionPref.userId
+        _userWithWishList.value = userInformationDao.getUserWithWishList().firstOrNull {
+            it.user?.userId == sessionPref.userId
         }
 
         productRepository.getSome(queryProducts, sessionPref.sortOrder).flow.cachedIn(viewModelScope)

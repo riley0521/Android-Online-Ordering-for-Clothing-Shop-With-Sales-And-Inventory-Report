@@ -13,6 +13,7 @@ import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.util.AGREE_TO_SHIPPING_FEE
 import com.teampym.onlineclothingshopapplication.data.util.CANCEL_BUTTON
 import com.teampym.onlineclothingshopapplication.data.util.CANCEL_OR_SUGGEST
+import com.teampym.onlineclothingshopapplication.data.util.ORDER_COMPLETED
 import com.teampym.onlineclothingshopapplication.data.util.SUGGEST_BUTTON
 import com.teampym.onlineclothingshopapplication.data.util.Status
 import com.teampym.onlineclothingshopapplication.data.util.UserType
@@ -140,7 +141,11 @@ class OrderListAdapter(
                             tvUserAgreedToSf.text = "No"
                         }
 
-                        btnAction.isVisible = false
+                        if (userType == UserType.ADMIN.name) {
+                            btnAction.text = ORDER_COMPLETED
+                        } else {
+                            btnAction.isVisible = false
+                        }
                     }
                     Status.COMPLETED.name -> {
                         // Nothing to do here.
@@ -190,7 +195,7 @@ class OrderListAdapter(
 
                 val calendarDate = Calendar.getInstance()
                 calendarDate.timeInMillis = item.dateOrdered
-                val formattedDate = SimpleDateFormat("MM/dd/yyyy hh:mm:ss a").format(calendarDate)
+                val formattedDate = SimpleDateFormat("MM/dd/yyyy hh:mm:ss a").format(calendarDate.time)
 
                 tvDateOrdered.text = formattedDate
 

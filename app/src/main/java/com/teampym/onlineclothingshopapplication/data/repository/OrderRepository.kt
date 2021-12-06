@@ -74,18 +74,25 @@ class OrderRepository @Inject constructor(
                 numberOfItems = cartList.size.toLong()
             )
 
-            newOrder?.let { o ->
+            if (newOrder != null) {
                 val result = orderCollectionRef
-                    .add(o)
+                    .add(newOrder)
                     .await()
+
                 if (result != null) {
-                    newOrder?.id = result.id
+                    newOrder.id = result.id
 
                     // Insert all items in the cart after adding order in database
-                    newOrder?.orderDetailList = orderDetailRepository.insertAll(
+                    newOrder.orderDetailList = orderDetailRepository.insertAll(
                         result.id,
                         userId,
                         cartList
+                    )
+
+                    notificationTokenRepository.notifyAllAdmins(
+                        newOrder,
+                        "New Order ($newOrder.id)",
+                        "You have a new order!"
                     )
                 } else {
                     newOrder = null
@@ -130,12 +137,12 @@ class OrderRepository @Inject constructor(
     suspend fun cancelOrder(
         username: String,
         orderId: String,
-        orderDetailList: List<OrderDetail>
+        isCommitted: Boolean
     ): Boolean {
         return withContext(dispatcher) {
 
             // Change Status to Canceled
-            changeStatusToCancelled(orderId, Status.CANCELED.name, true)
+            changeStatusToCancelled(orderId, Status.CANCELED.name, true, isCommitted)
 
             val isSuccessful = notificationTokenRepository.notifyAllAdmins(
                 null,
@@ -228,7 +235,7 @@ class OrderRepository @Inject constructor(
                     isCompleted = changeStatusToReturned(userType, orderId, status, isCompleted)
                 }
                 Status.CANCELED.name -> {
-                    isCompleted = changeStatusToCancelled(orderId, status, isCompleted)
+                    isCompleted = changeStatusToCancelled(orderId, status, isCompleted, false)
                     notificationTokenRepository.notifyCustomer(
                         obj = null,
                         userId = userId,
@@ -241,10 +248,11 @@ class OrderRepository @Inject constructor(
         }
     }
 
-    private fun changeStatusToCancelled(
+    private suspend fun changeStatusToCancelled(
         orderId: String,
         status: String,
-        isCompleted: Boolean
+        isCompleted: Boolean,
+        isCommitted: Boolean,
     ): Boolean {
         var isSuccess = isCompleted
         val orderDetailList = mutableListOf<OrderDetail>()
@@ -252,23 +260,33 @@ class OrderRepository @Inject constructor(
             "status" to status
         )
 
-        orderCollectionRef
+        val result = orderCollectionRef
             .document(orderId)
             .set(updateOrderStatus, SetOptions.merge())
-            .addOnSuccessListener {
-                orderCollectionRef
+            .await()
+
+        if (result != null) {
+            if (isCommitted) {
+                val anotherRes = orderCollectionRef
                     .document(orderId)
                     .collection(ORDER_DETAILS_SUB_COLLECTION)
                     .get()
-                    .addOnSuccessListener {
-                    }.addOnFailureListener {
-                        isSuccess = false
-                        return@addOnFailureListener
+                    .await()
+
+                if (anotherRes.documents.isNotEmpty()) {
+                    for (doc in anotherRes.documents) {
+                        val item =
+                            doc.toObject<OrderDetail>()!!.copy(id = doc.id, orderId = orderId)
+                        orderDetailList.add(item)
                     }
-            }.addOnFailureListener {
-                isSuccess = false
-                return@addOnFailureListener
+
+                    isSuccess = productRepository.deductCommittedToStockCount(orderDetailList)
+                }
             }
+        } else {
+            isSuccess = false
+        }
+
         return isSuccess
     }
 

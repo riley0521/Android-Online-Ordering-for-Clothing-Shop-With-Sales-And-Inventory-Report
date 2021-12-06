@@ -16,7 +16,6 @@ import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCategoryBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 
 @AndroidEntryPoint
@@ -30,7 +29,7 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
 
     private lateinit var loadingDialog: LoadingDialog
 
-    private var myMenu: Menu? = null
+    private var addMenu: MenuItem? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -61,22 +60,20 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
 
         lifecycleScope.launchWhenStarted {
             viewModel.userFlow.collectLatest { user ->
-                when (user.userType) {
-                    UserType.CUSTOMER.name -> {
-                        myMenu?.let {
-                            it.findItem(R.id.action_add).isVisible = false
+                if (user != null) {
+                    when (user.userType) {
+                        UserType.CUSTOMER.name -> {
+                            addMenu?.isVisible = false
+                        }
+                        UserType.ADMIN.name -> {
+                            addMenu?.isVisible = true
+                        }
+                        else -> {
+                            addMenu?.isVisible = false
                         }
                     }
-                    UserType.ADMIN.name -> {
-                        myMenu?.let {
-                            it.findItem(R.id.action_add).isVisible = true
-                        }
-                    }
-                    else -> {
-                        myMenu?.let {
-                            it.findItem(R.id.action_add).isVisible = false
-                        }
-                    }
+                } else {
+                    addMenu?.isVisible = false
                 }
             }
         }
@@ -96,7 +93,7 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.category_action_menu, menu)
 
-        myMenu = menu
+        addMenu = menu.findItem(R.id.action_add)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

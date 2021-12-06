@@ -44,7 +44,7 @@ data class Product(
     var flag: String = ""
 
     @get:Exclude
-    val avgRate: BigDecimal get() = (totalRate / numberOfReviews).toBigDecimal()
+    val avgRate: BigDecimal get() = (totalRate / numberOfReviews.toDouble()).toBigDecimal()
 
     @get:Exclude
     @Ignore

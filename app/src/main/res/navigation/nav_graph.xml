@@ -85,6 +85,12 @@
         <action
             android:id="@+id/action_profileFragment_to_deliveryInformationFragment"
             app:destination="@id/deliveryInformationFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_termsAndConditionFragment"
+            app:destination="@id/termsAndConditionFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_sizeChartFragment"
+            app:destination="@id/sizeChartFragment" />
     </fragment>
     <action
         android:id="@+id/action_global_profileFragment"
@@ -209,5 +215,66 @@
         <argument
             android:name="status"
             app:argType="string" />
+        <action
+            android:id="@+id/action_orderListFragment_to_cancelReasonDialogFragment"
+            app:destination="@id/cancelReasonDialogFragment" />
+        <action
+            android:id="@+id/action_orderListFragment_to_agreeToShippingFeeDialogFragment"
+            app:destination="@id/agreeToShippingFeeDialogFragment" />
+        <action
+            android:id="@+id/action_orderListFragment_to_shippingFeeDialogFragment"
+            app:destination="@id/shippingFeeDialogFragment" />
+        <action
+            android:id="@+id/action_orderListFragment_to_orderDetailListFragment"
+            app:destination="@id/orderDetailListFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/termsAndConditionFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.toc.TermsAndConditionFragment"
+        android:label="Terms And Conditions"
+        tools:layout="@layout/fragment_terms_and_condition" />
+    <fragment
+        android:id="@+id/sizeChartFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.size.SizeChartFragment"
+        android:label="Size Charts"
+        tools:layout="@layout/fragment_size_chart" />
+    <dialog
+        android:id="@+id/cancelReasonDialogFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.others.CancelReasonDialogFragment"
+        android:label="Cancel Reason"
+        tools:layout="@layout/fragment_cancel_reason_dialog" >
+        <argument
+            android:name="order"
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.Order" />
+    </dialog>
+    <dialog
+        android:id="@+id/agreeToShippingFeeDialogFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.others.AgreeToShippingFeeDialogFragment"
+        android:label="Agree/Disagree To Shipping Fee"
+        tools:layout="@layout/fragment_agree_to_shipping_fee_dialog">
+        <argument
+            android:name="order"
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.Order" />
+    </dialog>
+    <dialog
+        android:id="@+id/shippingFeeDialogFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.others.ShippingFeeDialogFragment"
+        android:label="Shipping Fee"
+        tools:layout="@layout/fragment_shipping_fee_dialog">
+        <argument
+            android:name="order"
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.Order" />
+    </dialog>
+    <fragment
+        android:id="@+id/orderDetailListFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.orderdetails.OrderDetailListFragment"
+        android:label="{title}"
+        tools:layout="@layout/fragment_order_detail_list" >
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <argument
+            android:name="order"
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.Order" />
     </fragment>
 </navigation>

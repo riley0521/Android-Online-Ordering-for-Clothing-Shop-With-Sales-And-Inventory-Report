@@ -26,6 +26,7 @@ const val CANCEL_BUTTON = "Cancel"
 const val SUGGEST_BUTTON = "Suggest Shipping Fee"
 const val CANCEL_OR_SUGGEST = "Cancel | Suggest Shipping Fee"
 const val AGREE_TO_SHIPPING_FEE = "Agree To Shipping Fee"
+const val ORDER_COMPLETED = "Complete Order"
 
 const val SHIPPING_ORDERS = "Shipping Orders"
 const val SHIPPED_ORDERS = "Shipped Orders"

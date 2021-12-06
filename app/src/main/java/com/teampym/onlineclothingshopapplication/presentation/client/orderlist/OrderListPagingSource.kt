@@ -50,7 +50,7 @@ class OrderListPagingSource(
             var orderList = mutableListOf<Order>()
             for (document in currentPage.documents) {
 
-                var order = document.toObject<Order>()!!.copy(id = document.id)
+                val order = document.toObject<Order>()!!.copy(id = document.id)
                 CoroutineScope(Dispatchers.IO).launch {
                     val orderDetailList = async {
                         orderDetailRepository.getByOrderId(
@@ -60,9 +60,7 @@ class OrderListPagingSource(
                         )
                     }
 
-                    order = order.copy(
-                        orderDetailList = orderDetailList.await()
-                    )
+                    order.orderDetailList = orderDetailList.await()
                 }
                 orderList.add(order)
             }

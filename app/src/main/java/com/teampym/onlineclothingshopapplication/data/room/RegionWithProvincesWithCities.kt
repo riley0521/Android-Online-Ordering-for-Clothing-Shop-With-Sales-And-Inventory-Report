@@ -10,7 +10,9 @@ data class Region(
     @PrimaryKey
     val id: Long,
     val name: String
-)
+) {
+    constructor() : this(0L, "")
+}
 
 @Entity(tableName = "table_provinces")
 data class Province(
@@ -18,7 +20,9 @@ data class Province(
     val id: Long,
     val regionId: Long,
     val name: String
-)
+) {
+    constructor() : this(0L, 0L, "")
+}
 
 data class RegionWithProvinces(
     @Embedded val region: Region,
@@ -35,7 +39,9 @@ data class City(
     val id: Long,
     val provinceId: Long,
     val name: String
-)
+) {
+    constructor() : this(0L, 0L, "")
+}
 
 data class ProvinceWithCities(
     @Embedded val province: Province,

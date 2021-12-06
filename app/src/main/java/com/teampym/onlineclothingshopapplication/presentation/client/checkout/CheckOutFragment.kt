@@ -17,7 +17,10 @@ import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCheckOutBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 private const val TAG = "CheckOutFragment"
 
@@ -84,12 +87,14 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                 if (currentUser != null) {
                     if (currentUser.isEmailVerified) {
                         loadingDialog.show()
-                        viewModel.placeOrder(
-                            finalUser,
-                            finalUser.cartList,
-                            paymentMethodEnum.name,
-                            ""
-                        )
+                        CoroutineScope(Dispatchers.IO).launch {
+                            viewModel.placeOrder(
+                                finalUser,
+                                finalUser.cartList,
+                                paymentMethodEnum.name,
+                                ""
+                            )
+                        }
                     } else {
                         Snackbar.make(
                             requireView(),
@@ -147,9 +152,8 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
             userWithDeliveryInfo?.let { user ->
                 Log.d(TAG, user.toString())
 
-                finalUser = user.user.copy(
-                    deliveryInformationList = user.deliveryInformation,
-                )
+                finalUser = user.user
+                finalUser.deliveryInformationList = user.deliveryInformation
 
                 val defaultDeliveryInfo = user.deliveryInformation.firstOrNull { it.isPrimary }
                 binding.apply {

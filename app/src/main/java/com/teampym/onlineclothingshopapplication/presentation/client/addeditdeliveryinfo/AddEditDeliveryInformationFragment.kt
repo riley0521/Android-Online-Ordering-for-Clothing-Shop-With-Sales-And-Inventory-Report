@@ -69,6 +69,8 @@ class AddEditDeliveryInformationFragment :
                 edtPostalCode.setText(it.postalCode)
                 edtDetailedAddress.setText(it.streetNumber)
                 switchDefaultAddress.isChecked = it.isPrimary
+
+                saveStateOfDeliveryInfo(it)
             }
         }
 
@@ -246,25 +248,25 @@ class AddEditDeliveryInformationFragment :
             userId = it
         }
 
-        viewModel.selectedRegion.observe(viewLifecycleOwner) {
-            selectedRegion = it.name
-            binding.edtRegion.text = it.name
-            newDeliveryInformation.region = it.name
-            editDeliveryInformation?.region = it.name
+        if(viewModel.selectedRegion.name.isNotBlank()) {
+            selectedRegion = viewModel.selectedRegion.name
+            binding.edtRegion.text = viewModel.selectedRegion.name
+            newDeliveryInformation.region = viewModel.selectedRegion.name
+            editDeliveryInformation?.region = viewModel.selectedRegion.name
         }
 
-        viewModel.selectedProvince.observe(viewLifecycleOwner) {
-            selectedProvince = it.name
-            binding.edtProvince.text = it.name
-            newDeliveryInformation.province = it.name
-            editDeliveryInformation?.province = it.name
+        if(viewModel.selectedProvince.name.isNotBlank()) {
+            selectedProvince = viewModel.selectedProvince.name
+            binding.edtProvince.text = viewModel.selectedProvince.name
+            newDeliveryInformation.province = viewModel.selectedProvince.name
+            editDeliveryInformation?.province = viewModel.selectedProvince.name
         }
 
-        viewModel.selectedCity.observe(viewLifecycleOwner) {
-            selectedCity = it.name
-            binding.edtCity.text = it.name
-            newDeliveryInformation.city = it.name
-            editDeliveryInformation?.city = it.name
+        if(viewModel.selectedCity.name.isNotBlank()) {
+            selectedCity = viewModel.selectedCity.name
+            binding.edtCity.text = viewModel.selectedCity.name
+            newDeliveryInformation.city = viewModel.selectedCity.name
+            editDeliveryInformation?.city = viewModel.selectedCity.name
         }
 
         viewModel.regionId.observe(viewLifecycleOwner) { parentId ->
@@ -326,6 +328,13 @@ class AddEditDeliveryInformationFragment :
                 }
             }
         }
+    }
+
+    private fun saveStateOfDeliveryInfo(deliveryInfo: DeliveryInformation) {
+        viewModel.fullName = deliveryInfo.name
+        viewModel.streetNumber = deliveryInfo.streetNumber
+        viewModel.phoneNumber = deliveryInfo.contactNo
+        viewModel.postalCode = deliveryInfo.postalCode
     }
 
     private fun showAlertDialog(msg: String) {

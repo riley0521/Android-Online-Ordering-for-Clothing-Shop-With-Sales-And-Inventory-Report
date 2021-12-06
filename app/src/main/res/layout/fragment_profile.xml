@@ -31,6 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="@string/label_guest"
+            android:paddingBottom="8dp"
             android:textAllCaps="true"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textStyle="bold"
@@ -52,6 +53,7 @@
             android:text="@string/label_address"
             android:textAppearance="?attr/textAppearanceBody2"
             android:textStyle="bold"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
@@ -70,6 +72,7 @@
             android:text="@string/label_change_profile"
             android:textAppearance="?attr/textAppearanceBody2"
             android:textStyle="bold"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
@@ -88,10 +91,47 @@
             android:text="@string/label_wish_list"
             android:textAppearance="?attr/textAppearanceBody2"
             android:textStyle="bold"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvProfile" />
+
+        <TextView
+            android:id="@+id/tvToc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/tv_border"
+            android:gravity="center_vertical"
+            android:paddingStart="32dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="32dp"
+            android:paddingBottom="16dp"
+            android:text="@string/label_terms_and_condition"
+            android:textAppearance="?attr/textAppearanceBody2"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvWishList" />
+
+        <TextView
+            android:id="@+id/tvSizeChart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/tv_border"
+            android:gravity="center_vertical"
+            android:paddingStart="32dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="32dp"
+            android:paddingBottom="16dp"
+            android:text="@string/label_size_chart"
+            android:textAppearance="?attr/textAppearanceBody2"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvToc" />
 
         <TextView
             android:id="@+id/btnSignInAndOut"
@@ -108,7 +148,7 @@
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvWishList" />
+            app:layout_constraintTop_toBottomOf="@+id/tvSizeChart" />
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cardViewBanner"

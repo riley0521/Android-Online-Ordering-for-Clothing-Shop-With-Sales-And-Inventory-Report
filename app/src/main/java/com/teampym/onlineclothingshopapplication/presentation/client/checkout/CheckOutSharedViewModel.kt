@@ -26,7 +26,6 @@ class CheckOutSharedViewModel @Inject constructor(
 ) : ViewModel() {
 
     private var _userWithDeliveryInfo = MutableLiveData<UserWithDeliveryInfo?>()
-    private var _userWithNotificationsTokens = MutableLiveData<UserWithNotificationTokens?>()
 
     private val _selectedPaymentMethod = MutableLiveData<PaymentMethod>()
 
@@ -40,9 +39,6 @@ class CheckOutSharedViewModel @Inject constructor(
             _userWithDeliveryInfo.value = userInformationDao.getUserWithDeliveryInfo()
                 .firstOrNull { it.user.userId == sessionPref.userId }
 
-            _userWithNotificationsTokens.value = userInformationDao.getUserWithNotificationTokens()
-                .firstOrNull { it.user.userId == sessionPref.userId }
-
             cartDao.getAll(sessionPref.userId)
         }
 
@@ -50,12 +46,9 @@ class CheckOutSharedViewModel @Inject constructor(
 
     val userWithDeliveryInfo: LiveData<UserWithDeliveryInfo?> get() = _userWithDeliveryInfo
 
-    // I think I will remove this because what I need is the notification token of admins to notify them.
-    val userWithNotificationTokens: LiveData<UserWithNotificationTokens?> get() = _userWithNotificationsTokens
-
     val finalCartList = _checkOutCartFlow.asLiveData()
 
-    fun placeOrder(
+    suspend fun placeOrder(
         userInformation: UserInformation,
         cartList: List<Cart>,
         paymentMethod: String,
@@ -68,19 +61,16 @@ class CheckOutSharedViewModel @Inject constructor(
             paymentMethod,
             additionalNote
         )
-        orderResult?.let {
+        if (orderResult != null) {
             _checkOutChannel.send(CheckOutEvent.ShowSuccessfulMessage("Thank you for placing your order!"))
-
-            // TODO("Notify all admins about the new order")
-            val orderId = it.id
 
             // Delete all items from cart in remote and local db
             cartRepository.deleteAll(userInformation.userId)
             cartDao.deleteAll(userInformation.userId)
-        } ?: run {
+        } else {
             _checkOutChannel.send(CheckOutEvent.ShowFailedMessage("Failed to place order. Please try again later."))
         }
-    }
+    }.join()
 
     sealed class CheckOutEvent {
         data class ShowSuccessfulMessage(val msg: String) : CheckOutEvent()

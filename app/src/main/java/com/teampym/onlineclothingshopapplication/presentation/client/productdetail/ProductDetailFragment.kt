@@ -18,7 +18,6 @@ import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductDetailBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import javax.inject.Inject
 
@@ -48,86 +47,97 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
         val productId = args.productId
 
         if (product == null) {
+            // Product ID Should not be null if Product Parcelable is null
             viewModel.getProductById(productId!!)
+        } else {
+            viewModel.updateProduct(product)
         }
 
-        viewModel.product.observe(viewLifecycleOwner) {
-            product = it
-        }
+        product = viewModel.product
 
         binding.apply {
             btnAddToCart.setOnClickListener {
                 val action =
                     ProductDetailFragmentDirections.actionProductDetailFragmentToInventoryModalFragment(
-                        product!!
+                        product
                     )
                 findNavController().navigate(action)
             }
 
             Glide.with(requireView())
-                .load(product?.imageUrl)
+                .load(product.imageUrl)
                 .centerCrop()
                 .transition(DrawableTransitionOptions.withCrossFade())
                 .error(R.drawable.ic_food)
                 .into(imgProduct)
 
-            val priceStr = "$" + product?.price
-            tvProductName.text = product?.name
+            val priceStr = "$" + product.price
+            tvProductName.text = product.name
             tvPrice.text = priceStr
-            val descStr = product?.description ?: "No Available Description"
+            val descStr = if (product.description.isBlank()) {
+                "No Available Description"
+            } else {
+                product.description
+            }
 
             tvDescription.text = descStr
             btnAddToCart.setOnClickListener {
                 val action =
                     ProductDetailFragmentDirections.actionProductDetailFragmentToInventoryModalFragment(
-                        product!!
+                        product
                     )
                 findNavController().navigate(action)
             }
 
             // submit list to the adapter if the reviewList is not empty.
-            product.let { p ->
-                adapter.submitList(p?.reviewList)
 
-                var rate = 0.0
-                if (p?.totalRate!! > 0.0 || p.numberOfReviews > 0L) {
-                    rate = p.avgRate.toDouble()
-                }
+            adapter.submitList(product.reviewList)
 
-                if (rate == 0.0) {
-                    labelRate.text = getString(R.string.no_available_rating)
+            var rate = 0.0
+            if (product.totalRate > 0.0 && product.numberOfReviews > 0L) {
+                rate = product.avgRate.toDouble()
+            }
 
-                    tvRate.visibility = View.INVISIBLE
-                    labelNoReviews.isVisible = true
-                } else {
-                    val rateStr = "- $rate"
-                    tvRate.text = rateStr
+            if (rate == 0.0) {
+                labelRate.text = getString(R.string.no_available_rating)
 
-                    // Load Reviews here.
-                    recyclerReviews.setHasFixedSize(true)
-                    recyclerReviews.adapter = adapter
-                }
+                tvRate.visibility = View.INVISIBLE
+                labelNoReviews.isVisible = true
+            } else {
+                val rateStr = "- $rate"
+                tvRate.text = rateStr
+
+                // Load Reviews here.
+                recyclerReviews.setHasFixedSize(true)
+                recyclerReviews.adapter = adapter
             }
         }
 
         lifecycleScope.launchWhenStarted {
             viewModel.userFlow.collectLatest { user ->
-                when (user.userType) {
-                    UserType.CUSTOMER.name -> {
-                        myMenu?.let {
-                            it.findItem(R.id.action_add_edit_stock).isVisible = false
+                if (user != null) {
+                    when (user.userType) {
+                        UserType.CUSTOMER.name -> {
+                            myMenu?.let {
+                                it.findItem(R.id.action_add_edit_stock).isVisible = false
+                            }
+                        }
+                        UserType.ADMIN.name -> {
+                            myMenu?.let {
+                                it.findItem(R.id.action_add_edit_stock).isVisible = true
+                            }
+                        }
+                        else -> {
+                            myMenu?.let {
+                                it.findItem(R.id.action_add_edit_stock).isVisible = false
+                                it.findItem(R.id.action_cart).isVisible = false
+                            }
                         }
                     }
-                    UserType.ADMIN.name -> {
-                        myMenu?.let {
-                            it.findItem(R.id.action_add_edit_stock).isVisible = true
-                        }
-                    }
-                    else -> {
-                        myMenu?.let {
-                            it.findItem(R.id.action_add_edit_stock).isVisible = false
-                            it.findItem(R.id.action_cart).isVisible = false
-                        }
+                } else {
+                    myMenu?.let {
+                        it.findItem(R.id.action_add_edit_stock).isVisible = false
+                        it.findItem(R.id.action_cart).isVisible = false
                     }
                 }
             }

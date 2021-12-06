@@ -41,9 +41,9 @@ class CartRepository @Inject constructor(
                     }
 
                     val cartList = mutableListOf<Cart>()
-                    value?.let { snapshot ->
+                    if (value != null && value.documents.isNotEmpty()) {
                         // loop all items in cart
-                        for (document in snapshot.documents) {
+                        for (document in value.documents) {
 
                             var cartItem = document
                                 .toObject(Cart::class.java)!!.copy(id = document.id)
@@ -55,66 +55,66 @@ class CartRepository @Inject constructor(
                             cartItem.product = foundProduct
                             cartItem.inventory = foundInventory
 
-                            CoroutineScope(dispatcher).launch {
-                                // get corresponding product (cartItem.id == product.id)
-                                cartItem = getUpdatedPriceAndStock(cartItem, userId)
-                            }
+                            // get corresponding product (cartItem.id == product.id)
+                            cartItem = getUpdatedPriceAndStock(cartItem, userId)
                             cartList.add(cartItem)
                         }
-                        offer(cartList)
                     }
+                    offer(cartList)
                 }
         }
-        awaitClose() {
+        awaitClose {
             cartListener?.remove()
         }
     }
 
-    private suspend fun getUpdatedPriceAndStock(
+    private fun getUpdatedPriceAndStock(
         cart: Cart,
         userId: String
     ): Cart {
-        val productDocument = productsCollectionRef
+        productsCollectionRef
             .document(cart.product.productId)
             .get()
-            .await()
+            .addOnSuccessListener { prod ->
+                val fetchedUpdatedProduct = prod.toObject<Product>()!!
+                    .copy(
+                        productId = prod.id,
+                        roomId = cart.id,
+                        cartId = cart.id
+                    )
 
-        if (productDocument != null) {
-            val fetchedUpdatedProduct = productDocument.toObject<Product>()!!
-                .copy(
-                    productId = productDocument.id,
-                    roomId = cart.id,
-                    cartId = cart.id
-                )
+                // get corresponding inventory of a single product (product.id == inventory.productId)
+                productsCollectionRef
+                    .document(fetchedUpdatedProduct.productId)
+                    .collection(INVENTORIES_SUB_COLLECTION)
+                    .document(cart.inventory.inventoryId)
+                    .get()
+                    .addOnSuccessListener { inv ->
+                        val fetchedUpdatedInventory = inv.toObject<Inventory>()!!
+                            .copy(
+                                inventoryId = inv.id,
+                                pid = cart.product.productId,
+                                pCartId = cart.id
+                            )
 
-            // get corresponding inventory of a single product (product.id == inventory.productId)
-            val inventoryDocument = productsCollectionRef
-                .document(fetchedUpdatedProduct.productId)
-                .collection(INVENTORIES_SUB_COLLECTION)
-                .document(cart.inventory.inventoryId)
-                .get()
-                .await()
+                        cart.product = fetchedUpdatedProduct
+                        cart.inventory = fetchedUpdatedInventory
 
-            if (inventoryDocument.data != null) {
-                val fetchedUpdatedInventory =
-                    inventoryDocument.toObject<Inventory>()!!
-                        .copy(
-                            inventoryId = inventoryDocument.id,
-                            pid = cart.product.productId,
-                            pCartId = cart.id
-                        )
-
-                cart.product = fetchedUpdatedProduct
-                cart.inventory = fetchedUpdatedInventory
-
-                userCartCollectionRef
-                    .document(userId)
-                    .collection(CART_SUB_COLLECTION)
-                    .document(cart.id)
-                    .set(cart, SetOptions.merge())
-                    .await()
+                        userCartCollectionRef
+                            .document(userId)
+                            .collection(CART_SUB_COLLECTION)
+                            .document(cart.id)
+                            .set(cart, SetOptions.merge())
+                            .addOnSuccessListener {
+                            }.addOnFailureListener {
+                                return@addOnFailureListener
+                            }
+                    }.addOnFailureListener {
+                        return@addOnFailureListener
+                    }
+            }.addOnFailureListener {
+                return@addOnFailureListener
             }
-        }
         return cart
     }
 
@@ -141,30 +141,26 @@ class CartRepository @Inject constructor(
                     cartItemFromDb.quantity += 1
                     cartItemFromDb.subTotal = cartItemFromDb.calculatedTotalPrice.toDouble()
 
-                    userCartCollectionRef
+                    val result = userCartCollectionRef
                         .document(userId)
                         .collection(CART_SUB_COLLECTION)
                         .document(cartItem.id)
                         .set(cartItemFromDb, SetOptions.merge())
-                        .addOnSuccessListener {
-                        }.addOnFailureListener {
-                            isSuccessful = false
-                            return@addOnFailureListener
-                        }
+                        .await()
+
+                    isSuccessful = result != null
                 }
             } else {
                 cartItem.subTotal = cartItem.calculatedTotalPrice.toDouble()
 
-                userCartCollectionRef
+                val result = userCartCollectionRef
                     .document(userId)
                     .collection(CART_SUB_COLLECTION)
                     .document(cartItem.inventory.inventoryId)
                     .set(cartItem, SetOptions.merge())
-                    .addOnSuccessListener {
-                    }.addOnFailureListener {
-                        isSuccessful = false
-                        return@addOnFailureListener
-                    }
+                    .await()
+
+                isSuccessful = result != null
             }
             isSuccessful
         }
@@ -180,16 +176,14 @@ class CartRepository @Inject constructor(
                 item.quantity = item.quantity
                 item.subTotal = item.calculatedTotalPrice.toDouble()
 
-                userCartCollectionRef
+                val result = userCartCollectionRef
                     .document(userId)
                     .collection(CART_SUB_COLLECTION)
                     .document(item.id)
                     .set(item, SetOptions.merge())
-                    .addOnSuccessListener {
-                    }.addOnFailureListener {
-                        isSuccessful = false
-                        return@addOnFailureListener
-                    }
+                    .await()
+
+                isSuccessful = result != null
             }
             isSuccessful
         }
@@ -200,18 +194,14 @@ class CartRepository @Inject constructor(
         cartId: String
     ): Boolean {
         return withContext(dispatcher) {
-            var isSuccessful = true
-            userCartCollectionRef
+            val result = userCartCollectionRef
                 .document(userId)
                 .collection(CART_SUB_COLLECTION)
                 .document(cartId)
                 .delete()
-                .addOnSuccessListener {
-                }.addOnFailureListener {
-                    isSuccessful = false
-                    return@addOnFailureListener
-                }
-            isSuccessful
+                .await()
+
+            result != null
         }
     }
 
@@ -222,16 +212,14 @@ class CartRepository @Inject constructor(
         return withContext(dispatcher) {
             var isSuccessful = true
             for (item in cartList) {
-                userCartCollectionRef
+                val result = userCartCollectionRef
                     .document(userId)
                     .collection(CART_SUB_COLLECTION)
                     .document(item.id)
                     .delete()
-                    .addOnSuccessListener {
-                    }.addOnFailureListener {
-                        isSuccessful = false
-                        return@addOnFailureListener
-                    }
+                    .await()
+
+                isSuccessful = result != null
             }
             isSuccessful
         }
@@ -250,17 +238,17 @@ class CartRepository @Inject constructor(
 
             if (cartDocuments.documents.isNotEmpty()) {
                 for (item in cartDocuments.documents) {
-                    userCartCollectionRef
+                    val result = userCartCollectionRef
                         .document(userId)
                         .collection(CART_SUB_COLLECTION)
                         .document(item.id)
                         .delete()
-                        .addOnSuccessListener {
-                        }.addOnFailureListener {
-                            isSuccessful = false
-                            return@addOnFailureListener
-                        }
+                        .await()
+
+                    isSuccessful = result != null
                 }
+            } else {
+                isSuccessful = false
             }
             isSuccessful
         }

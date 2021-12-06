@@ -11,6 +11,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.databinding.ProductItemBinding
+import java.lang.NumberFormatException
 
 class ProductAdapter(
     private val listener: OnProductListener
@@ -118,8 +119,12 @@ class ProductAdapter(
                     labelNumberOfSold.text = totalTxt
                 }
 
-                labelRate.isVisible = product.avgRate > (0).toBigDecimal()
-                labelRate.text = product.avgRate.toDouble().toString()
+                try {
+                    labelRate.isVisible = product.avgRate.toDouble() > 0.0
+                    labelRate.text = product.avgRate.toDouble().toString()
+                } catch (ex: NumberFormatException) {
+                    labelRate.isVisible = false
+                }
 
                 if (product.isWishListedByUser) {
                     btnAddToWishList.setImageResource(R.drawable.ic_fav_checked)

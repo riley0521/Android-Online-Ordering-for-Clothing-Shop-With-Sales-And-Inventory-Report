@@ -70,7 +70,7 @@ class ProductPagingSource(
                     product.inventoryList = inventoryList.await()
                     product.productImageList = productImageList.await()
                     product.reviewList = reviewList.await()
-                }
+                }.join()
                 productList.add(product)
             }
 

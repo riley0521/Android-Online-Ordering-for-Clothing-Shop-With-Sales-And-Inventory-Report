@@ -32,9 +32,14 @@ class InventoryViewModel @Inject constructor(
         val newCartItem = Cart(
             userId = userId,
             subTotal = 0.0,
+            // Cart ID Should be == inventory ID
+            id = inventory.inventoryId,
             product = product,
             inventory = inventory
         )
+
+        // Set subTotal
+        newCartItem.subTotal = newCartItem.calculatedTotalPrice.toDouble()
 
         if (cartRepository.insert(userId, newCartItem)) {
             cartDao.insert(newCartItem)

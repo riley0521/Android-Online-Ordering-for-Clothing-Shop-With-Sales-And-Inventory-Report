@@ -49,19 +49,16 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
         loadingDialog = LoadingDialog(requireActivity())
         adapter = CartAdapter(this)
 
-        if (getFirebaseUser() == null) {
-            if (loadingDialog.isActive()) {
-                loadingDialog.dismiss()
-            }
+        val currentUser = getFirebaseUser()
+        if (currentUser != null) {
+            userId = currentUser.uid
+        } else {
             Toast.makeText(
                 requireContext(),
                 "Please log in first to view your cart.",
                 Toast.LENGTH_LONG
             ).show()
             findNavController().navigate(R.id.action_cartFragment_to_categoryFragment)
-        } else {
-            userId = getFirebaseUser()?.uid!!
-            loadingDialog.show()
         }
 
         binding.apply {

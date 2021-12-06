@@ -62,11 +62,12 @@ class ProductRepository @Inject constructor(
                 val reviewList = async { reviewRepository.getFive(productId) }
 
                 foundProduct = productDocument.toObject<Product>()!!.copy(
-                    productId = productDocument.id,
-                    productImageList = productImageList.await(),
-                    inventoryList = inventoryList.await(),
-                    reviewList = reviewList.await()
+                    productId = productDocument.id
                 )
+
+                foundProduct.productImageList = productImageList.await()
+                foundProduct.inventoryList = inventoryList.await()
+                foundProduct.reviewList = reviewList.await()
             }
             foundProduct
         }

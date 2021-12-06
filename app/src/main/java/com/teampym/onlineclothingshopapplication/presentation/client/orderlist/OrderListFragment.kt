@@ -9,8 +9,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
@@ -24,9 +26,19 @@ import com.teampym.onlineclothingshopapplication.data.util.SHIPPING_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.Status
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentOrderListBinding
-import kotlinx.coroutines.flow.collect
+import com.teampym.onlineclothingshopapplication.presentation.client.others.AGREE_TO_SF_REQUEST
+import com.teampym.onlineclothingshopapplication.presentation.client.others.AGREE_TO_SF_RESULT
+import com.teampym.onlineclothingshopapplication.presentation.client.others.CANCEL_REASON_REQUEST
+import com.teampym.onlineclothingshopapplication.presentation.client.others.CANCEL_REASON_RESULT
+import com.teampym.onlineclothingshopapplication.presentation.client.others.SHIPPING_FEE_REQUEST
+import com.teampym.onlineclothingshopapplication.presentation.client.others.SHIPPING_FEE_RESULT
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapter.OnOrderListener {
 
     private lateinit var binding: FragmentOrderListBinding
@@ -48,24 +60,32 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
         viewModel.statusQuery.value = status
 
         lifecycleScope.launchWhenStarted {
-            viewModel.userFlow.collect {
-                adapter = OrderListAdapter(it.userType, this@OrderListFragment, requireActivity())
+            viewModel.userFlow.collectLatest { user ->
+                if (user != null) {
+                    CoroutineScope(Dispatchers.Main).launch {
+                        adapter = OrderListAdapter(
+                            user.userType,
+                            this@OrderListFragment,
+                            requireActivity()
+                        )
 
-                binding.apply {
-                    recyclerOrders.setHasFixedSize(true)
-                    recyclerOrders.adapter = adapter
+                        binding.apply {
+                            recyclerOrders.setHasFixedSize(true)
+                            recyclerOrders.adapter = adapter
+                        }
+                    }.join()
+                    viewModel.ordersFlow.collectLatest {
+                        adapter.submitData(it)
+                    }
                 }
-            }
-
-            viewModel.ordersFlow.collectLatest {
-                adapter.submitData(it)
             }
 
             viewModel.orderEvent.collectLatest { event ->
                 when (event) {
                     is OrderListViewModel.OrderListEvent.ShowMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
-                        adapter.notifyItemRemoved(event.positionToRemove)
+                        adapter.refresh()
+                        // adapter.notifyItemRemoved(event.positionToRemove)
                     }
                 }
             }
@@ -137,7 +157,11 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
     }
 
     override fun onItemClicked(item: Order) {
-        TODO("Not yet implemented")
+        val action = OrderListFragmentDirections.actionOrderListFragmentToOrderDetailListFragment(
+            "Order ${item.id}",
+            item
+        )
+        findNavController().navigate(action)
     }
 
     override fun onCancelClicked(item: Order, userType: String, position: Int) {
@@ -156,15 +180,38 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
     }
 
     override fun onAgreeToSfClicked(item: Order, position: Int) {
-        TODO("Not yet implemented")
+        setFragmentResultListener(AGREE_TO_SF_REQUEST) { _, bundle ->
+            val result = bundle.getString(AGREE_TO_SF_RESULT)
+            viewModel.onAgreeToSfResult(result ?: "", position)
+        }
+
+        val action =
+            OrderListFragmentDirections.actionOrderListFragmentToAgreeToShippingFeeDialogFragment(
+                item
+            )
+        findNavController().navigate(action)
     }
 
     private fun showCancelModalForAdmin(item: Order, position: Int) {
-        TODO("Not yet implemented")
+        setFragmentResultListener(CANCEL_REASON_REQUEST) { _, bundle ->
+            val result = bundle.getString(CANCEL_REASON_RESULT)
+            viewModel.onAdminCancelResult(result ?: "", position)
+        }
+
+        val action =
+            OrderListFragmentDirections.actionOrderListFragmentToCancelReasonDialogFragment(item)
+        findNavController().navigate(action)
     }
 
     private fun showSuggestShipFeeModalForAdmin(item: Order, position: Int) {
-        TODO("Not yet implemented")
+        setFragmentResultListener(SHIPPING_FEE_REQUEST) { _, bundle ->
+            val result = bundle.getString(SHIPPING_FEE_RESULT)
+            viewModel.onSuggestedShippingFeeResult(result ?: "", position)
+        }
+
+        val action =
+            OrderListFragmentDirections.actionOrderListFragmentToShippingFeeDialogFragment(item)
+        findNavController().navigate(action)
     }
 
     private fun showCancelDialogForCustomer(item: Order, position: Int) {
