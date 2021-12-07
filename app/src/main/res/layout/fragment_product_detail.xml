@@ -1,39 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <ScrollView
-        android:id="@+id/prodDetailLayout"
+        android:id="@+id/mainContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/btnAddToCart"
-        android:layout_marginBottom="8dp"
-        tools:context=".presentation.client.productdetail.ProductDetailFragment">
-
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/btnAddToCart"
+        android:fillViewport="true">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <ImageView
-                android:id="@+id/imgProduct"
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/carouselViewPager"
                 android:layout_width="0dp"
-                android:layout_height="150dp"
-                android:contentDescription="@string/image_product_description"
-                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_height="321dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.0"
-                tools:src="@tools:sample/avatars" />
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/indicatorTabLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/carouselViewPager"
+                app:tabBackground="@drawable/tab_selector"
+                app:tabGravity="center"
+                app:tabIndicatorHeight="0dp" />
 
             <TextView
                 android:id="@+id/tvProductName"
@@ -45,12 +47,12 @@
                 android:ellipsize="end"
                 android:maxLines="2"
                 android:text="@string/product_name"
-                android:textStyle="bold"
                 android:textAppearance="?attr/textAppearanceBody1"
+                android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/imgProduct" />
+                app:layout_constraintTop_toBottomOf="@id/indicatorTabLayout" />
 
             <TextView
                 android:id="@+id/tvPrice"
@@ -75,8 +77,8 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="16dp"
                 android:text="@string/label_description"
-                android:textStyle="bold"
                 android:textAppearance="?attr/textAppearanceBody1"
+                android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvPrice" />
@@ -103,8 +105,8 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
                 android:text="@string/label_rate"
-                android:textStyle="bold"
                 android:textAppearance="?attr/textAppearanceBody1"
+                android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
@@ -112,31 +114,38 @@
 
             <TextView
                 android:id="@+id/tvRate"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="16dp"
                 android:text="3.5"
                 android:textAppearance="?attr/textAppearanceBody1"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toEndOf="@id/labelRate"
                 app:layout_constraintTop_toBottomOf="@id/tvDescription" />
 
             <TextView
+                android:id="@+id/tvShowMoreReviews"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:text="@string/label_show_more_reviews"
+                android:textAppearance="?attr/textAppearanceBody1"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/ratingBar" />
+
+            <TextView
                 android:id="@+id/labelReview"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="16dp"
                 android:text="@string/label_reviews"
-                android:textStyle="bold"
                 android:textAppearance="?attr/textAppearanceBody1"
-                app:layout_constraintEnd_toEndOf="parent"
+                android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/labelRate" />
+                app:layout_constraintTop_toBottomOf="@+id/ratingBar" />
 
             <TextView
                 android:id="@+id/labelNoReviews"
@@ -145,8 +154,8 @@
                 android:layout_margin="8dp"
                 android:gravity="center_horizontal"
                 android:text="@string/label_no_reviews_yet"
-                android:textStyle="bold"
                 android:textAppearance="?attr/textAppearanceBody1"
+                android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="@id/recyclerReviews"
                 app:layout_constraintEnd_toEndOf="@id/recyclerReviews"
                 app:layout_constraintStart_toStartOf="@id/recyclerReviews"
@@ -162,25 +171,38 @@
                 android:padding="8dp"
                 android:visibility="invisible"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/labelReview"
-                app:layout_constraintBottom_toBottomOf="parent"
                 tools:listitem="@layout/cart_item_final" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+            <RatingBar
+                android:id="@+id/ratingBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:clickable="false"
+                android:numStars="5"
+                android:rating="1"
+                android:isIndicator="true"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toEndOf="@+id/tvRate"
+                app:layout_constraintTop_toBottomOf="@+id/tvDescription" />
 
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 
     <Button
         android:id="@+id/btnAddToCart"
-        android:layout_width="0dp"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
-        android:text="@string/button_add_to_cart"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:text="@string/button_add_to_cart" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+
+</RelativeLayout>
 

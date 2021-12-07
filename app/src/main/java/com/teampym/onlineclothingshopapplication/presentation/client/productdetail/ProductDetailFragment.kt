@@ -13,6 +13,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.google.android.material.tabs.TabLayoutMediator
 import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.util.UserType
@@ -43,6 +44,7 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
         binding = FragmentProductDetailBinding.bind(view)
         adapter = ReviewAdapter()
 
+
         var product = args.product
         val productId = args.productId
 
@@ -64,13 +66,6 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                 findNavController().navigate(action)
             }
 
-            Glide.with(requireView())
-                .load(product.imageUrl)
-                .centerCrop()
-                .transition(DrawableTransitionOptions.withCrossFade())
-                .error(R.drawable.ic_food)
-                .into(imgProduct)
-
             val priceStr = "$" + product.price
             tvProductName.text = product.name
             tvPrice.text = priceStr
@@ -89,8 +84,18 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                 findNavController().navigate(action)
             }
 
-            // submit list to the adapter if the reviewList is not empty.
+            // submit list to the image adapter
+            val viewPager = carouselViewPager.apply {
+                adapter = ImagePagerAdapter(requireActivity()).apply {
+                    submitList(product.productImageList)
+                    notifyDataSetChanged()
+                }
+            }
 
+            // Attach viewPager and the tabLayout together so that they can work altogether
+            TabLayoutMediator(indicatorTabLayout, viewPager) { _, _ -> }.attach()
+
+            // submit list to the adapter if the reviewList is not empty.
             adapter.submitList(product.reviewList)
 
             var rate = 0.0
@@ -98,14 +103,19 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                 rate = product.avgRate.toDouble()
             }
 
-            if (rate == 0.0) {
-                labelRate.text = getString(R.string.no_available_rating)
+            val rateStr = "- $rate"
+            tvRate.text = rateStr
+            ratingBar.rating = rate.toFloat()
 
-                tvRate.visibility = View.INVISIBLE
+            if(product.numberOfReviews > 5L) {
+                tvShowMoreReviews.text = getString(R.string.label_show_more_reviews, product.numberOfReviews)
+            } else {
+                tvShowMoreReviews.isVisible = false
+            }
+
+            if (rate == 0.0) {
                 labelNoReviews.isVisible = true
             } else {
-                val rateStr = "- $rate"
-                tvRate.text = rateStr
 
                 // Load Reviews here.
                 recyclerReviews.setHasFixedSize(true)

@@ -65,7 +65,7 @@ class OrderRepository @Inject constructor(
         return withContext(dispatcher) {
 
             val newDate = Calendar.getInstance()
-            newDate.timeZone = TimeZone.getTimeZone("GMT+8:00")
+            newDate.timeZone = TimeZone.getTimeZone("UTC")
 
             var newOrder: Order? = Order(
                 userId = userId,

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/carouselImageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/image_product_description" />
+
+    <TextView
+        android:id="@+id/imagePositionIndicatorTextView"
+        android:layout_width="80dp"
+        android:layout_height="30dp"
+        android:layout_gravity="end"
+        android:layout_marginTop="30dp"
+        android:layout_marginEnd="30dp"
+        android:background="@drawable/rounded_background"
+        android:gravity="center_horizontal|center_vertical" />
+</FrameLayout>

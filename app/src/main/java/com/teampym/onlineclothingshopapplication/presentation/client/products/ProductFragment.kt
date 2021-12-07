@@ -1,6 +1,7 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.products
 
 import android.os.Bundle
+import android.util.Log
 import android.view.* // ktlint-disable no-wildcard-imports
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
@@ -11,6 +12,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.paging.map
 import androidx.recyclerview.widget.GridLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.room.Product
@@ -20,7 +22,10 @@ import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -50,38 +55,64 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentProductBinding.bind(view)
-
         loadingDialog = LoadingDialog(requireActivity())
+        adapter = ProductAdapter(this)
 
         viewModel.updateCategory(args.categoryId)
 
-        adapter = ProductAdapter(this)
+        viewModel.isAddMenuVisible.observe(viewLifecycleOwner) {
+            addMenu?.isVisible = viewModel.isAddMenuVisible.value!!
+        }
 
-        binding.apply {
-            recyclerProducts.setHasFixedSize(true)
-            recyclerProducts.layoutManager = GridLayoutManager(requireContext(), 2)
-            recyclerProducts.adapter = adapter
+        viewModel.isCartMenuVisible.observe(viewLifecycleOwner) {
+            cartMenu?.isVisible = viewModel.isCartMenuVisible.value!!
         }
 
         viewModel.userWithWishList.observe(viewLifecycleOwner) { userWithWishList ->
             // Check if the user is customer then hide admin functions when true
+
             if (userWithWishList?.user != null) {
                 when (userWithWishList.user.userType) {
                     UserType.CUSTOMER.name -> {
-                        addMenu?.isVisible = false
+                        CoroutineScope(Dispatchers.IO).launch {
+                            viewModel.updateAddMenu(false)
+                            viewModel.updateCartMenu(true)
+                        }
+
+                        // Product Adapter For Customer
+                        instantiateProductAdapterForCustomer()
                     }
                     UserType.ADMIN.name -> {
-                        addMenu?.isVisible = true
+                        CoroutineScope(Dispatchers.IO).launch {
+                            viewModel.updateAddMenu(true)
+                            viewModel.updateCartMenu(false)
+                        }
+
+                        // Product Adapter For Admin
+                        binding.apply {
+                            adapter = ProductAdapter(this@ProductFragment)
+                            recyclerProducts.setHasFixedSize(true)
+                            recyclerProducts.layoutManager =
+                                GridLayoutManager(requireContext(), 2)
+                            recyclerProducts.adapter = adapter
+                        }
                     }
                     else -> {
-                        addMenu?.isVisible = false
-                        cartMenu?.isVisible = false
+                        CoroutineScope(Dispatchers.IO).launch {
+                            viewModel.updateAddMenu(false)
+                            viewModel.updateCartMenu(false)
+                        }
                     }
                 }
                 userAndWishList = userWithWishList
             } else {
-                addMenu?.isVisible = false
-                cartMenu?.isVisible = false
+                CoroutineScope(Dispatchers.IO).launch {
+                    viewModel.updateAddMenu(false)
+                    viewModel.updateCartMenu(false)
+                }
+
+                // Product Adapter For Customer
+                instantiateProductAdapterForCustomer()
             }
         }
 
@@ -95,19 +126,36 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
                     }
                     p
                 }
+                Log.d("ProductFragment", "onViewCreated: I'm called")
                 adapter.submitData(paging)
             }
 
             viewModel.productEvent.collectLatest { event ->
                 when (event) {
                     is ProductViewModel.ProductEvent.ShowMessage -> {
-                        Toast.makeText(requireContext(), event.msg, Toast.LENGTH_SHORT).show()
+                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
+                        adapter.refresh()
                     }
                 }
             }
         }
 
         setHasOptionsMenu(true)
+    }
+
+    override fun onResume() {
+        requireActivity().invalidateOptionsMenu()
+        Log.d("ProductFragment", "onResume: I'm called!!!")
+
+        super.onResume()
+    }
+
+    private fun instantiateProductAdapterForCustomer() {
+        binding.apply {
+            recyclerProducts.setHasFixedSize(true)
+            recyclerProducts.layoutManager = GridLayoutManager(requireContext(), 2)
+            recyclerProducts.adapter = adapter
+        }
     }
 
     override fun onItemClicked(product: Product) {
@@ -140,7 +188,10 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
 
         // Set action add and cart to hide it whenever needed
         addMenu = menu.findItem(R.id.action_add)
+        addMenu?.isVisible = viewModel.isAddMenuVisible.value!!
+
         cartMenu = menu.findItem(R.id.action_cart)
+        cartMenu?.isVisible = viewModel.isCartMenuVisible.value!!
 
         val searchItem = menu.findItem(R.id.action_search)
         searchView = searchItem.actionView as SearchView

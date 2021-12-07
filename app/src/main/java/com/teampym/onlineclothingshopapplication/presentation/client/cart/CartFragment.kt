@@ -70,22 +70,18 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
                         .setTitle("DELETE OUT OF STOCK ITEMS")
                         .setMessage("Are you sure you want to proceed? You cannot reverse this action.")
                         .setPositiveButton("YES") { _, _ ->
-                            viewModel.onDeleteOutOfStockItems(outOfStockList)
+                            loadingDialog.show()
 
-                            val action =
-                                CartFragmentDirections.actionCartFragmentToCheckOutFragment(
-                                    cart = Checkout(userId, cartList, total)
-                                )
-                            findNavController().navigate(action)
+                            viewModel.onDeleteOutOfStockItems(outOfStockList)
+                            viewModel.onCartUpdated(userId, adapter.currentList)
                         }.setNegativeButton("NO") { dialog, _ ->
                             dialog.dismiss()
                         }
                         .show()
                 } else {
-                    val action = CartFragmentDirections.actionCartFragmentToCheckOutFragment(
-                        cart = Checkout(userId, cartList, total)
-                    )
-                    findNavController().navigate(action)
+                    loadingDialog.show()
+
+                    viewModel.onCartUpdated(userId, adapter.currentList)
                 }
             }
 
@@ -118,6 +114,14 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
                 when (event) {
                     is CartViewModel.CartEvent.ShowMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
+                    }
+                    CartViewModel.CartEvent.NavigateToCheckOutFragment -> {
+                        loadingDialog.dismiss()
+
+                        val action = CartFragmentDirections.actionCartFragmentToCheckOutFragment(
+                            cart = Checkout(userId, cartList, total)
+                        )
+                        findNavController().navigate(action)
                     }
                 }
             }
@@ -153,10 +157,5 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
     override fun onFailure(msg: String) {
         Snackbar.make(requireView(), msg, Snackbar.LENGTH_SHORT).show()
-    }
-
-    override fun onStop() {
-        viewModel.onCartUpdated(userId, adapter.currentList)
-        super.onStop()
     }
 }

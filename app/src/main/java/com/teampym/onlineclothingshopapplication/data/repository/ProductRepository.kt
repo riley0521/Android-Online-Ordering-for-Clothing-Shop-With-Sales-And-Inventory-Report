@@ -32,7 +32,7 @@ class ProductRepository @Inject constructor(
 
     private val productCollectionRef = db.collection(PRODUCTS_COLLECTION)
 
-    fun getSome(queryProducts: Query, sortOrder: SortOrder) =
+    fun getSome(user: UserInformation?, queryProducts: Query, sortOrder: SortOrder) =
         Pager(
             PagingConfig(
                 pageSize = 30,
@@ -41,6 +41,7 @@ class ProductRepository @Inject constructor(
             )
         ) {
             ProductPagingSource(
+                user,
                 queryProducts,
                 sortOrder,
                 productImageRepository,

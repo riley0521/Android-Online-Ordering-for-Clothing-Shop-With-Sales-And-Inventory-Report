@@ -6,6 +6,7 @@ import com.bumptech.glide.load.HttpException
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.toObject
+import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.ProductImageRepository
 import com.teampym.onlineclothingshopapplication.data.repository.ProductInventoryRepository
 import com.teampym.onlineclothingshopapplication.data.repository.ReviewRepository
@@ -21,6 +22,7 @@ import kotlinx.coroutines.tasks.await
 import java.io.IOException
 
 class ProductPagingSource(
+    private val user: UserInformation?,
     private val queryProducts: Query,
     private val sortOrder: SortOrder,
     private val productImageRepository: ProductImageRepository,
@@ -55,17 +57,13 @@ class ProductPagingSource(
             val productList = mutableListOf<Product>()
             for (document in currentPage.documents) {
 
-                var product = document.toObject<Product>()!!.copy(productId = document.id)
+                val product = document.toObject<Product>()!!.copy(productId = document.id)
                 CoroutineScope(Dispatchers.IO).launch {
                     val inventoryList = async { productInventoryRepository.getAll(document.id) }
 
                     val productImageList = async { productImageRepository.getAll(document.id) }
 
                     val reviewList = async { reviewRepository.getFive(document.id) }
-
-                    product = product.copy(
-                        productId = document.id,
-                    )
 
                     product.inventoryList = inventoryList.await()
                     product.productImageList = productImageList.await()

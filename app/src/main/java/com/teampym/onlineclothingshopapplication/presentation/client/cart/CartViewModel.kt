@@ -9,6 +9,7 @@ import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.util.CartFlag
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -54,24 +55,34 @@ class CartViewModel @Inject constructor(
     }
 
     fun onCartUpdated(userId: String, cart: List<Cart>) = appScope.launch {
-        cartRepository.update(userId, cart)
-        cartDao.insertAll(cart)
+        val res = async { cartRepository.update(userId, cart) }.await()
+        if (res) {
+            async { cartDao.insertAll(cart) }.await()
+            _cartChannel.send(CartEvent.NavigateToCheckOutFragment)
+        }
     }
 
     fun onDeleteOutOfStockItems(cartList: List<Cart>) = appScope.launch {
         if (_userId.value != null) {
-            cartRepository.deleteOutOfStockItems(_userId.value!!, cartList)
-            cartDao.deleteAll(_userId.value!!)
+            val res = async {
+                cartRepository.deleteOutOfStockItems(_userId.value!!, cartList)
+            }.await()
+            if (res) {
+                cartDao.deleteAllOutOfStockItems(_userId.value!!)
+            }
         }
     }
 
     fun onDeleteItemSelected(userId: String, cartId: String) = viewModelScope.launch {
-        cartRepository.delete(userId, cartId)
-        cartDao.delete(cartId)
-        _cartChannel.send(CartEvent.ShowMessage("Item deleted successfully!"))
+        val res = async { cartRepository.delete(userId, cartId) }.await()
+        if (res) {
+            async { cartDao.delete(cartId) }.await()
+            _cartChannel.send(CartEvent.ShowMessage("Item deleted successfully!"))
+        }
     }
 
     sealed class CartEvent {
         data class ShowMessage(val msg: String) : CartEvent()
+        object NavigateToCheckOutFragment : CartEvent()
     }
 }

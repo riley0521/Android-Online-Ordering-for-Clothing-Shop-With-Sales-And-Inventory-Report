@@ -2,6 +2,7 @@ package com.teampym.onlineclothingshopapplication.presentation.client.products
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
@@ -17,7 +18,9 @@ import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.room.UserWithWishList
 import com.teampym.onlineclothingshopapplication.data.room.WishItemDao
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
+import com.teampym.onlineclothingshopapplication.data.util.UserType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -32,8 +35,34 @@ class ProductViewModel @Inject constructor(
     private val wishListRepository: WishItemRepository,
     private val userInformationDao: UserInformationDao,
     private val wishListDao: WishItemDao,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val state: SavedStateHandle
 ) : ViewModel() {
+
+    companion object {
+        private const val ADD_MENU_VISIBLE = "add_menu"
+        private const val CART_MENU_VISIBLE = "cart_menu"
+    }
+
+    val isAddMenuVisible: MutableLiveData<Boolean> =
+        state.getLiveData(ADD_MENU_VISIBLE, false)
+
+    val isCartMenuVisible: MutableLiveData<Boolean> =
+        state.getLiveData(CART_MENU_VISIBLE, false)
+
+    suspend fun updateAddMenu(isVisible: Boolean) = viewModelScope.launch {
+        isAddMenuVisible.postValue(isVisible)
+    }
+
+    suspend fun updateCartMenu(isVisible: Boolean) {
+        isCartMenuVisible.postValue(isVisible)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        state.set(ADD_MENU_VISIBLE, isAddMenuVisible.value)
+        state.set(CART_MENU_VISIBLE, isCartMenuVisible.value)
+    }
 
     val searchQuery = MutableLiveData("")
     private val _categoryQuery = MutableLiveData("")
@@ -103,16 +132,23 @@ class ProductViewModel @Inject constructor(
             }
         }
 
-        _userWithWishList.value = userInformationDao.getUserWithWishList().firstOrNull {
+        val userWithWishList = userInformationDao.getUserWithWishList().firstOrNull {
             it.user?.userId == sessionPref.userId
         }
 
-        productRepository.getSome(queryProducts, sessionPref.sortOrder).flow.cachedIn(viewModelScope)
+        _userWithWishList.value = userWithWishList
+
+        productRepository.getSome(
+            userWithWishList?.user,
+            queryProducts,
+            sessionPref.sortOrder
+        ).flow.cachedIn(viewModelScope)
     }
 
     fun addToWishList(userId: String, product: Product) = viewModelScope.launch {
-        wishListRepository.insert(userId, product)?.let {
-            wishListDao.insert(it)
+        val res = async { wishListRepository.insert(userId, product) }.await()
+        if (res != null) {
+            async { wishListDao.insert(res) }.await()
             _productChannel.send(ProductEvent.ShowMessage("Added product to wish list."))
         }
     }

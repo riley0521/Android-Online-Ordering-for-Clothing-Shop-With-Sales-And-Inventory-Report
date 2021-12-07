@@ -157,6 +157,8 @@
     <string name="label_date_sold">Date Sold:</string>
     <string name="label_is_exchangeable">Is Exchangeable:</string>
     <string name="btn_exchange_item">Exchange Item</string>
+    <string name="count_indicator_text">"%1$d/%2$d"</string>
+    <string name="label_show_more_reviews">"Show All (%1$d) >"</string>
 
 
 </resources>
