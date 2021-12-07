@@ -14,6 +14,7 @@ import com.teampym.onlineclothingshopapplication.data.room.MOST_POPULAR
 import com.teampym.onlineclothingshopapplication.data.room.NEWEST
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.SortOrder
+import com.teampym.onlineclothingshopapplication.data.util.UserType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -54,7 +55,7 @@ class ProductPagingSource(
                 nextPage = queryProducts.startAfter(lastVisibleItem).get().await()
             }
 
-            val productList = mutableListOf<Product>()
+            var productList = mutableListOf<Product>()
             for (document in currentPage.documents) {
 
                 val product = document.toObject<Product>()!!.copy(productId = document.id)
@@ -70,6 +71,24 @@ class ProductPagingSource(
                     product.reviewList = reviewList.await()
                 }.join()
                 productList.add(product)
+            }
+
+            val finalProductList = mutableListOf<Product>()
+            if (user != null && user.userType == UserType.ADMIN.name) {
+                for (item in productList) {
+                    for (inv in item.inventoryList) {
+                        item.fastTrack = inv.sold
+                        item.inventoryList = listOf(inv)
+                        finalProductList.add(item)
+                    }
+                }
+
+                // For Admin View
+                productList = finalProductList
+
+                // Each Product has 1 inventory and it will repeat every item with different sizes.
+                // Sort All Items with the most sold items.
+                productList = productList.sortedByDescending { it.fastTrack } as MutableList<Product>
             }
 
             if (sortOrder == SortOrder.BY_POPULARITY) {

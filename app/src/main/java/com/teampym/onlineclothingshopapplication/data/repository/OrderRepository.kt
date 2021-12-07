@@ -15,6 +15,7 @@ import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.ORDER_DETAILS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.Status
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import com.teampym.onlineclothingshopapplication.presentation.client.orderlist.OrderListPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.runBlocking
@@ -64,9 +65,6 @@ class OrderRepository @Inject constructor(
     ): Order? {
         return withContext(dispatcher) {
 
-            val newDate = Calendar.getInstance()
-            newDate.timeZone = TimeZone.getTimeZone("UTC")
-
             var newOrder: Order? = Order(
                 userId = userId,
                 totalCost = cartList.sumOf { it.subTotal },
@@ -74,7 +72,7 @@ class OrderRepository @Inject constructor(
                 deliveryInformation = deliveryInformation,
                 suggestedShippingFee = 0.0,
                 additionalNote = additionalNote,
-                dateOrdered = newDate.timeInMillis,
+                dateOrdered = Utils.getTimeInMillisUTC(),
                 numberOfItems = cartList.size.toLong()
             )
 

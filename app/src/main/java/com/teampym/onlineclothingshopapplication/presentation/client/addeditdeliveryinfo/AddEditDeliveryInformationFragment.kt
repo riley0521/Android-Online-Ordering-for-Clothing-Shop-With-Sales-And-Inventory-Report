@@ -114,6 +114,11 @@ class AddEditDeliveryInformationFragment :
                     }.show()
             }
 
+            edtFullName.setText(viewModel.fullName)
+            edtPhoneNo.setText(viewModel.phoneNumber)
+            edtPostalCode.setText(viewModel.postalCode)
+            edtDetailedAddress.setText(viewModel.streetNumber)
+
             edtFullName.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(
                     s: CharSequence?,
@@ -121,7 +126,7 @@ class AddEditDeliveryInformationFragment :
                     count: Int,
                     after: Int
                 ) {
-                    edtFullName.setText(viewModel.fullName)
+                    // Nothing
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -140,7 +145,7 @@ class AddEditDeliveryInformationFragment :
                     count: Int,
                     after: Int
                 ) {
-                    edtPhoneNo.setText(viewModel.phoneNumber)
+                    // Nothing
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -159,7 +164,7 @@ class AddEditDeliveryInformationFragment :
                     count: Int,
                     after: Int
                 ) {
-                    edtPostalCode.setText(viewModel.postalCode)
+                    // Nothing
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -178,7 +183,7 @@ class AddEditDeliveryInformationFragment :
                     count: Int,
                     after: Int
                 ) {
-                    edtDetailedAddress.setText(viewModel.streetNumber)
+                    // Nothing
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -248,25 +253,31 @@ class AddEditDeliveryInformationFragment :
             userId = it
         }
 
-        if(viewModel.selectedRegion.name.isNotBlank()) {
-            selectedRegion = viewModel.selectedRegion.name
-            binding.edtRegion.text = viewModel.selectedRegion.name
-            newDeliveryInformation.region = viewModel.selectedRegion.name
-            editDeliveryInformation?.region = viewModel.selectedRegion.name
+        viewModel.selectedRegion.observe(viewLifecycleOwner) {
+            if (it.name.isNotBlank()) {
+                selectedRegion = it.name
+                binding.edtRegion.text = it.name
+                newDeliveryInformation.region = it.name
+                editDeliveryInformation?.region = it.name
+            }
         }
 
-        if(viewModel.selectedProvince.name.isNotBlank()) {
-            selectedProvince = viewModel.selectedProvince.name
-            binding.edtProvince.text = viewModel.selectedProvince.name
-            newDeliveryInformation.province = viewModel.selectedProvince.name
-            editDeliveryInformation?.province = viewModel.selectedProvince.name
+        viewModel.selectedProvince.observe(viewLifecycleOwner) {
+            if (it.name.isNotBlank()) {
+                selectedProvince = it.name
+                binding.edtProvince.text = it.name
+                newDeliveryInformation.province = it.name
+                editDeliveryInformation?.province = it.name
+            }
         }
 
-        if(viewModel.selectedCity.name.isNotBlank()) {
-            selectedCity = viewModel.selectedCity.name
-            binding.edtCity.text = viewModel.selectedCity.name
-            newDeliveryInformation.city = viewModel.selectedCity.name
-            editDeliveryInformation?.city = viewModel.selectedCity.name
+        viewModel.selectedCity.observe(viewLifecycleOwner) {
+            if (it.name.isNotBlank()) {
+                selectedCity = it.name
+                binding.edtCity.text = it.name
+                newDeliveryInformation.city = it.name
+                editDeliveryInformation?.city = it.name
+            }
         }
 
         viewModel.regionId.observe(viewLifecycleOwner) { parentId ->

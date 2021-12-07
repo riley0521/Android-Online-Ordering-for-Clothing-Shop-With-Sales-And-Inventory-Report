@@ -160,6 +160,27 @@ class ProductRepository @Inject constructor(
         }
     }
 
+    // This will be called from category repository to delete all items in the specified
+    // Category Id.
+    suspend fun deleteAll(categoryId: String): Boolean {
+        return withContext(dispatcher) {
+            var isSuccessful = true
+
+            val productDocuments = productCollectionRef
+                .whereEqualTo("categoryId", categoryId)
+                .get()
+                .await()
+
+            if (productDocuments.documents.isNotEmpty()) {
+                for (doc in productDocuments.documents) {
+                    val res = doc.reference.delete().await()
+                    isSuccessful = res != null
+                }
+            }
+            isSuccessful
+        }
+    }
+
     // SHIPPED
     suspend fun deductStockToCommittedCount(
         userType: String,

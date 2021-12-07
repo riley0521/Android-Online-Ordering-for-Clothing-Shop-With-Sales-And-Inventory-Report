@@ -68,7 +68,8 @@ class CartViewModel @Inject constructor(
                 cartRepository.deleteOutOfStockItems(_userId.value!!, cartList)
             }.await()
             if (res) {
-                cartDao.deleteAllOutOfStockItems(_userId.value!!)
+                async { cartDao.deleteAllOutOfStockItems(_userId.value!!) }.await()
+                _cartChannel.send(CartEvent.NavigateToCheckOutFragment)
             }
         }
     }

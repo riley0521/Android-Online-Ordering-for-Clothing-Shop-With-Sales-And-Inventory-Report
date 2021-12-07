@@ -18,7 +18,6 @@ import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.room.UserWithWishList
 import com.teampym.onlineclothingshopapplication.data.room.WishItemDao
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
-import com.teampym.onlineclothingshopapplication.data.util.UserType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -42,6 +41,7 @@ class ProductViewModel @Inject constructor(
     companion object {
         private const val ADD_MENU_VISIBLE = "add_menu"
         private const val CART_MENU_VISIBLE = "cart_menu"
+        private const val SORT_MENU_VISIBLE = "sort_menu"
     }
 
     val isAddMenuVisible: MutableLiveData<Boolean> =
@@ -49,6 +49,9 @@ class ProductViewModel @Inject constructor(
 
     val isCartMenuVisible: MutableLiveData<Boolean> =
         state.getLiveData(CART_MENU_VISIBLE, false)
+
+    val isSortMenuVisible: MutableLiveData<Boolean> =
+        state.getLiveData(SORT_MENU_VISIBLE, false)
 
     suspend fun updateAddMenu(isVisible: Boolean) = viewModelScope.launch {
         isAddMenuVisible.postValue(isVisible)
@@ -58,10 +61,15 @@ class ProductViewModel @Inject constructor(
         isCartMenuVisible.postValue(isVisible)
     }
 
+    suspend fun updateSortMenu(isVisible: Boolean) {
+        isSortMenuVisible.postValue(isVisible)
+    }
+
     override fun onCleared() {
         super.onCleared()
         state.set(ADD_MENU_VISIBLE, isAddMenuVisible.value)
         state.set(CART_MENU_VISIBLE, isCartMenuVisible.value)
+        state.set(SORT_MENU_VISIBLE, isSortMenuVisible.value)
     }
 
     val searchQuery = MutableLiveData("")

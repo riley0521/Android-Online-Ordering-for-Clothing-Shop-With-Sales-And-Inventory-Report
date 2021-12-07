@@ -48,6 +48,10 @@ data class Product(
 
     @get:Exclude
     @Ignore
+    var fastTrack: Long = 0
+
+    @get:Exclude
+    @Ignore
     var isWishListedByUser = false
 
     @get:Exclude

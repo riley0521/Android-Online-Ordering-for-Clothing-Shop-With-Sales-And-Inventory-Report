@@ -12,6 +12,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.paging.map
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.R
@@ -24,16 +25,21 @@ import com.teampym.onlineclothingshopapplication.databinding.FragmentProductBind
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnProductListener {
+class ProductFragment :
+    Fragment(R.layout.fragment_product),
+    ProductAdapter.OnProductListener,
+    ProductAdminAdapter.OnProductAdapterListener {
 
     private lateinit var binding: FragmentProductBinding
 
     private lateinit var adapter: ProductAdapter
+    private lateinit var adminAdapter: ProductAdminAdapter
 
     private lateinit var searchView: SearchView
 
@@ -50,22 +56,29 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
 
     private var addMenu: MenuItem? = null
     private var cartMenu: MenuItem? = null
+    private var sortMenu: MenuItem? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentProductBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
+
         adapter = ProductAdapter(this)
+        adminAdapter = ProductAdminAdapter(this)
 
         viewModel.updateCategory(args.categoryId)
 
         viewModel.isAddMenuVisible.observe(viewLifecycleOwner) {
-            addMenu?.isVisible = viewModel.isAddMenuVisible.value!!
+            addMenu?.isVisible = it
         }
 
         viewModel.isCartMenuVisible.observe(viewLifecycleOwner) {
-            cartMenu?.isVisible = viewModel.isCartMenuVisible.value!!
+            cartMenu?.isVisible = it
+        }
+
+        viewModel.isSortMenuVisible.observe(viewLifecycleOwner) {
+            sortMenu?.isVisible = it
         }
 
         viewModel.userWithWishList.observe(viewLifecycleOwner) { userWithWishList ->
@@ -77,6 +90,7 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
                         CoroutineScope(Dispatchers.IO).launch {
                             viewModel.updateAddMenu(false)
                             viewModel.updateCartMenu(true)
+                            viewModel.updateSortMenu(true)
                         }
 
                         // Product Adapter For Customer
@@ -86,21 +100,17 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
                         CoroutineScope(Dispatchers.IO).launch {
                             viewModel.updateAddMenu(true)
                             viewModel.updateCartMenu(false)
+                            viewModel.updateSortMenu(false)
                         }
 
                         // Product Adapter For Admin
-                        binding.apply {
-                            adapter = ProductAdapter(this@ProductFragment)
-                            recyclerProducts.setHasFixedSize(true)
-                            recyclerProducts.layoutManager =
-                                GridLayoutManager(requireContext(), 2)
-                            recyclerProducts.adapter = adapter
-                        }
+                        instantiateProductAdapterForAdmin()
                     }
                     else -> {
                         CoroutineScope(Dispatchers.IO).launch {
                             viewModel.updateAddMenu(false)
                             viewModel.updateCartMenu(false)
+                            viewModel.updateSortMenu(true)
                         }
                     }
                 }
@@ -109,6 +119,7 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
                 CoroutineScope(Dispatchers.IO).launch {
                     viewModel.updateAddMenu(false)
                     viewModel.updateCartMenu(false)
+                    viewModel.updateSortMenu(true)
                 }
 
                 // Product Adapter For Customer
@@ -118,6 +129,15 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
 
         lifecycleScope.launchWhenStarted {
             viewModel.productsFlow.collectLatest {
+                // For Admin. I can just pass 'it' No need for mapping wish lists.
+                if (userAndWishList?.user != null) {
+                    if (userAndWishList?.user!!.userType == UserType.ADMIN.name) {
+                        adminAdapter.submitData(it)
+                        return@collectLatest
+                    }
+                }
+
+                // For Customer (Authenticated or not)
                 val paging = it.map { p ->
                     if (userAndWishList != null) {
                         userAndWishList!!.wishList.forEach { w ->
@@ -126,7 +146,6 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
                     }
                     p
                 }
-                Log.d("ProductFragment", "onViewCreated: I'm called")
                 adapter.submitData(paging)
             }
 
@@ -136,6 +155,14 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
                         adapter.refresh()
                     }
+                }
+            }
+
+            // Check if the user is admin then refresh the paging adapter every 10 seconds.
+            if (userAndWishList?.user != null && userAndWishList?.user!!.userType == UserType.ADMIN.name) {
+                while (true) {
+                    delay(10_000)
+                    adminAdapter.refresh()
                 }
             }
         }
@@ -155,6 +182,14 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
             recyclerProducts.setHasFixedSize(true)
             recyclerProducts.layoutManager = GridLayoutManager(requireContext(), 2)
             recyclerProducts.adapter = adapter
+        }
+    }
+
+    private fun instantiateProductAdapterForAdmin() {
+        binding.apply {
+            recyclerProducts.setHasFixedSize(true)
+            recyclerProducts.layoutManager = LinearLayoutManager(requireContext())
+            recyclerProducts.adapter = adminAdapter
         }
     }
 
@@ -192,6 +227,9 @@ class ProductFragment : Fragment(R.layout.fragment_product), ProductAdapter.OnPr
 
         cartMenu = menu.findItem(R.id.action_cart)
         cartMenu?.isVisible = viewModel.isCartMenuVisible.value!!
+
+        sortMenu = menu.findItem(R.id.action_sort)
+        sortMenu?.isVisible = viewModel.isSortMenuVisible.value!!
 
         val searchItem = menu.findItem(R.id.action_search)
         searchView = searchItem.actionView as SearchView

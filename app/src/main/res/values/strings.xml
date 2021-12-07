@@ -84,7 +84,7 @@
     <string name="enter_your_detailed_address_here">Enter your detailed address here</string>
     <string name="set_as_default_address">Set As Default Address</string>
     <string name="delete_address">Delete Address</string>
-    <string name="submit">SUBMIT</string>
+    <string name="btn_submit">SUBMIT</string>
     <string name="region_province_city">Region Province City</string>
     <string name="no_delivery_address_yet_please_create_one">No Delivery Address Yet. Please Create One.</string>
     <string name="no_delivery_address_yet_please_create_one_fab">No Delivery Address Yet. Please Create One By Tapping the + Button below.</string>
@@ -159,6 +159,12 @@
     <string name="btn_exchange_item">Exchange Item</string>
     <string name="count_indicator_text">"%1$d/%2$d"</string>
     <string name="label_show_more_reviews">"Show All (%1$d) >"</string>
+    <string name="label_sold">Sold:</string>
+    <string name="label_remaining_stock">Remaining Stock:</string>
+    <string name="hint_input_category_name">Input Category Name</string>
+    <string name="label_file_name">File Name:</string>
+    <string name="btn_select_image_from_gallery">Select Image From Gallery</string>
+    <string name="label_image_url">Image URL:</string>
 
 
 </resources>

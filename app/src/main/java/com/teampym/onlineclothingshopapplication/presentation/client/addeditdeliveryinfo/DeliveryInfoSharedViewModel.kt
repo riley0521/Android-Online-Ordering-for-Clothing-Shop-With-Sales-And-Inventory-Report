@@ -10,6 +10,7 @@ import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -84,23 +85,26 @@ class DeliveryInfoSharedViewModel @Inject constructor(
     private val _provinceId = MutableLiveData(0L)
     val provinceId: LiveData<Long> get() = _provinceId
 
-    var selectedRegion = state.get<Region>(REGION) ?: Region()
-        set(value) {
-            field = value
-            state.set(REGION, value)
-        }
+    val selectedRegion: MutableLiveData<Region> = state.getLiveData(REGION, Region())
 
-    var selectedProvince = state.get<Province>(PROVINCE) ?: Province()
-        set(value) {
-            field = value
-            state.set(PROVINCE, value)
-        }
+    val selectedProvince: MutableLiveData<Province> = state.getLiveData(PROVINCE, Province())
 
-    var selectedCity = state.get<City>(CITY) ?: City()
-        set(value) {
-            field = value
-            state.set(CITY, value)
-        }
+    val selectedCity: MutableLiveData<City> = state.getLiveData(CITY, City())
+
+    private fun updateRegion(region: Region) {
+        selectedRegion.value = region
+        state.set(REGION, region)
+    }
+
+    private fun updateProvince(province: Province) {
+        selectedProvince.value = province
+        state.set(PROVINCE, province)
+    }
+
+    private fun updateCity(city: City) {
+        selectedCity.value = city
+        state.set(CITY, city)
+    }
 
     val regions = regionDao.getAll().asLiveData()
 
@@ -113,27 +117,34 @@ class DeliveryInfoSharedViewModel @Inject constructor(
     }
 
     fun onSelectedRegion(selector: Selector) = viewModelScope.launch {
-        selectedRegion = Region(id = selector.id, name = selector.name)
+        updateRegion(Region(id = selector.id, name = selector.name))
         _regionId.value = selector.id
     }
 
     fun onSelectedProvince(selector: Selector) = viewModelScope.launch {
-        selectedProvince =
-            Province(id = selector.id, regionId = selector.parentId, name = selector.name)
+        updateProvince(
+            Province(
+                id = selector.id,
+                regionId = selector.parentId,
+                name = selector.name
+            )
+        )
         _provinceId.value = selector.id
     }
 
     fun onSelectedCity(selector: Selector) = viewModelScope.launch {
-        selectedCity =
-            City(id = selector.id, provinceId = selector.parentId, name = selector.name)
+        updateCity(City(id = selector.id, provinceId = selector.parentId, name = selector.name))
     }
 
     fun onDeleteAddressClicked(deliveryInfo: DeliveryInformation?) = appScope.launch {
         _userId.value?.let { userId ->
             if (userId.isNotBlank()) {
-                deliveryInfo?.let {
-                    if (deliveryInformationRepository.delete(userId, it)) {
-                        deliveryInformationDao.delete(it.id)
+                if (deliveryInfo != null) {
+                    val res = async {
+                        deliveryInformationRepository.delete(userId, deliveryInfo)
+                    }.await()
+                    if (res) {
+                        async { deliveryInformationDao.delete(deliveryInfo.id) }.await()
                         _deliveryInformationChannel.send(
                             AddEditDeliveryInformationEvent.NavigateBackWithResult(
                                 DELETE_DELIVERY_INFO_RESULT_OK
@@ -162,8 +173,10 @@ class DeliveryInfoSharedViewModel @Inject constructor(
             if (it.isNotBlank()) {
 
                 if (isEditing) {
-                    if (deliveryInformationRepository.update(it, deliveryInfo)) {
-                        insertToLocalDbAndChangeDefault(deliveryInfo)
+                    val res =
+                        async { deliveryInformationRepository.update(it, deliveryInfo) }.await()
+                    if (res) {
+                        async { insertToLocalDbAndChangeDefault(deliveryInfo) }.await()
 
                         // Send signal to other fragment
                         _deliveryInformationChannel.send(
@@ -171,6 +184,7 @@ class DeliveryInfoSharedViewModel @Inject constructor(
                                 EDIT_DELIVERY_INFO_RESULT_OK
                             )
                         )
+
                         resetAllUiState()
                     } else {
                         _deliveryInformationChannel.send(
@@ -180,8 +194,10 @@ class DeliveryInfoSharedViewModel @Inject constructor(
                         )
                     }
                 } else {
-                    deliveryInformationRepository.create(it, deliveryInfo)?.let {
-                        insertToLocalDbAndChangeDefault(deliveryInfo)
+                    val res =
+                        async { deliveryInformationRepository.create(it, deliveryInfo) }.await()
+                    if (res != null) {
+                        async { insertToLocalDbAndChangeDefault(deliveryInfo) }.await()
 
                         // Send signal to other fragment
                         _deliveryInformationChannel.send(
@@ -189,14 +205,15 @@ class DeliveryInfoSharedViewModel @Inject constructor(
                                 ADD_DELIVERY_INFO_RESULT_OK
                             )
                         )
+
                         resetAllUiState()
-                        return@launch
-                    }
-                    _deliveryInformationChannel.send(
-                        AddEditDeliveryInformationEvent.NavigateBackWithResult(
-                            ADD_DELIVERY_INFO_RESULT_ERR
+                    } else {
+                        _deliveryInformationChannel.send(
+                            AddEditDeliveryInformationEvent.NavigateBackWithResult(
+                                ADD_DELIVERY_INFO_RESULT_ERR
+                            )
                         )
-                    )
+                    }
                 }
             }
         }
@@ -207,14 +224,23 @@ class DeliveryInfoSharedViewModel @Inject constructor(
         phoneNumber = ""
         postalCode = ""
         streetNumber = ""
+        updateRegion(Region())
+        updateProvince(Province())
+        updateCity(City())
     }
 
-    private suspend fun insertToLocalDbAndChangeDefault(deliveryInfo: DeliveryInformation) {
-        deliveryInformationDao.insert(deliveryInfo)
-        if (deliveryInfo.isPrimary) {
-            deliveryInformationRepository.changeDefault(deliveryInfo.userId, deliveryInfo)
+    private fun insertToLocalDbAndChangeDefault(deliveryInfo: DeliveryInformation) =
+        viewModelScope.launch {
+            async { deliveryInformationDao.insert(deliveryInfo) }.await()
+            if (deliveryInfo.isPrimary) {
+                async {
+                    deliveryInformationRepository.changeDefault(
+                        deliveryInfo.userId,
+                        deliveryInfo
+                    )
+                }.await()
+            }
         }
-    }
 
     sealed class AddEditDeliveryInformationEvent {
         data class NavigateBackWithResult(val result: Int) : AddEditDeliveryInformationEvent()

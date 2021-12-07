@@ -6,8 +6,8 @@ import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.Category
 import com.teampym.onlineclothingshopapplication.data.util.CATEGORIES_COLLECTION
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -16,6 +16,7 @@ import javax.inject.Singleton
 @Singleton
 class CategoryRepository @Inject constructor(
     db: FirebaseFirestore,
+    private val productRepository: ProductRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
@@ -41,12 +42,15 @@ class CategoryRepository @Inject constructor(
     suspend fun createCategory(category: Category?): Category? {
         return withContext(dispatcher) {
             var createdCategory: Category? = category
-            createdCategory?.let { c ->
+            if (createdCategory != null) {
+                createdCategory.dateAdded = Utils.getTimeInMillisUTC()
+
                 val result = categoriesCollectionRef
-                    .add(c)
+                    .add(createdCategory)
                     .await()
+
                 if (result != null) {
-                    createdCategory?.id = result.id
+                    createdCategory.id = result.id
                 } else {
                     createdCategory = null
                 }
@@ -55,41 +59,39 @@ class CategoryRepository @Inject constructor(
         }
     }
 
+    // TODO(Upload image in public/product/ folder)
+
     suspend fun updateCategory(category: Category?): Category? {
         return withContext(dispatcher) {
             var updatedCategory: Category? = category
-            updatedCategory?.let { c ->
-                val categoryDocument = categoriesCollectionRef
-                    .document(c.id)
-                    .get()
+            if (updatedCategory != null) {
+                val result = categoriesCollectionRef
+                    .document(updatedCategory.id)
+                    .set(updatedCategory, SetOptions.merge())
                     .await()
 
-                if (categoryDocument != null) {
-                    categoriesCollectionRef
-                        .document(c.id)
-                        .set(c, SetOptions.merge())
-                        .addOnSuccessListener {
-                        }.addOnFailureListener {
-                            updatedCategory = null
-                            return@addOnFailureListener
-                        }
+                if (result == null) {
+                    updatedCategory = null
                 }
             }
             updatedCategory
         }
     }
 
+    // Delete All Products in selected category
     suspend fun deleteCategory(categoryId: String): Boolean {
         return withContext(dispatcher) {
             var isSuccessful = true
-            categoriesCollectionRef
+
+            val result = categoriesCollectionRef
                 .document(categoryId)
                 .delete()
-                .addOnSuccessListener {
-                }.addOnFailureListener {
-                    isSuccessful = false
-                    return@addOnFailureListener
-                }
+                .await()
+
+            if (result != null) {
+                isSuccessful = productRepository.deleteAll(categoryId)
+            }
+
             isSuccessful
         }
     }

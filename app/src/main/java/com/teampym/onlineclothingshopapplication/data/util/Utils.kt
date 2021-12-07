@@ -1,5 +1,7 @@
 package com.teampym.onlineclothingshopapplication.data.util
 
+import java.util.*
+
 const val CATEGORIES_COLLECTION = "Categories"
 
 const val PRODUCTS_COLLECTION = "Products"
@@ -34,6 +36,14 @@ const val DELIVERY_ORDERS = "For Delivery Orders"
 const val COMPLETED_ORDERS = "Completed Orders"
 const val RETURNED_ORDERS = "Returned Orders"
 const val CANCELLED_ORDERS = "Cancelled Orders"
+
+object Utils {
+    fun getTimeInMillisUTC(): Long {
+        val newDate = Calendar.getInstance()
+        newDate.timeZone = TimeZone.getTimeZone("UTC")
+        return newDate.timeInMillis
+    }
+}
 
 enum class Status {
     SHIPPING,

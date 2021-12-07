@@ -73,7 +73,6 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
                             loadingDialog.show()
 
                             viewModel.onDeleteOutOfStockItems(outOfStockList)
-                            viewModel.onCartUpdated(userId, adapter.currentList)
                         }.setNegativeButton("NO") { dialog, _ ->
                             dialog.dismiss()
                         }

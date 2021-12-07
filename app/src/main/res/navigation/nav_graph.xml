@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_categoryFragment_to_productFragment"
             app:destination="@id/productFragment" />
+        <action
+            android:id="@+id/action_categoryFragment_to_addEditCategoryFragment"
+            app:destination="@id/addEditCategoryFragment" />
     </fragment>
     <fragment
         android:id="@+id/registrationFragment"
@@ -263,4 +266,23 @@
             android:name="order"
             app:argType="com.teampym.onlineclothingshopapplication.data.models.Order" />
     </fragment><action android:id="@+id/action_global_categoryFragment" app:destination="@id/categoryFragment"/>
+    <fragment
+        android:id="@+id/addEditCategoryFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.addeditcategory.AddEditCategoryFragment"
+        android:label="{title}"
+        tools:layout="@layout/fragment_add_edit_category">
+        <argument
+            android:name="category"
+            android:defaultValue="@null"
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.Category"
+            app:nullable="true" />
+        <argument
+            android:name="editMode"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <argument
+            android:name="title"
+            android:defaultValue="Add Category"
+            app:argType="string" />
+    </fragment>
 </navigation>

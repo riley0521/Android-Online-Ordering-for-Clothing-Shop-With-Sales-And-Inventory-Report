@@ -29,8 +29,9 @@ object RepositoryModule {
     @Provides
     fun provideCategoryRepository(
         db: FirebaseFirestore,
+        productRepository: ProductRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
-    ) = CategoryRepository(db, dispatcher)
+    ) = CategoryRepository(db, productRepository, dispatcher)
 
     @Provides
     fun provideAccountRepository(
