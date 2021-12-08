@@ -6,34 +6,34 @@
         android:enabled="true"
         android:icon="@drawable/ic_home"
         android:orderInCategory="1"
-        android:title="@string/home_nav_title" />
+        android:title="@string/nav_category_title" />
 
     <item
         android:id="@+id/newsFragment"
         android:enabled="true"
         android:icon="@drawable/ic_news"
         android:orderInCategory="2"
-        android:title="@string/news_nav_title" />
+        android:title="@string/nav_news_title" />
 
     <item
         android:id="@+id/orderFragment"
         android:enabled="true"
         android:icon="@drawable/ic_orders"
         android:orderInCategory="3"
-        android:title="@string/orders_nav_title" />
+        android:title="@string/nav_orders_title" />
 
     <item
         android:id="@+id/cartFragment"
         android:enabled="true"
         android:icon="@drawable/ic_cart"
         android:orderInCategory="4"
-        android:title="@string/action_menu_cart" />
+        android:title="@string/nav_cart_title" />
 
     <item
         android:id="@+id/profileFragment"
         android:enabled="true"
         android:icon="@drawable/ic_user"
         android:orderInCategory="4"
-        android:title="@string/action_menu_profile" />
+        android:title="@string/nav_profile_title" />
 
 </menu>

@@ -37,6 +37,10 @@ const val COMPLETED_ORDERS = "Completed Orders"
 const val RETURNED_ORDERS = "Returned Orders"
 const val CANCELLED_ORDERS = "Cancelled Orders"
 
+const val ROOT_PATH = "public/"
+const val CATEGORY_PATH = "public/categories/"
+const val PRODUCT_PATH = "public/products/"
+
 object Utils {
     fun getTimeInMillisUTC(): Long {
         val newDate = Calendar.getInstance()

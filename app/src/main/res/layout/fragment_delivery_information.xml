@@ -86,7 +86,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
-                android:text="@string/delete"
+                android:text="@string/btn_delete"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tvAddress" />
 
@@ -131,7 +131,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
-        android:text="@string/no_delivery_address_yet_please_create_one_fab"
+        android:text="@string/label_no_delivery_address_yet_please_create_one_fab"
         android:textAppearance="?attr/textAppearanceBody1"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -146,7 +146,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        android:text="@string/delivery_addresses"
+        android:text="@string/label_delivery_addresses"
         android:textAppearance="?attr/textAppearanceBody1"
         android:textStyle="bold"
         android:visibility="invisible"

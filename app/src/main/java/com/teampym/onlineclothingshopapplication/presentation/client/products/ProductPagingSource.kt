@@ -1,5 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.products
 
+import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.bumptech.glide.load.HttpException
@@ -55,7 +56,7 @@ class ProductPagingSource(
                 nextPage = queryProducts.startAfter(lastVisibleItem).get().await()
             }
 
-            var productList = mutableListOf<Product>()
+            val productList = mutableListOf<Product>()
             for (document in currentPage.documents) {
 
                 val product = document.toObject<Product>()!!.copy(productId = document.id)
@@ -73,55 +74,81 @@ class ProductPagingSource(
                 productList.add(product)
             }
 
-            val finalProductList = mutableListOf<Product>()
-            if (user != null && user.userType == UserType.ADMIN.name) {
+            productList.forEach {
+                it.inventoryList.forEach {
+                    Log.d("ProductPagingSource", it.toString())
+                }
+            }
+
+            var finalProductList = mutableListOf<Product>()
+            return if (user != null && user.userType == UserType.ADMIN.name) {
                 for (item in productList) {
                     for (inv in item.inventoryList) {
-                        item.fastTrack = inv.sold
-                        item.inventoryList = listOf(inv)
-                        finalProductList.add(item)
+                        val newP = Product(
+                            item.categoryId,
+                            item.name,
+                            item.description,
+                            item.fileName,
+                            item.imageUrl,
+                            item.price,
+                            item.productId,
+                            type = item.type,
+                            dateAdded = item.dateAdded,
+                            dateModified = item.dateModified,
+                            totalRate = item.totalRate,
+                            numberOfReviews = item.numberOfReviews
+                        )
+                        newP.productImageList = item.productImageList
+                        newP.reviewList = item.reviewList
+
+                        newP.fastTrack = inv.sold
+                        newP.inventoryList = listOf(inv)
+                        finalProductList.add(newP)
                     }
                 }
 
-                // For Admin View
-                productList = finalProductList
-
                 // Each Product has 1 inventory and it will repeat every item with different sizes.
                 // Sort All Items with the most sold items.
-                productList = productList.sortedByDescending { it.fastTrack } as MutableList<Product>
+                finalProductList = finalProductList.sortedWith(compareBy({it.fastTrack}, {it.name})).toMutableList()
+
+                LoadResult.Page(
+                    data = finalProductList,
+                    prevKey = null,
+                    nextKey = nextPage
+                )
+            } else {
+                if (sortOrder == SortOrder.BY_POPULARITY) {
+                    productList.sortByDescending { product ->
+                        product.inventoryList.maxOf { it.sold }
+                    }
+
+                    if (productList.size > 5) {
+                        productList[0].flag = MOST_POPULAR
+                        productList[1].flag = MOST_POPULAR
+                        productList[2].flag = MOST_POPULAR
+                        productList[3].flag = MOST_POPULAR
+                        productList[4].flag = MOST_POPULAR
+                    }
+                } else if (sortOrder == SortOrder.BY_NEWEST) {
+                    productList.sortByDescending { product ->
+                        product.inventoryList.maxOf { it.sold }
+                    }
+
+                    if (productList.size > 5) {
+                        productList[0].flag = NEWEST
+                        productList[1].flag = NEWEST
+                        productList[2].flag = NEWEST
+                        productList[3].flag = NEWEST
+                        productList[4].flag = NEWEST
+                    }
+                }
+
+                LoadResult.Page(
+                    data = productList,
+                    prevKey = null,
+                    nextKey = nextPage
+                )
             }
-
-            if (sortOrder == SortOrder.BY_POPULARITY) {
-                productList.sortByDescending { product ->
-                    product.inventoryList.maxOf { it.sold }
-                }
-
-                if (productList.size > 5) {
-                    productList[0].flag = MOST_POPULAR
-                    productList[1].flag = MOST_POPULAR
-                    productList[2].flag = MOST_POPULAR
-                    productList[3].flag = MOST_POPULAR
-                    productList[4].flag = MOST_POPULAR
-                }
-            } else if (sortOrder == SortOrder.BY_NEWEST) {
-                productList.sortByDescending { product ->
-                    product.inventoryList.maxOf { it.sold }
-                }
-
-                if (productList.size > 5) {
-                    productList[0].flag = NEWEST
-                    productList[1].flag = NEWEST
-                    productList[2].flag = NEWEST
-                    productList[3].flag = NEWEST
-                    productList[4].flag = NEWEST
-                }
-            }
-
-            LoadResult.Page(
-                data = productList,
-                prevKey = null,
-                nextKey = nextPage
-            )
         } catch (exception: IOException) {
             return LoadResult.Error(exception)
         } catch (exception: HttpException) {

@@ -6,6 +6,6 @@
     android:layout_margin="8dp"
     android:textAppearance="?attr/textAppearanceBody1"
     style="@style/Widget.MaterialComponents.Chip.Filter"
-    android:text="@string/chip_option_1">
+    android:text="@string/placeholder_chip_option_1">
 
 </com.google.android.material.chip.Chip>

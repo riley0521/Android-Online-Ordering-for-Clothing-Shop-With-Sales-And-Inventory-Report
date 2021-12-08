@@ -7,7 +7,7 @@
         android:id="@+id/carouselImageView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:contentDescription="@string/image_product_description" />
+        android:contentDescription="@string/img_description" />
 
     <TextView
         android:id="@+id/imagePositionIndicatorTextView"

@@ -17,6 +17,7 @@ data class Product(
     var categoryId: String,
     var name: String,
     var description: String,
+    var fileName: String,
     var imageUrl: String,
     var price: Double,
     var productId: String = "",
@@ -32,6 +33,7 @@ data class Product(
     var numberOfReviews: Long = 0
 ) : Parcelable {
     constructor() : this(
+        "",
         "",
         "",
         "",

@@ -137,13 +137,14 @@ class OrderListAdapter(
                     Status.DELIVERY.name -> {
                         if (item.isUserAgreedToShippingFee) {
                             tvUserAgreedToSf.text = "Yes"
+
+                            if (userType == UserType.ADMIN.name) {
+                                btnAction.text = ORDER_COMPLETED
+                            } else {
+                                btnAction.isVisible = false
+                            }
                         } else {
                             tvUserAgreedToSf.text = "No"
-                        }
-
-                        if (userType == UserType.ADMIN.name) {
-                            btnAction.text = ORDER_COMPLETED
-                        } else {
                             btnAction.isVisible = false
                         }
                     }
@@ -196,7 +197,8 @@ class OrderListAdapter(
                 val calendarDate = Calendar.getInstance()
                 calendarDate.timeInMillis = item.dateOrdered
                 calendarDate.timeZone = TimeZone.getTimeZone("GMT+8:00")
-                val formattedDate = SimpleDateFormat("MM/dd/yyyy hh:mm:ss a").format(calendarDate.time)
+                val formattedDate =
+                    SimpleDateFormat("MM/dd/yyyy hh:mm:ss a").format(calendarDate.time)
 
                 tvDateOrdered.text = formattedDate
 

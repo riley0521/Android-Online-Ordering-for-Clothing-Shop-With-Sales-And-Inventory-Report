@@ -19,6 +19,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
+import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProfileBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -106,14 +107,16 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
                 binding.apply {
 
-                    tvAddress.isVisible = true
-                    tvProfile.isVisible = true
-                    tvWishList.isVisible = true
+                    if (userInformation.userType == UserType.CUSTOMER.name) {
+                        tvAddress.isVisible = true
+                        tvProfile.isVisible = true
+                        tvWishList.isVisible = true
 
-                    // check if the user is already verified in email
-                    val currentUser = getFirebaseUser()
-                    if (currentUser != null) {
-                        cardViewBanner.isVisible = !currentUser.isEmailVerified
+                        // check if the user is already verified in email
+                        val currentUser = getFirebaseUser()
+                        if (currentUser != null) {
+                            cardViewBanner.isVisible = !currentUser.isEmailVerified
+                        }
                     }
 
                     // Instantiate view
@@ -184,6 +187,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
             btnSignInAndOut.text = getString(R.string.btn_sign_in)
             cardViewBanner.isVisible = false
+
+            tvAddress.isVisible = false
+            tvProfile.isVisible = false
+            tvWishList.isVisible = false
         }
     }
 

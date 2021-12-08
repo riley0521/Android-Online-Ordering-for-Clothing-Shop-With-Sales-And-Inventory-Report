@@ -11,8 +11,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.google.android.material.tabs.TabLayoutMediator
 import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.R
@@ -43,7 +41,6 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
 
         binding = FragmentProductDetailBinding.bind(view)
         adapter = ReviewAdapter()
-
 
         var product = args.product
         val productId = args.productId
@@ -107,7 +104,7 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             tvRate.text = rateStr
             ratingBar.rating = rate.toFloat()
 
-            if(product.numberOfReviews > 5L) {
+            if (product.numberOfReviews > 5L) {
                 tvShowMoreReviews.text = getString(R.string.label_show_more_reviews, product.numberOfReviews)
             } else {
                 tvShowMoreReviews.isVisible = false
@@ -129,12 +126,13 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                     when (user.userType) {
                         UserType.CUSTOMER.name -> {
                             myMenu?.let {
-                                it.findItem(R.id.action_add_edit_stock).isVisible = false
+                                it.findItem(R.id.action_cart).isVisible = true
                             }
                         }
                         UserType.ADMIN.name -> {
                             myMenu?.let {
                                 it.findItem(R.id.action_add_edit_stock).isVisible = true
+                                binding.btnAddToCart.isVisible = false
                             }
                         }
                         else -> {
@@ -160,6 +158,9 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
         inflater.inflate(R.menu.product_detail_action_menu, menu)
 
         myMenu = menu
+
+        menu.findItem(R.id.action_add_edit_stock).isVisible = false
+        menu.findItem(R.id.action_cart).isVisible = false
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

@@ -1,10 +1,13 @@
 package com.teampym.onlineclothingshopapplication.presentation.admin.addeditcategory
 
+import android.net.Uri
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.models.Category
 import com.teampym.onlineclothingshopapplication.data.repository.CategoryRepository
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -40,46 +43,72 @@ class AddEditCategoryViewModel @Inject constructor(
             state.set(CATEGORY_NAME, value)
         }
 
-    var fileName = state.get(FILE_NAME) ?: ""
-        set(value) {
-            field = value
-            state.set(FILE_NAME, value)
-        }
+    val fileName: MutableLiveData<String> = state.getLiveData(FILE_NAME, "")
 
-    var imageUrl = state.get(IMAGE_URL) ?: ""
-        set(value) {
-            field = value
-            state.set(IMAGE_URL, value)
-        }
+    val imageUrl: MutableLiveData<String> = state.getLiveData(IMAGE_URL, "")
 
-    fun onSubmitClicked(category: Category, isEditMode: Boolean) = viewModelScope.launch {
-        if (isEditMode && categoryId.isNotBlank()) {
-            val res = async { categoryRepository.updateCategory(category) }.await()
-            if (res != null) {
-                resetAllUiState()
-                _categoryChannel.send(CategoryEvent.NavigateBackWithMessage("Updated Category Successfully!"))
-            } else {
-                _categoryChannel.send(CategoryEvent.ShowErrorMessage("Updating Category Failed. Please try again later."))
+    suspend fun updateFileName(name: String) {
+        fileName.postValue(name)
+    }
+
+    suspend fun updateImageUrl(url: String) {
+        imageUrl.postValue(url)
+    }
+
+    fun onSubmitClicked(category: Category?, isEditMode: Boolean) = viewModelScope.launch {
+        if (isEditMode && category != null && category.id.isNotBlank()) {
+            if (isFormValid()) {
+                val res = async { categoryRepository.update(category) }.await()
+                if (res != null) {
+                    resetAllUiState()
+                    _categoryChannel.send(CategoryEvent.NavigateBackWithMessage("Updated Category Successfully!"))
+                } else {
+                    _categoryChannel.send(CategoryEvent.ShowErrorMessage("Updating Category Failed. Please try again later."))
+                }
             }
         } else {
-            val res = async { categoryRepository.createCategory(category) }.await()
-            if (res != null) {
-                resetAllUiState()
-                _categoryChannel.send(CategoryEvent.NavigateBackWithMessage("Added Category Successfully!"))
+            if (isFormValid()) {
+                val newCategory = Category(
+                    categoryName,
+                    fileName.value!!,
+                    imageUrl.value!!,
+                    dateAdded = Utils.getTimeInMillisUTC()
+                )
+                val res = async { categoryRepository.create(newCategory) }.await()
+                if (res != null) {
+                    resetAllUiState()
+                    _categoryChannel.send(CategoryEvent.NavigateBackWithMessage("Added Category Successfully!"))
+                } else {
+                    _categoryChannel.send(CategoryEvent.ShowErrorMessage("Adding Category Failed. Please try again later."))
+                }
             } else {
-                _categoryChannel.send(CategoryEvent.ShowErrorMessage("Adding Category Failed. Please try again later."))
+                _categoryChannel.send(CategoryEvent.ShowErrorMessage("Please fill the form."))
             }
         }
     }
 
-    private fun resetAllUiState() {
+    fun onUploadImageClicked(imgCategory: Uri) = viewModelScope.launch {
+        _categoryChannel.send(CategoryEvent.ShowLoadingBar)
+        val uploadedImage = async { categoryRepository.uploadImage(imgCategory) }.await()
+        updateFileName(uploadedImage.fileName)
+        updateImageUrl(uploadedImage.url)
+    }
+
+    private fun resetAllUiState() = viewModelScope.launch {
         categoryId = ""
         categoryName = ""
-        fileName = ""
-        imageUrl = ""
+        updateFileName("")
+        updateImageUrl("")
+    }
+
+    private fun isFormValid(): Boolean {
+        return categoryName.isNotBlank() &&
+            fileName.value!!.isNotBlank() &&
+            imageUrl.value!!.isNotBlank()
     }
 
     sealed class CategoryEvent {
+        object ShowLoadingBar : CategoryEvent()
         data class NavigateBackWithMessage(val msg: String) : CategoryEvent()
         data class ShowErrorMessage(val msg: String) : CategoryEvent()
     }

@@ -35,21 +35,20 @@
     <item
         android:id="@+id/action_cart"
         android:icon="@drawable/ic_cart"
-        android:title="@string/view_cart"
+        android:title="@string/action_view_cart"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/action_add"
         android:icon="@drawable/ic_add"
-        android:iconTint="@android:color/black"
-        android:title="@string/actions"
+        android:title="@string/menu_actions"
         app:showAsAction="ifRoom"
         tools:targetApi="o">
 
         <menu>
             <item
                 android:id="@+id/action_new_product"
-                android:title="@string/add_new_product" />
+                android:title="@string/menu_add_new_product" />
         </menu>
 
     </item>

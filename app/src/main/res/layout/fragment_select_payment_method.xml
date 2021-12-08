@@ -57,7 +57,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:enabled="false"
-        android:text="@string/choose_payment_method"
+        android:text="@string/label_choose_payment_method"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"

@@ -13,7 +13,7 @@
     <item
         android:id="@+id/action_get_by"
         android:icon="@drawable/ic_sort"
-        android:title="@string/actions"
+        android:title="@string/menu_actions"
         app:showAsAction="ifRoom">
 
         <menu>

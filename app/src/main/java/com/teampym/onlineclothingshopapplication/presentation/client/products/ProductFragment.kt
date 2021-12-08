@@ -10,6 +10,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.paging.PagingData
 import androidx.paging.map
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -127,26 +129,35 @@ class ProductFragment :
             }
         }
 
+        CoroutineScope(Dispatchers.IO).launch {
+            // Check if the user is admin then refresh the paging adapter every 10 seconds.
+            while (true) {
+                if (userAndWishList?.user != null && userAndWishList?.user!!.userType == UserType.ADMIN.name) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Refreshing Dataset Every 10 Seconds...",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    delay(10_000)
+                    adminAdapter.refresh()
+                }
+            }
+        }
+
         lifecycleScope.launchWhenStarted {
             viewModel.productsFlow.collectLatest {
                 // For Admin. I can just pass 'it' No need for mapping wish lists.
                 if (userAndWishList?.user != null) {
                     if (userAndWishList?.user!!.userType == UserType.ADMIN.name) {
                         adminAdapter.submitData(it)
-                        return@collectLatest
+                    } else {
+                        showAdapterForCustomer(it)
                     }
+                } else {
+                    showAdapterForCustomer(it)
                 }
-
-                // For Customer (Authenticated or not)
-                val paging = it.map { p ->
-                    if (userAndWishList != null) {
-                        userAndWishList!!.wishList.forEach { w ->
-                            p.isWishListedByUser = p.productId == w.productId
-                        }
-                    }
-                    p
-                }
-                adapter.submitData(paging)
             }
 
             viewModel.productEvent.collectLatest { event ->
@@ -157,17 +168,21 @@ class ProductFragment :
                     }
                 }
             }
-
-            // Check if the user is admin then refresh the paging adapter every 10 seconds.
-            if (userAndWishList?.user != null && userAndWishList?.user!!.userType == UserType.ADMIN.name) {
-                while (true) {
-                    delay(10_000)
-                    adminAdapter.refresh()
-                }
-            }
         }
 
         setHasOptionsMenu(true)
+    }
+
+    private suspend fun showAdapterForCustomer(it: PagingData<Product>) {
+        val paging = it.map { p ->
+            if (userAndWishList != null) {
+                userAndWishList!!.wishList.forEach { w ->
+                    p.isWishListedByUser = p.productId == w.productId
+                }
+            }
+            p
+        }
+        adapter.submitData(paging)
     }
 
     override fun onResume() {

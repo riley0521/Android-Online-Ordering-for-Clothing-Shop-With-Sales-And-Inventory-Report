@@ -1,8 +1,8 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.products
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.view.isVisible
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -11,8 +11,6 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.databinding.ProductItemAdminBinding
-import com.teampym.onlineclothingshopapplication.databinding.ProductItemBinding
-import java.lang.NumberFormatException
 
 class ProductAdminAdapter(
     private val listener: OnProductAdapterListener
@@ -29,7 +27,8 @@ class ProductAdminAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductAdminViewHolder {
-        val binding = ProductItemAdminBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding =
+            ProductItemAdminBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ProductAdminViewHolder(binding)
     }
 
@@ -67,6 +66,7 @@ class ProductAdminAdapter(
 
                 tvProductName.text = product.name
 
+                Log.d("AdminAdapter", product.inventoryList[0].toString())
                 tvSize.text = product.inventoryList[0].size
                 tvSoldCount.text = product.inventoryList[0].sold.toString()
                 tvRemainingStockCount.text = product.inventoryList[0].stock.toString()

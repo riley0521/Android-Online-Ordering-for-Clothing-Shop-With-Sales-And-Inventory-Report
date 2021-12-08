@@ -99,7 +99,8 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_new_category -> {
-                // TODO("Navigate to add category layout when admin")
+                val action = CategoryFragmentDirections.actionCategoryFragmentToAddEditCategoryFragment()
+                findNavController().navigate(action)
                 true
             }
             else -> false

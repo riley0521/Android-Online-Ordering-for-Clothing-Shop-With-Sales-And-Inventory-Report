@@ -19,7 +19,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/full_name"
+            android:text="@string/label_full_name"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textStyle="bold" />
 
@@ -30,7 +30,7 @@
             android:layout_alignParentEnd="true"
             android:background="@android:color/transparent"
             android:gravity="end"
-            android:hint="@string/set_full_name"
+            android:hint="@string/hint_set_full_name"
             android:importantForAutofill="no"
             android:inputType="textPersonName"
             android:maxLength="35"
@@ -51,7 +51,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/phone_number"
+            android:text="@string/label_phone_number"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textStyle="bold" />
 
@@ -64,7 +64,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/ph_number_format"
+                android:text="@string/label_ph_number_format"
                 android:textAppearance="?attr/textAppearanceBody1"
                 android:textStyle="bold" />
 
@@ -75,7 +75,7 @@
                 android:layout_marginStart="4dp"
                 android:background="@android:color/transparent"
                 android:gravity="end"
-                android:hint="@string/set_phone_number"
+                android:hint="@string/hint_set_phone_number"
                 android:maxLength="10" />
 
         </LinearLayout>
@@ -95,7 +95,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/region"
+            android:text="@string/label_region"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textStyle="bold" />
 
@@ -105,7 +105,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:background="@android:color/transparent"
-            android:hint="@string/region_select"
+            android:hint="@string/hint_region_select"
             android:textAppearance="?attr/textAppearanceBody1" />
 
     </RelativeLayout>
@@ -123,7 +123,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/province"
+            android:text="@string/label_province"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textStyle="bold" />
 
@@ -133,7 +133,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:background="@android:color/transparent"
-            android:hint="@string/province_select"
+            android:hint="@string/hint_province_select"
             android:textAppearance="?attr/textAppearanceBody1" />
 
     </RelativeLayout>
@@ -151,7 +151,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/city"
+            android:text="@string/label_city"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textStyle="bold" />
 
@@ -161,7 +161,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:background="@android:color/transparent"
-            android:hint="@string/city_select"
+            android:hint="@string/hint_city_select"
             android:textAppearance="?attr/textAppearanceBody1" />
 
     </RelativeLayout>
@@ -179,7 +179,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/postal_code"
+            android:text="@string/label_postal_code"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textStyle="bold" />
 
@@ -190,7 +190,7 @@
             android:layout_alignParentEnd="true"
             android:background="@android:color/transparent"
             android:gravity="end"
-            android:hint="@string/set_postal_code"
+            android:hint="@string/hint_set_postal_code"
             android:inputType="number"
             android:maxLength="7"
             android:textAppearance="?attr/textAppearanceBody1" />
@@ -211,14 +211,14 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/detailed_address"
+            android:text="@string/label_detailed_address"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/unit_number_house_number_building_street_name"
+            android:text="@string/label_unit_number_house_number_building_street_name"
             android:textAppearance="?attr/textAppearanceBody2" />
 
         <EditText
@@ -227,7 +227,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:background="@android:color/transparent"
-            android:hint="@string/set_detailed_address"
+            android:hint="@string/hint_set_detailed_address"
             android:inputType="textLongMessage"
             android:maxLines="3"
             android:textAppearance="?attr/textAppearanceBody1" />
@@ -248,7 +248,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="@string/set_as_default_address"
+            android:text="@string/btn_set_as_default_address"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textStyle="bold" />
 
@@ -277,7 +277,7 @@
             android:id="@+id/tvDeleteAddress"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="@string/delete_address"
+            android:text="@string/btn_delete_address"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textColor="@android:color/holo_red_light"
             android:textStyle="bold" />

@@ -1,111 +1,53 @@
 <resources>
     <string name="app_name">Online Clothing Shop</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 
     <!--  UI Labels  -->
-    <string name="home_nav_title" translatable="false">Home</string>
-    <string name="news_nav_title" translatable="false">News Feed</string>
-    <string name="orders_nav_title" translatable="false">Orders</string>
-    <string name="button_label_login" translatable="false">Login</string>
-    <string name="button_label_register" translatable="false">Register</string>
-    <string name="view_label_or" translatable="false">OR</string>
-    <string name="image_category_description" translatable="false">Image for Category</string>
-    <string name="label_category" translatable="false">Category</string>
-    <string name="label_browse_products" translatable="false">Browse Products</string>
-    <string name="action_menu_profile" translatable="false">Profile</string>
-    <string name="btn_sign_in" translatable="false">Sign In</string>
-    <string name="btn_sign_out" translatable="false">Sign Out</string>
-    <string name="label_address" translatable="false">Addresses</string>
-    <string name="label_favorites" translatable="false">Favorites</string>
-    <string name="label_change_profile" translatable="false">Change Profile Information</string>
-    <string name="label_wish_list" translatable="false">Wish List</string>
-    <string name="image_product_description" translatable="false">Product Image</string>
-    <string name="button_add_to_cart" translatable="false">Add To Cart</string>
-    <string name="button_share" translatable="false">Share</string>
-    <string name="label_description" translatable="false">Description</string>
-    <string name="label_rate" translatable="false">Rating </string>
-    <string name="label_reviews" translatable="false">Reviews</string>
-    <string name="label_no_reviews_yet" translatable="false">No Reviews Yet.</string>
-    <string name="label_guest" translatable="false">Guest</string>
-    <string name="action_menu_cart" translatable="false">Cart</string>
-    <string name="action_sort" translatable="false">Sort</string>
-    <string name="action_search" translatable="false">Search</string>
-    <string name="action_sort_best_seller" translatable="false">Sort By Best Seller</string>
-    <string name="action_sort_name" translatable="false">Sort By Name</string>
-    <string name="action_sort_new" translatable="false">Sort By New</string>
-    <string name="label_merchandise_total" translatable="false">Merchandise Total \n(Shipping fee not yet included)</string>
-    <string name="label_shipping_total" translatable="false">Shipping Total</string>
-    <string name="button_check_out" translatable="false">Check Out</string>
-    <string name="label_no_items_yet" translatable="false">No items yet.</string>
-    <string name="button_place_order" translatable="false">Place Order</string>
-    <string name="label_delivery_address" translatable="false">Delivery Address</string>
-    <string name="button_change_address" translatable="false">Change Address</string>
-    <string name="label_payment_method" translatable="false">Payment Method</string>
-    <string name="rb_credit_debit_card" translatable="false">Credit/Debit Card</string>
-    <string name="rb_cod" translatable="false">Cash On Delivery (COD)</string>
-    <string name="rb_gcash" translatable="false">G-Cash</string>
-    <string name="rb_paymaya" translatable="false">Paymaya</string>
-    <string name="label_email_verification" translatable="false">Verification link has been sent to your email. Please click the link to verify your account and remove this message.</string>
-    <string name="label_unverified_warning" translatable="false">Warning: You cannot place order if you are an unverified user.</string>
-    <string name="button_send_verification" translatable="false">Send verification</string>
-    <string name="hint_first_name" translatable="false">First Name</string>
-    <string name="hint_last_name" translatable="false">Last Name</string>
-    <string name="button_continue_to_app" translatable="false">Continue To App</string>
-    <string name="label_registration_instruction" translatable="false">Please enter your information below.</string>
-    <string name="label_sizes" translatable="false">Sizes</string>
-    <string name="chip_option_1" translatable="false">Option 1</string>
-    <string name="txt_selected_birth_date" translatable="false">No Selected Date</string>
-    <string name="txt_date_picker" translatable="false">Date Picker</string>
-    <string name="btn_change_payment_method">Change</string>
-    <string name="product_name">Product Name</string>
-    <string name="long_sentence">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam luctus, elit sed consequat iaculis, tellus dui dapibus sapien, ut malesuada lectus magna rutrum ex.</string>
-    <string name="very_long_sentence">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam luctus, elit sed consequat iaculis, tellus dui dapibus sapien, ut malesuada lectus magna rutrum ex. Nulla a vehicula enim, nec ornare purus. Morbi id commodo dolor. Nulla hendrerit posuere dapibus. Nunc condimentum molestie neque et ornare. Duis cursus consequat augue at ultrices. Nullam aliquam lorem nisi, sit amet malesuada nibh commodo sit amet. Sed libero nibh, mattis sit amet condimentum in, lacinia sed risus. Suspendisse ac mauris id nunc tincidunt iaculis eu ut velit. Phasellus accumsan, nibh eu tempor rutrum, nisi elit eleifend ipsum, ut suscipit enim risus quis turpis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam luctus, elit sed consequat iaculis, tellus dui dapibus sapien, ut malesuada lectus magna rutrum ex. Nulla a vehicula enim, nec ornare purus. Morbi id commodo dolor. Nulla hendrerit posuere dapibus. Nunc condimentum molestie neque et ornare. Duis cursus consequat augue at ultrices. Nullam aliquam lorem nisi, sit amet malesuada nibh commodo sit amet. Sed libero nibh, mattis sit amet condimentum in, lacinia sed risus. Suspendisse ac mauris id nunc tincidunt iaculis eu ut velit. Phasellus accumsan, nibh eu tempor rutrum, nisi elit eleifend ipsum, ut suscipit enim risus quis turpis.</string>
-    <string name="test_address">#300 11th Avenue Justice Lourdes Paredes Cubao Quezon City \nQuezon City, Metro Manila, Metro Manila, 1109</string>
+    <string name="nav_category_title">Category</string>
+    <string name="nav_news_title">News Feed</string>
+    <string name="nav_orders_title">Orders</string>
+    <string name="nav_profile_title">Profile</string>
+    <string name="nav_cart_title">Cart</string>
+
+    <string name="label_or">OR</string>
+    <string name="label_category">Category</string>
+    <string name="label_browse_products">Browse Products</string>
+    <string name="label_address">Addresses</string>
+    <string name="label_favorites">Favorites</string>
+    <string name="label_change_profile">Change Profile Information</string>
+    <string name="label_wish_list">Wish List</string>
+    <string name="label_description">Description</string>
+    <string name="label_rate">Rating </string>
+    <string name="label_reviews">Reviews</string>
+    <string name="label_no_reviews_yet">No Reviews Yet.</string>
+    <string name="label_guest">Guest</string>
+    <string name="label_merchandise_total">Merchandise Total \n(Shipping fee not yet included)</string>
+    <string name="label_shipping_total">Shipping Total</string>
+    <string name="label_no_items_yet">No items yet.</string>
+    <string name="label_payment_method">Payment Method</string>
+    <string name="label_email_verification">Verification link has been sent to your email. Please click the link to verify your account and remove this message.</string>
+    <string name="label_unverified_warning">Warning: You cannot place order if you are an unverified user.</string>
+    <string name="label_selected_birth_date">No Selected Date</string>
     <string name="label_name_with_contact">John Doe | (+63) 912 345 6789</string>
     <string name="label_name_example">John Doe</string>
     <string name="label_date_example">11/26/2021 07:11 PM</string>
     <string name="label_title_example">This is a title</string>
     <string name="label_description_example">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam luctus, elit sed consequat iaculis, tellus dui dapibus sapien, ut malesuada lectus magna rutrum ex. Nulla a vehicula enim, nec ornare purus. Morbi id commodo dolor. Nulla hendrerit posuere dapibus. Nunc condimentum molestie neque et ornare. Duis cursus consequat augue at ultrices. Nullam aliquam lorem nisi, sit amet malesuada nibh commodo sit amet. Sed libero nibh, mattis sit amet condimentum in, lacinia sed risus. Suspendisse ac mauris id nunc tincidunt iaculis eu ut velit. Phasellus accumsan, nibh eu tempor rutrum, nisi elit eleifend ipsum, ut suscipit enim risus quis turpis.</string>
-    <string name="default_text">Default</string>
-    <string name="add_new_delivery_information">Add New Delivery Information</string>
-    <string name="full_name">Full Name</string>
-    <string name="phone_number">Phone Number</string>
-    <string name="phone_number_edt">(+63) Phone Number</string>
-    <string name="region">Region</string>
-    <string name="region_select">Region ></string>
-    <string name="province">Province</string>
-    <string name="province_select">Province ></string>
-    <string name="city">City</string>
-    <string name="city_select">City ></string>
-    <string name="postal_code">Postal Code</string>
-    <string name="detailed_address">Detailed Address</string>
-    <string name="unit_number_house_number_building_street_name">Unit number, house number, building, street name</string>
-    <string name="enter_your_detailed_address_here">Enter your detailed address here</string>
-    <string name="set_as_default_address">Set As Default Address</string>
-    <string name="delete_address">Delete Address</string>
-    <string name="btn_submit">SUBMIT</string>
-    <string name="region_province_city">Region Province City</string>
-    <string name="no_delivery_address_yet_please_create_one">No Delivery Address Yet. Please Create One.</string>
-    <string name="no_delivery_address_yet_please_create_one_fab">No Delivery Address Yet. Please Create One By Tapping the + Button below.</string>
-    <string name="set_full_name">Set Full Name</string>
-    <string name="set_phone_number">Set Phone Number</string>
-    <string name="set_postal_code">Set Postal Code</string>
-    <string name="set_detailed_address">Set Detailed Address</string>
-    <string name="delivery_addresses">Delivery Addresses</string>
-    <string name="delete">Delete</string>
-    <string name="edit">Edit</string>
-    <string name="make_default">Make Default</string>
-    <string name="no_available_rating">No Available Rating.</string>
-    <string name="choose_payment_method">Choose Payment Method</string>
-    <string name="out_of_stock">(Out Of Stock)</string>
-    <string name="msg_subscribed">Message Subscribed</string>
-    <string name="msg_subscribe_failed">Message Subscribing Failed</string>
-    <string name="add_to_wish_list">Add To Wish List</string>
-    <string name="ph_number_format">(+63)</string>
-    <string name="total_payment">Total Payment</string>
-    <string name="loading_please_wait">Loading. Please wait…</string>
-    <string name="update_information">Update Information</string>
+    <string name="label_full_name">Full Name</string>
+    <string name="label_registration_instruction">Please enter your information below.</string>
+    <string name="label_sizes">Sizes</string>
+    <string name="label_unit_number_house_number_building_street_name">Unit number, house number, building, street name</string>
+    <string name="label_region_province_city">Region Province City</string>
+    <string name="label_no_delivery_address_yet_please_create_one_fab">No Delivery Address Yet. Please Create One By Tapping the + Button below.</string>
+    <string name="label_delivery_addresses">Delivery Addresses</string>
+    <string name="label_make_default">Make Default</string>
+    <string name="label_choose_payment_method">Choose Payment Method</string>
+    <string name="label_out_of_stock">(Out Of Stock)</string>
+    <string name="label_subscribe_succeeded">Message Subscribed</string>
+    <string name="label_subscribe_failed">Message Subscribing Failed</string>
+    <string name="label_ph_number_format">(+63)</string>
+    <string name="label_total_payment">Total Payment</string>
+    <string name="label_loading_please_wait">Loading. Please wait…</string>
+    <string name="label_update_information">Update Information</string>
     <string name="label_price">Price:</string>
     <string name="label_size">Size:</string>
     <string name="label_like">Like</string>
@@ -127,44 +69,111 @@
     <string name="label_additional_note_for_admins">Additional Note For Admins:</string>
     <string name="label_view_completed_orders">View Completed Orders</string>
     <string name="label_view_items">View Items</string>
-    <string name="add_new_product">Add New Product</string>
-    <string name="add">Add</string>
-    <string name="edit_product">Edit Product</string>
-    <string name="add_new_inventory">Add New Inventory</string>
-    <string name="stock_in">Stock In</string>
-    <string name="actions">Actions</string>
-    <string name="view_cart">View Cart</string>
+    <string name="label_add_new_category">Add New Category</string>
+    <string name="label_grand_total">Grand Total:</string>
+    <string name="label_delivery_address">Delivery Address</string>
+    <string name="label_terms_and_condition">Terms And Condition</string>
+    <string name="label_size_chart">Size Chart</string>
+    <string name="label_cancel_reason">Cancel Reason</string>
+    <string name="label_agree_to_suggested_shipping_fee">Agree To Suggested Shipping Fee</string>
+    <string name="label_order_details">Order Details:</string>
+    <string name="label_quantity">Quantity:</string>
+    <string name="label_sub_total">Sub Total:</string>
+    <string name="label_date_sold">Date Sold:</string>
+    <string name="label_is_exchangeable">Is Exchangeable:</string>
+    <string name="label_show_more_reviews">"Show All (%1$d) >"</string>
+    <string name="label_sold">Sold:</string>
+    <string name="label_remaining_stock">Remaining Stock:</string>
+    <string name="label_file_name">File Name:</string>
+    <string name="label_image_url">Image URL:</string>
+    <string name="label_please_create_your_first_delivery_address">Please create your first delivery address.</string>
+
+    <string name="img_description">Image Text Placeholder</string>
+
+    <string name="action_view_cart">View Cart</string>
+    <string name="action_sort">Sort</string>
+    <string name="action_search">Search</string>
+    <string name="action_sort_best_seller">Sort By Best Seller</string>
+    <string name="action_sort_name">Sort By Name</string>
+    <string name="action_sort_new">Sort By New</string>
+
+    <string name="rb_credit_debit_card">Credit/Debit Card</string>
+    <string name="rb_cod">Cash On Delivery (COD)</string>
+    <string name="rb_gcash">G-Cash</string>
+    <string name="rb_paymaya">Paymaya</string>
+
+    <string name="placeholder_chip_option_1">Option 1</string>
+    <string name="placeholder_product_name">Product Name</string>
+    <string name="placeholder_long_sentence">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam luctus, elit sed consequat iaculis, tellus dui dapibus sapien, ut malesuada lectus magna rutrum ex.</string>
+    <string name="placeholder_very_long_sentence">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam luctus, elit sed consequat iaculis, tellus dui dapibus sapien, ut malesuada lectus magna rutrum ex. Nulla a vehicula enim, nec ornare purus. Morbi id commodo dolor. Nulla hendrerit posuere dapibus. Nunc condimentum molestie neque et ornare. Duis cursus consequat augue at ultrices. Nullam aliquam lorem nisi, sit amet malesuada nibh commodo sit amet. Sed libero nibh, mattis sit amet condimentum in, lacinia sed risus. Suspendisse ac mauris id nunc tincidunt iaculis eu ut velit. Phasellus accumsan, nibh eu tempor rutrum, nisi elit eleifend ipsum, ut suscipit enim risus quis turpis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam luctus, elit sed consequat iaculis, tellus dui dapibus sapien, ut malesuada lectus magna rutrum ex. Nulla a vehicula enim, nec ornare purus. Morbi id commodo dolor. Nulla hendrerit posuere dapibus. Nunc condimentum molestie neque et ornare. Duis cursus consequat augue at ultrices. Nullam aliquam lorem nisi, sit amet malesuada nibh commodo sit amet. Sed libero nibh, mattis sit amet condimentum in, lacinia sed risus. Suspendisse ac mauris id nunc tincidunt iaculis eu ut velit. Phasellus accumsan, nibh eu tempor rutrum, nisi elit eleifend ipsum, ut suscipit enim risus quis turpis.</string>
+
+    <string name="test_address">#300 11th Avenue Justice Lourdes Paredes Cubao Quezon City \nQuezon City, Metro Manila, Metro Manila, 1109</string>
+    <string name="default_text">Default</string>
+    <string name="add_new_delivery_information">Add New Delivery Information</string>
+
+    <string name="label_phone_number">Phone Number</string>
+    <string name="hint_phone_number_edt">(+63) Phone Number</string>
+
+    <string name="label_region">Region</string>
+    <string name="hint_region_select">Region ></string>
+
+    <string name="label_province">Province</string>
+    <string name="hint_province_select">Province ></string>
+
+    <string name="label_city">City</string>
+    <string name="hint_city_select">City ></string>
+
+    <string name="label_postal_code">Postal Code</string>
+    <string name="label_detailed_address">Detailed Address</string>
+
+    <string name="btn_set_as_default_address">Set As Default Address</string>
+    <string name="btn_delete_address">Delete Address</string>
+    <string name="btn_submit">Submit</string>
+    <string name="btn_date_picker">Date Picker</string>
+    <string name="btn_send_verification">Send verification</string>
+    <string name="btn_continue_to_app">Continue To App</string>
+    <string name="btn_place_order">Place Order</string>
+    <string name="btn_change_address">Change Address</string>
+    <string name="btn_change_payment_method">Change</string>
+    <string name="btn_check_out">Check Out</string>
+    <string name="btn_add_to_cart">Add To Cart</string>
+    <string name="btn_share">Share</string>
+    <string name="btn_sign_in">Sign In</string>
+    <string name="btn_sign_out">Sign Out</string>
+    <string name="btn_label_register">Register</string>
+
+    <string name="menu_add_new_product">Add New Product</string>
+    <string name="menu_add">Add</string>
+    <string name="menu_edit_product">Edit Product</string>
+    <string name="menu_add_new_size">Add New Size</string>
+    <string name="menu_stock_in">Stock In</string>
+    <string name="menu_actions">Actions</string>
+
     <string name="action_get_by_shipping">Action Get By Shipping</string>
     <string name="action_get_by_shipped">Action Get By Shipped</string>
     <string name="action_get_by_delivery">Action Get By Delivery</string>
     <string name="action_get_by_completed">Action Get By Completed</string>
     <string name="action_get_by_returned">Action Get By Returned</string>
     <string name="action_get_by_cancelled">Action Get By Cancelled</string>
-    <string name="add_new_category">Add New Category</string>
-    <string name="label_grand_total">Grand Total:</string>
-    <string name="delivery_address">Delivery Address:</string>
-    <string name="label_terms_and_condition">Terms And Condition</string>
-    <string name="label_size_chart">Size Chart</string>
+
+    <string name="count_indicator_text">"%1$d/%2$d"</string>
+
+    <string name="hint_input_category_name">Input Category Name</string>
+    <string name="hint_input_suggested_shipping_fee">Input Suggested Shipping Fee</string>
     <string name="hint_input_cancel_reason">Input cancel reason</string>
-    <string name="label_cancel_reason">Cancel Reason</string>
-    <string name="label_agree_to_suggested_shipping_fee">Agree To Suggested Shipping Fee</string>
+    <string name="hint_set_full_name">Set Full Name</string>
+    <string name="hint_set_phone_number">Set Phone Number</string>
+    <string name="hint_set_postal_code">Set Postal Code</string>
+    <string name="hint_set_detailed_address">Set Detailed Address</string>
+    <string name="hint_first_name">First Name</string>
+    <string name="hint_last_name">Last Name</string>
+
+    <string name="btn_select_image_from_gallery">Select Image From Gallery</string>
+    <string name="btn_exchange_item">Exchange Item</string>
     <string name="btn_agree">Agree</string>
     <string name="btn_disagree_cancel_the_order_immediately">Disagree (Cancel The Order Immediately)</string>
-    <string name="hint_input_suggested_shipping_fee">Input Suggested Shipping Fee</string>
-    <string name="label_order_details">Order Details:</string>
-    <string name="label_quantity">Quantity:</string>
-    <string name="label_sub_total">Sub Total:</string>
-    <string name="label_date_sold">Date Sold:</string>
-    <string name="label_is_exchangeable">Is Exchangeable:</string>
-    <string name="btn_exchange_item">Exchange Item</string>
-    <string name="count_indicator_text">"%1$d/%2$d"</string>
-    <string name="label_show_more_reviews">"Show All (%1$d) >"</string>
-    <string name="label_sold">Sold:</string>
-    <string name="label_remaining_stock">Remaining Stock:</string>
-    <string name="hint_input_category_name">Input Category Name</string>
-    <string name="label_file_name">File Name:</string>
-    <string name="btn_select_image_from_gallery">Select Image From Gallery</string>
-    <string name="label_image_url">Image URL:</string>
-
+    <string name="btn_delete">Delete</string>
+    <string name="btn_edit">Edit</string>
+    <string name="label_address_info">Address:</string>
 
 </resources>

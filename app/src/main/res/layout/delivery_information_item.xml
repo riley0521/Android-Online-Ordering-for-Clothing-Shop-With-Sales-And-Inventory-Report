@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_marginStart="8dp"
-            android:text="@string/make_default"
+            android:text="@string/label_make_default"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textColor="@android:color/white" />
 
@@ -30,7 +30,7 @@
             android:layout_height="40dp"
             android:layout_gravity="center_vertical"
             android:src="@drawable/ic_delivery_info"
-            android:contentDescription="@string/make_default" />
+            android:contentDescription="@string/label_make_default" />
 
     </LinearLayout>
 
@@ -47,13 +47,13 @@
             android:layout_height="40dp"
             android:layout_gravity="center_vertical"
             android:src="@drawable/ic_delete"
-            android:contentDescription="@string/delete" />
+            android:contentDescription="@string/btn_delete" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:text="@string/delete"
+            android:text="@string/btn_delete"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textColor="@android:color/white"
             app:layout_constraintEnd_toEndOf="parent"
@@ -95,7 +95,7 @@
             android:src="@drawable/ic_edit"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:contentDescription="@string/edit" />
+            android:contentDescription="@string/btn_edit" />
 
         <TextView
             android:id="@+id/tvAddress"

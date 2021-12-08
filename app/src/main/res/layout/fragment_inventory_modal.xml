@@ -16,7 +16,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:src="@tools:sample/avatars"
-        android:contentDescription="@string/image_product_description" />
+        android:contentDescription="@string/img_description" />
 
     <TextView
         android:id="@+id/tvProductName"
@@ -86,7 +86,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:enabled="false"
-        android:text="@string/button_add_to_cart"
+        android:text="@string/btn_add_to_cart"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.05"

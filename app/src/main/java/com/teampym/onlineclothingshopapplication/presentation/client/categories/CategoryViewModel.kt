@@ -32,6 +32,6 @@ class CategoryViewModel @Inject constructor(
     }
 
     fun loadCategories() = viewModelScope.launch {
-        _categories.value = categoryRepository.getCategories()
+        _categories.value = categoryRepository.getAll()
     }
 }

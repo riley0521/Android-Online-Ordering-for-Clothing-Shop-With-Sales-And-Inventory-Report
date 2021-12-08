@@ -20,7 +20,6 @@ import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentRegistrationBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_registration.*
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
 import java.util.*
@@ -164,7 +163,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                 }
 
                 tvInstruction.isVisible = false
-                btnRegister.text = getString(R.string.update_information)
+                btnRegister.text = getString(R.string.label_update_information)
 
                 userInfo = it
                 binding.edtFirstName.text.apply { it.firstName }
