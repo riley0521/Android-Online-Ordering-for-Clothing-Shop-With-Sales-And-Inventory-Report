@@ -161,16 +161,11 @@ class ProductRepository @Inject constructor(
 
     suspend fun delete(productId: String): Boolean {
         return withContext(dispatcher) {
-            var isCompleted = true
-            productCollectionRef
+            val result = productCollectionRef
                 .document(productId)
                 .delete()
-                .addOnSuccessListener {
-                }.addOnFailureListener {
-                    isCompleted = false
-                    return@addOnFailureListener
-                }
-            isCompleted
+                .await()
+            result != null
         }
     }
 

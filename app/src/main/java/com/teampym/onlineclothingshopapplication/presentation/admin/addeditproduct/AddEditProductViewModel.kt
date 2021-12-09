@@ -10,6 +10,7 @@ import com.teampym.onlineclothingshopapplication.data.repository.ProductImageRep
 import com.teampym.onlineclothingshopapplication.data.repository.ProductRepository
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.util.ProductType
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -69,7 +70,8 @@ class AddEditProductViewModel @Inject constructor(
 
     val imageUrl: MutableLiveData<String> = state.getLiveData(PRODUCT_IMAGE_URL, "")
 
-    val imageList: MutableLiveData<List<ProductImage>> = state.getLiveData(PRODUCT_IMAGE_LIST, listOf())
+    val imageList: MutableLiveData<MutableList<ProductImage>> =
+        state.getLiveData(PRODUCT_IMAGE_LIST, mutableListOf())
 
     private val _addEditProductChannel = Channel<AddEditProductEvent>()
     val addEditProductEvent = _addEditProductChannel.receiveAsFlow()
@@ -83,7 +85,7 @@ class AddEditProductViewModel @Inject constructor(
     }
 
     suspend fun updateImageList(list: List<ProductImage>) {
-        imageList.postValue(list)
+        imageList.postValue(list.toMutableList())
     }
 
     private fun resetAllUiState() = viewModelScope.launch {
@@ -97,9 +99,79 @@ class AddEditProductViewModel @Inject constructor(
         updateImageList(listOf())
     }
 
+    private fun isFormValid(): Boolean {
+        return categoryId.isNotBlank() &&
+            productName.isNotBlank() &&
+            productPrice > 0.0 &&
+            productType.isNotBlank() &&
+            fileName.value!!.isNotBlank() &&
+            imageUrl.value!!.isNotBlank() &&
+            imageList.value!!.isNotEmpty()
+    }
+
     fun onSubmitClicked(product: Product?, isEditMode: Boolean) = viewModelScope.launch {
         if (isEditMode && product != null && categoryId.isNotBlank()) {
+            if (isFormValid()) {
+                val res = async { productRepository.update(product) }.await()
+                if (res) {
+                    val updatedProductImages = async {
+                        productImageRepository.updateAll(imageList.value!!)
+                    }.await()
+
+                    if (updatedProductImages) {
+                        _addEditProductChannel.send(
+                            AddEditProductEvent.NavigateBackWithMessage(
+                                "Product Updated Successfully!"
+                            )
+                        )
+                    }
+                }
+            } else {
+                _addEditProductChannel.send(
+                    AddEditProductEvent.ShowErrorMessage(
+                        "Please fill the form."
+                    )
+                )
+            }
         } else {
+            if (isFormValid()) {
+                val newProd = Product(
+                    categoryId = categoryId,
+                    name = productName,
+                    description = productDesc,
+                    fileName = fileName.value!!,
+                    imageUrl = imageUrl.value!!,
+                    price = productPrice,
+                    type = productType,
+                    dateAdded = Utils.getTimeInMillisUTC()
+                )
+                val res = async { productRepository.create(newProd) }.await()
+                if (res != null) {
+                    imageList.value!!.map {
+                        it.productId = res.productId
+                    }
+
+                    updateImageList(imageList.value!!)
+
+                    val resultList = async {
+                        productImageRepository.insertAll(imageList.value!!)
+                    }.await()
+
+                    if (resultList) {
+                        _addEditProductChannel.send(
+                            AddEditProductEvent.NavigateToAddInvWithMessage(
+                                "Product Added Successfully!"
+                            )
+                        )
+                    }
+                }
+            } else {
+                _addEditProductChannel.send(
+                    AddEditProductEvent.ShowErrorMessage(
+                        "Please fill the form."
+                    )
+                )
+            }
         }
     }
 
@@ -116,9 +188,36 @@ class AddEditProductViewModel @Inject constructor(
         updateImageList(productImageList)
     }
 
+    fun onRemoveProductImageClicked(isEditMode: Boolean, item: ProductImage, position: Int) =
+        viewModelScope.launch {
+            if (isEditMode) {
+                val res = async { productImageRepository.delete(item) }.await()
+                if (res) {
+                    _addEditProductChannel.send(
+                        AddEditProductEvent.NotifyAdapterWithMessage(
+                            "Product image deleted successfully",
+                            position
+                        )
+                    )
+                }
+            } else {
+                imageList.value!!.removeAt(position)
+                updateImageList(imageList.value!!)
+                _addEditProductChannel.send(
+                    AddEditProductEvent.NotifyAdapterWithMessage(
+                        "Product image deleted successfully",
+                        position
+                    )
+                )
+            }
+        }
+
     sealed class AddEditProductEvent {
         object ShowLoadingBar : AddEditProductEvent()
         data class NavigateBackWithMessage(val msg: String) : AddEditProductEvent()
+        data class NavigateToAddInvWithMessage(val msg: String) : AddEditProductEvent()
         data class ShowErrorMessage(val msg: String) : AddEditProductEvent()
+        data class NotifyAdapterWithMessage(val msg: String, val position: Int) :
+            AddEditProductEvent()
     }
 }

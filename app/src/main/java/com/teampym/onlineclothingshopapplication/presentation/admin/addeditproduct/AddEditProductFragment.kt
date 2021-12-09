@@ -17,10 +17,12 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
+import com.teampym.onlineclothingshopapplication.data.models.ProductImage
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentAddEditProductBinding
@@ -36,25 +38,31 @@ const val SELECT_MULTIPLE_IMAGE_FROM_GALLERY_REQUEST = 2426
 @AndroidEntryPoint
 class AddEditProductFragment :
     Fragment(R.layout.fragment_add_edit_product),
-    AdapterView.OnItemSelectedListener {
+    AdapterView.OnItemSelectedListener,
+    ProductImageAdapter.ProductImageListener {
 
     private lateinit var binding: FragmentAddEditProductBinding
 
     private lateinit var loadingDialog: LoadingDialog
 
+    private lateinit var adapter: ProductImageAdapter
+
     private val args by navArgs<AddEditProductFragmentArgs>()
 
     private val viewModel by viewModels<AddEditProductViewModel>()
+
+    private var isEditMode: Boolean = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentAddEditProductBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
+        adapter = ProductImageAdapter(this)
 
         val categoryId = args.categoryId
         val product = args.product
-        val isEditMode = args.editMode
+        isEditMode = args.editMode
 
         if (categoryId.isBlank()) {
             Toast.makeText(
@@ -92,7 +100,12 @@ class AddEditProductFragment :
             loadingDialog.dismiss()
 
             if (it.isNotEmpty()) {
-                binding.rvProductImageList.isVisible = true
+                adapter.submitList(it)
+                binding.rvProductImageList.apply {
+                    setHasFixedSize(true)
+                    layoutManager = LinearLayoutManager(requireContext())
+                    adapter = adapter
+                }
             }
         }
 
@@ -112,6 +125,7 @@ class AddEditProductFragment :
             spProductType.onItemSelectedListener = this@AddEditProductFragment
 
             // Set edit text values when editing a product (product != null)
+            viewModel.categoryId = categoryId
             etProductName.setText(viewModel.productName)
             etProductDescription.setText(viewModel.productDesc)
             etProductPrice.setText(viewModel.productPrice.toString())
@@ -230,6 +244,17 @@ class AddEditProductFragment :
                         ).show()
                         findNavController().popBackStack()
                     }
+                    is AddEditProductViewModel.AddEditProductEvent.NavigateToAddInvWithMessage -> {
+                        loadingDialog.dismiss()
+                        Toast.makeText(
+                            requireContext(),
+                            event.msg,
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        // TODO(Navigate to AddInventoryFragment)
+                        findNavController().popBackStack()
+                    }
                     is AddEditProductViewModel.AddEditProductEvent.ShowErrorMessage -> {
                         loadingDialog.dismiss()
                         Snackbar.make(
@@ -237,6 +262,15 @@ class AddEditProductFragment :
                             event.msg,
                             Snackbar.LENGTH_SHORT
                         ).show()
+                    }
+                    is AddEditProductViewModel.AddEditProductEvent.NotifyAdapterWithMessage -> {
+                        loadingDialog.dismiss()
+                        Snackbar.make(
+                            requireView(),
+                            event.msg,
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                        adapter.notifyItemRemoved(event.position)
                     }
                 }
             }
@@ -298,5 +332,10 @@ class AddEditProductFragment :
 
     override fun onNothingSelected(parent: AdapterView<*>?) {
         // Nothing
+    }
+
+    override fun onRemoveClicked(item: ProductImage, position: Int) {
+        loadingDialog.show()
+        viewModel.onRemoveProductImageClicked(isEditMode, item, position)
     }
 }

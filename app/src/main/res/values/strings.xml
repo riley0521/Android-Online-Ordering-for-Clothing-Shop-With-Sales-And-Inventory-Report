@@ -188,5 +188,10 @@
     <string name="btn_select_multiple_product_image">Select Multiple Product Image</string>
     <string name="label_product_images">Product Images</string>
     <string name="label_product_type">Product Type:</string>
+    <string name="label_available_sizes">"Available Sizes: %1$s"</string>
+    <string name="hint_input_size">Input Size</string>
+    <string name="hint_input_available_stocks">Input Available Stocks</string>
+    <string name="btn_add_another_size">Add Another Size</string>
+    <string name="hint_input_restock_level">Input Restock Level</string>
 
 </resources>

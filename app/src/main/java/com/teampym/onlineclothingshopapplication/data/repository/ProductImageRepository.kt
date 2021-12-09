@@ -2,6 +2,7 @@ package com.teampym.onlineclothingshopapplication.data.repository
 
 import android.net.Uri
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -55,6 +56,22 @@ class ProductImageRepository @Inject constructor(
                     .document(item.productId)
                     .collection(PRODUCT_IMAGES_SUB_COLLECTION)
                     .add(item)
+                    .await()
+                isSuccessful = result != null
+            }
+            isSuccessful
+        }
+    }
+
+    suspend fun updateAll(productImageList: List<ProductImage>): Boolean {
+        return withContext(dispatcher) {
+            var isSuccessful = true
+            for (item in productImageList) {
+                val result = productCollectionRef
+                    .document(item.productId)
+                    .collection(PRODUCT_IMAGES_SUB_COLLECTION)
+                    .document(item.id)
+                    .set(item, SetOptions.merge())
                     .await()
                 isSuccessful = result != null
             }

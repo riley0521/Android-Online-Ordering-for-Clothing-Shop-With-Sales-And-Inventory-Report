@@ -8,7 +8,6 @@ import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.data.util.INVENTORIES_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -22,7 +21,6 @@ class ProductInventoryRepository @Inject constructor(
 
     private val productCollectionRef = db.collection(PRODUCTS_COLLECTION)
 
-    // TODO("Inventory Collection operation - Add Stock, Create Inventory(size), Delete Inventory")
     suspend fun getAll(productId: String): List<Inventory> {
         return withContext(dispatcher) {
             val inventoryList = mutableListOf<Inventory>()
@@ -35,7 +33,8 @@ class ProductInventoryRepository @Inject constructor(
             if (inventoryDocuments.documents.isNotEmpty()) {
                 for (document in inventoryDocuments.documents) {
                     val copy =
-                        document.toObject<Inventory>()!!.copy(inventoryId = document.id, pid = productId)
+                        document.toObject<Inventory>()!!
+                            .copy(inventoryId = document.id, pid = productId)
                     inventoryList.add(copy)
                 }
             }
@@ -43,19 +42,20 @@ class ProductInventoryRepository @Inject constructor(
         }
     }
 
-    suspend fun create(inventory: Inventory): Boolean {
+    suspend fun create(inventory: Inventory): Inventory? {
         return withContext(dispatcher) {
-            var isCompleted = true
-            productCollectionRef
+            var createdInventory: Inventory? = inventory
+            val result = productCollectionRef
                 .document(inventory.pid)
                 .collection(INVENTORIES_SUB_COLLECTION)
                 .add(inventory)
-                .addOnSuccessListener {
-                }.addOnFailureListener {
-                    isCompleted = false
-                    return@addOnFailureListener
-                }
-            isCompleted
+                .await()
+            if (result != null) {
+                createdInventory?.inventoryId = result.id
+            } else {
+                createdInventory = null
+            }
+            createdInventory
         }
     }
 
@@ -75,18 +75,16 @@ class ProductInventoryRepository @Inject constructor(
                 .await()
 
             if (inventoryDocument != null) {
-                val inventory = inventoryDocument.toObject<Inventory>()!!.copy(inventoryId = inventoryDocument.id)
+                val inventory = inventoryDocument.toObject<Inventory>()!!
+                    .copy(inventoryId = inventoryDocument.id)
                 inventory.stock += stockToAdd
-                productCollectionRef
+                val result = productCollectionRef
                     .document(productId)
                     .collection(INVENTORIES_SUB_COLLECTION)
                     .document(inventoryId)
                     .set(inventory, SetOptions.merge())
-                    .addOnSuccessListener {
-                    }.addOnFailureListener {
-                        isSuccessful = false
-                        return@addOnFailureListener
-                    }
+                    .await()
+                isSuccessful = result != null
             }
             isSuccessful
         }
@@ -94,18 +92,13 @@ class ProductInventoryRepository @Inject constructor(
 
     suspend fun delete(productId: String, inventoryId: String): Boolean {
         return withContext(dispatcher) {
-            var isCompleted = true
-            productCollectionRef
+            val result = productCollectionRef
                 .document(productId)
                 .collection(INVENTORIES_SUB_COLLECTION)
                 .document(inventoryId)
                 .delete()
-                .addOnSuccessListener {
-                }.addOnFailureListener {
-                    isCompleted = false
-                    return@addOnFailureListener
-                }
-            isCompleted
+                .await()
+            result != null
         }
     }
 }

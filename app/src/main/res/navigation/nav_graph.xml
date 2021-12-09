@@ -122,6 +122,9 @@
         <action
             android:id="@+id/action_productDetailFragment_to_addEditProductFragment"
             app:destination="@id/addEditProductFragment" />
+        <action
+            android:id="@+id/action_productDetailFragment_to_addInventoryFragment"
+            app:destination="@id/addInventoryFragment" />
     </fragment>
     <dialog
         android:id="@+id/inventoryModalFragment"
@@ -311,6 +314,18 @@
             android:defaultValue="false" />
         <argument
             android:name="categoryId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_addEditProductFragment_to_addInventoryFragment"
+            app:destination="@id/addInventoryFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/addInventoryFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.addinventory.AddInventoryFragment"
+        android:label="Add Inventory"
+        tools:layout="@layout/fragment_add_inventory" >
+        <argument
+            android:name="productId"
             app:argType="string" />
     </fragment>
 </navigation>

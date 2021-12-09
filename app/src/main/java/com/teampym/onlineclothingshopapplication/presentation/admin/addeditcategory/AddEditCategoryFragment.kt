@@ -98,6 +98,7 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
         }
 
         binding.apply {
+            viewModel.categoryId = category?.id ?: ""
             etCategoryName.setText(viewModel.categoryName)
             tvFileName.text = viewModel.fileName.value
             tvImageUrl.text = viewModel.imageUrl.value

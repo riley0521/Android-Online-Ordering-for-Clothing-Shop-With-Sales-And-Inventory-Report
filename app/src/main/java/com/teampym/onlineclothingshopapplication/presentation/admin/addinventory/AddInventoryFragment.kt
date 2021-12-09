@@ -1,0 +1,201 @@
+package com.teampym.onlineclothingshopapplication.presentation.admin.addinventory
+
+import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.View
+import android.widget.Toast
+import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
+import com.google.android.material.snackbar.Snackbar
+import com.teampym.onlineclothingshopapplication.R
+import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
+import com.teampym.onlineclothingshopapplication.databinding.FragmentAddInventoryBinding
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+
+@AndroidEntryPoint
+class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
+
+    private lateinit var binding: FragmentAddInventoryBinding
+
+    private lateinit var loadingDialog: LoadingDialog
+
+    private val args by navArgs<AddInventoryFragmentArgs>()
+
+    private val viewModel by viewModels<AddInventoryViewModel>()
+
+    private var availableSizeList: List<String> = listOf()
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        binding = FragmentAddInventoryBinding.bind(view)
+        loadingDialog = LoadingDialog(requireActivity())
+
+        val productId = args.productId
+
+        if (productId.isBlank()) {
+            Toast.makeText(
+                requireContext(),
+                "Please select a product first " +
+                    "before adding a new inventory/size.",
+                Toast.LENGTH_SHORT
+            ).show()
+            findNavController().popBackStack()
+        } else {
+            viewModel.productId = productId
+
+            loadingDialog.show()
+            viewModel.onLoadSizesInitiated()
+        }
+
+        viewModel.availableInvList.observe(viewLifecycleOwner) { listOfSizes ->
+            loadingDialog.dismiss()
+
+            if (listOfSizes.isNotEmpty()) {
+                availableSizeList = listOfSizes
+
+                val sizes = "["
+                for (i in listOfSizes.indices) {
+                    if (listOfSizes.lastIndex == i) {
+                        sizes.plus("${listOfSizes[i]}]")
+                    } else {
+                        sizes.plus("${listOfSizes[i]}, ")
+                    }
+                }
+
+                binding.tvAvailableSizes.text = getString(R.string.label_available_sizes, sizes)
+                binding.tvAvailableSizes.isVisible = true
+            }
+        }
+
+        binding.apply {
+            etSize.setText(viewModel.inventorySize)
+            etAvailableStocks.setText(viewModel.inventoryStock)
+
+            etSize.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                    // Nothing
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    viewModel.inventorySize = s.toString()
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    // Nothing
+                }
+            })
+
+            etAvailableStocks.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                    // Nothing
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    viewModel.inventoryStock = s.toString().toInt()
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    // Nothing
+                }
+            })
+
+            etRestockLevel.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                    // Nothing
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    viewModel.inventoryRestockLevel = s.toString().toInt()
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    // Nothing
+                }
+            })
+
+            btnAddAnotherSize.setOnClickListener {
+                if (isStockExisting()) {
+                    Snackbar.make(
+                        requireView(),
+                        "Stock is already existing. Avoid duplicates",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                } else {
+                    loadingDialog.show()
+                    viewModel.onSubmitClicked(true)
+                }
+            }
+
+            btnSubmit.setOnClickListener {
+                if (isStockExisting()) {
+                    Snackbar.make(
+                        requireView(),
+                        "Stock is already existing. Avoid duplicates",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                } else {
+                    loadingDialog.show()
+                    viewModel.onSubmitClicked(false)
+                }
+            }
+        }
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.addInventoryEvent.collectLatest { event ->
+                when (event) {
+                    is AddInventoryViewModel.AddInventoryEvent.NavigateBackWithMessage -> {
+                        loadingDialog.dismiss()
+                        Toast.makeText(
+                            requireContext(),
+                            event.msg,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        try {
+                            findNavController().getBackStackEntry(R.id.addEditProductFragment)
+                            findNavController().navigate(R.id.action_global_categoryFragment)
+                        } catch (ex: Exception) {
+                            findNavController().popBackStack()
+                        }
+                    }
+                    is AddInventoryViewModel.AddInventoryEvent.ShowSuccessMessageAndResetState -> {
+                        Snackbar.make(
+                            requireView(),
+                            event.msg,
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                        viewModel.onLoadSizesInitiated()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun isStockExisting(): Boolean {
+        if (availableSizeList.isNotEmpty()) {
+            return availableSizeList.contains(viewModel.inventorySize)
+        }
+        return false
+    }
+}
