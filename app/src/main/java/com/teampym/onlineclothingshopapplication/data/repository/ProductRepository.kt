@@ -1,22 +1,27 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
+import android.net.Uri
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.SortOrder
+import com.teampym.onlineclothingshopapplication.data.room.UserWithWishList
 import com.teampym.onlineclothingshopapplication.data.util.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.presentation.client.products.ProductPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,8 +36,9 @@ class ProductRepository @Inject constructor(
 ) {
 
     private val productCollectionRef = db.collection(PRODUCTS_COLLECTION)
+    private val imageRef = Firebase.storage.reference
 
-    fun getSome(user: UserInformation?, queryProducts: Query, sortOrder: SortOrder) =
+    fun getSome(user: UserWithWishList?, queryProducts: Query, sortOrder: SortOrder) =
         Pager(
             PagingConfig(
                 pageSize = 30,
@@ -74,37 +80,45 @@ class ProductRepository @Inject constructor(
         }
     }
 
-    suspend fun create(product: Product?): Product? {
+    suspend fun create(product: Product): Product? {
         return withContext(dispatcher) {
-            var createdProduct = product
-            createdProduct?.let { p ->
-                p.dateAdded = System.currentTimeMillis()
-                productCollectionRef
-                    .add(p)
-                    .addOnSuccessListener {
-                        createdProduct?.productId = it.id
-                    }.addOnFailureListener {
-                        createdProduct = null
-                        return@addOnFailureListener
-                    }
+            var createdProduct: Product? = product
+            if (createdProduct != null) {
+                createdProduct.dateAdded = System.currentTimeMillis()
+                val result = productCollectionRef
+                    .add(createdProduct)
+                    .await()
+
+                if (result != null) {
+                    createdProduct.productId = result.id
+                } else {
+                    createdProduct = null
+                }
             }
             createdProduct
         }
     }
 
+    suspend fun uploadImage(imgProduct: Uri): UploadedImage {
+        return withContext(dispatcher) {
+            val fileName = UUID.randomUUID().toString()
+            val uploadImage = imageRef.child(PRODUCT_PATH + fileName)
+                .putFile(imgProduct)
+                .await()
+
+            val url = uploadImage.storage.downloadUrl.await().toString()
+            UploadedImage(url, fileName)
+        }
+    }
+
     suspend fun update(product: Product): Boolean {
         return withContext(dispatcher) {
-            var isCompleted = true
-
             product.dateModified = System.currentTimeMillis()
             val result = productCollectionRef
                 .document(product.productId)
                 .set(product, SetOptions.merge())
                 .await()
-            if (result == null) {
-                isCompleted = false
-            }
-            isCompleted
+            result != null
         }
     }
 

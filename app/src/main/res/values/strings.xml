@@ -1,6 +1,11 @@
 <resources>
     <string name="app_name">Online Clothing Shop</string>
 
+    <string-array name="product_types_array">
+        <item>SHIRTS</item>
+        <item>HOODIES</item>
+    </string-array>
+
     <!--  UI Labels  -->
     <string name="nav_category_title">Category</string>
     <string name="nav_news_title">News Feed</string>
@@ -175,5 +180,13 @@
     <string name="btn_delete">Delete</string>
     <string name="btn_edit">Edit</string>
     <string name="label_address_info">Address:</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="hint_input_product_name">Input Product Name</string>
+    <string name="hint_input_product_description">Input Product Description</string>
+    <string name="hint_input_product_price">Input Product Price</string>
+    <string name="btn_select_multiple_product_image">Select Multiple Product Image</string>
+    <string name="label_product_images">Product Images</string>
+    <string name="label_product_type">Product Type:</string>
 
 </resources>

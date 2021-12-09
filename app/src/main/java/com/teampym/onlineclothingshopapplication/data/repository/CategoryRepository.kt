@@ -65,7 +65,6 @@ class CategoryRepository @Inject constructor(
         }
     }
 
-    // TODO(Upload image in public/product/ folder)
     suspend fun uploadImage(imgCategory: Uri): UploadedImage {
         return withContext(dispatcher) {
             val fileName = UUID.randomUUID().toString()

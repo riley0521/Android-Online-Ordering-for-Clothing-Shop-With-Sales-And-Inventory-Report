@@ -8,14 +8,18 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
+import com.teampym.onlineclothingshopapplication.data.models.Category
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentAddEditCategoryBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -38,7 +42,8 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
 
     private val viewModel by viewModels<AddEditCategoryViewModel>()
 
-    private var selectedCategoryImage: Uri? = null
+    private var hasFileName: Boolean = false
+    private var hasImageUrl: Boolean = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -50,10 +55,23 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
         val isEditMode = args.editMode
 
         if (category != null) {
-            viewModel.categoryId = category.id
-            viewModel.categoryName = category.name
-            CoroutineScope(Dispatchers.IO).launch {
-                viewModel.updateImageUrl(category.imageUrl)
+            if (viewModel.categoryName.isNotBlank() ||
+                viewModel.fileName.value!!.isNotBlank() ||
+                viewModel.imageUrl.value!!.isNotBlank()
+            ) {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("OVERWRITE FIELDS")
+                    .setMessage(
+                        "You are trying to add a new category. " +
+                            "If you press 'Yes' this will override those fields?" +
+                            "Do you wish to continue?"
+                    ).setPositiveButton("Yes") { _, _ ->
+                        overwriteFields(category)
+                    }.setNegativeButton("No") { _, _ ->
+                        findNavController().popBackStack()
+                    }.show()
+            } else {
+                overwriteFields(category)
             }
         }
 
@@ -61,6 +79,9 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
             if (it.isNotBlank()) {
                 binding.tvFileName.text = it
                 binding.tvFileName.isVisible = true
+                hasFileName = true
+
+                binding.btnSubmit.isEnabled = hasFileName && hasImageUrl
             }
         }
 
@@ -70,6 +91,9 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
             if (it.isNotBlank()) {
                 binding.tvImageUrl.text = it
                 binding.tvImageUrl.isVisible = true
+                hasImageUrl = true
+
+                binding.btnSubmit.isEnabled = hasFileName && hasImageUrl
             }
         }
 
@@ -80,12 +104,14 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
 
             if (viewModel.fileName.value!!.isNotBlank()) {
                 tvFileName.visibility = View.VISIBLE
+                tvFileName.text = viewModel.fileName.value!!
             } else {
                 tvFileName.visibility = View.INVISIBLE
             }
 
             if (viewModel.imageUrl.value!!.isNotBlank()) {
                 tvImageUrl.visibility = View.VISIBLE
+                tvImageUrl.text = viewModel.imageUrl.value!!
             } else {
                 tvImageUrl.visibility = View.INVISIBLE
             }
@@ -143,6 +169,24 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
                     }
                 }
             }
+        }
+    }
+
+    // This will overwrite the UI state according to the selected category the admin wish to change.
+    private fun overwriteFields(category: Category) {
+        viewModel.categoryId = category.id
+        viewModel.categoryName = category.name
+
+        Glide.with(requireContext())
+            .load(category.imageUrl)
+            .centerCrop()
+            .transition(DrawableTransitionOptions.withCrossFade())
+            .error(R.drawable.ic_food)
+            .into(binding.imgCategory)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            viewModel.updateFileName(category.fileName)
+            viewModel.updateImageUrl(category.imageUrl)
         }
     }
 

@@ -67,6 +67,9 @@
         <argument
             android:name="categoryId"
             app:argType="string" />
+        <action
+            android:id="@+id/action_productFragment_to_addEditProductFragment"
+            app:destination="@id/addEditProductFragment" />
     </fragment>
     <fragment
         android:id="@+id/profileFragment"
@@ -116,6 +119,9 @@
             android:name="productId"
             app:argType="string"
             app:nullable="true" />
+        <action
+            android:id="@+id/action_productDetailFragment_to_addEditProductFragment"
+            app:destination="@id/addEditProductFragment" />
     </fragment>
     <dialog
         android:id="@+id/inventoryModalFragment"
@@ -283,6 +289,28 @@
         <argument
             android:name="title"
             android:defaultValue="Add Category"
+            app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/addEditProductFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.addeditproduct.AddEditProductFragment"
+        android:label="{title}"
+        tools:layout="@layout/fragment_add_edit_product" >
+        <argument
+            android:name="title"
+            app:argType="string"
+            android:defaultValue="Add Product" />
+        <argument
+            android:name="product"
+            app:argType="com.teampym.onlineclothingshopapplication.data.room.Product"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="editMode"
+            app:argType="boolean"
+            android:defaultValue="false" />
+        <argument
+            android:name="categoryId"
             app:argType="string" />
     </fragment>
 </navigation>

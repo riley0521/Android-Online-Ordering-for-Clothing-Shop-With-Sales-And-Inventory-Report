@@ -147,7 +147,7 @@ class ProductViewModel @Inject constructor(
         _userWithWishList.value = userWithWishList
 
         productRepository.getSome(
-            userWithWishList?.user,
+            userWithWishList,
             queryProducts,
             sessionPref.sortOrder
         ).flow.cachedIn(viewModelScope)

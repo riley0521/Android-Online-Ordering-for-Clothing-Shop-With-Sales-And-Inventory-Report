@@ -18,7 +18,6 @@
     <item
         android:id="@+id/action_add_edit_stock"
         android:icon="@drawable/ic_add"
-        android:iconTint="@android:color/black"
         android:title="@string/menu_actions"
         app:showAsAction="ifRoom"
         tools:targetApi="o">

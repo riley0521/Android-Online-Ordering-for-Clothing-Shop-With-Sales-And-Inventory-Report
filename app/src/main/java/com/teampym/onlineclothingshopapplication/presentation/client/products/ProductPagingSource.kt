@@ -7,7 +7,6 @@ import com.bumptech.glide.load.HttpException
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.toObject
-import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.ProductImageRepository
 import com.teampym.onlineclothingshopapplication.data.repository.ProductInventoryRepository
 import com.teampym.onlineclothingshopapplication.data.repository.ReviewRepository
@@ -15,6 +14,7 @@ import com.teampym.onlineclothingshopapplication.data.room.MOST_POPULAR
 import com.teampym.onlineclothingshopapplication.data.room.NEWEST
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.SortOrder
+import com.teampym.onlineclothingshopapplication.data.room.UserWithWishList
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,7 +24,7 @@ import kotlinx.coroutines.tasks.await
 import java.io.IOException
 
 class ProductPagingSource(
-    private val user: UserInformation?,
+    private val user: UserWithWishList?,
     private val queryProducts: Query,
     private val sortOrder: SortOrder,
     private val productImageRepository: ProductImageRepository,
@@ -56,7 +56,7 @@ class ProductPagingSource(
                 nextPage = queryProducts.startAfter(lastVisibleItem).get().await()
             }
 
-            val productList = mutableListOf<Product>()
+            var productList = mutableListOf<Product>()
             for (document in currentPage.documents) {
 
                 val product = document.toObject<Product>()!!.copy(productId = document.id)
@@ -81,7 +81,8 @@ class ProductPagingSource(
             }
 
             var finalProductList = mutableListOf<Product>()
-            return if (user != null && user.userType == UserType.ADMIN.name) {
+            return if (user?.user != null && user.user.userType == UserType.ADMIN.name) {
+                // Each Product has 1 inventory and it will repeat every item with different sizes.
                 for (item in productList) {
                     for (inv in item.inventoryList) {
                         val newP = Product(
@@ -107,9 +108,13 @@ class ProductPagingSource(
                     }
                 }
 
-                // Each Product has 1 inventory and it will repeat every item with different sizes.
-                // Sort All Items with the most sold items.
-                finalProductList = finalProductList.sortedWith(compareBy({it.fastTrack}, {it.name})).toMutableList()
+                // Sort by A - Z
+                val nameComparator = compareBy<Product> { it.name }
+                finalProductList = finalProductList
+                    .sortedWith(
+                        // Then sort by most sold size.
+                        nameComparator.thenByDescending { it.fastTrack }
+                    ).toMutableList()
 
                 LoadResult.Page(
                     data = finalProductList,
@@ -142,6 +147,13 @@ class ProductPagingSource(
                         productList[4].flag = NEWEST
                     }
                 }
+
+                // When the admin adds a new product
+                // It does not have an inventory automatically
+                // So this line will filter all product that have at least 1 size.
+                productList = productList.filter { it.inventoryList.isNotEmpty() }.toMutableList()
+
+                // TODO("Map list here to modify if the user has wish listed an item instead doing it in the UI")
 
                 LoadResult.Page(
                     data = productList,

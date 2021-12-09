@@ -1,15 +1,19 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
+import android.net.Uri
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.toObject
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.ProductImage
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCT_IMAGES_SUB_COLLECTION
+import com.teampym.onlineclothingshopapplication.data.util.PRODUCT_PATH
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,6 +24,7 @@ class ProductImageRepository @Inject constructor(
 ) {
 
     private val productCollectionRef = db.collection(PRODUCTS_COLLECTION)
+    private val imageRef = Firebase.storage.reference
 
     // TODO("ProductImages Collection operation - Add and Delete")
     suspend fun getAll(productId: String): List<ProductImage> {
@@ -42,33 +47,54 @@ class ProductImageRepository @Inject constructor(
         }
     }
 
-    suspend fun create(productImage: ProductImage): Boolean {
+    suspend fun insertAll(productImageList: List<ProductImage>): Boolean {
         return withContext(dispatcher) {
-            var isCompleted = true
-            val result = productCollectionRef
-                .document(productImage.productId)
-                .collection(PRODUCT_IMAGES_SUB_COLLECTION)
-                .add(productImage)
-                .await()
-            isCompleted = result != null
-            isCompleted
+            var isSuccessful = true
+            for (item in productImageList) {
+                val result = productCollectionRef
+                    .document(item.productId)
+                    .collection(PRODUCT_IMAGES_SUB_COLLECTION)
+                    .add(item)
+                    .await()
+                isSuccessful = result != null
+            }
+            isSuccessful
+        }
+    }
+
+    suspend fun uploadImages(imgUriList: List<Uri>): List<ProductImage> {
+        return withContext(dispatcher) {
+            val productImageList = mutableListOf<ProductImage>()
+
+            for (img in imgUriList) {
+                val fileName = UUID.randomUUID().toString()
+                val uploadImage = imageRef.child(PRODUCT_PATH + fileName)
+                    .putFile(img)
+                    .await()
+
+                val url = uploadImage.storage.downloadUrl.await().toString()
+                productImageList.add(
+                    ProductImage(
+                        productId = "",
+                        fileName = fileName,
+                        imageUrl = url
+                    )
+                )
+            }
+
+            productImageList
         }
     }
 
     suspend fun delete(productImage: ProductImage): Boolean {
         return withContext(dispatcher) {
-            var isCompleted = true
-            productCollectionRef
+            val result = productCollectionRef
                 .document(productImage.productId)
                 .collection(PRODUCT_IMAGES_SUB_COLLECTION)
                 .document(productImage.id)
                 .delete()
-                .addOnSuccessListener {
-                }.addOnFailureListener {
-                    isCompleted = false
-                    return@addOnFailureListener
-                }
-            isCompleted
+                .await()
+            result != null
         }
     }
 }

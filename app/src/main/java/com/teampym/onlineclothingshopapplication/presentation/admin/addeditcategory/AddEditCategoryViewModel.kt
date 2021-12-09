@@ -56,7 +56,7 @@ class AddEditCategoryViewModel @Inject constructor(
     }
 
     fun onSubmitClicked(category: Category?, isEditMode: Boolean) = viewModelScope.launch {
-        if (isEditMode && category != null && category.id.isNotBlank()) {
+        if (isEditMode && category != null && categoryId.isNotBlank()) {
             if (isFormValid()) {
                 val res = async { categoryRepository.update(category) }.await()
                 if (res != null) {
@@ -65,6 +65,8 @@ class AddEditCategoryViewModel @Inject constructor(
                 } else {
                     _categoryChannel.send(CategoryEvent.ShowErrorMessage("Updating Category Failed. Please try again later."))
                 }
+            } else {
+                _categoryChannel.send(CategoryEvent.ShowErrorMessage("Please fill the form."))
             }
         } else {
             if (isFormValid()) {
