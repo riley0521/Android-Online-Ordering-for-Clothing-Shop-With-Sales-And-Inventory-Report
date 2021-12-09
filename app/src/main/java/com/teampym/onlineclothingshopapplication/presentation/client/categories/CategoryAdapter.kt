@@ -48,11 +48,21 @@ class CategoryAdapter(
         init {
             binding.root.setOnClickListener {
                 val position = bindingAdapterPosition
-                if(position != RecyclerView.NO_POSITION) {
+                if (position != RecyclerView.NO_POSITION) {
                     val item = getItem(position)
-                    if(item != null)
+                    if (item != null)
                         listener.onItemClick(item)
                 }
+            }
+
+            binding.root.setOnLongClickListener {
+                val position = bindingAdapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    val item = getItem(position)
+                    if (item != null)
+                        listener.onItemLongClick(item)
+                }
+                true
             }
         }
 
@@ -68,10 +78,10 @@ class CategoryAdapter(
                 tvCategoryName.text = category.name
             }
         }
-
     }
 
     interface OnCategoryListener {
         fun onItemClick(category: Category)
+        fun onItemLongClick(category: Category)
     }
 }

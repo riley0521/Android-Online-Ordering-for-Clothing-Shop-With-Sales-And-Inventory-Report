@@ -90,6 +90,15 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
         findNavController().navigate(action)
     }
 
+    override fun onItemLongClick(category: Category) {
+        val action = CategoryFragmentDirections.actionCategoryFragmentToAddEditCategoryFragment(
+            category,
+            true,
+            "Edit Category (${category.id})"
+        )
+        findNavController().navigate(action)
+    }
+
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.category_action_menu, menu)
 

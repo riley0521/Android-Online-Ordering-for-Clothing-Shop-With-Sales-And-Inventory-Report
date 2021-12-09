@@ -3,6 +3,7 @@ package com.teampym.onlineclothingshopapplication.presentation.client.products
 import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import androidx.paging.map
 import com.bumptech.glide.load.HttpException
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
@@ -153,7 +154,12 @@ class ProductPagingSource(
                 // So this line will filter all product that have at least 1 size.
                 productList = productList.filter { it.inventoryList.isNotEmpty() }.toMutableList()
 
-                // TODO("Map list here to modify if the user has wish listed an item instead doing it in the UI")
+                // Map list here to modify if the user has wish listed an item instead doing it in the UI
+                productList.map { p ->
+                    user?.wishList?.forEach { w ->
+                        p.isWishListedByUser = p.productId == w.productId
+                    }
+                }
 
                 LoadResult.Page(
                     data = productList,

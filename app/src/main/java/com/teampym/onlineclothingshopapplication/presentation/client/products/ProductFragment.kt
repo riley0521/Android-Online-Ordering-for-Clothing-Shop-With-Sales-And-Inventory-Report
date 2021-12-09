@@ -11,7 +11,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.paging.PagingData
-import androidx.paging.map
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
@@ -69,7 +68,9 @@ class ProductFragment :
         adapter = ProductAdapter(this)
         adminAdapter = ProductAdminAdapter(this)
 
-        viewModel.updateCategory(args.categoryId)
+        CoroutineScope(Dispatchers.IO).launch {
+            viewModel.updateCategoryId(args.categoryId)
+        }
 
         viewModel.isAddMenuVisible.observe(viewLifecycleOwner) {
             addMenu?.isVisible = it
@@ -174,15 +175,7 @@ class ProductFragment :
     }
 
     private suspend fun showAdapterForCustomer(it: PagingData<Product>) {
-        val paging = it.map { p ->
-            if (userAndWishList != null) {
-                userAndWishList!!.wishList.forEach { w ->
-                    p.isWishListedByUser = p.productId == w.productId
-                }
-            }
-            p
-        }
-        adapter.submitData(paging)
+        adapter.submitData(it)
     }
 
     override fun onResume() {
@@ -288,7 +281,10 @@ class ProductFragment :
                 true
             }
             R.id.action_new_product -> {
-                // TODO("Navigate to add/edit product layout when admin")
+                // Navigate to add/edit product layout when admin
+                val action = ProductFragmentDirections
+                    .actionProductFragmentToAddEditProductFragment(categoryId = viewModel.categoryId.value!!)
+                findNavController().navigate(action)
                 true
             }
             else -> false

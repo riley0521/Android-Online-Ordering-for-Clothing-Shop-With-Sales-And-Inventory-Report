@@ -17,7 +17,10 @@ import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductDetailBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -49,34 +52,38 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             // Product ID Should not be null if Product Parcelable is null
             viewModel.getProductById(productId!!)
         } else {
-            viewModel.updateProduct(product)
+            CoroutineScope(Dispatchers.IO).launch {
+                viewModel.updateProduct(product!!)
+            }
         }
 
-        product = viewModel.product
+        viewModel.product.observe(viewLifecycleOwner) {
+            product = it
+        }
 
         binding.apply {
             btnAddToCart.setOnClickListener {
                 val action =
                     ProductDetailFragmentDirections.actionProductDetailFragmentToInventoryModalFragment(
-                        product
+                        product!!
                     )
                 findNavController().navigate(action)
             }
 
-            val priceStr = "$" + product.price
-            tvProductName.text = product.name
+            val priceStr = "$" + product?.price
+            tvProductName.text = product?.name
             tvPrice.text = priceStr
-            val descStr = if (product.description.isBlank()) {
+            val descStr = if (product!!.description.isBlank()) {
                 "No Available Description"
             } else {
-                product.description
+                product?.description
             }
 
             tvDescription.text = descStr
             btnAddToCart.setOnClickListener {
                 val action =
                     ProductDetailFragmentDirections.actionProductDetailFragmentToInventoryModalFragment(
-                        product
+                        product!!
                     )
                 findNavController().navigate(action)
             }
@@ -84,7 +91,7 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             // submit list to the image adapter
             val viewPager = carouselViewPager.apply {
                 adapter = ImagePagerAdapter(requireActivity()).apply {
-                    submitList(product.productImageList)
+                    submitList(product?.productImageList)
                     notifyDataSetChanged()
                 }
             }
@@ -93,19 +100,19 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             TabLayoutMediator(indicatorTabLayout, viewPager) { _, _ -> }.attach()
 
             // submit list to the adapter if the reviewList is not empty.
-            adapter.submitList(product.reviewList)
+            adapter.submitList(product!!.reviewList)
 
             var rate = 0.0
-            if (product.totalRate > 0.0 && product.numberOfReviews > 0L) {
-                rate = product.avgRate.toDouble()
+            if (product!!.totalRate > 0.0 && product!!.numberOfReviews > 0L) {
+                rate = product!!.avgRate.toDouble()
             }
 
             val rateStr = "- $rate"
             tvRate.text = rateStr
             ratingBar.rating = rate.toFloat()
 
-            if (product.numberOfReviews > 5L) {
-                tvShowMoreReviews.text = getString(R.string.label_show_more_reviews, product.numberOfReviews)
+            if (product!!.numberOfReviews > 5L) {
+                tvShowMoreReviews.text = getString(R.string.label_show_more_reviews, product!!.numberOfReviews)
             } else {
                 tvShowMoreReviews.isVisible = false
             }
@@ -174,11 +181,24 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                 true
             }
             R.id.action_edit_product -> {
-                // TODO("Navigate to add/edit product layout when admin")
+                // Navigate to add/edit product layout when admin
+                val action = ProductDetailFragmentDirections
+                    .actionProductDetailFragmentToAddEditProductFragment(
+                        "Edit Product (${viewModel.product.value!!.productId})",
+                        viewModel.product.value,
+                        true,
+                        viewModel.product.value!!.categoryId
+                    )
+                findNavController().navigate(action)
                 true
             }
             R.id.action_add_new_inventory -> {
-                // TODO("Navigate to add inventory layout when admin")
+                // Navigate to add inventory layout when admin
+                val action = ProductDetailFragmentDirections
+                    .actionProductDetailFragmentToAddInventoryFragment(
+                        viewModel.product.value!!.productId
+                    )
+                findNavController().navigate(action)
                 true
             }
             R.id.action_stock_in -> {

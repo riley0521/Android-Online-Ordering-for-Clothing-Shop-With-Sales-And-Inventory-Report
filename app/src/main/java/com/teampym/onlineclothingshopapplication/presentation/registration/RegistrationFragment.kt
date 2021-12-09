@@ -22,22 +22,20 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_registration.*
 import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.* // ktlint-disable no-wildcard-imports
 
 @AndroidEntryPoint
 class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
     private lateinit var binding: FragmentRegistrationBinding
 
+    private lateinit var loadingDialog: LoadingDialog
+
     private val viewModel: RegistrationViewModel by viewModels()
 
     private val args by navArgs<RegistrationFragmentArgs>()
 
-    private var selectedBirthDate: String = ""
-
     private var userInfo: UserInformation? = null
-
-    private lateinit var loadingDialog: LoadingDialog
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -47,11 +45,9 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         loadingDialog.show()
 
         val currentUser = FirebaseAuth.getInstance().currentUser
-
-        viewModel.userSession.observe(viewLifecycleOwner) { sessionPref ->
-            if (sessionPref.userId.isNotBlank()) {
-                viewModel.fetchNotificationTokensAndWishList(sessionPref.userId)
-            }
+        if (currentUser != null) {
+            viewModel.userId = currentUser.uid
+            viewModel.fetchNotificationTokensAndWishList(currentUser.uid)
         }
 
         // Reuse this fragment when the user is editing his firstName, lastName, and birthDate
@@ -59,6 +55,22 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         if (!editMode) {
             if (loadingDialog.isActive()) {
                 loadingDialog.dismiss()
+            }
+        }
+
+        viewModel.user.observe(viewLifecycleOwner) {
+            if (it != null && editMode) {
+                if (loadingDialog.isActive()) {
+                    loadingDialog.dismiss()
+                }
+
+                tvInstruction.isVisible = false
+                btnRegister.text = getString(R.string.label_update_information)
+
+                userInfo = it
+                binding.edtFirstName.text.apply { it.firstName }
+                binding.edtLastName.text.apply { it.lastName }
+                binding.tvBirthdate.text = it.birthDate
             }
         }
 
@@ -88,34 +100,23 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                     val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.ENGLISH)
                     val selectedDate = Calendar.getInstance()
                     selectedDate.timeInMillis = it
-                    selectedBirthDate = formatter.format(selectedDate.time)
-                    tvBirthdate.text = selectedBirthDate
-                    btnRegister.isEnabled = checkDataIfValid(editMode)
+                    viewModel.birthDate = formatter.format(selectedDate.time)
+                    tvBirthdate.text = viewModel.birthDate
                 }
 
                 birthDatePicker.show(parentFragmentManager, "DatePicker")
             }
 
             btnRegister.setOnClickListener {
-                if (editMode && currentUser != null) {
-                    viewModel.updateBasicInformation(
-                        edtFirstName.text.toString(),
-                        edtLastName.text.toString(),
-                        selectedBirthDate,
-                        currentUser.uid
-                    )
-                    return@setOnClickListener
-                } else {
-                    if (currentUser != null) {
-                        viewModel.registerUser(
-                            edtFirstName.text.toString(),
-                            edtLastName.text.toString(),
-                            selectedBirthDate,
-                            currentUser
-                        )
-                    }
-                }
+                viewModel.onSubmitClicked(
+                    editMode,
+                    currentUser?.photoUrl.toString()
+                )
             }
+
+            edtFirstName.setText(viewModel.firstName)
+            edtLastName.setText(viewModel.lastName)
+            tvBirthdate.text = viewModel.birthDate
 
             edtFirstName.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(
@@ -128,7 +129,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    btnRegister.isEnabled = checkDataIfValid(editMode)
+                    viewModel.firstName = s.toString()
                 }
 
                 override fun afterTextChanged(s: Editable?) {
@@ -147,29 +148,13 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    btnRegister.isEnabled = checkDataIfValid(editMode)
+                    viewModel.lastName = s.toString()
                 }
 
                 override fun afterTextChanged(s: Editable?) {
                     // Nothing to do here
                 }
             })
-        }
-
-        viewModel.user.observe(viewLifecycleOwner) {
-            if (it != null && editMode) {
-                if (loadingDialog.isActive()) {
-                    loadingDialog.dismiss()
-                }
-
-                tvInstruction.isVisible = false
-                btnRegister.text = getString(R.string.label_update_information)
-
-                userInfo = it
-                binding.edtFirstName.text.apply { it.firstName }
-                binding.edtLastName.text.apply { it.lastName }
-                binding.tvBirthdate.text = it.birthDate
-            }
         }
 
         lifecycleScope.launchWhenStarted {
@@ -186,13 +171,5 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                 }
             }
         }
-    }
-
-    fun checkDataIfValid(editMode: Boolean): Boolean {
-        if (editMode) {
-            return !userInfo!!.firstName.equals(edtFirstName.text.toString(), true) or
-                !userInfo!!.lastName.equals(edtLastName.text.toString(), true)
-        }
-        return edtFirstName.text!!.isNotBlank() && edtLastName.text!!.isNotBlank() && selectedBirthDate.isNotBlank()
     }
 }

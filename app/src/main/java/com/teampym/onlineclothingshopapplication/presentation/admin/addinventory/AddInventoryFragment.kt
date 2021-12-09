@@ -136,10 +136,10 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
             })
 
             btnAddAnotherSize.setOnClickListener {
-                if (isStockExisting()) {
+                if (isSizeExisting()) {
                     Snackbar.make(
                         requireView(),
-                        "Stock is already existing. Avoid duplicates",
+                        "Size is already existing in database. Avoid duplicates",
                         Snackbar.LENGTH_SHORT
                     ).show()
                 } else {
@@ -149,10 +149,10 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
             }
 
             btnSubmit.setOnClickListener {
-                if (isStockExisting()) {
+                if (isSizeExisting()) {
                     Snackbar.make(
                         requireView(),
-                        "Stock is already existing. Avoid duplicates",
+                        "Size is already existing in database. Avoid duplicates",
                         Snackbar.LENGTH_SHORT
                     ).show()
                 } else {
@@ -187,12 +187,20 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
                         ).show()
                         viewModel.onLoadSizesInitiated()
                     }
+                    is AddInventoryViewModel.AddInventoryEvent.ShowErrorMessage -> {
+                        loadingDialog.dismiss()
+                        Snackbar.make(
+                            requireView(),
+                            event.msg,
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
         }
     }
 
-    private fun isStockExisting(): Boolean {
+    private fun isSizeExisting(): Boolean {
         if (availableSizeList.isNotEmpty()) {
             return availableSizeList.contains(viewModel.inventorySize)
         }

@@ -1,6 +1,5 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.productdetail
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -31,28 +30,24 @@ class ProductDetailViewModel @Inject constructor(
         const val PRODUCT = "product"
     }
 
-    var product = state.get<Product>(PRODUCT) ?: Product()
+    var product: MutableLiveData<Product?> = state.getLiveData(PRODUCT, null)
         set(value) {
             field = value
             state.set(PRODUCT, value)
         }
+
+    suspend fun updateProduct(p: Product) {
+        product.postValue(p)
+    }
 
     val userFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
         userInformationDao.get(sessionPref.userId)
     }
 
     fun getProductById(productId: String) = viewModelScope.launch {
-        productRepository.getOne(productId)?.let {
-            val reviewList = async { reviewRepository.getFive(it.productId) }
-
-            val prod = it
-            prod.reviewList = reviewList.await()
-
-            product = prod
+        val res = async { productRepository.getOne(productId) }.await()
+        if (res != null) {
+            updateProduct(res)
         }
-    }
-
-    fun updateProduct(p: Product) {
-        product = p
     }
 }

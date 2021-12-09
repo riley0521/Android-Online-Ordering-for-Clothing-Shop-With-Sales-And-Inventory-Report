@@ -101,6 +101,12 @@ class AddInventoryViewModel @Inject constructor(
                     )
                 }
             }
+        } else {
+            _addInventoryChannel.send(
+                AddInventoryEvent.ShowErrorMessage(
+                    "Please fill the form."
+                )
+            )
         }
     }
 
@@ -116,5 +122,6 @@ class AddInventoryViewModel @Inject constructor(
     sealed class AddInventoryEvent {
         data class NavigateBackWithMessage(val msg: String) : AddInventoryEvent()
         data class ShowSuccessMessageAndResetState(val msg: String) : AddInventoryEvent()
+        data class ShowErrorMessage(val msg: String) : AddInventoryEvent()
     }
 }

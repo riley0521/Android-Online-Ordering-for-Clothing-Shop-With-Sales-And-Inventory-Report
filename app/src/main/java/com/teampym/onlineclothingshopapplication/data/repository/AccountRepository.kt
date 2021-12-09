@@ -2,12 +2,11 @@ package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
-import com.teampym.onlineclothingshopapplication.data.models.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -32,12 +31,11 @@ class AccountRepository @Inject constructor(
                 .get()
                 .await()
 
-            userQuery?.let { doc ->
+            if (userQuery.data != null) {
+                val userInfo = userQuery
+                    .toObject(UserInformation::class.java)!!.copy(userId = userQuery.id)
 
-                val userInfo =
-                    doc.toObject(UserInformation::class.java)!!.copy(userId = doc.id)
-
-                fetchedUser = userInfo.copy()
+                fetchedUser = userInfo
             }
             fetchedUser
         }
@@ -60,14 +58,13 @@ class AccountRepository @Inject constructor(
             )
 
             newUser?.let { user ->
-                userCollectionRef
+                val res = userCollectionRef
                     .document(userId)
                     .set(user)
-                    .addOnSuccessListener {
-                    }.addOnFailureListener {
-                        newUser = null
-                        return@addOnFailureListener
-                    }
+                    .await()
+                if (res == null) {
+                    newUser = null
+                }
             }
             newUser
         }
@@ -86,32 +83,27 @@ class AccountRepository @Inject constructor(
 
                 val date = SimpleDateFormat("MM/dd/yyyy", Locale.ENGLISH).parse(birthDate)
                 val calendarDate = Calendar.getInstance()
-                date?.let { calendarDate.time = it }
+                if (date != null) {
+                    calendarDate.time = date
 
-                // Check if the user is in the right age to use the application
-                if (Calendar.getInstance().get(Calendar.YEAR)
-                    .minus(calendarDate.get(Calendar.YEAR)) >= 12
-                ) {
-                    val userDocument = userCollectionRef
-                        .document(userId)
-                        .get()
-                        .await()
-                    val fetchedUser = userDocument
-                        .toObject<UserInformation>()!!.copy(userId = userDocument.id)
+                    // Check if the user is in the right age to use the application
+                    if (Calendar.getInstance().get(Calendar.YEAR)
+                        .minus(calendarDate.get(Calendar.YEAR)) >= 12
+                    ) {
 
-                    fetchedUser.firstName = firstName
-                    fetchedUser.lastName = lastName
-                    fetchedUser.birthDate = birthDate
-                    fetchedUser.dateModified = System.currentTimeMillis()
+                        val updateUserMap = mapOf<String, Any>(
+                            "firstName" to firstName,
+                            "lastName" to lastName,
+                            "birthDate" to birthDate,
+                            "dateModified" to Utils.getTimeInMillisUTC()
+                        )
 
-                    userCollectionRef
-                        .document(userId)
-                        .set(fetchedUser, SetOptions.merge())
-                        .addOnSuccessListener {
-                        }.addOnFailureListener {
-                            isSuccessful = false
-                            return@addOnFailureListener
-                        }
+                        val result = userCollectionRef
+                            .document(userId)
+                            .set(updateUserMap, SetOptions.merge())
+                            .await()
+                        isSuccessful = result != null
+                    }
                 }
             }
             isSuccessful

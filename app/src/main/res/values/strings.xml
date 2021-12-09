@@ -171,7 +171,7 @@
     <string name="hint_set_postal_code">Set Postal Code</string>
     <string name="hint_set_detailed_address">Set Detailed Address</string>
     <string name="hint_first_name">First Name</string>
-    <string name="hint_last_name">Last Name</string>
+    <string name="hint_last_name">Last Name (Optional)</string>
 
     <string name="btn_select_image_from_gallery">Select Image From Gallery</string>
     <string name="btn_exchange_item">Exchange Item</string>

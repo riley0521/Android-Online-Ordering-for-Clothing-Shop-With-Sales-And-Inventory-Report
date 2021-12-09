@@ -42,6 +42,7 @@ class ProductViewModel @Inject constructor(
         private const val ADD_MENU_VISIBLE = "add_menu"
         private const val CART_MENU_VISIBLE = "cart_menu"
         private const val SORT_MENU_VISIBLE = "sort_menu"
+        private const val CATEGORY_ID = "category_id"
     }
 
     val isAddMenuVisible: MutableLiveData<Boolean> =
@@ -52,6 +53,8 @@ class ProductViewModel @Inject constructor(
 
     val isSortMenuVisible: MutableLiveData<Boolean> =
         state.getLiveData(SORT_MENU_VISIBLE, false)
+
+    val categoryId: MutableLiveData<String> = state.getLiveData(CATEGORY_ID, "")
 
     suspend fun updateAddMenu(isVisible: Boolean) = viewModelScope.launch {
         isAddMenuVisible.postValue(isVisible)
@@ -65,6 +68,10 @@ class ProductViewModel @Inject constructor(
         isSortMenuVisible.postValue(isVisible)
     }
 
+    suspend fun updateCategoryId(id: String) {
+        categoryId.postValue(id)
+    }
+
     override fun onCleared() {
         super.onCleared()
         state.set(ADD_MENU_VISIBLE, isAddMenuVisible.value)
@@ -73,7 +80,6 @@ class ProductViewModel @Inject constructor(
     }
 
     val searchQuery = MutableLiveData("")
-    private val _categoryQuery = MutableLiveData("")
 
     private val _userWithWishList = MutableLiveData<UserWithWishList?>()
     val userWithWishList: LiveData<UserWithWishList?> get() = _userWithWishList
@@ -88,7 +94,6 @@ class ProductViewModel @Inject constructor(
         Pair(search, sessionPref)
     }.flatMapLatest { (search, sessionPref) ->
         val queryProducts: Query?
-        val categoryId = _categoryQuery.value
 
         queryProducts = when (sessionPref.sortOrder) {
             SortOrder.BY_NAME -> {
@@ -159,10 +164,6 @@ class ProductViewModel @Inject constructor(
             async { wishListDao.insert(res) }.await()
             _productChannel.send(ProductEvent.ShowMessage("Added product to wish list."))
         }
-    }
-
-    fun updateCategory(categoryId: String) {
-        _categoryQuery.value = categoryId
     }
 
     fun updateSortOrder(sortOrder: SortOrder) = viewModelScope.launch {
