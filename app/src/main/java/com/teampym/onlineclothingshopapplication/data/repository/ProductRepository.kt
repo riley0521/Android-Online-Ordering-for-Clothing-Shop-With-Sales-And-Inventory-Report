@@ -31,7 +31,7 @@ class ProductRepository @Inject constructor(
     private val productImageRepository: ProductImageRepository,
     private val productInventoryRepository: ProductInventoryRepository,
     private val reviewRepository: ReviewRepository,
-    private val notificationTokenRepository: NotificationTokenRepositoryImpl,
+    private val orderDetailRepository: OrderDetailRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
@@ -126,33 +126,41 @@ class ProductRepository @Inject constructor(
         userInformation: UserInformation,
         rate: Double,
         desc: String,
-        productId: String,
+        product: OrderDetail,
     ): Product? {
         return withContext(dispatcher) {
-            var updatedProduct: Product? = getOne(productId)
+            var updatedProduct: Product? = getOne(product.product.productId)
 
-            val addedReview = async {
-                reviewRepository.insert(
-                    userInformation,
-                    rate,
-                    desc,
-                    productId
-                )
-            }
+            if (updatedProduct != null) {
 
-            addedReview.await()?.let {
-                updatedProduct?.let { p ->
-                    p.totalRate += rate
-                    p.numberOfReviews + 1
+                val addedReview = async {
+                    reviewRepository.insert(
+                        userInformation,
+                        rate,
+                        desc,
+                        product.product.productId
+                    )
+                }.await()
 
-                    productCollectionRef
-                        .document(productId)
-                        .set(p, SetOptions.merge())
-                        .addOnSuccessListener {
-                        }.addOnFailureListener {
+                if (addedReview != null) {
+
+                    updatedProduct.totalRate += rate
+                    updatedProduct.numberOfReviews + 1
+
+                    val res = productCollectionRef
+                        .document(updatedProduct.productId)
+                        .set(updatedProduct, SetOptions.merge())
+                        .await()
+
+                    if (res != null) {
+                        product.hasAddedReview = true
+                        val updated = orderDetailRepository.update(product)
+                        if (!updated) {
                             updatedProduct = null
-                            return@addOnFailureListener
                         }
+                    } else {
+                        updatedProduct = null
+                    }
                 }
             }
             updatedProduct

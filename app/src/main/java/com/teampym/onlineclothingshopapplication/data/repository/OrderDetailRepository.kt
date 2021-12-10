@@ -1,6 +1,7 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
 import com.teampym.onlineclothingshopapplication.data.room.Cart
@@ -98,6 +99,19 @@ class OrderDetailRepository @Inject constructor(
                 }
             }
             orderDetailList
+        }
+    }
+
+    suspend fun update(orderDetail: OrderDetail): Boolean {
+        return withContext(dispatcher) {
+            val res = orderCollectionRef
+                .document(orderDetail.orderId)
+                .collection(ORDER_DETAILS_SUB_COLLECTION)
+                .document(orderDetail.id)
+                .set(orderDetail, SetOptions.merge())
+                .await()
+
+            res != null
         }
     }
 }

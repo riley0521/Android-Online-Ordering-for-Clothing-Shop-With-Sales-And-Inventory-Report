@@ -17,7 +17,9 @@ data class OrderDetail(
     val id: String = "",
     var dateSold: Long = 0,
     val product: Product = Product(),
-    val isExchangeable: Boolean = false
+    var isExchangeable: Boolean = false,
+    var canAddReview: Boolean = false,
+    var hasAddedReview: Boolean = false
 ) : Parcelable {
     constructor() : this("", "", "", "", 0L, 0.0)
 

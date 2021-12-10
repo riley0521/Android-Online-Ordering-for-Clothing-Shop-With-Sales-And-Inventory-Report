@@ -7,11 +7,14 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
+import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentOrderDetailListBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
 import java.util.* // ktlint-disable no-wildcard-imports
 
@@ -39,9 +42,6 @@ class OrderDetailListFragment :
 
         // Reassign order variable in case process death took place.
         order = viewModel.order
-
-        adapter = OrderDetailListAdapter(this)
-        adapter.submitList(order.orderDetailList)
 
         binding.apply {
 
@@ -95,9 +95,38 @@ class OrderDetailListFragment :
             rvOrderDetails.setHasFixedSize(true)
             rvOrderDetails.adapter = adapter
         }
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.userFlow.collectLatest { user ->
+                if (user != null) {
+                    adapter = OrderDetailListAdapter(
+                        this@OrderDetailListFragment,
+                        requireContext(),
+                        user
+                    )
+                    adapter.submitList(order.orderDetailList)
+
+                    if (user.userType == UserType.ADMIN.name) {
+                        binding.orderBanner.isVisible = true
+                    }
+                }
+            }
+        }
     }
 
     override fun onExchangeItemClicked(item: OrderDetail) {
-        Toast.makeText(requireContext(), "item ${item.product.productId} clicked", Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+            requireContext(),
+            "item ${item.product.productId} clicked",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    override fun onAddReviewClicked(item: OrderDetail) {
+        Toast.makeText(
+            requireContext(),
+            "Adding review to item ${item.product.productId}",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 }

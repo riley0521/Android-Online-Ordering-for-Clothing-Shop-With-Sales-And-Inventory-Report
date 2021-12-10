@@ -170,6 +170,20 @@ class OrderListAdapter(
                     }
                 }
 
+                if (userType == UserType.CUSTOMER.name) {
+                    labelUsername.isVisible = false
+                    tvUsername.isVisible = false
+
+                    labelUserAgreedToSf.isVisible = false
+                    tvUserAgreedToSf.isVisible = false
+
+                    labelNumberOfItems.isVisible = false
+                    tvNumberOfItems.isVisible = false
+
+                    labelAdditionalNote.isVisible = false
+                    tvAdditionalNote.isVisible = false
+                }
+
                 val totalCostStr = "$" + item.totalCost
 
                 tvOrderId.text = item.id

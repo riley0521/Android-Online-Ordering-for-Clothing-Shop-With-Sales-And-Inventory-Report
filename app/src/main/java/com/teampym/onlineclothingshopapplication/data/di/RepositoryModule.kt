@@ -78,14 +78,14 @@ object RepositoryModule {
         productImageRepository: ProductImageRepository,
         productInventoryRepository: ProductInventoryRepository,
         reviewRepository: ReviewRepository,
-        notificationTokenRepository: NotificationTokenRepositoryImpl,
+        orderDetailRepository: OrderDetailRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = ProductRepository(
         db,
         productImageRepository,
         productInventoryRepository,
         reviewRepository,
-        notificationTokenRepository,
+        orderDetailRepository,
         dispatcher
     )
 

@@ -6,12 +6,11 @@ import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.teampym.onlineclothingshopapplication.data.models.Order
+import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.room.Product
-import dagger.hilt.android.AndroidEntryPoint
 
 private const val TAG = "MyFCMService"
 
-@AndroidEntryPoint
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
@@ -19,8 +18,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        Log.d(TAG, "From: ${remoteMessage.from}")
-
         remoteMessage.data.let {
             // Create notification handler here.
 
@@ -28,14 +25,21 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 val order = Gson().fromJson(it["obj"], Order::class.java)
                 Log.d(TAG, "onMessageReceived: $order")
             } catch (e: JsonSyntaxException) {
-                return
+                Log.d(TAG, "onMessageReceived: ${e.message}")
             }
 
             try {
                 val product = Gson().fromJson(it["obj"], Product::class.java)
                 Log.d(TAG, "onMessageReceived: $product")
             } catch (e: JsonSyntaxException) {
-                return
+                Log.d(TAG, "onMessageReceived: ${e.message}")
+            }
+
+            try {
+                val news = Gson().fromJson(it["obj"], Post::class.java)
+                Log.d(TAG, "onMessageReceived: $news")
+            } catch (e: JsonSyntaxException) {
+                Log.d(TAG, "onMessageReceived: ${e.message}")
             }
         }
     }

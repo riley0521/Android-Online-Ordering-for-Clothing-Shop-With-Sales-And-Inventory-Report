@@ -190,5 +190,6 @@
     <string name="hint_input_available_stocks">Input Available Stocks</string>
     <string name="btn_add_another_size">Add Another Size</string>
     <string name="hint_input_restock_level">Input Restock Level</string>
+    <string name="btn_add_review">Add Review</string>
 
 </resources>

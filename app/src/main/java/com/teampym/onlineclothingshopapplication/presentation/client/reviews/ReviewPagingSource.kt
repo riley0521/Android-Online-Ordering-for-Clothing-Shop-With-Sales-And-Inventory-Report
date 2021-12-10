@@ -11,6 +11,7 @@ import kotlinx.coroutines.tasks.await
 import java.io.IOException
 
 class ReviewPagingSource(
+    private val userId: String?,
     private val queryReviews: Query
 ) : PagingSource<QuerySnapshot, Review>() {
 
@@ -42,6 +43,15 @@ class ReviewPagingSource(
             for (document in currentPage.documents) {
                 val review = document.toObject<Review>()!!.copy(id = document.id)
                 reviewList.add(review)
+            }
+
+            // Move user's review to the very top of the reviews.
+            userId?.let { id ->
+                val currentUser = reviewList.firstOrNull { it.userId == id }
+                if(currentUser != null) {
+                    reviewList.removeAt(reviewList.indexOf(currentUser))
+                    reviewList.add(0, currentUser)
+                }
             }
 
             LoadResult.Page(

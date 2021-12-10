@@ -523,6 +523,8 @@ class OrderRepository @Inject constructor(
                         .toObject(OrderDetail::class.java)!!.copy(id = document.id)
 
                     orderDetailItem.dateSold = System.currentTimeMillis()
+                    orderDetailItem.isExchangeable = true
+                    orderDetailItem.canAddReview = true
 
                     val result = orderCollectionRef.document(orderId)
                         .collection(ORDER_DETAILS_SUB_COLLECTION)
