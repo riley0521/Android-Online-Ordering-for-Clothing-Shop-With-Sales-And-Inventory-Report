@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.* // ktlint-disable no-wildcard-imports
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -65,7 +66,7 @@ class ProductFragment :
         binding = FragmentProductBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
 
-        adapter = ProductAdapter(this)
+        adapter = ProductAdapter(this, requireContext())
         adminAdapter = ProductAdminAdapter(this)
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -163,7 +164,11 @@ class ProductFragment :
 
             viewModel.productEvent.collectLatest { event ->
                 when (event) {
-                    is ProductViewModel.ProductEvent.ShowMessage -> {
+                    is ProductViewModel.ProductEvent.ShowSuccessMessage -> {
+                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
+                        adapter.refresh()
+                    }
+                    is ProductViewModel.ProductEvent.ShowErrorMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
                         adapter.refresh()
                     }
@@ -224,6 +229,31 @@ class ProductFragment :
         if (userAndWishList?.user != null) {
             viewModel.addToWishList(userAndWishList?.user!!.userId, product)
         }
+    }
+
+    override fun onEditClicked(product: Product) {
+        val action = ProductFragmentDirections.actionProductFragmentToAddEditProductFragment(
+            "Edit Product (${product.productId})",
+            product,
+            true,
+            product.categoryId
+        )
+        findNavController().navigate(action)
+    }
+
+    override fun onDeleteClicked(product: Product) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("DELETE PRODUCT")
+            .setMessage(
+                "Are you sure you want to delete this product?\n" +
+                        "All corresponding inventory, additional images, and reviews will be deleted as well."
+            )
+            .setPositiveButton("Yes") { _, _ ->
+                loadingDialog.show()
+                viewModel.onDeleteProductClicked(product)
+            }.setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }.show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

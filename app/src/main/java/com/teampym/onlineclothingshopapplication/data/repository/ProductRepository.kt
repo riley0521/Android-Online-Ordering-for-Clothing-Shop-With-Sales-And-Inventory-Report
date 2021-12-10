@@ -169,6 +169,15 @@ class ProductRepository @Inject constructor(
         }
     }
 
+    suspend fun deleteImage(fileName: String): Boolean {
+        return withContext(dispatcher) {
+            val deleted = imageRef.child(PRODUCT_PATH + fileName)
+                .delete()
+                .await()
+            deleted != null
+        }
+    }
+
     // This will be called from category repository to delete all items in the specified
     // Category Id.
     suspend fun deleteAll(categoryId: String): Boolean {

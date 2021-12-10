@@ -27,6 +27,7 @@ class AddEditProductViewModel @Inject constructor(
 
     companion object {
         private const val CATEGORY_ID = "category_id"
+        private const val PRODUCT_ID = "product_id"
         private const val PRODUCT_NAME = "product_name"
         private const val PRODUCT_DESCRIPTION = "product_description"
         private const val PRODUCT_FILE_NAME = "product_file_name"
@@ -34,12 +35,20 @@ class AddEditProductViewModel @Inject constructor(
         private const val PRODUCT_PRICE = "product_price"
         private const val PRODUCT_TYPE = "product_type"
         private const val PRODUCT_IMAGE_LIST = "product_image_list"
+        private const val SELECTED_PRODUCT_IMAGE = "selected_product_image"
+        private const val ADDITIONAL_IMAGES = "additional_images"
     }
 
     var categoryId = state.get(CATEGORY_ID) ?: ""
         set(value) {
             field = value
             state.set(CATEGORY_ID, value)
+        }
+
+    var productId = state.get(PRODUCT_ID) ?: ""
+        set(value) {
+            field = value
+            state.set(PRODUCT_ID, value)
         }
 
     var productName = state.get(PRODUCT_NAME) ?: ""
@@ -66,12 +75,21 @@ class AddEditProductViewModel @Inject constructor(
             state.set(PRODUCT_TYPE, value)
         }
 
+    var selectedProductImage = state.get<Uri?>(SELECTED_PRODUCT_IMAGE)
+        set(value) {
+            field = value
+            state.set(SELECTED_PRODUCT_IMAGE, value)
+        }
+
     val fileName: MutableLiveData<String> = state.getLiveData(PRODUCT_FILE_NAME, "")
 
     val imageUrl: MutableLiveData<String> = state.getLiveData(PRODUCT_IMAGE_URL, "")
 
     val imageList: MutableLiveData<MutableList<ProductImage>> =
         state.getLiveData(PRODUCT_IMAGE_LIST, mutableListOf())
+
+    var additionalImageList: MutableLiveData<MutableList<Uri>> =
+        state.getLiveData(ADDITIONAL_IMAGES, mutableListOf())
 
     private val _addEditProductChannel = Channel<AddEditProductEvent>()
     val addEditProductEvent = _addEditProductChannel.receiveAsFlow()
@@ -88,15 +106,21 @@ class AddEditProductViewModel @Inject constructor(
         imageList.postValue(list.toMutableList())
     }
 
+    suspend fun updateAdditionalImages(list: List<Uri>) {
+        additionalImageList.postValue(list.toMutableList())
+    }
+
     private fun resetAllUiState() = viewModelScope.launch {
         categoryId = ""
         productName = ""
         productDesc = ""
         productPrice = 0.0
         productType = ProductType.HOODIES.name
+        selectedProductImage = null
         updateFileName("")
         updateImageUrl("")
         updateImageList(listOf())
+        updateAdditionalImages(listOf())
     }
 
     private fun isFormValid(): Boolean {
@@ -112,13 +136,21 @@ class AddEditProductViewModel @Inject constructor(
     fun onSubmitClicked(product: Product?, isEditMode: Boolean) = viewModelScope.launch {
         if (isEditMode && product != null && categoryId.isNotBlank()) {
             if (isFormValid()) {
+
+                async { uploadProductImage() }.await()
+                product.fileName = fileName.value!!
+                product.imageUrl = imageUrl.value!!
                 val res = async { productRepository.update(product) }.await()
                 if (res) {
+
+                    async { uploadAdditionalImages() }.await()
                     val updatedProductImages = async {
                         productImageRepository.updateAll(imageList.value!!)
                     }.await()
 
                     if (updatedProductImages) {
+                        resetAllUiState()
+
                         _addEditProductChannel.send(
                             AddEditProductEvent.NavigateBackWithMessage(
                                 "Product Updated Successfully!"
@@ -135,6 +167,8 @@ class AddEditProductViewModel @Inject constructor(
             }
         } else {
             if (isFormValid()) {
+
+                async { uploadProductImage() }.await()
                 val newProd = Product(
                     categoryId = categoryId,
                     name = productName,
@@ -147,20 +181,25 @@ class AddEditProductViewModel @Inject constructor(
                 )
                 val res = async { productRepository.create(newProd) }.await()
                 if (res != null) {
+
+                    async { uploadAdditionalImages() }.await()
+                    productId = res.productId
                     imageList.value!!.map {
                         it.productId = res.productId
                     }
 
                     updateImageList(imageList.value!!)
-
                     val resultList = async {
                         productImageRepository.insertAll(imageList.value!!)
                     }.await()
 
                     if (resultList) {
+                        resetAllUiState()
+
                         _addEditProductChannel.send(
                             AddEditProductEvent.NavigateToAddInvWithMessage(
-                                "Product Added Successfully!"
+                                "Product Added Successfully!\n" +
+                                    "Now you need to add the first size/inventory of this product"
                             )
                         )
                     }
@@ -175,23 +214,43 @@ class AddEditProductViewModel @Inject constructor(
         }
     }
 
-    fun onUploadProductImageClicked(imgProduct: Uri) = viewModelScope.launch {
-        _addEditProductChannel.send(AddEditProductEvent.ShowLoadingBar)
-        val uploadedImage = async { productRepository.uploadImage(imgProduct) }.await()
-        updateFileName(uploadedImage.fileName)
-        updateImageUrl(uploadedImage.url)
+    private fun uploadProductImage() = viewModelScope.launch {
+        if (fileName.value!!.isBlank() && productId.isBlank()) {
+            if (selectedProductImage != null) {
+                val uploadedImage = async {
+                    productRepository.uploadImage(selectedProductImage!!)
+                }.await()
+                updateFileName(uploadedImage.fileName)
+                updateImageUrl(uploadedImage.url)
+            }
+        } else {
+            val res = productRepository.deleteImage(fileName.value!!)
+            if (res) {
+                if (selectedProductImage != null) {
+                    val uploadedImage = async {
+                        productRepository.uploadImage(selectedProductImage!!)
+                    }.await()
+                    updateFileName(uploadedImage.fileName)
+                    updateImageUrl(uploadedImage.url)
+                }
+            }
+        }
     }
 
-    fun onUploadProductImageListClicked(imgUriList: List<Uri>) = viewModelScope.launch {
-        _addEditProductChannel.send(AddEditProductEvent.ShowLoadingBar)
-        val productImageList = async { productImageRepository.uploadImages(imgUriList) }.await()
-        updateImageList(productImageList)
+    private fun uploadAdditionalImages() = viewModelScope.launch {
+        if (additionalImageList.value!!.isNotEmpty()) {
+            val productImageList = async {
+                productImageRepository.uploadImages(additionalImageList.value!!)
+            }.await()
+            updateImageList(productImageList)
+        }
     }
 
-    fun onRemoveProductImageClicked(isEditMode: Boolean, item: ProductImage, position: Int) =
+    fun onRemoveProductImageClicked(isEditMode: Boolean, position: Int) =
         viewModelScope.launch {
-            if (isEditMode) {
-                val res = async { productImageRepository.delete(item) }.await()
+            if (isEditMode && imageList.value!!.isNotEmpty()) {
+                val res =
+                    async { productImageRepository.delete(imageList.value!![position]) }.await()
                 if (res) {
                     _addEditProductChannel.send(
                         AddEditProductEvent.NotifyAdapterWithMessage(
@@ -212,10 +271,32 @@ class AddEditProductViewModel @Inject constructor(
             }
         }
 
+    fun onDeleteAllAdditionalImagesClicked() = viewModelScope.launch {
+        if (imageList.value!!.isNotEmpty()) {
+            val res = productImageRepository.deleteAll(imageList.value!!)
+            if (res) {
+                updateImageList(listOf())
+
+                _addEditProductChannel.send(
+                    AddEditProductEvent.ShowSuccessMessage(
+                        "All product images successfully deleted."
+                    )
+                )
+            } else {
+                _addEditProductChannel.send(
+                    AddEditProductEvent.ShowSuccessMessage(
+                        "Deleting all product images failed. Please wait for a while."
+                    )
+                )
+            }
+        }
+    }
+
     sealed class AddEditProductEvent {
         object ShowLoadingBar : AddEditProductEvent()
         data class NavigateBackWithMessage(val msg: String) : AddEditProductEvent()
         data class NavigateToAddInvWithMessage(val msg: String) : AddEditProductEvent()
+        data class ShowSuccessMessage(val msg: String) : AddEditProductEvent()
         data class ShowErrorMessage(val msg: String) : AddEditProductEvent()
         data class NotifyAdapterWithMessage(val msg: String, val position: Int) :
             AddEditProductEvent()

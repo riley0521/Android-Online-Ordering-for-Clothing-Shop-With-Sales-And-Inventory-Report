@@ -162,7 +162,16 @@ class ProductViewModel @Inject constructor(
         val res = async { wishListRepository.insert(userId, product) }.await()
         if (res != null) {
             async { wishListDao.insert(res) }.await()
-            _productChannel.send(ProductEvent.ShowMessage("Added product to wish list."))
+            _productChannel.send(ProductEvent.ShowSuccessMessage("Added product to wish list."))
+        }
+    }
+
+    fun onDeleteProductClicked(product: Product) = viewModelScope.launch {
+        val res = productRepository.delete(product.productId)
+        if (res) {
+            _productChannel.send(ProductEvent.ShowSuccessMessage("Deleted product successfully!"))
+        } else {
+            _productChannel.send(ProductEvent.ShowSuccessMessage("Deleting product failed. Please wait for a while."))
         }
     }
 
@@ -171,6 +180,7 @@ class ProductViewModel @Inject constructor(
     }
 
     sealed class ProductEvent {
-        data class ShowMessage(val msg: String) : ProductEvent()
+        data class ShowSuccessMessage(val msg: String) : ProductEvent()
+        data class ShowErrorMessage(val msg: String) : ProductEvent()
     }
 }

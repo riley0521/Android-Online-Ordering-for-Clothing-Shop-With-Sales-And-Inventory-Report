@@ -9,7 +9,9 @@ import com.teampym.onlineclothingshopapplication.data.repository.CategoryReposit
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,6 +25,9 @@ class CategoryViewModel @Inject constructor(
     private val _categories = MutableLiveData<List<Category>>()
     val categories: LiveData<List<Category>> get() = _categories
 
+    private val _categoryChannel = Channel<CategoryEvent>()
+    val categoryEvent = _categoryChannel.receiveAsFlow()
+
     val userFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
         userInformationDao.get(sessionPref.userId)
     }
@@ -33,5 +38,19 @@ class CategoryViewModel @Inject constructor(
 
     fun loadCategories() = viewModelScope.launch {
         _categories.value = categoryRepository.getAll()
+    }
+
+    fun onDeleteCategoryClicked(category: Category) = viewModelScope.launch {
+        val res = categoryRepository.delete(category.id)
+        if (res) {
+            _categoryChannel.send(CategoryEvent.ShowSuccessMessage("Deleted category successfully!"))
+        } else {
+            _categoryChannel.send(CategoryEvent.ShowErrorMessage("Deleting category failed. Please wait for a while."))
+        }
+    }
+
+    sealed class CategoryEvent {
+        data class ShowSuccessMessage(val msg: String) : CategoryEvent()
+        data class ShowErrorMessage(val msg: String) : CategoryEvent()
     }
 }

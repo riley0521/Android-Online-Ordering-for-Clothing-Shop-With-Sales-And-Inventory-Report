@@ -24,11 +24,21 @@ const val COMMENTS_SUB_COLLECTION = "comments"
 
 const val AUDIT_TRAILS_COLLECTION = "AuditTrails"
 
+const val SALES_COLLECTION = "Sales"
+const val MONTHS_SUB_COLLECTION = "months"
+const val DAYS_SUB_COLLECTION = "days"
+
 const val CANCEL_BUTTON = "Cancel"
 const val SUGGEST_BUTTON = "Suggest Shipping Fee"
 const val CANCEL_OR_SUGGEST = "Cancel | Suggest Shipping Fee"
 const val AGREE_TO_SHIPPING_FEE = "Agree To Shipping Fee"
 const val ORDER_COMPLETED = "Complete Order"
+
+const val EDIT_BUTTON = "Edit"
+const val REMOVE_BUTTON = "Remove"
+
+const val SELECT_MULTIPLE_ADDITIONAL_IMAGES = "Select Multiple Additional Images"
+const val DELETE_ALL_ADDITIONAL_IMAGES = "Delete All And Upload New Images"
 
 const val SHIPPING_ORDERS = "Shipping Orders"
 const val SHIPPED_ORDERS = "Shipped Orders"

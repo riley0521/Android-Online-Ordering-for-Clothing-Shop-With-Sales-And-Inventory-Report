@@ -26,6 +26,7 @@ class AddEditCategoryViewModel @Inject constructor(
         private const val CATEGORY_NAME = "category_name"
         private const val FILE_NAME = "file_name"
         private const val IMAGE_URL = "image_url"
+        private const val SELECTED_IMAGE = "selected_image"
     }
 
     private val _categoryChannel = Channel<CategoryEvent>()
@@ -43,6 +44,12 @@ class AddEditCategoryViewModel @Inject constructor(
             state.set(CATEGORY_NAME, value)
         }
 
+    var selectedImage = state.get<Uri?>(SELECTED_IMAGE)
+        set(value) {
+            field = value
+            state.set(SELECTED_IMAGE, value)
+        }
+
     val fileName: MutableLiveData<String> = state.getLiveData(FILE_NAME, "")
 
     val imageUrl: MutableLiveData<String> = state.getLiveData(IMAGE_URL, "")
@@ -58,6 +65,13 @@ class AddEditCategoryViewModel @Inject constructor(
     fun onSubmitClicked(category: Category?, isEditMode: Boolean) = viewModelScope.launch {
         if (isEditMode && category != null && categoryId.isNotBlank()) {
             if (isFormValid()) {
+
+                // Upload image to cloud and pass new value
+                // of fileName and imageUrl to category object
+                async { uploadImage() }.await()
+                category.fileName = fileName.value!!
+                category.imageUrl = fileName.value!!
+
                 val res = async { categoryRepository.update(category) }.await()
                 if (res != null) {
                     resetAllUiState()
@@ -70,6 +84,10 @@ class AddEditCategoryViewModel @Inject constructor(
             }
         } else {
             if (isFormValid()) {
+                // Upload image to cloud and pass new value
+                // of fileName and imageUrl to category object
+                async { uploadImage() }.await()
+
                 val newCategory = Category(
                     categoryName,
                     fileName.value!!,
@@ -89,16 +107,31 @@ class AddEditCategoryViewModel @Inject constructor(
         }
     }
 
-    fun onUploadImageClicked(imgCategory: Uri) = viewModelScope.launch {
-        _categoryChannel.send(CategoryEvent.ShowLoadingBar)
-        val uploadedImage = async { categoryRepository.uploadImage(imgCategory) }.await()
-        updateFileName(uploadedImage.fileName)
-        updateImageUrl(uploadedImage.url)
+    private fun uploadImage() = viewModelScope.launch {
+        if (fileName.value!!.isBlank() && categoryId.isBlank()) {
+            if (selectedImage != null) {
+                val uploadedImage =
+                    async { categoryRepository.uploadImage(selectedImage!!) }.await()
+                updateFileName(uploadedImage.fileName)
+                updateImageUrl(uploadedImage.url)
+            }
+        } else {
+            val res = categoryRepository.deleteImage(fileName.value!!)
+            if (res) {
+                if (selectedImage != null) {
+                    val uploadedImage =
+                        async { categoryRepository.uploadImage(selectedImage!!) }.await()
+                    updateFileName(uploadedImage.fileName)
+                    updateImageUrl(uploadedImage.url)
+                }
+            }
+        }
     }
 
     private fun resetAllUiState() = viewModelScope.launch {
         categoryId = ""
         categoryName = ""
+        selectedImage = null
         updateFileName("")
         updateImageUrl("")
     }

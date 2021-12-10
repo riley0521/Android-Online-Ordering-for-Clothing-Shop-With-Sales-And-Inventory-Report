@@ -11,7 +11,7 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
-import androidx.core.view.isVisible
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -22,9 +22,10 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
-import com.teampym.onlineclothingshopapplication.data.models.ProductImage
 import com.teampym.onlineclothingshopapplication.data.room.Product
+import com.teampym.onlineclothingshopapplication.data.util.DELETE_ALL_ADDITIONAL_IMAGES
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
+import com.teampym.onlineclothingshopapplication.data.util.SELECT_MULTIPLE_ADDITIONAL_IMAGES
 import com.teampym.onlineclothingshopapplication.databinding.FragmentAddEditProductBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -45,7 +46,7 @@ class AddEditProductFragment :
 
     private lateinit var loadingDialog: LoadingDialog
 
-    private lateinit var adapter: ProductImageAdapter
+    private var adapter: ProductImageAdapter? = null
 
     private val args by navArgs<AddEditProductFragmentArgs>()
 
@@ -58,7 +59,6 @@ class AddEditProductFragment :
 
         binding = FragmentAddEditProductBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
-        adapter = ProductImageAdapter(this)
 
         val categoryId = args.categoryId
         val product = args.product
@@ -78,29 +78,29 @@ class AddEditProductFragment :
             overwriteFields(product)
         }
 
-        viewModel.fileName.observe(viewLifecycleOwner) {
-            loadingDialog.dismiss()
-
-            if (it.isNotBlank()) {
-                binding.tvFileName.text = it
-                binding.tvFileName.isVisible = true
-            }
-        }
-
-        viewModel.imageUrl.observe(viewLifecycleOwner) {
-            loadingDialog.dismiss()
-
-            if (it.isNotBlank()) {
-                binding.tvImageUrl.text = it
-                binding.tvImageUrl.isVisible = true
-            }
-        }
-
         viewModel.imageList.observe(viewLifecycleOwner) {
             loadingDialog.dismiss()
 
             if (it.isNotEmpty()) {
-                adapter.submitList(it)
+                adapter = ProductImageAdapter(this, it)
+
+                binding.rvProductImageList.apply {
+                    setHasFixedSize(true)
+                    layoutManager = LinearLayoutManager(requireContext())
+                    adapter = adapter
+                }
+                binding.btnSelectMultipleProductImage.text = DELETE_ALL_ADDITIONAL_IMAGES
+            } else {
+                binding.btnSelectMultipleProductImage.text = SELECT_MULTIPLE_ADDITIONAL_IMAGES
+            }
+        }
+
+        viewModel.additionalImageList.observe(viewLifecycleOwner) {
+            loadingDialog.dismiss()
+
+            if (it.isNotEmpty()) {
+                adapter = ProductImageAdapter(this, it)
+
                 binding.rvProductImageList.apply {
                     setHasFixedSize(true)
                     layoutManager = LinearLayoutManager(requireContext())
@@ -124,25 +124,15 @@ class AddEditProductFragment :
 
             spProductType.onItemSelectedListener = this@AddEditProductFragment
 
+            if (btnSelectMultipleProductImage.text.isBlank()) {
+                btnSelectMultipleProductImage.text = SELECT_MULTIPLE_ADDITIONAL_IMAGES
+            }
+
             // Set edit text values when editing a product (product != null)
             viewModel.categoryId = categoryId
             etProductName.setText(viewModel.productName)
             etProductDescription.setText(viewModel.productDesc)
             etProductPrice.setText(viewModel.productPrice.toString())
-
-            if (viewModel.fileName.value!!.isNotBlank()) {
-                tvFileName.visibility = View.VISIBLE
-                tvFileName.text = viewModel.fileName.value!!
-            } else {
-                tvFileName.visibility = View.INVISIBLE
-            }
-
-            if (viewModel.imageUrl.value!!.isNotBlank()) {
-                tvImageUrl.visibility = View.VISIBLE
-                tvImageUrl.text = viewModel.imageUrl.value!!
-            } else {
-                tvImageUrl.visibility = View.INVISIBLE
-            }
 
             etProductName.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(
@@ -210,16 +200,34 @@ class AddEditProductFragment :
             }
 
             btnSelectMultipleProductImage.setOnClickListener {
-                Intent(Intent.ACTION_GET_CONTENT).also {
-                    it.type = "image/*"
-                    it.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-                    startActivityForResult(
-                        Intent.createChooser(
-                            it,
-                            getString(R.string.btn_select_multiple_product_image)
-                        ),
-                        SELECT_MULTIPLE_IMAGE_FROM_GALLERY_REQUEST
-                    )
+                when (binding.btnSelectImageFromGallery.text) {
+                    SELECT_MULTIPLE_ADDITIONAL_IMAGES -> {
+                        Intent(Intent.ACTION_GET_CONTENT).also {
+                            it.type = "image/*"
+                            it.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                            startActivityForResult(
+                                Intent.createChooser(
+                                    it,
+                                    SELECT_MULTIPLE_ADDITIONAL_IMAGES
+                                ),
+                                SELECT_MULTIPLE_IMAGE_FROM_GALLERY_REQUEST
+                            )
+                        }
+                    }
+                    DELETE_ALL_ADDITIONAL_IMAGES -> {
+                        AlertDialog.Builder(requireContext())
+                            .setTitle("DELETE ALL EXISTING PRODUCT IMAGES")
+                            .setMessage(
+                                "You need to delete all of this first to save cloud storage space.\n" +
+                                    "Do you wish to continue?"
+                            )
+                            .setPositiveButton("Yes") { _, _ ->
+                                loadingDialog.show()
+                                viewModel.onDeleteAllAdditionalImagesClicked()
+                            }.setNegativeButton("No") { dialog, _ ->
+                                dialog.dismiss()
+                            }.show()
+                    }
                 }
             }
 
@@ -249,11 +257,18 @@ class AddEditProductFragment :
                         Toast.makeText(
                             requireContext(),
                             event.msg,
-                            Toast.LENGTH_SHORT
+                            Toast.LENGTH_LONG
                         ).show()
 
-                        // TODO(Navigate to AddInventoryFragment)
-                        findNavController().popBackStack()
+                        val action = AddEditProductFragmentDirections
+                            .actionAddEditProductFragmentToAddInventoryFragment(
+                                viewModel.productId
+                            )
+
+                        // Remove productId from state after passing it in action variable
+                        viewModel.productId = ""
+
+                        findNavController().navigate(action)
                     }
                     is AddEditProductViewModel.AddEditProductEvent.ShowErrorMessage -> {
                         loadingDialog.dismiss()
@@ -270,7 +285,15 @@ class AddEditProductFragment :
                             event.msg,
                             Snackbar.LENGTH_SHORT
                         ).show()
-                        adapter.notifyItemRemoved(event.position)
+                        adapter?.notifyItemRemoved(event.position)
+                    }
+                    is AddEditProductViewModel.AddEditProductEvent.ShowSuccessMessage -> {
+                        loadingDialog.dismiss()
+                        Snackbar.make(
+                            requireView(),
+                            event.msg,
+                            Snackbar.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
@@ -296,35 +319,6 @@ class AddEditProductFragment :
         viewModel.updateImageList(product.productImageList)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (resultCode == Activity.RESULT_OK && requestCode == SELECT_PRODUCT_IMAGE_FROM_GALLERY_REQUEST) {
-            data?.data?.let {
-
-                // Show selected image from gallery to the imageView
-                binding.imgProduct.setImageURI(it)
-
-                // Upload the image on background thread while the loading screen is showing...
-                viewModel.onUploadProductImageClicked(it)
-            }
-        } else if (resultCode == Activity.RESULT_OK && requestCode == SELECT_MULTIPLE_IMAGE_FROM_GALLERY_REQUEST) {
-            data?.clipData?.let {
-
-                // Show selected image from gallery to the imageView
-                // binding.imgProduct.setImageURI(it)
-
-                val imageUriList = mutableListOf<Uri>()
-                for (pos in 0..it.itemCount) {
-                    imageUriList.add(it.getItemAt(pos).uri)
-                }
-
-                // Upload the image on background thread while the loading screen is showing...
-                viewModel.onUploadProductImageListClicked(imageUriList)
-            }
-        }
-    }
-
     override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
         viewModel.productType = parent?.getItemAtPosition(position).toString()
         Log.d("AddEditProductFragment", viewModel.productType)
@@ -334,8 +328,34 @@ class AddEditProductFragment :
         // Nothing
     }
 
-    override fun onRemoveClicked(item: ProductImage, position: Int) {
+    override fun onRemoveClicked(position: Int) {
         loadingDialog.show()
-        viewModel.onRemoveProductImageClicked(isEditMode, item, position)
+        viewModel.onRemoveProductImageClicked(isEditMode, position)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (resultCode == Activity.RESULT_OK && requestCode == SELECT_PRODUCT_IMAGE_FROM_GALLERY_REQUEST) {
+            data?.data?.let {
+
+                // Show selected image from gallery to the imageView
+                binding.imgProduct.setImageURI(it)
+                viewModel.selectedProductImage = it
+            }
+        } else if (resultCode == Activity.RESULT_OK && requestCode == SELECT_MULTIPLE_IMAGE_FROM_GALLERY_REQUEST) {
+            data?.clipData?.let {
+
+                // Loop all selected images then add it to the list.
+                // Then you can save its state just in case of process death.
+                val imageUriList = mutableListOf<Uri>()
+                for (pos in 0..it.itemCount) {
+                    imageUriList.add(it.getItemAt(pos).uri)
+                }
+                CoroutineScope(Dispatchers.IO).launch {
+                    viewModel.updateAdditionalImages(imageUriList)
+                }
+            }
+        }
     }
 }

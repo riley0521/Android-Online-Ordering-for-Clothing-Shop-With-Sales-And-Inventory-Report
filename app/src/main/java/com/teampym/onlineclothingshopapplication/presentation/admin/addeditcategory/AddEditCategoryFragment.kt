@@ -2,14 +2,12 @@ package com.teampym.onlineclothingshopapplication.presentation.admin.addeditcate
 
 import android.app.Activity
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -23,7 +21,6 @@ import com.teampym.onlineclothingshopapplication.data.models.Category
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentAddEditCategoryBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.fragment_add_edit_category.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -77,8 +74,6 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
 
         viewModel.fileName.observe(viewLifecycleOwner) {
             if (it.isNotBlank()) {
-                binding.tvFileName.text = it
-                binding.tvFileName.isVisible = true
                 hasFileName = true
 
                 binding.btnSubmit.isEnabled = hasFileName && hasImageUrl
@@ -89,8 +84,6 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
             loadingDialog.dismiss()
 
             if (it.isNotBlank()) {
-                binding.tvImageUrl.text = it
-                binding.tvImageUrl.isVisible = true
                 hasImageUrl = true
 
                 binding.btnSubmit.isEnabled = hasFileName && hasImageUrl
@@ -100,22 +93,6 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
         binding.apply {
             viewModel.categoryId = category?.id ?: ""
             etCategoryName.setText(viewModel.categoryName)
-            tvFileName.text = viewModel.fileName.value
-            tvImageUrl.text = viewModel.imageUrl.value
-
-            if (viewModel.fileName.value!!.isNotBlank()) {
-                tvFileName.visibility = View.VISIBLE
-                tvFileName.text = viewModel.fileName.value!!
-            } else {
-                tvFileName.visibility = View.INVISIBLE
-            }
-
-            if (viewModel.imageUrl.value!!.isNotBlank()) {
-                tvImageUrl.visibility = View.VISIBLE
-                tvImageUrl.text = viewModel.imageUrl.value!!
-            } else {
-                tvImageUrl.visibility = View.INVISIBLE
-            }
 
             etCategoryName.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(
@@ -199,9 +176,7 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
 
                 // Show selected image from gallery to the imageView
                 binding.imgCategory.setImageURI(it)
-
-                // Upload the image on background thread while the loading screen is showing...
-                viewModel.onUploadImageClicked(it)
+                viewModel.selectedImage = it
             }
         }
     }

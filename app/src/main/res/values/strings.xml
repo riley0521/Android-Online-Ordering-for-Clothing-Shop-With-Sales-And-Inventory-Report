@@ -86,11 +86,9 @@
     <string name="label_sub_total">Sub Total:</string>
     <string name="label_date_sold">Date Sold:</string>
     <string name="label_is_exchangeable">Is Exchangeable:</string>
-    <string name="label_show_more_reviews">"Show All (%1$d) >"</string>
+    <string name="label_show_more_reviews">Show All (%1$d) ></string>
     <string name="label_sold">Sold:</string>
     <string name="label_remaining_stock">Remaining Stock:</string>
-    <string name="label_file_name">File Name:</string>
-    <string name="label_image_url">Image URL:</string>
     <string name="label_please_create_your_first_delivery_address">Please create your first delivery address.</string>
 
     <string name="img_description">Image Text Placeholder</string>
@@ -185,7 +183,6 @@
     <string name="hint_input_product_name">Input Product Name</string>
     <string name="hint_input_product_description">Input Product Description</string>
     <string name="hint_input_product_price">Input Product Price</string>
-    <string name="btn_select_multiple_product_image">Select Multiple Product Image</string>
     <string name="label_product_images">Product Images</string>
     <string name="label_product_type">Product Type:</string>
     <string name="label_available_sizes">"Available Sizes: %1$s"</string>

@@ -105,13 +105,33 @@ class ProductImageRepository @Inject constructor(
 
     suspend fun delete(productImage: ProductImage): Boolean {
         return withContext(dispatcher) {
+            var isSuccess = true
             val result = productCollectionRef
                 .document(productImage.productId)
                 .collection(PRODUCT_IMAGES_SUB_COLLECTION)
                 .document(productImage.id)
                 .delete()
                 .await()
-            result != null
+
+            if(result != null) {
+                val deleted = imageRef.child(PRODUCT_PATH + productImage.fileName)
+                    .delete()
+                    .await()
+
+                isSuccess = deleted != null
+            }
+
+            isSuccess
+        }
+    }
+
+    suspend fun deleteAll(listOfImages: List<ProductImage>): Boolean {
+        return withContext(dispatcher) {
+            var isSuccess = true
+            for (item in listOfImages) {
+                isSuccess = delete(item)
+            }
+            isSuccess
         }
     }
 }

@@ -114,4 +114,13 @@ class CategoryRepository @Inject constructor(
             isSuccessful
         }
     }
+
+    suspend fun deleteImage(fileName: String): Boolean {
+        return withContext(dispatcher) {
+            val deleted = imageRef.child(CATEGORY_PATH + fileName)
+                .delete()
+                .await()
+            deleted != null
+        }
+    }
 }
