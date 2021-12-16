@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Online Clothing Shop</string>
+    <string name="app_name">Midnightmares</string>
 
     <string-array name="product_types_array">
         <item>SHIRTS</item>
@@ -179,8 +179,7 @@
     <string name="btn_delete">Delete</string>
     <string name="btn_edit">Edit</string>
     <string name="label_address_info">Address:</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
     <string name="hint_input_product_name">Input Product Name</string>
     <string name="hint_input_product_description">Input Product Description</string>
     <string name="hint_input_product_price">Input Product Price</string>
@@ -196,5 +195,6 @@
     <string name="hint_input_stock_to_add">Input Stock to Add</string>
     <string name="label_variant_size">Variant/Size: %1$s</string>
     <string name="hint_input_description_of_your_feedback">Input Description of your feedback</string>
+    <string name="channel_description">Simple Description</string>
 
 </resources>
