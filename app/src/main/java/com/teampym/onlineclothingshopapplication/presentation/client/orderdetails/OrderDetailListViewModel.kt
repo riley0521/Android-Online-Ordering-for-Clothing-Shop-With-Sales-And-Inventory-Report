@@ -2,15 +2,20 @@ package com.teampym.onlineclothingshopapplication.presentation.client.orderdetai
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.models.Order
+import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
+import com.teampym.onlineclothingshopapplication.data.repository.OrderDetailRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.flatMapLatest
 import javax.inject.Inject
 
 @HiltViewModel
 class OrderDetailListViewModel @Inject constructor(
+    private val orderDetailRepository: OrderDetailRepository,
     private val userInformationDao: UserInformationDao,
     private val preferencesManager: PreferencesManager,
     private val state: SavedStateHandle
@@ -33,4 +38,12 @@ class OrderDetailListViewModel @Inject constructor(
     fun updateOrder(o: Order) {
         order = o
     }
+
+    suspend fun checkItemIfExchangeable(item: OrderDetail): Boolean = viewModelScope.async {
+        return@async orderDetailRepository.isExchangeable(item)
+    }.await()
+
+    suspend fun checkItemIfCanAddReview(item: OrderDetail): Boolean = viewModelScope.async {
+        return@async orderDetailRepository.canAddReview(item)
+    }.await()
 }

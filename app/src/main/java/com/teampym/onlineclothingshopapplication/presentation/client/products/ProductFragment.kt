@@ -60,6 +60,8 @@ class ProductFragment :
     private var cartMenu: MenuItem? = null
     private var sortMenu: MenuItem? = null
 
+    private var currentPagingData: PagingData<Product>? = null
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -153,6 +155,7 @@ class ProductFragment :
                 // For Admin. I can just pass 'it' No need for mapping wish lists.
                 if (userAndWishList?.user != null) {
                     if (userAndWishList?.user!!.userType == UserType.ADMIN.name) {
+                        currentPagingData = it
                         adminAdapter.submitData(it)
                     } else {
                         showAdapterForCustomer(it)
@@ -166,11 +169,13 @@ class ProductFragment :
                 when (event) {
                     is ProductViewModel.ProductEvent.ShowSuccessMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
-                        adapter.refresh()
                     }
                     is ProductViewModel.ProductEvent.ShowErrorMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
-                        adapter.refresh()
+                    }
+                    is ProductViewModel.ProductEvent.ShowAddedToWishListSuccessMessage -> {
+                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
+                        adapter.submitData(event.currentPagingData)
                     }
                 }
             }
@@ -180,6 +185,7 @@ class ProductFragment :
     }
 
     private suspend fun showAdapterForCustomer(it: PagingData<Product>) {
+        currentPagingData = it
         adapter.submitData(it)
     }
 
@@ -215,19 +221,15 @@ class ProductFragment :
         findNavController().navigate(action)
     }
 
-    override fun onShareClicked(product: Product) {
-        Toast.makeText(requireContext(), "Sharing ${product.name}", Toast.LENGTH_SHORT).show()
-    }
-
-    override fun onAddToCartClicked(product: Product) {
-        val action =
-            ProductFragmentDirections.actionProductFragmentToInventoryModalFragment(product)
-        findNavController().navigate(action)
-    }
-
-    override fun onAddToWishListClicked(product: Product) {
-        if (userAndWishList?.user != null) {
-            viewModel.addToWishList(userAndWishList?.user!!.userId, product)
+    override fun onAddToWishListClicked(product: Product, isWishListed: Boolean) {
+        if (userAndWishList?.user != null && currentPagingData != null) {
+            viewModel.addOrRemoveToWishList(
+                userAndWishList?.user!!.userId,
+                product,
+                currentPagingData!!,
+                ProductUpdateRemove.Edit(product),
+                isWishListed
+            )
         }
     }
 
@@ -246,7 +248,7 @@ class ProductFragment :
             .setTitle("DELETE PRODUCT")
             .setMessage(
                 "Are you sure you want to delete this product?\n" +
-                        "All corresponding inventory, additional images, and reviews will be deleted as well."
+                    "All corresponding inventory, additional images, and reviews will be deleted as well."
             )
             .setPositiveButton("Yes") { _, _ ->
                 loadingDialog.show()
@@ -319,5 +321,10 @@ class ProductFragment :
             }
             else -> false
         }
+    }
+
+    sealed class ProductUpdateRemove {
+        data class Edit(val product: Product) : ProductUpdateRemove()
+        data class Remove(val product: Product) : ProductUpdateRemove()
     }
 }

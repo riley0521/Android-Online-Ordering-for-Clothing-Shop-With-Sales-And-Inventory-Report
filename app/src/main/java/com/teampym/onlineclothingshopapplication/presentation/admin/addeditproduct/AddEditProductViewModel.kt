@@ -242,6 +242,11 @@ class AddEditProductViewModel @Inject constructor(
             val productImageList = async {
                 productImageRepository.uploadImages(additionalImageList.value!!)
             }.await()
+
+            // Empty list of Uri
+            updateAdditionalImages(listOf())
+
+            // Update imageList <Product> to trigger observer in UI
             updateImageList(productImageList)
         }
     }
@@ -260,8 +265,7 @@ class AddEditProductViewModel @Inject constructor(
                     )
                 }
             } else {
-                imageList.value!!.removeAt(position)
-                updateImageList(imageList.value!!)
+                additionalImageList.value!!.removeAt(position)
                 _addEditProductChannel.send(
                     AddEditProductEvent.NotifyAdapterWithMessage(
                         "Product image deleted successfully",
@@ -276,7 +280,6 @@ class AddEditProductViewModel @Inject constructor(
             val res = productImageRepository.deleteAll(imageList.value!!)
             if (res) {
                 updateImageList(listOf())
-
                 _addEditProductChannel.send(
                     AddEditProductEvent.ShowSuccessMessage(
                         "All product images successfully deleted."

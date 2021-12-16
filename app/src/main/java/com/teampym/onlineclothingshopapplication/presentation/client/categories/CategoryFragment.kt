@@ -96,6 +96,7 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
                             event.msg,
                             Snackbar.LENGTH_SHORT
                         ).show()
+                        adapter.notifyItemRemoved(event.position)
                     }
                 }
             }
@@ -122,7 +123,7 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
         findNavController().navigate(action)
     }
 
-    override fun onDeleteClicked(category: Category) {
+    override fun onDeleteClicked(category: Category, position: Int) {
         AlertDialog.Builder(requireContext())
             .setTitle("DELETE CATEGORY")
             .setMessage(
@@ -131,7 +132,7 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
             )
             .setPositiveButton("Yes") { _, _ ->
                 loadingDialog.show()
-                viewModel.onDeleteCategoryClicked(category)
+                viewModel.onDeleteCategoryClicked(category, position)
             }.setNegativeButton("No") { dialog, _ ->
                 dialog.dismiss()
             }.show()

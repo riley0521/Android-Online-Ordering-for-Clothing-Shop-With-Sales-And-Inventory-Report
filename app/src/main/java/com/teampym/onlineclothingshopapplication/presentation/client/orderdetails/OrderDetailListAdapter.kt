@@ -16,6 +16,7 @@ import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.OrderDetailItemBinding
+import kotlinx.coroutines.Job
 import java.text.SimpleDateFormat
 import java.util.* // ktlint-disable no-wildcard-imports
 
@@ -143,7 +144,7 @@ class OrderDetailListAdapter(
     }
 
     interface OrderDetailListener {
-        fun onExchangeItemClicked(item: OrderDetail)
-        fun onAddReviewClicked(item: OrderDetail)
+        fun onExchangeItemClicked(item: OrderDetail): Job
+        fun onAddReviewClicked(item: OrderDetail): Job
     }
 }

@@ -186,6 +186,7 @@
                 android:clickable="false"
                 android:numStars="5"
                 android:rating="1"
+                style="?attr/ratingBarStyleSmall"
                 android:isIndicator="true"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"

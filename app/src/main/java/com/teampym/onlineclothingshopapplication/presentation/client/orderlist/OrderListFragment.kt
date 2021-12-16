@@ -14,9 +14,11 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.paging.PagingData
 import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Order
+import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.util.CANCELLED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.COMPLETED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.DELIVERY_ORDERS
@@ -37,6 +39,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.* // ktlint-disable no-wildcard-imports
 
 @AndroidEntryPoint
 class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapter.OnOrderListener {
@@ -51,6 +54,10 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
 
     private lateinit var adapter: OrderListAdapter
 
+    private var currentPagingData: PagingData<Order>? = null
+
+    private var userInfo: UserInformation? = null
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -63,6 +70,7 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
             viewModel.userFlow.collectLatest { user ->
                 if (user != null) {
                     CoroutineScope(Dispatchers.Main).launch {
+                        userInfo = user
                         adapter = OrderListAdapter(
                             user.userType,
                             this@OrderListFragment,
@@ -75,6 +83,7 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
                         }
                     }.join()
                     viewModel.ordersFlow.collectLatest {
+                        currentPagingData = it
                         adapter.submitData(it)
                     }
                 }
@@ -84,8 +93,7 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
                 when (event) {
                     is OrderListViewModel.OrderListEvent.ShowMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
-                        adapter.refresh()
-                        // adapter.notifyItemRemoved(event.positionToRemove)
+                        adapter.submitData(event.currentPagingData)
                     }
                 }
             }
@@ -157,32 +165,49 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
     }
 
     override fun onItemClicked(item: Order) {
-        val action = OrderListFragmentDirections.actionOrderListFragmentToOrderDetailListFragment(
-            "Order ${item.id}",
-            item
-        )
-        findNavController().navigate(action)
+        if (userInfo != null) {
+            val action =
+                OrderListFragmentDirections.actionOrderListFragmentToOrderDetailListFragment(
+                    "Order ${item.id}",
+                    item,
+                    userInfo!!
+                )
+            findNavController().navigate(action)
+        }
     }
 
-    override fun onCancelClicked(item: Order, userType: String, position: Int) {
+    override fun onCancelClicked(item: Order, userType: String) {
+        val isCancellable = viewModel.checkOrderIfCancellable(item)
+
         when (userType) {
             UserType.CUSTOMER.name -> {
-                showCancelDialogForCustomer(item, position)
+                if (isCancellable) {
+                    showCancelDialogForCustomer(item)
+                }
             }
             UserType.ADMIN.name -> {
-                showCancelModalForAdmin(item, position)
+                if (isCancellable) {
+                    showCancelModalForAdmin(item)
+                }
             }
         }
     }
 
-    override fun onSuggestClicked(item: Order, position: Int) {
-        showSuggestShipFeeModalForAdmin(item, position)
+    override fun onSuggestClicked(item: Order) {
+        showSuggestShipFeeModalForAdmin(item)
     }
 
-    override fun onAgreeToSfClicked(item: Order, position: Int) {
+    override fun onAgreeToSfClicked(item: Order) {
         setFragmentResultListener(AGREE_TO_SF_REQUEST) { _, bundle ->
             val result = bundle.getString(AGREE_TO_SF_RESULT)
-            viewModel.onAgreeToSfResult(result ?: "", position)
+            if (currentPagingData != null) {
+                viewModel.onAgreeToSfResult(
+                    result ?: "",
+                    item,
+                    currentPagingData!!,
+                    OrderRemoveEvent.Remove(item)
+                )
+            }
         }
 
         val action =
@@ -192,21 +217,17 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
         findNavController().navigate(action)
     }
 
-    private fun showCancelModalForAdmin(item: Order, position: Int) {
-        setFragmentResultListener(CANCEL_REASON_REQUEST) { _, bundle ->
-            val result = bundle.getString(CANCEL_REASON_RESULT)
-            viewModel.onAdminCancelResult(result ?: "", position)
-        }
-
-        val action =
-            OrderListFragmentDirections.actionOrderListFragmentToCancelReasonDialogFragment(item)
-        findNavController().navigate(action)
-    }
-
-    private fun showSuggestShipFeeModalForAdmin(item: Order, position: Int) {
+    private fun showSuggestShipFeeModalForAdmin(item: Order) {
         setFragmentResultListener(SHIPPING_FEE_REQUEST) { _, bundle ->
             val result = bundle.getString(SHIPPING_FEE_RESULT)
-            viewModel.onSuggestedShippingFeeResult(result ?: "", position)
+            if (currentPagingData != null) {
+                viewModel.onSuggestedShippingFeeResult(
+                    result ?: "",
+                    item,
+                    currentPagingData!!,
+                    OrderRemoveEvent.Remove(item)
+                )
+            }
         }
 
         val action =
@@ -214,14 +235,42 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
         findNavController().navigate(action)
     }
 
-    private fun showCancelDialogForCustomer(item: Order, position: Int) {
+    private fun showCancelModalForAdmin(item: Order) {
+        setFragmentResultListener(CANCEL_REASON_REQUEST) { _, bundle ->
+            val result = bundle.getString(CANCEL_REASON_RESULT)
+            if (currentPagingData != null) {
+                viewModel.onAdminCancelResult(
+                    result ?: "",
+                    item,
+                    currentPagingData!!,
+                    OrderRemoveEvent.Remove(item)
+                )
+            }
+        }
+
+        val action =
+            OrderListFragmentDirections.actionOrderListFragmentToCancelReasonDialogFragment(item)
+        findNavController().navigate(action)
+    }
+
+    private fun showCancelDialogForCustomer(item: Order) {
         AlertDialog.Builder(requireContext())
             .setTitle("CANCEL ORDER")
             .setMessage("Are you sure you want to cancel order?")
             .setPositiveButton("Yes") { _, _ ->
-                viewModel.cancelOrder(item, position)
+                if (currentPagingData != null) {
+                    viewModel.cancelOrder(
+                        item,
+                        currentPagingData!!,
+                        OrderRemoveEvent.Remove(item)
+                    )
+                }
             }.setNegativeButton("No") { dialog, _ ->
                 dialog.dismiss()
             }
+    }
+
+    sealed class OrderRemoveEvent {
+        data class Remove(val order: Order) : OrderRemoveEvent()
     }
 }

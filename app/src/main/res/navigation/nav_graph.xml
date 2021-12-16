@@ -125,6 +125,9 @@
         <action
             android:id="@+id/action_productDetailFragment_to_addInventoryFragment"
             app:destination="@id/addInventoryFragment" />
+        <action
+            android:id="@+id/action_productDetailFragment_to_stockInModalFragment"
+            app:destination="@id/stockInModalFragment" />
     </fragment>
     <dialog
         android:id="@+id/inventoryModalFragment"
@@ -274,6 +277,12 @@
         <argument
             android:name="order"
             app:argType="com.teampym.onlineclothingshopapplication.data.models.Order" />
+        <action
+            android:id="@+id/action_orderDetailListFragment_to_addReviewFragment"
+            app:destination="@id/addReviewFragment" />
+        <argument
+            android:name="userInfo"
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.UserInformation" />
     </fragment><action android:id="@+id/action_global_categoryFragment" app:destination="@id/categoryFragment"/>
     <fragment
         android:id="@+id/addEditCategoryFragment"
@@ -326,6 +335,30 @@
         tools:layout="@layout/fragment_add_inventory" >
         <argument
             android:name="productId"
+            app:argType="string" />
+    </fragment>
+    <dialog
+        android:id="@+id/stockInModalFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.stockin.StockInModalFragment"
+        android:label="fragment_stock_in_modal"
+        tools:layout="@layout/fragment_stock_in_modal" >
+        <argument
+            android:name="product"
+            app:argType="com.teampym.onlineclothingshopapplication.data.room.Product" />
+    </dialog>
+    <fragment
+        android:id="@+id/addReviewFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.addreview.AddReviewFragment"
+        android:label="{title}"
+        tools:layout="@layout/fragment_add_review">
+        <argument
+            android:name="orderDetail"
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.OrderDetail" />
+        <argument
+            android:name="userInfo"
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.UserInformation" />
+        <argument
+            android:name="title"
             app:argType="string" />
     </fragment>
 </navigation>

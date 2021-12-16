@@ -126,10 +126,10 @@ class ProductRepository @Inject constructor(
         userInformation: UserInformation,
         rate: Double,
         desc: String,
-        product: OrderDetail,
+        item: OrderDetail,
     ): Product? {
         return withContext(dispatcher) {
-            var updatedProduct: Product? = getOne(product.product.productId)
+            var updatedProduct: Product? = getOne(item.product.productId)
 
             if (updatedProduct != null) {
 
@@ -138,7 +138,7 @@ class ProductRepository @Inject constructor(
                         userInformation,
                         rate,
                         desc,
-                        product.product.productId
+                        item.product.productId
                     )
                 }.await()
 
@@ -153,8 +153,9 @@ class ProductRepository @Inject constructor(
                         .await()
 
                     if (res != null) {
-                        product.hasAddedReview = true
-                        val updated = orderDetailRepository.update(product)
+                        item.canAddReview = false
+                        item.hasAddedReview = true
+                        val updated = orderDetailRepository.update(item)
                         if (!updated) {
                             updatedProduct = null
                         }

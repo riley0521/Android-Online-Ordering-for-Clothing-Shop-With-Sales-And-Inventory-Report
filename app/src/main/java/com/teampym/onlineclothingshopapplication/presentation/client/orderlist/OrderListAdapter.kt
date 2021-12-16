@@ -72,7 +72,7 @@ class OrderListAdapter(
                         when (btnAction.text) {
                             CANCEL_BUTTON -> {
                                 if (item != null) {
-                                    listener.onCancelClicked(item, userType, position)
+                                    listener.onCancelClicked(item, userType)
                                 }
                             }
                             CANCEL_OR_SUGGEST -> {
@@ -88,11 +88,11 @@ class OrderListAdapter(
                                     showPopUpMenu.setOnMenuItemClickListener { menuItem ->
                                         when (menuItem.itemId) {
                                             0 -> {
-                                                listener.onCancelClicked(item, userType, position)
+                                                listener.onCancelClicked(item, userType)
                                                 true
                                             }
                                             1 -> {
-                                                listener.onSuggestClicked(item, position)
+                                                listener.onSuggestClicked(item)
                                                 true
                                             }
                                             else -> false
@@ -102,7 +102,7 @@ class OrderListAdapter(
                             }
                             AGREE_TO_SHIPPING_FEE -> {
                                 if (item != null) {
-                                    listener.onAgreeToSfClicked(item, position)
+                                    listener.onAgreeToSfClicked(item)
                                 }
                             }
                         }
@@ -113,6 +113,14 @@ class OrderListAdapter(
 
         fun bind(item: Order) {
             binding.apply {
+                val calendarDate = Calendar.getInstance()
+                calendarDate.timeInMillis = item.dateOrdered
+                calendarDate.timeZone = TimeZone.getTimeZone("GMT+8:00")
+                val formattedDate =
+                    SimpleDateFormat("MM/dd/yyyy hh:mm:ss a").format(calendarDate.time)
+
+                tvDateOrdered.text = formattedDate
+
                 when (item.status) {
                     Status.SHIPPING.name -> {
                         labelShippingFee.isVisible = false
@@ -121,7 +129,13 @@ class OrderListAdapter(
                         tvUserAgreedToSf.isVisible = false
 
                         if (userType == UserType.CUSTOMER.name) {
-                            btnAction.text = CANCEL_BUTTON
+                            if (Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
+                                .minus(calendarDate.get(Calendar.DAY_OF_YEAR)) == 0
+                            ) {
+                                btnAction.text = CANCEL_BUTTON
+                            } else {
+                                btnAction.isVisible = false
+                            }
                         } else {
                             btnAction.text = CANCEL_OR_SUGGEST
                         }
@@ -208,14 +222,6 @@ class OrderListAdapter(
                 tvStatus.text = item.status
                 tvNumberOfItems.text = item.numberOfItems.toString()
 
-                val calendarDate = Calendar.getInstance()
-                calendarDate.timeInMillis = item.dateOrdered
-                calendarDate.timeZone = TimeZone.getTimeZone("GMT+8:00")
-                val formattedDate =
-                    SimpleDateFormat("MM/dd/yyyy hh:mm:ss a").format(calendarDate.time)
-
-                tvDateOrdered.text = formattedDate
-
                 tvAdditionalNote.text = item.additionalNote
             }
         }
@@ -223,8 +229,8 @@ class OrderListAdapter(
 
     interface OnOrderListener {
         fun onItemClicked(item: Order)
-        fun onCancelClicked(item: Order, userType: String, position: Int)
-        fun onSuggestClicked(item: Order, position: Int)
-        fun onAgreeToSfClicked(item: Order, position: Int)
+        fun onCancelClicked(item: Order, userType: String)
+        fun onSuggestClicked(item: Order)
+        fun onAgreeToSfClicked(item: Order)
     }
 }

@@ -8,13 +8,19 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
+import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentOrderDetailListBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.* // ktlint-disable no-wildcard-imports
 
@@ -31,11 +37,14 @@ class OrderDetailListFragment :
 
     private lateinit var adapter: OrderDetailListAdapter
 
+    private lateinit var loadingDialog: LoadingDialog
+
     @SuppressLint("SetTextI18n", "SimpleDateFormat")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentOrderDetailListBinding.bind(view)
+        loadingDialog = LoadingDialog(requireActivity())
 
         var order = args.order
         viewModel.updateOrder(order)
@@ -114,19 +123,44 @@ class OrderDetailListFragment :
         }
     }
 
-    override fun onExchangeItemClicked(item: OrderDetail) {
-        Toast.makeText(
-            requireContext(),
-            "item ${item.product.productId} clicked",
-            Toast.LENGTH_SHORT
-        ).show()
+    override fun onExchangeItemClicked(item: OrderDetail) = CoroutineScope(Dispatchers.IO).launch {
+        withContext(Dispatchers.Main) {
+            loadingDialog.show()
+        }
+
+        val isExchangeable = viewModel.checkItemIfExchangeable(item)
+
+        withContext(Dispatchers.Main) {
+            loadingDialog.dismiss()
+
+            Toast.makeText(
+                requireContext(),
+                "item ${item.product.productId} clicked",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
-    override fun onAddReviewClicked(item: OrderDetail) {
-        Toast.makeText(
-            requireContext(),
-            "Adding review to item ${item.product.productId}",
-            Toast.LENGTH_SHORT
-        ).show()
+    // TODO(Navigate to add review fragment)
+    override fun onAddReviewClicked(item: OrderDetail) = CoroutineScope(Dispatchers.IO).launch {
+        withContext(Dispatchers.Main) {
+            loadingDialog.show()
+        }
+
+        val canAddReview = viewModel.checkItemIfCanAddReview(item)
+
+        withContext(Dispatchers.Main) {
+            loadingDialog.dismiss()
+
+            if (canAddReview) {
+                val action = OrderDetailListFragmentDirections
+                    .actionOrderDetailListFragmentToAddReviewFragment(
+                        item,
+                        args.userInfo,
+                        item.product.name
+                    )
+                findNavController().navigate(action)
+            }
+        }
     }
 }

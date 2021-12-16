@@ -1,6 +1,7 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.products
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.ViewGroup
@@ -17,6 +18,8 @@ import com.teampym.onlineclothingshopapplication.data.util.EDIT_BUTTON
 import com.teampym.onlineclothingshopapplication.data.util.REMOVE_BUTTON
 import com.teampym.onlineclothingshopapplication.databinding.ProductItemBinding
 import java.lang.NumberFormatException
+
+private const val TAG = "ProductAdapter"
 
 class ProductAdapter(
     private val listener: OnProductListener,
@@ -90,36 +93,20 @@ class ProductAdapter(
                     true
                 }
 
-                btnShare.setOnClickListener {
-                    val position = bindingAdapterPosition
-                    if (position != RecyclerView.NO_POSITION) {
-                        val item = getItem(position)
-                        if (item != null)
-                            listener.onShareClicked(item)
-                    }
-                }
-
-                btnAddToCart.setOnClickListener {
-                    val position = bindingAdapterPosition
-                    if (position != RecyclerView.NO_POSITION) {
-                        val item = getItem(position)
-                        if (item != null)
-                            listener.onAddToCartClicked(item)
-                    }
-                }
-
                 btnAddToWishList.setOnClickListener {
                     val position = bindingAdapterPosition
                     if (position != RecyclerView.NO_POSITION) {
                         val item = getItem(position)
                         if (item != null) {
-                            if (!item.isWishListedByUser) {
+                            val isWishListed = if (!item.isWishListedByUser) {
                                 btnAddToWishList.setImageResource(R.drawable.ic_fav_checked)
+                                true
                             } else {
                                 btnAddToWishList.setImageResource(R.drawable.ic_fav_unchecked)
+                                false
                             }
 
-                            listener.onAddToWishListClicked(item)
+                            listener.onAddToWishListClicked(item, isWishListed)
                         }
                     }
                 }
@@ -150,16 +137,15 @@ class ProductAdapter(
                     labelOutOfStock.isVisible = isOutOfStock
 
                     val totalSold = inv.sumOf { it.sold }
-                    val totalTxt = "Sold $totalSold"
-                    labelNumberOfSold.isVisible = totalSold > 0
+                    val totalTxt = context.getString(R.string.label_sold_w_format, totalSold)
                     labelNumberOfSold.text = totalTxt
                 }
 
                 try {
-                    labelRate.isVisible = product.avgRate.toDouble() > 0.0
+                    productRating.rating = product.avgRate.toFloat()
                     labelRate.text = product.avgRate.toDouble().toString()
                 } catch (ex: NumberFormatException) {
-                    labelRate.isVisible = false
+                    Log.d(TAG, "bind: ${ex.message}")
                 }
 
                 if (product.isWishListedByUser) {
@@ -171,9 +157,7 @@ class ProductAdapter(
 
     interface OnProductListener {
         fun onItemClicked(product: Product)
-        fun onShareClicked(product: Product)
-        fun onAddToCartClicked(product: Product)
-        fun onAddToWishListClicked(product: Product)
+        fun onAddToWishListClicked(product: Product, isWishListed: Boolean)
         fun onEditClicked(product: Product)
         fun onDeleteClicked(product: Product)
     }

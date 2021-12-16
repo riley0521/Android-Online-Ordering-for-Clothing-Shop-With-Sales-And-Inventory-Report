@@ -2,6 +2,7 @@ package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
 import com.teampym.onlineclothingshopapplication.data.room.Cart
@@ -112,6 +113,40 @@ class OrderDetailRepository @Inject constructor(
                 .await()
 
             res != null
+        }
+    }
+
+    suspend fun isExchangeable(orderDetail: OrderDetail): Boolean {
+        return withContext(dispatcher) {
+            val res = orderCollectionRef
+                .document(orderDetail.orderId)
+                .collection(ORDER_DETAILS_SUB_COLLECTION)
+                .document(orderDetail.id)
+                .get()
+                .await()
+            if (res != null) {
+                val item = res.toObject<OrderDetail>()!!.copy(id = res.id)
+                return@withContext item.isExchangeable
+            } else {
+                false
+            }
+        }
+    }
+
+    suspend fun canAddReview(orderDetail: OrderDetail): Boolean {
+        return withContext(dispatcher) {
+            val res = orderCollectionRef
+                .document(orderDetail.orderId)
+                .collection(ORDER_DETAILS_SUB_COLLECTION)
+                .document(orderDetail.id)
+                .get()
+                .await()
+            if (res != null) {
+                val item = res.toObject<OrderDetail>()!!.copy(id = res.id)
+                return@withContext item.canAddReview
+            } else {
+                false
+            }
         }
     }
 }

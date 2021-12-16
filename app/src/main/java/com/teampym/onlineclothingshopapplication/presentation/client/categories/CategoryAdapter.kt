@@ -83,7 +83,7 @@ class CategoryAdapter(
                                     true
                                 }
                                 1 -> {
-                                    listener.onDeleteClicked(item)
+                                    listener.onDeleteClicked(item, position)
                                     true
                                 }
                                 else -> false
@@ -112,6 +112,6 @@ class CategoryAdapter(
     interface OnCategoryListener {
         fun onItemClick(category: Category)
         fun onEditClicked(category: Category)
-        fun onDeleteClicked(category: Category)
+        fun onDeleteClicked(category: Category, position: Int)
     }
 }

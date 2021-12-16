@@ -25,7 +25,7 @@ class ReviewRepository @Inject constructor(
 
     private val reviewCollectionRef = db.collection(PRODUCTS_COLLECTION)
 
-    fun getSome(queryReviews: Query) =
+    fun getSome(userId: String?, queryReviews: Query) =
         Pager(
             PagingConfig(
                 pageSize = 30,
@@ -34,6 +34,7 @@ class ReviewRepository @Inject constructor(
             )
         ) {
             ReviewPagingSource(
+                userId,
                 queryReviews
             )
         }

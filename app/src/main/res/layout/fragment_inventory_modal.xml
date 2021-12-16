@@ -75,9 +75,7 @@
         app:layout_constraintHorizontal_bias="0.043"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvInstruction"
-        app:singleSelection="true">
-
-    </com.google.android.material.chip.ChipGroup>
+        app:singleSelection="true"/>
 
     <Button
         android:id="@+id/btnAddToCart"

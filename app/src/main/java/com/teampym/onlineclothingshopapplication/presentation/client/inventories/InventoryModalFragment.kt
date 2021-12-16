@@ -78,11 +78,11 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
 
         if (product.inventoryList.size == 1) {
             viewModel.addToCart(userId, product, product.inventoryList[0])
+            findNavController().popBackStack()
         }
 
         if (product.inventoryList.isNotEmpty()) {
             for (inventory in product.inventoryList) {
-                // TODO("Compare if getLayoutInflater() is same as creating a new instance of LayoutInflater object.")
                 val chip = layoutInflater.inflate(R.layout.inventory_item, null, false) as Chip
                 chip.id = View.generateViewId()
                 chip.text = inventory.size

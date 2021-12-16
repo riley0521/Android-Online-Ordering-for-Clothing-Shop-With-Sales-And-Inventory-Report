@@ -6,7 +6,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.map
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.teampym.onlineclothingshopapplication.data.repository.ProductRepository
@@ -158,11 +160,39 @@ class ProductViewModel @Inject constructor(
         ).flow.cachedIn(viewModelScope)
     }
 
-    fun addToWishList(userId: String, product: Product) = viewModelScope.launch {
+    fun addOrRemoveToWishList(
+        userId: String,
+        product: Product,
+        currentPagingData: PagingData<Product>,
+        event: ProductFragment.ProductUpdateRemove,
+        isWishListed: Boolean
+    ) = viewModelScope.launch {
         val res = async { wishListRepository.insert(userId, product) }.await()
         if (res != null) {
             async { wishListDao.insert(res) }.await()
-            _productChannel.send(ProductEvent.ShowSuccessMessage("Added product to wish list."))
+
+            when (event) {
+                is ProductFragment.ProductUpdateRemove.Edit -> {
+                    currentPagingData.map {
+                        if (product.productId == it.productId) {
+                            it.isWishListedByUser = isWishListed
+                            return@map it
+                        } else {
+                            return@map it
+                        }
+                    }
+                }
+                is ProductFragment.ProductUpdateRemove.Remove -> {
+                    // The code will be provided in onDeleteProductClicked() method
+                }
+            }
+
+            _productChannel.send(
+                ProductEvent.ShowAddedToWishListSuccessMessage(
+                    "Added product to wish list.",
+                    currentPagingData
+                )
+            )
         }
     }
 
@@ -180,6 +210,11 @@ class ProductViewModel @Inject constructor(
     }
 
     sealed class ProductEvent {
+        data class ShowAddedToWishListSuccessMessage(
+            val msg: String,
+            val currentPagingData: PagingData<Product>
+        ) : ProductEvent()
+
         data class ShowSuccessMessage(val msg: String) : ProductEvent()
         data class ShowErrorMessage(val msg: String) : ProductEvent()
     }

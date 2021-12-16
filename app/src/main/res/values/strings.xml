@@ -88,6 +88,7 @@
     <string name="label_is_exchangeable">Is Exchangeable:</string>
     <string name="label_show_more_reviews">Show All (%1$d) ></string>
     <string name="label_sold">Sold:</string>
+    <string name="label_sold_w_format">(%1$d Sold)</string>
     <string name="label_remaining_stock">Remaining Stock:</string>
     <string name="label_please_create_your_first_delivery_address">Please create your first delivery address.</string>
 
@@ -191,5 +192,9 @@
     <string name="btn_add_another_size">Add Another Size</string>
     <string name="hint_input_restock_level">Input Restock Level</string>
     <string name="btn_add_review">Add Review</string>
+    <string name="label_add_stock_available">Add Stock (Available: %1$d)</string>
+    <string name="hint_input_stock_to_add">Input Stock to Add</string>
+    <string name="label_variant_size">Variant/Size: %1$s</string>
+    <string name="hint_input_description_of_your_feedback">Input Description of your feedback</string>
 
 </resources>
