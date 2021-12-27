@@ -30,7 +30,10 @@ data class Product(
     var dateAdded: Long = 0,
     var dateModified: Long = 0,
     var totalRate: Double = 0.0,
-    var numberOfReviews: Long = 0
+    var numberOfReviews: Long = 0,
+    @get:Exclude
+    @Ignore
+    var isWishListedByUser: Boolean = false
 ) : Parcelable {
     constructor() : this(
         "",
@@ -46,15 +49,11 @@ data class Product(
     var flag: String = ""
 
     @get:Exclude
-    val avgRate: BigDecimal get() = (totalRate / numberOfReviews.toDouble()).toBigDecimal()
+    val avgRate: Double get() = totalRate / numberOfReviews
 
     @get:Exclude
     @Ignore
     var fastTrack: Long = 0
-
-    @get:Exclude
-    @Ignore
-    var isWishListedByUser = false
 
     @get:Exclude
     @Ignore

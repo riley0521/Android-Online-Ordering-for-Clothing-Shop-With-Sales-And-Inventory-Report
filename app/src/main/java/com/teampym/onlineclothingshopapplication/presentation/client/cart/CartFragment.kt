@@ -114,7 +114,7 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
                     is CartViewModel.CartEvent.ShowMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
                     }
-                    CartViewModel.CartEvent.NavigateToCheckOutFragment -> {
+                    is CartViewModel.CartEvent.NavigateToCheckOutFragment -> {
                         loadingDialog.dismiss()
 
                         val action = CartFragmentDirections.actionCartFragmentToCheckOutFragment(

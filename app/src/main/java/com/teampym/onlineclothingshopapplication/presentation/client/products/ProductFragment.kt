@@ -94,7 +94,7 @@ class ProductFragment :
                         viewModel.updateSortMenu(true)
 
                         // Product Adapter For Customer
-                        instantiateProductAdapterForCustomer()
+                        instantiateProductAdapterForCustomer(userWithWishList.user.userId)
                     }
                     UserType.ADMIN.name -> {
                         viewModel.updateAddMenu(true)
@@ -110,7 +110,7 @@ class ProductFragment :
                         viewModel.updateSortMenu(true)
 
                         // Product Adapter For Customer
-                        instantiateProductAdapterForCustomer()
+                        instantiateProductAdapterForCustomer(userWithWishList.user.userId)
                     }
                 }
                 userAndWishList = userWithWishList
@@ -120,7 +120,7 @@ class ProductFragment :
                 viewModel.updateSortMenu(true)
 
                 // Product Adapter For Customer
-                instantiateProductAdapterForCustomer()
+                instantiateProductAdapterForCustomer(null)
             }
         }
 
@@ -167,17 +167,16 @@ class ProductFragment :
         adapter.submitData(currentPagingData!!)
     }
 
-    private fun instantiateProductAdapterForCustomer() {
+    private fun instantiateProductAdapterForCustomer(userId: String?) {
         Log.d(TAG, "instantiateProductAdapterForCustomer: here")
 
-        adapter = ProductAdapter(userAndWishList?.user?.userId, this, requireContext())
+        adapter = ProductAdapter(userId, this, requireContext())
 
         binding.apply {
             recyclerProducts.setHasFixedSize(true)
-            recyclerProducts.layoutManager = GridLayoutManager(
+            recyclerProducts.layoutManager = LinearLayoutManager(
                 requireContext(),
-                2,
-                GridLayoutManager.VERTICAL,
+                LinearLayoutManager.VERTICAL,
                 false
             )
             recyclerProducts.adapter = adapter
@@ -314,7 +313,7 @@ class ProductFragment :
             R.id.action_new_product -> {
                 // Navigate to add/edit product layout when admin
                 val action = ProductFragmentDirections
-                    .actionProductFragmentToAddEditProductFragment(categoryId = viewModel.categoryId.value!!)
+                    .actionProductFragmentToAddEditProductFragment(categoryId = args.categoryId)
                 findNavController().navigate(action)
                 true
             }

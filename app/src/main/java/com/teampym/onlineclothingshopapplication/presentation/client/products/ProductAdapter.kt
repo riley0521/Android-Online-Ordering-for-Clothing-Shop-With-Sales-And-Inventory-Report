@@ -1,7 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.products
 
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.ViewGroup
@@ -17,7 +16,6 @@ import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.util.EDIT_BUTTON
 import com.teampym.onlineclothingshopapplication.data.util.REMOVE_BUTTON
 import com.teampym.onlineclothingshopapplication.databinding.ProductItemBinding
-import java.lang.NumberFormatException
 
 private const val TAG = "ProductAdapter"
 
@@ -142,15 +140,10 @@ class ProductAdapter(
                     labelNumberOfSold.text = totalTxt
                 }
 
-                try {
-                    productRating.rating = product.avgRate.toFloat()
-                    labelRate.text = product.avgRate.toDouble().toString()
-                } catch (ex: NumberFormatException) {
-                    Log.d(TAG, "bind: ${ex.message}")
-                }
+                productRating.rating = product.avgRate.toFloat()
 
-                userId?.let {
-                    btnAddToWishList.isVisible = true
+                if (!product.avgRate.isNaN()) {
+                    labelRate.text = product.avgRate.toString()
                 }
 
                 if (product.isWishListedByUser) {

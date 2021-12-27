@@ -1,5 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.cart
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
@@ -16,6 +17,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+private const val TAG = "CartViewModel"
 
 @HiltViewModel
 class CartViewModel @Inject constructor(
@@ -52,8 +55,9 @@ class CartViewModel @Inject constructor(
     }
 
     fun onCartUpdated(userId: String, cart: List<Cart>) = viewModelScope.launch {
-        val res = async { cartRepository.update(userId, cart) }.await()
+        val res = cartRepository.update(userId, cart)
         if (res) {
+            Log.d(TAG, "onCartUpdated: eut")
             async {
                 cartDao.deleteAll(userId)
                 cartDao.insertAll(cart)
@@ -63,9 +67,7 @@ class CartViewModel @Inject constructor(
     }
 
     fun onDeleteOutOfStockItems(userId: String, cartList: List<Cart>) = viewModelScope.launch {
-        val res = async {
-            cartRepository.deleteOutOfStockItems(userId, cartList)
-        }.await()
+        val res = cartRepository.deleteOutOfStockItems(userId, cartList)
         if (res) {
             async { cartDao.deleteAllOutOfStockItems(userId) }.await()
             _cartChannel.send(CartEvent.NavigateToCheckOutFragment)

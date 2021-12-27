@@ -184,8 +184,6 @@ class DeliveryInfoSharedViewModel @Inject constructor(
                                 EDIT_DELIVERY_INFO_RESULT_OK
                             )
                         )
-
-                        resetAllUiState()
                     } else {
                         _deliveryInformationChannel.send(
                             AddEditDeliveryInformationEvent.NavigateBackWithResult(
@@ -205,8 +203,6 @@ class DeliveryInfoSharedViewModel @Inject constructor(
                                 ADD_DELIVERY_INFO_RESULT_OK
                             )
                         )
-
-                        resetAllUiState()
                     } else {
                         _deliveryInformationChannel.send(
                             AddEditDeliveryInformationEvent.NavigateBackWithResult(
@@ -227,6 +223,11 @@ class DeliveryInfoSharedViewModel @Inject constructor(
         updateRegion(Region())
         updateProvince(Province())
         updateCity(City())
+    }
+
+    override fun onCleared() {
+        resetAllUiState()
+        super.onCleared()
     }
 
     private fun insertToLocalDbAndChangeDefault(deliveryInfo: DeliveryInformation) =

@@ -76,4 +76,17 @@ class WishItemRepository @Inject constructor(
             createdWishItem
         }
     }
+
+    suspend fun remove(userId: String, product: Product): Boolean {
+        return withContext(dispatcher) {
+            val result = userWishListRef
+                .document(userId)
+                .collection(WISH_LIST_SUB_COLLECTION)
+                .document(product.productId)
+                .delete()
+                .await()
+
+            result != null
+        }
+    }
 }
