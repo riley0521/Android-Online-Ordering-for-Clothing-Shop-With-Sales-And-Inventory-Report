@@ -186,6 +186,8 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
                             Snackbar.LENGTH_SHORT
                         ).show()
                         viewModel.onLoadSizesInitiated()
+
+                        resetFields()
                     }
                     is AddInventoryViewModel.AddInventoryEvent.ShowErrorMessage -> {
                         loadingDialog.dismiss()
@@ -197,6 +199,16 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
                     }
                 }
             }
+        }
+    }
+
+    // We reset the Ui States in ViewModel
+    // So, we need to reset the Ui states for the user level as well.
+    private fun resetFields() {
+        binding.apply {
+            etSize.setText(viewModel.inventorySize)
+            etAvailableStocks.setText(viewModel.inventoryStock)
+            etRestockLevel.setText(viewModel.inventoryRestockLevel)
         }
     }
 

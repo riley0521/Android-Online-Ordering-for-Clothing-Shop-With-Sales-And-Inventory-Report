@@ -47,7 +47,7 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
         binding = FragmentCartBinding.bind(view)
 
         loadingDialog = LoadingDialog(requireActivity())
-        adapter = CartAdapter(this)
+        adapter = CartAdapter(this, requireActivity())
 
         val currentUser = getFirebaseUser()
         if (currentUser != null) {
@@ -72,7 +72,7 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
                         .setPositiveButton("YES") { _, _ ->
                             loadingDialog.show()
 
-                            viewModel.onDeleteOutOfStockItems(outOfStockList)
+                            viewModel.onDeleteOutOfStockItems(userId, outOfStockList)
                         }.setNegativeButton("NO") { dialog, _ ->
                             dialog.dismiss()
                         }

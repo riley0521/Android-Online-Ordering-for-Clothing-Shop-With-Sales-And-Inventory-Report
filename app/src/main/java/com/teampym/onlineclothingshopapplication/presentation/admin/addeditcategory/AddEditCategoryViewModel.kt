@@ -54,11 +54,11 @@ class AddEditCategoryViewModel @Inject constructor(
 
     val imageUrl: MutableLiveData<String> = state.getLiveData(IMAGE_URL, "")
 
-    suspend fun updateFileName(name: String) {
+    fun updateFileName(name: String) {
         fileName.postValue(name)
     }
 
-    suspend fun updateImageUrl(url: String) {
+    fun updateImageUrl(url: String) {
         imageUrl.postValue(url)
     }
 

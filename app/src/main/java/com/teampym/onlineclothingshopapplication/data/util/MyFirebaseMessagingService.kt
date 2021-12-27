@@ -17,8 +17,9 @@ import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
-import com.teampym.onlineclothingshopapplication.data.repository.AccountRepository
 import com.teampym.onlineclothingshopapplication.data.room.Product
+import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -27,8 +28,11 @@ import javax.inject.Inject
 
 private const val TAG = "MyFCMService"
 const val CHANNEL_ID = "my_channel"
-const val NOTIFICATION_ID = 777
+const val ORDER_NOTIFICATION_ID = 777
+const val PRODUCT_NOTIFICATION_ID = 778
+const val POST_NOTIFICATION_ID = 779
 
+@AndroidEntryPoint
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     init {
@@ -36,7 +40,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     @Inject
-    lateinit var accountRepository: AccountRepository
+    lateinit var userInformationDao: UserInformationDao
 
     override fun onNewToken(token: String) {
         Log.d(TAG, "Refreshed token: $token")
@@ -46,15 +50,90 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         remoteMessage.data.let { notificationData ->
             // Create notification handler here.
 
-            try {
-                val order = Gson().fromJson(notificationData["obj"], Order::class.java)
+            showOrderNotification(notificationData)
 
-                var userInfo: UserInformation? = null
+            showProductNotification(notificationData)
 
-                CoroutineScope(Dispatchers.IO).launch {
-                    userInfo = async { accountRepository.get(order.userId) }.await()
-                }.invokeOnCompletion {
-                    // Create an explicit intent for an Activity in your app
+            showPostNotification(notificationData)
+        }
+    }
+
+    private fun showPostNotification(notificationData: Map<String, String>) =
+        try {
+            val news = Gson().fromJson(notificationData["obj"], Post::class.java)
+
+            // TODO(Does not have post detail fragment yet)
+            // So, no pendingIntent for now.
+            val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_news)
+                .setContentTitle(notificationData["title"].toString())
+                .setContentText(notificationData["body"].toString())
+                .setStyle(
+                    NotificationCompat.BigTextStyle()
+                        .bigText(notificationData["body"].toString())
+                )
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+
+            with(NotificationManagerCompat.from(this)) {
+                // notificationId is a unique int for each notification that you must define
+                notify(POST_NOTIFICATION_ID, builder.build())
+            }
+
+            Log.d(TAG, "onMessageReceived: $news")
+        } catch (e: JsonSyntaxException) {
+            Log.d(TAG, "onMessageReceived: ${e.message}")
+        }
+
+    private fun showProductNotification(notificationData: Map<String, String>) {
+        try {
+            val product = Gson().fromJson(notificationData["obj"], Product::class.java)
+
+            val pendingIntent = NavDeepLinkBuilder(this)
+                .setGraph(R.navigation.nav_graph)
+                .setDestination(R.id.productDetailFragment)
+                .setArguments(
+                    bundleOf(
+                        "product" to product,
+                        "name" to product.name
+                    )
+                )
+                .createPendingIntent()
+
+            val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_home)
+                .setContentTitle(notificationData["title"].toString())
+                .setContentText(notificationData["body"].toString())
+                .setStyle(
+                    NotificationCompat.BigTextStyle()
+                        .bigText(notificationData["body"].toString())
+                )
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+
+            with(NotificationManagerCompat.from(this)) {
+                // notificationId is a unique int for each notification that you must define
+                notify(PRODUCT_NOTIFICATION_ID, builder.build())
+            }
+
+            Log.d(TAG, "onMessageReceived: $product")
+        } catch (e: JsonSyntaxException) {
+            Log.d(TAG, "onMessageReceived: ${e.message}")
+        }
+    }
+
+    private fun showOrderNotification(notificationData: Map<String, String>) {
+        try {
+            val order = Gson().fromJson(notificationData["obj"], Order::class.java)
+
+            var userInfo: UserInformation? = null
+
+            CoroutineScope(Dispatchers.IO).launch {
+                userInfo = async { userInformationDao.getCurrentUser(order.userId) }.await()
+            }.invokeOnCompletion {
+                // Create an explicit intent for an Activity in your app
+                userInfo?.let { u ->
                     val pendingIntent = NavDeepLinkBuilder(this)
                         .setGraph(R.navigation.nav_graph)
                         .setDestination(R.id.orderDetailListFragment)
@@ -62,7 +141,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                             bundleOf(
                                 "title" to "Order ${order.id}",
                                 "order" to order,
-                                "userInfo" to userInfo!!
+                                "userInfo" to u
                             )
                         )
                         .createPendingIntent()
@@ -75,32 +154,18 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                             NotificationCompat.BigTextStyle()
                                 .bigText(notificationData["body"].toString())
                         )
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
                         .setContentIntent(pendingIntent)
                         .setAutoCancel(true)
 
                     with(NotificationManagerCompat.from(this)) {
                         // notificationId is a unique int for each notification that you must define
-                        notify(NOTIFICATION_ID, builder.build())
+                        notify(ORDER_NOTIFICATION_ID, builder.build())
                     }
                 }
-            } catch (e: JsonSyntaxException) {
-                Log.d(TAG, "onMessageReceived: ${e.message}")
             }
-
-            try {
-                val product = Gson().fromJson(notificationData["obj"], Product::class.java)
-                Log.d(TAG, "onMessageReceived: $product")
-            } catch (e: JsonSyntaxException) {
-                Log.d(TAG, "onMessageReceived: ${e.message}")
-            }
-
-            try {
-                val news = Gson().fromJson(notificationData["obj"], Post::class.java)
-                Log.d(TAG, "onMessageReceived: $news")
-            } catch (e: JsonSyntaxException) {
-                Log.d(TAG, "onMessageReceived: ${e.message}")
-            }
+        } catch (e: JsonSyntaxException) {
+            Log.d(TAG, "onMessageReceived: ${e.message}")
         }
     }
 

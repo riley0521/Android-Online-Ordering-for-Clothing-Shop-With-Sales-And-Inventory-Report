@@ -13,7 +13,7 @@ import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.databinding.ProductItemAdminBinding
 
 class ProductAdminAdapter(
-    private val listener: OnProductAdapterListener
+    private val listener: OnProductAdminListener
 ) : PagingDataAdapter<Product, ProductAdminAdapter.ProductAdminViewHolder>(PRODUCT_COMPARATOR) {
 
     companion object {
@@ -74,7 +74,7 @@ class ProductAdminAdapter(
         }
     }
 
-    interface OnProductAdapterListener {
+    interface OnProductAdminListener {
         fun onItemClicked(product: Product)
     }
 }

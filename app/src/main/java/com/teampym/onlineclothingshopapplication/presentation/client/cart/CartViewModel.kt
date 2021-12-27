@@ -1,14 +1,15 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.cart
 
-import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
-import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.repository.CartRepository
 import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.room.CartDao
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.util.CartFlag
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
@@ -20,12 +21,8 @@ import javax.inject.Inject
 class CartViewModel @Inject constructor(
     private val cartRepository: CartRepository,
     private val cartDao: CartDao,
-    preferencesManager: PreferencesManager,
-    @ApplicationScope val appScope: CoroutineScope
+    preferencesManager: PreferencesManager
 ) : ViewModel() {
-
-    private var _userId = MutableLiveData("")
-    val userId: LiveData<String> get() = _userId
 
     private val _cartChannel = Channel<CartEvent>()
     val cartEvent = _cartChannel.receiveAsFlow()
@@ -54,23 +51,24 @@ class CartViewModel @Inject constructor(
         cart.value = cart.value
     }
 
-    fun onCartUpdated(userId: String, cart: List<Cart>) = appScope.launch {
+    fun onCartUpdated(userId: String, cart: List<Cart>) = viewModelScope.launch {
         val res = async { cartRepository.update(userId, cart) }.await()
         if (res) {
-            async { cartDao.insertAll(cart) }.await()
+            async {
+                cartDao.deleteAll(userId)
+                cartDao.insertAll(cart)
+            }.await()
             _cartChannel.send(CartEvent.NavigateToCheckOutFragment)
         }
     }
 
-    fun onDeleteOutOfStockItems(cartList: List<Cart>) = appScope.launch {
-        if (_userId.value != null) {
-            val res = async {
-                cartRepository.deleteOutOfStockItems(_userId.value!!, cartList)
-            }.await()
-            if (res) {
-                async { cartDao.deleteAllOutOfStockItems(_userId.value!!) }.await()
-                _cartChannel.send(CartEvent.NavigateToCheckOutFragment)
-            }
+    fun onDeleteOutOfStockItems(userId: String, cartList: List<Cart>) = viewModelScope.launch {
+        val res = async {
+            cartRepository.deleteOutOfStockItems(userId, cartList)
+        }.await()
+        if (res) {
+            async { cartDao.deleteAllOutOfStockItems(userId) }.await()
+            _cartChannel.send(CartEvent.NavigateToCheckOutFragment)
         }
     }
 

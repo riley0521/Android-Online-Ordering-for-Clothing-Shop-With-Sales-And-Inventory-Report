@@ -196,5 +196,7 @@
     <string name="label_variant_size">Variant/Size: %1$s</string>
     <string name="hint_input_description_of_your_feedback">Input Description of your feedback</string>
     <string name="channel_description">Simple Description</string>
+    <string name="placeholder_cart_price">$ %1$d</string>
+    <string name="placeholder_cart_size">(%1$s)</string>
 
 </resources>

@@ -4,9 +4,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.data.repository.ProductRepository
-import com.teampym.onlineclothingshopapplication.data.repository.ReviewRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
@@ -18,9 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProductDetailViewModel @Inject constructor(
-    private val db: FirebaseFirestore,
     private val productRepository: ProductRepository,
-    private val reviewRepository: ReviewRepository,
     private val preferencesManager: PreferencesManager,
     private val userInformationDao: UserInformationDao,
     private val state: SavedStateHandle
@@ -36,7 +32,7 @@ class ProductDetailViewModel @Inject constructor(
             state.set(PRODUCT, value)
         }
 
-    suspend fun updateProduct(p: Product) {
+    fun updateProduct(p: Product) {
         product.postValue(p)
     }
 

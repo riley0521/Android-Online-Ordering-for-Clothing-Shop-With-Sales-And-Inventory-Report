@@ -2,8 +2,10 @@ package com.teampym.onlineclothingshopapplication.presentation.client.products
 
 import android.os.Bundle
 import android.util.Log
-import android.view.* // ktlint-disable no-wildcard-imports
-import android.widget.Toast
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
@@ -24,19 +26,16 @@ import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
+
+private const val TAG = "ProductFragment"
 
 @AndroidEntryPoint
 class ProductFragment :
     Fragment(R.layout.fragment_product),
     ProductAdapter.OnProductListener,
-    ProductAdminAdapter.OnProductAdapterListener {
+    ProductAdminAdapter.OnProductAdminListener {
 
     private lateinit var binding: FragmentProductBinding
 
@@ -68,12 +67,9 @@ class ProductFragment :
         binding = FragmentProductBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
 
-        adapter = ProductAdapter(this, requireContext())
         adminAdapter = ProductAdminAdapter(this)
 
-        CoroutineScope(Dispatchers.IO).launch {
-            viewModel.updateCategoryId(args.categoryId)
-        }
+        viewModel.updateCategoryId(args.categoryId)
 
         viewModel.isAddMenuVisible.observe(viewLifecycleOwner) {
             addMenu?.isVisible = it
@@ -93,70 +89,49 @@ class ProductFragment :
             if (userWithWishList?.user != null) {
                 when (userWithWishList.user.userType) {
                     UserType.CUSTOMER.name -> {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            viewModel.updateAddMenu(false)
-                            viewModel.updateCartMenu(true)
-                            viewModel.updateSortMenu(true)
-                        }
+                        viewModel.updateAddMenu(false)
+                        viewModel.updateCartMenu(true)
+                        viewModel.updateSortMenu(true)
 
                         // Product Adapter For Customer
                         instantiateProductAdapterForCustomer()
                     }
                     UserType.ADMIN.name -> {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            viewModel.updateAddMenu(true)
-                            viewModel.updateCartMenu(false)
-                            viewModel.updateSortMenu(false)
-                        }
+                        viewModel.updateAddMenu(true)
+                        viewModel.updateCartMenu(false)
+                        viewModel.updateSortMenu(false)
 
                         // Product Adapter For Admin
                         instantiateProductAdapterForAdmin()
                     }
                     else -> {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            viewModel.updateAddMenu(false)
-                            viewModel.updateCartMenu(false)
-                            viewModel.updateSortMenu(true)
-                        }
+                        viewModel.updateAddMenu(false)
+                        viewModel.updateCartMenu(false)
+                        viewModel.updateSortMenu(true)
+
+                        // Product Adapter For Customer
+                        instantiateProductAdapterForCustomer()
                     }
                 }
                 userAndWishList = userWithWishList
             } else {
-                CoroutineScope(Dispatchers.IO).launch {
-                    viewModel.updateAddMenu(false)
-                    viewModel.updateCartMenu(false)
-                    viewModel.updateSortMenu(true)
-                }
+                viewModel.updateAddMenu(false)
+                viewModel.updateCartMenu(false)
+                viewModel.updateSortMenu(true)
 
                 // Product Adapter For Customer
                 instantiateProductAdapterForCustomer()
             }
         }
 
-        CoroutineScope(Dispatchers.IO).launch {
-            // Check if the user is admin then refresh the paging adapter every 10 seconds.
-            while (true) {
-                if (userAndWishList?.user != null && userAndWishList?.user!!.userType == UserType.ADMIN.name) {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Refreshing Dataset Every 10 Seconds...",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                    delay(10_000)
-                    adminAdapter.refresh()
-                }
-            }
-        }
-
         lifecycleScope.launchWhenStarted {
             viewModel.productsFlow.collectLatest {
-                // For Admin. I can just pass 'it' No need for mapping wish lists.
                 if (userAndWishList?.user != null) {
                     if (userAndWishList?.user!!.userType == UserType.ADMIN.name) {
+                        Log.d(TAG, "productsFlow: here")
+
                         currentPagingData = it
-                        adminAdapter.submitData(it)
+                        adminAdapter.submitData(currentPagingData!!)
                     } else {
                         showAdapterForCustomer(it)
                     }
@@ -169,6 +144,7 @@ class ProductFragment :
                 when (event) {
                     is ProductViewModel.ProductEvent.ShowSuccessMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
+                        adminAdapter.submitData(event.currentPagingData)
                     }
                     is ProductViewModel.ProductEvent.ShowErrorMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
@@ -184,32 +160,49 @@ class ProductFragment :
         setHasOptionsMenu(true)
     }
 
-    private suspend fun showAdapterForCustomer(it: PagingData<Product>) {
-        currentPagingData = it
-        adapter.submitData(it)
-    }
+    private suspend fun showAdapterForCustomer(pagingData: PagingData<Product>) {
+        Log.d(TAG, "showAdapterForCustomer: here")
 
-    override fun onResume() {
-        requireActivity().invalidateOptionsMenu()
-        Log.d("ProductFragment", "onResume: I'm called!!!")
-
-        super.onResume()
+        currentPagingData = pagingData
+        adapter.submitData(currentPagingData!!)
     }
 
     private fun instantiateProductAdapterForCustomer() {
+        Log.d(TAG, "instantiateProductAdapterForCustomer: here")
+
+        adapter = ProductAdapter(userAndWishList?.user?.userId, this, requireContext())
+
         binding.apply {
             recyclerProducts.setHasFixedSize(true)
-            recyclerProducts.layoutManager = GridLayoutManager(requireContext(), 2)
+            recyclerProducts.layoutManager = GridLayoutManager(
+                requireContext(),
+                2,
+                GridLayoutManager.VERTICAL,
+                false
+            )
             recyclerProducts.adapter = adapter
         }
     }
 
     private fun instantiateProductAdapterForAdmin() {
+        Log.d(TAG, "instantiateProductAdapterForAdmin: here")
+
         binding.apply {
             recyclerProducts.setHasFixedSize(true)
-            recyclerProducts.layoutManager = LinearLayoutManager(requireContext())
+            recyclerProducts.layoutManager = LinearLayoutManager(
+                requireContext(),
+                LinearLayoutManager.VERTICAL,
+                false
+            )
             recyclerProducts.adapter = adminAdapter
         }
+    }
+
+    override fun onResume() {
+        requireActivity().invalidateOptionsMenu()
+        Log.d(TAG, "onResume: I'm called!!!")
+
+        super.onResume()
     }
 
     override fun onItemClicked(product: Product) {
@@ -251,8 +244,14 @@ class ProductFragment :
                     "All corresponding inventory, additional images, and reviews will be deleted as well."
             )
             .setPositiveButton("Yes") { _, _ ->
-                loadingDialog.show()
-                viewModel.onDeleteProductClicked(product)
+                if (currentPagingData != null) {
+                    loadingDialog.show()
+                    viewModel.onDeleteProductClicked(
+                        product,
+                        currentPagingData!!,
+                        ProductUpdateRemove.Remove(product)
+                    )
+                }
             }.setNegativeButton("No") { dialog, _ ->
                 dialog.dismiss()
             }.show()

@@ -14,7 +14,6 @@ import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.databinding.FragmentStockInModalBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.fragment_inventory_modal.*
 
 @AndroidEntryPoint
 class StockInModalFragment : BottomSheetDialogFragment() {

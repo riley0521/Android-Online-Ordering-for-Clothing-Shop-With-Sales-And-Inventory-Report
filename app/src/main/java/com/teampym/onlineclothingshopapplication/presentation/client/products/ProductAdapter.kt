@@ -22,6 +22,7 @@ import java.lang.NumberFormatException
 private const val TAG = "ProductAdapter"
 
 class ProductAdapter(
+    private val userId: String?,
     private val listener: OnProductListener,
     private val context: Context
 ) : PagingDataAdapter<Product, ProductAdapter.ProductViewHolder>(PRODUCT_COMPARATOR) {
@@ -146,6 +147,10 @@ class ProductAdapter(
                     labelRate.text = product.avgRate.toDouble().toString()
                 } catch (ex: NumberFormatException) {
                     Log.d(TAG, "bind: ${ex.message}")
+                }
+
+                userId?.let {
+                    btnAddToWishList.isVisible = true
                 }
 
                 if (product.isWishListedByUser) {

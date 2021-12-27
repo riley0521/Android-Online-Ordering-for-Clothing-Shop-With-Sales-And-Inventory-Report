@@ -25,7 +25,5 @@ data class Post(
     )
 
     @get:Exclude
-    val likeList: List<Like> = emptyList()
-    @get:Exclude
-    val commentList: List<Comment> = emptyList()
+    var isLikedByCurrentUser: Boolean = false
 }

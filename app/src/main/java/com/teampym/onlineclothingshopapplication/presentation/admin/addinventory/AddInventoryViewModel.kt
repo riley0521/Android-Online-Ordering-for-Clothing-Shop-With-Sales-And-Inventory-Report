@@ -59,7 +59,7 @@ class AddInventoryViewModel @Inject constructor(
     private val _addInventoryChannel = Channel<AddInventoryEvent>()
     val addInventoryEvent = _addInventoryChannel.receiveAsFlow()
 
-    suspend fun updateAvailableSizeList(list: List<String>) {
+    private fun updateAvailableSizeList(list: List<String>) {
         availableInvList.postValue(list)
     }
 

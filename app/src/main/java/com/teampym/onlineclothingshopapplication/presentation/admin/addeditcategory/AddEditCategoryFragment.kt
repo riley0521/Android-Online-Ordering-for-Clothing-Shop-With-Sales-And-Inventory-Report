@@ -21,10 +21,7 @@ import com.teampym.onlineclothingshopapplication.data.models.Category
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentAddEditCategoryBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 const val SELECT_FROM_GALLERY_REQUEST = 2424
 
@@ -162,10 +159,8 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
             .error(R.drawable.ic_food)
             .into(binding.imgCategory)
 
-        CoroutineScope(Dispatchers.IO).launch {
-            viewModel.updateFileName(category.fileName)
-            viewModel.updateImageUrl(category.imageUrl)
-        }
+        viewModel.updateFileName(category.fileName)
+        viewModel.updateImageUrl(category.imageUrl)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

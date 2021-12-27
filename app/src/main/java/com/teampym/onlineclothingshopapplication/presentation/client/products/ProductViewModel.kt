@@ -8,6 +8,7 @@ import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.filter
 import androidx.paging.map
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -58,19 +59,19 @@ class ProductViewModel @Inject constructor(
 
     val categoryId: MutableLiveData<String> = state.getLiveData(CATEGORY_ID, "")
 
-    suspend fun updateAddMenu(isVisible: Boolean) = viewModelScope.launch {
+    fun updateAddMenu(isVisible: Boolean) = viewModelScope.launch {
         isAddMenuVisible.postValue(isVisible)
     }
 
-    suspend fun updateCartMenu(isVisible: Boolean) {
+    fun updateCartMenu(isVisible: Boolean) {
         isCartMenuVisible.postValue(isVisible)
     }
 
-    suspend fun updateSortMenu(isVisible: Boolean) {
+    fun updateSortMenu(isVisible: Boolean) {
         isSortMenuVisible.postValue(isVisible)
     }
 
-    suspend fun updateCategoryId(id: String) {
+    fun updateCategoryId(id: String) {
         categoryId.postValue(id)
     }
 
@@ -90,14 +91,14 @@ class ProductViewModel @Inject constructor(
     val productEvent = _productChannel.receiveAsFlow()
 
     val productsFlow = combine(
+        categoryId.asFlow(),
         searchQuery.asFlow(),
         preferencesManager.preferencesFlow
-    ) { search, sessionPref ->
-        Pair(search, sessionPref)
-    }.flatMapLatest { (search, sessionPref) ->
-        val queryProducts: Query?
+    ) { categoryId, search, sessionPref ->
+        Triple(categoryId, search, sessionPref)
+    }.flatMapLatest { (categoryId, search, sessionPref) ->
 
-        queryProducts = when (sessionPref.sortOrder) {
+        val queryProducts = when (sessionPref.sortOrder) {
             SortOrder.BY_NAME -> {
                 if (search.isEmpty()) {
                     db.collection(PRODUCTS_COLLECTION)
@@ -196,12 +197,28 @@ class ProductViewModel @Inject constructor(
         }
     }
 
-    fun onDeleteProductClicked(product: Product) = viewModelScope.launch {
+    fun onDeleteProductClicked(
+        product: Product,
+        currentPagingData: PagingData<Product>,
+        event: ProductFragment.ProductUpdateRemove
+    ) = viewModelScope.launch {
         val res = productRepository.delete(product.productId)
         if (res) {
-            _productChannel.send(ProductEvent.ShowSuccessMessage("Deleted product successfully!"))
+
+            when (event) {
+                is ProductFragment.ProductUpdateRemove.Remove -> {
+                    currentPagingData.filter {
+                        product.productId != it.productId
+                    }
+                }
+                is ProductFragment.ProductUpdateRemove.Edit -> {
+                    // Nothing to do here...
+                }
+            }
+
+            _productChannel.send(ProductEvent.ShowSuccessMessage("Deleted product successfully!", currentPagingData))
         } else {
-            _productChannel.send(ProductEvent.ShowSuccessMessage("Deleting product failed. Please wait for a while."))
+            _productChannel.send(ProductEvent.ShowErrorMessage("Deleting product failed. Please wait for a while."))
         }
     }
 
@@ -215,7 +232,7 @@ class ProductViewModel @Inject constructor(
             val currentPagingData: PagingData<Product>
         ) : ProductEvent()
 
-        data class ShowSuccessMessage(val msg: String) : ProductEvent()
+        data class ShowSuccessMessage(val msg: String, val currentPagingData: PagingData<Product>) : ProductEvent()
         data class ShowErrorMessage(val msg: String) : ProductEvent()
     }
 }

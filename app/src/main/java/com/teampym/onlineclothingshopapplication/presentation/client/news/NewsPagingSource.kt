@@ -7,10 +7,13 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.models.Post
+import com.teampym.onlineclothingshopapplication.data.repository.LikeRepository
 import kotlinx.coroutines.tasks.await
 import java.io.IOException
 
 class NewsPagingSource(
+    private val userId: String?,
+    private val likeRepository: LikeRepository,
     private val queryPosts: Query
 ) : PagingSource<QuerySnapshot, Post>() {
 
@@ -42,6 +45,12 @@ class NewsPagingSource(
             for (document in currentPage.documents) {
                 val post = document.toObject<Post>()!!.copy(id = document.id)
                 postList.add(post)
+            }
+
+            userId?.let {
+                postList.map { p ->
+                    p.isLikedByCurrentUser = likeRepository.isLikedByCurrentUser(p.id, it)
+                }
             }
 
             LoadResult.Page(

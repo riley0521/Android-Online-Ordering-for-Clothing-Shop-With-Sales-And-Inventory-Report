@@ -94,19 +94,19 @@ class AddEditProductViewModel @Inject constructor(
     private val _addEditProductChannel = Channel<AddEditProductEvent>()
     val addEditProductEvent = _addEditProductChannel.receiveAsFlow()
 
-    suspend fun updateFileName(name: String) {
+    fun updateFileName(name: String) {
         fileName.postValue(name)
     }
 
-    suspend fun updateImageUrl(url: String) {
+    fun updateImageUrl(url: String) {
         imageUrl.postValue(url)
     }
 
-    suspend fun updateImageList(list: List<ProductImage>) {
+    fun updateImageList(list: List<ProductImage>) {
         imageList.postValue(list.toMutableList())
     }
 
-    suspend fun updateAdditionalImages(list: List<Uri>) {
+    fun updateAdditionalImages(list: List<Uri>) {
         additionalImageList.postValue(list.toMutableList())
     }
 

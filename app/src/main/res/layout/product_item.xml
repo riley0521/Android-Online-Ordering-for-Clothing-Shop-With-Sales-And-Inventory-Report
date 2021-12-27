@@ -89,8 +89,10 @@
                     android:id="@+id/btnAddToWishList"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
-                    android:layout_marginTop="8dp"
                     android:layout_marginStart="4dp"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone"
+                    tools:visibility="visible"
                     android:contentDescription="@string/img_description"
                     android:src="@drawable/ic_fav_unchecked" />
 
@@ -99,13 +101,13 @@
                     style="?attr/ratingBarStyleSmall"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:numStars="5"
-                    android:rating="1"
-                    android:clickable="false"
                     android:layout_marginTop="12dp"
                     android:layout_marginEnd="8dp"
                     android:layout_toStartOf="@id/labelRate"
-                    android:isIndicator="true" />
+                    android:clickable="false"
+                    android:isIndicator="true"
+                    android:numStars="5"
+                    android:rating="1" />
 
                 <TextView
                     android:id="@+id/labelRate"

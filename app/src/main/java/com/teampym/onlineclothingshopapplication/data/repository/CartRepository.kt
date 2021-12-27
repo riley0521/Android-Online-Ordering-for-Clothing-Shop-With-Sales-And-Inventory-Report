@@ -173,13 +173,12 @@ class CartRepository @Inject constructor(
         return withContext(dispatcher) {
             var isSuccessful = true
             for (item in cart) {
-                item.quantity = item.quantity
                 item.subTotal = item.calculatedTotalPrice.toDouble()
 
                 val result = userCartCollectionRef
                     .document(userId)
                     .collection(CART_SUB_COLLECTION)
-                    .document(item.id)
+                    .document(item.inventory.inventoryId)
                     .set(item, SetOptions.merge())
                     .await()
 

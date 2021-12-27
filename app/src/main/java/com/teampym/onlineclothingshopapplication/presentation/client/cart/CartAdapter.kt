@@ -1,5 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.cart
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,7 +15,8 @@ import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.databinding.CartItemBinding
 
 class CartAdapter(
-    private val listener: OnItemCartListener
+    private val listener: OnItemCartListener,
+    private val context: Context
 ) : ListAdapter<Cart, CartAdapter.CartViewHolder>(CART_COMPARATOR) {
 
     companion object {
@@ -49,12 +51,16 @@ class CartAdapter(
                     if (position != RecyclerView.NO_POSITION && btnAdd.isEnabled) {
                         val item = getItem(position)
                         val isMaximum = item.quantity + 1 > item.inventory.stock
-                        if (isMaximum) {
-                            listener.onFailure("You have reached the maximum stocks available for this item.")
-                        } else if (item.quantity + 1 == 100.toLong()) {
-                            listener.onFailure("You can only have 99 pieces per item.")
-                        } else {
-                            listener.onAddQuantity(item.id, position)
+                        when {
+                            isMaximum -> {
+                                listener.onFailure("You have reached the maximum stocks available for this item.")
+                            }
+                            item.quantity + 1 == 100.toLong() -> {
+                                listener.onFailure("You can only have 99 pieces per item.")
+                            }
+                            else -> {
+                                listener.onAddQuantity(item.id, position)
+                            }
                         }
                     }
                 }
@@ -74,7 +80,7 @@ class CartAdapter(
 
                 btnDelete.setOnClickListener {
                     val position = absoluteAdapterPosition
-                    if(position != RecyclerView.NO_POSITION) {
+                    if (position != RecyclerView.NO_POSITION) {
                         val item = getItem(position)
                         listener.onDeleteItemClicked(item.id, position)
                     }
@@ -94,10 +100,12 @@ class CartAdapter(
 
                 tvProductName.text = cart.product.name
 
-                tvPrice.text = "$${cart.product.price}"
-                tvSize.text = "(${cart.inventory.size})"
-                tvTotal.text = "$" + "%.2f".format(cart.calculatedTotalPrice)
-                tvCount.text = "${cart.quantity}"
+                tvPrice.text = context.getString(R.string.placeholder_cart_price, cart.product.price)
+                tvSize.text = context.getString(R.string.placeholder_cart_size, cart.inventory.size)
+
+                val totalStr = "$" + "%.2f".format(cart.calculatedTotalPrice)
+                tvTotal.text = totalStr
+                tvCount.text = cart.quantity.toString()
 
                 val isMax = cart.inventory.stock == cart.quantity || cart.quantity == 99.toLong()
                 btnAdd.isEnabled = !isMax

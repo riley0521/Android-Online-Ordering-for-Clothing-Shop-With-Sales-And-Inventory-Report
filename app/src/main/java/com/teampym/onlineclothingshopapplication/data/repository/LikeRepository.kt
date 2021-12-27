@@ -7,7 +7,6 @@ import com.teampym.onlineclothingshopapplication.data.models.Like
 import com.teampym.onlineclothingshopapplication.data.util.LIKES_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.POSTS_COLLECTION
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -60,25 +59,35 @@ class LikeRepository @Inject constructor(
 
     suspend fun remove(postId: String, userId: String): Boolean {
         return withContext(dispatcher) {
-            var isCompleted = true
-            postCollectionRef
+            val result = postCollectionRef
                 .document(postId)
                 .collection(LIKES_SUB_COLLECTION)
                 .whereEqualTo("userId", userId)
                 .limit(1)
                 .get()
-                .addOnSuccessListener {
-                    it.documents[0].reference.delete()
-                        .addOnSuccessListener {
-                        }.addOnFailureListener {
-                            isCompleted = false
-                            return@addOnFailureListener
-                        }
-                }.addOnFailureListener {
-                    isCompleted = false
-                    return@addOnFailureListener
-                }
+                .await()
+
+            val isCompleted = if (result != null) {
+                result.documents[0].reference.delete().await() != null
+            } else {
+                false
+            }
+
             isCompleted
+        }
+    }
+
+    suspend fun isLikedByCurrentUser(postId: String, userId: String): Boolean {
+        return withContext(dispatcher) {
+            val result = postCollectionRef
+                .document(postId)
+                .collection(LIKES_SUB_COLLECTION)
+                .whereEqualTo("userId", userId)
+                .limit(1)
+                .get()
+                .await()
+
+            result != null
         }
     }
 }

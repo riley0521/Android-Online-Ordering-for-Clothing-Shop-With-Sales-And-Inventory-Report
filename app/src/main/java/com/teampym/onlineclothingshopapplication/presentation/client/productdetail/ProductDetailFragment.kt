@@ -17,10 +17,7 @@ import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductDetailBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -52,9 +49,7 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             // Product ID Should not be null if Product Parcelable is null
             viewModel.getProductById(productId!!)
         } else {
-            CoroutineScope(Dispatchers.IO).launch {
-                viewModel.updateProduct(product!!)
-            }
+            viewModel.updateProduct(product)
         }
 
         viewModel.product.observe(viewLifecycleOwner) {
@@ -112,7 +107,8 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             ratingBar.rating = rate.toFloat()
 
             if (product!!.numberOfReviews > 5L) {
-                tvShowMoreReviews.text = getString(R.string.label_show_more_reviews, product!!.numberOfReviews)
+                tvShowMoreReviews.text =
+                    getString(R.string.label_show_more_reviews, product!!.numberOfReviews)
             } else {
                 tvShowMoreReviews.isVisible = false
             }

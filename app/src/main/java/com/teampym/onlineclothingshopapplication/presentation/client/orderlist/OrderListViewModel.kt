@@ -54,6 +54,7 @@ class OrderListViewModel @Inject constructor(
             if (user!!.userType == UserType.CUSTOMER.name) {
                 db.collection(ORDERS_COLLECTION)
                     .whereEqualTo("status", status)
+                    .whereEqualTo("userId", user.userId)
                     .orderBy("dateOrdered", Query.Direction.DESCENDING)
                     .limit(30)
             } else {
@@ -66,6 +67,7 @@ class OrderListViewModel @Inject constructor(
             if (user!!.userType == UserType.CUSTOMER.name) {
                 db.collection(ORDERS_COLLECTION)
                     .whereEqualTo("status", status)
+                    .whereEqualTo("userId", user.userId)
                     .orderBy("dateOrdered", Query.Direction.DESCENDING)
                     .startAt(search)
                     .endAt(search + '\uf8ff')

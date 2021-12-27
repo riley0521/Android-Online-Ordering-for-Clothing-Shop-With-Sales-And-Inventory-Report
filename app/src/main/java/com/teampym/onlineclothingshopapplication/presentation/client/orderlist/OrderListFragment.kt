@@ -38,6 +38,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.* // ktlint-disable no-wildcard-imports
 
@@ -67,25 +68,24 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
         viewModel.statusQuery.value = status
 
         lifecycleScope.launchWhenStarted {
-            viewModel.userFlow.collectLatest { user ->
-                if (user != null) {
-                    CoroutineScope(Dispatchers.Main).launch {
-                        userInfo = user
-                        adapter = OrderListAdapter(
-                            user.userType,
-                            this@OrderListFragment,
-                            requireActivity()
-                        )
+            val user = viewModel.userFlow.first()
+            if (user != null) {
+                CoroutineScope(Dispatchers.Main).launch {
+                    userInfo = user
+                    adapter = OrderListAdapter(
+                        user.userType,
+                        this@OrderListFragment,
+                        requireActivity()
+                    )
 
-                        binding.apply {
-                            recyclerOrders.setHasFixedSize(true)
-                            recyclerOrders.adapter = adapter
-                        }
-                    }.join()
-                    viewModel.ordersFlow.collectLatest {
-                        currentPagingData = it
-                        adapter.submitData(it)
+                    binding.apply {
+                        recyclerOrders.setHasFixedSize(true)
+                        recyclerOrders.adapter = adapter
                     }
+                }.join()
+                viewModel.ordersFlow.collectLatest {
+                    currentPagingData = it
+                    adapter.submitData(it)
                 }
             }
 

@@ -352,9 +352,7 @@ class AddEditProductFragment :
                 for (pos in 0..it.itemCount) {
                     imageUriList.add(it.getItemAt(pos).uri)
                 }
-                CoroutineScope(Dispatchers.IO).launch {
-                    viewModel.updateAdditionalImages(imageUriList)
-                }
+                viewModel.updateAdditionalImages(imageUriList)
             }
         }
     }
