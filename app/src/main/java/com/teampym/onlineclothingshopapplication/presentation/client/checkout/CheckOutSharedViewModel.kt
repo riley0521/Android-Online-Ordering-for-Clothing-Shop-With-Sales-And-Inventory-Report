@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,28 +27,22 @@ class CheckOutSharedViewModel @Inject constructor(
     @ApplicationScope val appScope: CoroutineScope
 ) : ViewModel() {
 
-    private var _userWithDeliveryInfo = MutableLiveData<UserWithDeliveryInfo?>()
-
     private val _selectedPaymentMethod = MutableLiveData<PaymentMethod>()
 
     private val _checkOutChannel = Channel<CheckOutEvent>()
     val checkOutEvent = _checkOutChannel.receiveAsFlow()
 
-    private val _checkOutCartFlow =
+    val userWithDeliveryInfo =
         preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
             _selectedPaymentMethod.value = sessionPref.paymentMethod
 
-            _userWithDeliveryInfo.value = userInformationDao.getUserWithDeliveryInfo()
-                .firstOrNull { it.user.userId == sessionPref.userId }
-
-            cartDao.getAll(sessionPref.userId)
+            flowOf(
+                userInformationDao.getUserWithDeliveryInfo()
+                    .firstOrNull { it.user.userId == sessionPref.userId }
+            )
         }
 
     val selectedPaymentMethod: LiveData<PaymentMethod> get() = _selectedPaymentMethod
-
-    val userWithDeliveryInfo: LiveData<UserWithDeliveryInfo?> get() = _userWithDeliveryInfo
-
-    val finalCartList = _checkOutCartFlow.asLiveData()
 
     fun placeOrder(
         userInformation: UserInformation,

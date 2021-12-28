@@ -1,6 +1,7 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.categories
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -11,7 +12,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Category
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
@@ -19,6 +19,8 @@ import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCategoryBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+
+private const val TAG = "CategoryFragment"
 
 @AndroidEntryPoint
 class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.OnCategoryListener {
@@ -31,54 +33,26 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
 
     private lateinit var loadingDialog: LoadingDialog
 
-    private var addMenu: MenuItem? = null
+    private var myMenu: Menu? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentCategoryBinding.bind(view)
-
         loadingDialog = LoadingDialog(requireActivity())
-        loadingDialog.show()
 
         viewModel.loadCategories()
-        FirebaseAuth.getInstance().currentUser?.let {
-            viewModel.updateUserId(it.uid)
-        }
-
-        adapter = CategoryAdapter(this, requireContext())
-
-        binding.apply {
-            recyclerCategories.setHasFixedSize(true)
-            recyclerCategories.adapter = adapter
-        }
+        loadingDialog.show()
 
         viewModel.categories.observe(viewLifecycleOwner) {
-            if (loadingDialog.isActive()) {
-                loadingDialog.dismiss()
-            }
+            loadingDialog.dismiss()
             adapter.submitList(it)
+
+            binding.recyclerCategories.setHasFixedSize(true)
+            binding.recyclerCategories.adapter = adapter
         }
 
         lifecycleScope.launchWhenStarted {
-            viewModel.userFlow.collectLatest { user ->
-                if (user != null) {
-                    when (user.userType) {
-                        UserType.CUSTOMER.name -> {
-                            addMenu?.isVisible = false
-                        }
-                        UserType.ADMIN.name -> {
-                            addMenu?.isVisible = true
-                        }
-                        else -> {
-                            addMenu?.isVisible = false
-                        }
-                    }
-                } else {
-                    addMenu?.isVisible = false
-                }
-            }
-
             viewModel.categoryEvent.collectLatest { event ->
                 when (event) {
                     is CategoryViewModel.CategoryEvent.ShowErrorMessage -> {
@@ -106,6 +80,10 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
     }
 
     override fun onItemClick(category: Category) {
+
+        // Update categoryId in preferences
+        viewModel.updateCategoryId(category.id)
+
         val action = CategoryFragmentDirections
             .actionCategoryFragmentToProductFragment(
                 category.name,
@@ -141,7 +119,25 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.category_action_menu, menu)
 
-        addMenu = menu.findItem(R.id.action_add)
+        myMenu = menu
+
+        viewModel.getUserSession().observe(viewLifecycleOwner) { session ->
+
+            Log.d(TAG, "showAvailableMenus: $session")
+
+            when (session.userType) {
+                UserType.CUSTOMER.name -> {
+                    menu.findItem(R.id.action_add).isVisible = false
+                }
+                UserType.ADMIN.name -> {
+                    menu.findItem(R.id.action_add).isVisible = true
+                }
+                else -> {
+                    menu.findItem(R.id.action_add).isVisible = false
+                }
+            }
+            adapter = CategoryAdapter(this@CategoryFragment, session.userType)
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

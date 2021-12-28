@@ -1,10 +1,11 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.categories
 
-import android.content.Context
+import android.view.ContextMenu
 import android.view.LayoutInflater
 import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -12,13 +13,12 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Category
-import com.teampym.onlineclothingshopapplication.data.util.EDIT_BUTTON
-import com.teampym.onlineclothingshopapplication.data.util.REMOVE_BUTTON
+import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.CategoryItemBinding
 
 class CategoryAdapter(
     private val listener: OnCategoryListener,
-    private val context: Context
+    private val userType: String
 ) : ListAdapter<Category, CategoryAdapter.CategoryViewHolder>(
     CATEGORY_COMPARATOR
 ) {
@@ -49,7 +49,9 @@ class CategoryAdapter(
     }
 
     inner class CategoryViewHolder(private val binding: CategoryItemBinding) :
-        RecyclerView.ViewHolder(binding.root) {
+        RecyclerView.ViewHolder(binding.root),
+        View.OnCreateContextMenuListener,
+        MenuItem.OnMenuItemClickListener {
 
         init {
             binding.root.setOnClickListener {
@@ -61,35 +63,8 @@ class CategoryAdapter(
                 }
             }
 
-            binding.root.setOnLongClickListener {
-                val position = absoluteAdapterPosition
-                if (position != RecyclerView.NO_POSITION) {
-                    val item = getItem(position)
-                    if (item != null) {
-                        val showPopUpMenu = PopupMenu(
-                            context,
-                            binding.root
-                        )
-
-                        showPopUpMenu.menu.add(Menu.NONE, 0, 0, EDIT_BUTTON)
-                        showPopUpMenu.menu.add(Menu.NONE, 1, 1, REMOVE_BUTTON)
-
-                        showPopUpMenu.setOnMenuItemClickListener { menuItem ->
-                            when (menuItem.itemId) {
-                                0 -> {
-                                    listener.onEditClicked(item)
-                                    true
-                                }
-                                1 -> {
-                                    listener.onDeleteClicked(item, position)
-                                    true
-                                }
-                                else -> false
-                            }
-                        }
-                    }
-                }
-                true
+            if (userType == UserType.ADMIN.name) {
+                binding.root.setOnCreateContextMenuListener(this)
             }
         }
 
@@ -104,6 +79,40 @@ class CategoryAdapter(
 
                 tvCategoryName.text = category.name
             }
+        }
+
+        override fun onCreateContextMenu(
+            menu: ContextMenu?,
+            v: View?,
+            menuInfo: ContextMenu.ContextMenuInfo?
+        ) {
+            menu?.setHeaderTitle("Select Action")
+            val edit = menu?.add(Menu.NONE, 1, 1, "Edit")
+            val delete = menu?.add(Menu.NONE, 2, 2, "Delete")
+
+            edit?.setOnMenuItemClickListener(this)
+            delete?.setOnMenuItemClickListener(this)
+        }
+
+        override fun onMenuItemClick(item: MenuItem?): Boolean {
+            val position = absoluteAdapterPosition
+            if (position != RecyclerView.NO_POSITION) {
+                val category = getItem(position)
+
+                if (category != null) {
+                    when (item?.itemId) {
+                        1 -> {
+                            listener.onEditClicked(category)
+                            return true
+                        }
+                        2 -> {
+                            listener.onDeleteClicked(category, position)
+                            return true
+                        }
+                    }
+                }
+            }
+            return false
         }
     }
 

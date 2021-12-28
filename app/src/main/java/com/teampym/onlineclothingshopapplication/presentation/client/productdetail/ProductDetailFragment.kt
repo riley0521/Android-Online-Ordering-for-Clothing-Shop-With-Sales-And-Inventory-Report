@@ -124,46 +124,38 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
         }
 
         lifecycleScope.launchWhenStarted {
-            viewModel.userFlow.collectLatest { user ->
-                if (user != null) {
-                    when (user.userType) {
-                        UserType.CUSTOMER.name -> {
-                            myMenu?.let {
-                                it.findItem(R.id.action_cart).isVisible = true
-                            }
-                        }
-                        UserType.ADMIN.name -> {
-                            myMenu?.let {
-                                it.findItem(R.id.action_add_edit_stock).isVisible = true
-                                binding.btnAddToCart.isVisible = false
-                            }
-                        }
-                        else -> {
-                            myMenu?.let {
-                                it.findItem(R.id.action_add_edit_stock).isVisible = false
-                                it.findItem(R.id.action_cart).isVisible = false
-                            }
-                        }
-                    }
-                } else {
+            showAvailableMenus()
+        }
+
+        lifecycleScope.launchWhenResumed {
+            showAvailableMenus()
+        }
+
+        setHasOptionsMenu(true)
+    }
+
+    private suspend fun showAvailableMenus() {
+        viewModel.userSession.collectLatest { user ->
+            when (user.userType) {
+                UserType.CUSTOMER.name -> {
                     myMenu?.let {
-                        it.findItem(R.id.action_add_edit_stock).isVisible = false
-                        it.findItem(R.id.action_cart).isVisible = false
+                        it.findItem(R.id.action_cart).isVisible = true
+                    }
+                }
+                UserType.ADMIN.name -> {
+                    myMenu?.let {
+                        it.findItem(R.id.action_add_edit_stock).isVisible = true
+                        binding.btnAddToCart.isVisible = false
                     }
                 }
             }
         }
-
-        setHasOptionsMenu(true)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.product_detail_action_menu, menu)
 
         myMenu = menu
-
-        menu.findItem(R.id.action_add_edit_stock).isVisible = false
-        menu.findItem(R.id.action_cart).isVisible = false
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

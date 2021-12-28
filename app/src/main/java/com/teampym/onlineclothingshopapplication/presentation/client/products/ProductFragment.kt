@@ -14,20 +14,19 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.paging.PagingData
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.room.Product
+import com.teampym.onlineclothingshopapplication.data.room.SessionPreferences
 import com.teampym.onlineclothingshopapplication.data.room.SortOrder
-import com.teampym.onlineclothingshopapplication.data.room.UserWithWishList
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
-import javax.inject.Inject
+import kotlinx.coroutines.withContext
 
 private const val TAG = "ProductFragment"
 
@@ -48,18 +47,9 @@ class ProductFragment :
 
     private val args by navArgs<ProductFragmentArgs>()
 
-    @Inject
-    lateinit var db: FirebaseFirestore
-
-    private var userAndWishList: UserWithWishList? = null
-
     private lateinit var loadingDialog: LoadingDialog
 
-    private var addMenu: MenuItem? = null
-    private var cartMenu: MenuItem? = null
-    private var sortMenu: MenuItem? = null
-
-    private var currentPagingData: PagingData<Product>? = null
+    private var myMenu: Menu? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -69,102 +59,115 @@ class ProductFragment :
 
         adminAdapter = ProductAdminAdapter(this)
 
-        viewModel.updateCategoryId(args.categoryId)
-
-        viewModel.isAddMenuVisible.observe(viewLifecycleOwner) {
-            addMenu?.isVisible = it
-        }
-
-        viewModel.isCartMenuVisible.observe(viewLifecycleOwner) {
-            cartMenu?.isVisible = it
-        }
-
-        viewModel.isSortMenuVisible.observe(viewLifecycleOwner) {
-            sortMenu?.isVisible = it
-        }
-
-        viewModel.userWithWishList.observe(viewLifecycleOwner) { userWithWishList ->
-            // Check if the user is customer then hide admin functions when true
-
-            if (userWithWishList?.user != null) {
-                when (userWithWishList.user.userType) {
-                    UserType.CUSTOMER.name -> {
-                        viewModel.updateAddMenu(false)
-                        viewModel.updateCartMenu(true)
-                        viewModel.updateSortMenu(true)
-
-                        // Product Adapter For Customer
-                        instantiateProductAdapterForCustomer(userWithWishList.user.userId)
-                    }
-                    UserType.ADMIN.name -> {
-                        viewModel.updateAddMenu(true)
-                        viewModel.updateCartMenu(false)
-                        viewModel.updateSortMenu(false)
-
-                        // Product Adapter For Admin
-                        instantiateProductAdapterForAdmin()
-                    }
-                    else -> {
-                        viewModel.updateAddMenu(false)
-                        viewModel.updateCartMenu(false)
-                        viewModel.updateSortMenu(true)
-
-                        // Product Adapter For Customer
-                        instantiateProductAdapterForCustomer(userWithWishList.user.userId)
-                    }
-                }
-                userAndWishList = userWithWishList
-            } else {
-                viewModel.updateAddMenu(false)
-                viewModel.updateCartMenu(false)
-                viewModel.updateSortMenu(true)
-
-                // Product Adapter For Customer
-                instantiateProductAdapterForCustomer(null)
-            }
-        }
-
         lifecycleScope.launchWhenStarted {
-            viewModel.productsFlow.collectLatest {
-                if (userAndWishList?.user != null) {
-                    if (userAndWishList?.user!!.userType == UserType.ADMIN.name) {
-                        Log.d(TAG, "productsFlow: here")
-
-                        currentPagingData = it
-                        adminAdapter.submitData(currentPagingData!!)
-                    } else {
-                        showAdapterForCustomer(it)
-                    }
-                } else {
-                    showAdapterForCustomer(it)
-                }
-            }
+            collectUserSession()
 
             viewModel.productEvent.collectLatest { event ->
                 when (event) {
                     is ProductViewModel.ProductEvent.ShowSuccessMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
-                        adminAdapter.submitData(event.currentPagingData)
+                        adminAdapter.refresh()
                     }
                     is ProductViewModel.ProductEvent.ShowErrorMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
-                    }
-                    is ProductViewModel.ProductEvent.ShowAddedToWishListSuccessMessage -> {
-                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
-                        adapter.submitData(event.currentPagingData)
                     }
                 }
             }
         }
 
+        lifecycleScope.launchWhenResumed {
+            collectUserSession()
+        }
+
         setHasOptionsMenu(true)
+    }
+
+    private suspend fun collectUserSession() {
+        viewModel.userSession.collectLatest { userSession ->
+            withContext(Dispatchers.Main) {
+                Log.d(TAG, "onViewCreated: $userSession")
+            }
+
+            revalidateUser(userSession)
+
+            viewModel.productsFlow.collectLatest {
+                when (userSession.userType) {
+                    UserType.ADMIN.name -> {
+                        Log.d(TAG, "productsFlow: here")
+
+                        adminAdapter.submitData(it)
+                    }
+                    UserType.CUSTOMER.name -> {
+                        showAdapterForCustomer(it)
+                    }
+                    else -> {
+                        showAdapterForCustomer(it)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun revalidateUser(userSession: SessionPreferences) {
+        // Check if the user is customer then hide admin functions when true
+
+        Log.d(TAG, "onViewCreated: ${userSession.userType}")
+
+        when (userSession.userType) {
+            UserType.CUSTOMER.name -> {
+                showAvailableMenus(userSession.userType)
+
+                // Product Adapter For Customer
+                instantiateProductAdapterForCustomer(userSession.userId)
+            }
+            UserType.ADMIN.name -> {
+                showAvailableMenus(userSession.userType)
+
+                // Product Adapter For Admin
+                instantiateProductAdapterForAdmin()
+            }
+            else -> {
+                showAvailableMenus(userSession.userType)
+
+                // Product Adapter For Customer
+                instantiateProductAdapterForCustomer(userSession.userId)
+            }
+        }
+        viewModel.fetchWishList(userSession.userId)
+    }
+
+    private fun showAvailableMenus(userType: String) {
+        Log.d(TAG, "showAvailableMenus: $userType")
+
+        when (userType) {
+            UserType.CUSTOMER.name -> {
+                myMenu?.let {
+                    it.findItem(R.id.action_add).isVisible = false
+                    it.findItem(R.id.action_cart).isVisible = true
+                    it.findItem(R.id.action_sort).isVisible = true
+                }
+            }
+            UserType.ADMIN.name -> {
+                myMenu?.let {
+                    it.findItem(R.id.action_add).isVisible = true
+                    it.findItem(R.id.action_cart).isVisible = false
+                    it.findItem(R.id.action_sort).isVisible = false
+                }
+            }
+            else -> {
+                myMenu?.let {
+                    it.findItem(R.id.action_add).isVisible = false
+                    it.findItem(R.id.action_cart).isVisible = false
+                    it.findItem(R.id.action_sort).isVisible = true
+                }
+            }
+        }
     }
 
     private suspend fun showAdapterForCustomer(pagingData: PagingData<Product>) {
         Log.d(TAG, "showAdapterForCustomer: here")
 
-        currentPagingData = pagingData
-        adapter.submitData(currentPagingData!!)
+        adapter.submitData(pagingData)
     }
 
     private fun instantiateProductAdapterForCustomer(userId: String?) {
@@ -197,13 +200,6 @@ class ProductFragment :
         }
     }
 
-    override fun onResume() {
-        requireActivity().invalidateOptionsMenu()
-        Log.d(TAG, "onResume: I'm called!!!")
-
-        super.onResume()
-    }
-
     override fun onItemClicked(product: Product) {
         val action = ProductFragmentDirections.actionProductFragmentToProductDetailFragment(
             product,
@@ -214,14 +210,14 @@ class ProductFragment :
     }
 
     override fun onAddToWishListClicked(product: Product, isWishListed: Boolean) {
-        if (userAndWishList?.user != null && currentPagingData != null) {
-            viewModel.addOrRemoveToWishList(
-                userAndWishList?.user!!.userId,
-                product,
-                currentPagingData!!,
-                ProductUpdateRemove.Edit(product),
-                isWishListed
-            )
+        if (viewModel.userWishList.value?.user != null) {
+//            viewModel.addOrRemoveToWishList(
+//                userAndWishList?.user!!.userId,
+//                product,
+//                currentPagingData!!,
+//                ProductUpdateRemove.Edit(product),
+//                isWishListed
+//            )
         }
     }
 
@@ -243,14 +239,10 @@ class ProductFragment :
                     "All corresponding inventory, additional images, and reviews will be deleted as well."
             )
             .setPositiveButton("Yes") { _, _ ->
-                if (currentPagingData != null) {
-                    loadingDialog.show()
-                    viewModel.onDeleteProductClicked(
-                        product,
-                        currentPagingData!!,
-                        ProductUpdateRemove.Remove(product)
-                    )
-                }
+                loadingDialog.show()
+                viewModel.onDeleteProductClicked(
+                    product
+                )
             }.setNegativeButton("No") { dialog, _ ->
                 dialog.dismiss()
             }.show()
@@ -259,15 +251,7 @@ class ProductFragment :
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.product_action_menu, menu)
 
-        // Set action add and cart to hide it whenever needed
-        addMenu = menu.findItem(R.id.action_add)
-        addMenu?.isVisible = viewModel.isAddMenuVisible.value!!
-
-        cartMenu = menu.findItem(R.id.action_cart)
-        cartMenu?.isVisible = viewModel.isCartMenuVisible.value!!
-
-        sortMenu = menu.findItem(R.id.action_sort)
-        sortMenu?.isVisible = viewModel.isSortMenuVisible.value!!
+        myMenu = menu
 
         val searchItem = menu.findItem(R.id.action_search)
         searchView = searchItem.actionView as SearchView
@@ -319,10 +303,5 @@ class ProductFragment :
             }
             else -> false
         }
-    }
-
-    sealed class ProductUpdateRemove {
-        data class Edit(val product: Product) : ProductUpdateRemove()
-        data class Remove(val product: Product) : ProductUpdateRemove()
     }
 }

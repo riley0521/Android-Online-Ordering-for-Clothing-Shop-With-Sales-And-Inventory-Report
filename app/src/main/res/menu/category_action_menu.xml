@@ -8,12 +8,13 @@
         android:icon="@drawable/ic_add"
         android:title="@string/menu_actions"
         app:showAsAction="ifRoom"
+        android:visible="false"
         tools:targetApi="o">
 
         <menu>
             <item
                 android:id="@+id/action_new_category"
-                android:title="@string/label_add_new_category" />
+                android:title="@string/label_add_new_category"/>
         </menu>
 
     </item>

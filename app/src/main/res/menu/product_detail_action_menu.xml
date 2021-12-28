@@ -13,12 +13,14 @@
         android:id="@+id/action_cart"
         android:icon="@drawable/ic_cart"
         android:title="@string/action_view_cart"
+        android:visible="false"
         app:showAsAction="always|collapseActionView" />
 
     <item
         android:id="@+id/action_add_edit_stock"
         android:icon="@drawable/ic_add"
         android:title="@string/menu_actions"
+        android:visible="false"
         app:showAsAction="ifRoom"
         tools:targetApi="o">
 

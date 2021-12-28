@@ -80,6 +80,10 @@ class ProfileViewModel @Inject constructor(
         preferencesManager.updateUserId(userId)
     }
 
+    private fun updateUserType(userType: String) = viewModelScope.launch {
+        preferencesManager.updateUserType(userType)
+    }
+
     fun fetchUserInformation(user: FirebaseUser) = viewModelScope.launch {
         val fetchedUser = accountRepository.get(user.uid)
         if (fetchedUser != null) {
@@ -90,8 +94,11 @@ class ProfileViewModel @Inject constructor(
             // Get Notification Based on the device
             onNotificationTokenInserted(fetchedUser)
 
-            // Update preferences session
+            // Update userId in preferences
             updateUserId(fetchedUser.userId)
+
+            // Update userType in preferences
+            updateUserType(fetchedUser.userType)
 
             // insert data to local db
             userInformationDao.insert(fetchedUser)

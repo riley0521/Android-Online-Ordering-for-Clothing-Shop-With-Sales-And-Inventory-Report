@@ -1,20 +1,19 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.cart
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
 import com.teampym.onlineclothingshopapplication.data.repository.CartRepository
 import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.room.CartDao
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.util.CartFlag
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,11 +23,9 @@ private const val TAG = "CartViewModel"
 class CartViewModel @Inject constructor(
     private val cartRepository: CartRepository,
     private val cartDao: CartDao,
-    preferencesManager: PreferencesManager
+    preferencesManager: PreferencesManager,
+    @ApplicationScope val appScope: CoroutineScope
 ) : ViewModel() {
-
-    private val _cartChannel = Channel<CartEvent>()
-    val cartEvent = _cartChannel.receiveAsFlow()
 
     private val _cartFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
         cartRepository.getAll(sessionPref.userId)
@@ -54,15 +51,12 @@ class CartViewModel @Inject constructor(
         cart.value = cart.value
     }
 
-    fun onCartUpdated(userId: String, cart: List<Cart>) = viewModelScope.launch {
-        val res = cartRepository.update(userId, cart)
+    fun onCartUpdated(userId: String) = appScope.launch {
+        val res = cartRepository.update(userId, cart.value!!)
         if (res) {
-            Log.d(TAG, "onCartUpdated: eut")
             async {
-                cartDao.deleteAll(userId)
-                cartDao.insertAll(cart)
+                cartDao.insertAll(cart.value!!)
             }.await()
-            _cartChannel.send(CartEvent.NavigateToCheckOutFragment)
         }
     }
 
@@ -70,20 +64,13 @@ class CartViewModel @Inject constructor(
         val res = cartRepository.deleteOutOfStockItems(userId, cartList)
         if (res) {
             async { cartDao.deleteAllOutOfStockItems(userId) }.await()
-            _cartChannel.send(CartEvent.NavigateToCheckOutFragment)
         }
     }
 
     fun onDeleteItemSelected(userId: String, cartId: String) = viewModelScope.launch {
-        val res = async { cartRepository.delete(userId, cartId) }.await()
+        val res = cartRepository.delete(userId, cartId)
         if (res) {
             async { cartDao.delete(cartId) }.await()
-            _cartChannel.send(CartEvent.ShowMessage("Item deleted successfully!"))
         }
-    }
-
-    sealed class CartEvent {
-        data class ShowMessage(val msg: String) : CartEvent()
-        object NavigateToCheckOutFragment : CartEvent()
     }
 }

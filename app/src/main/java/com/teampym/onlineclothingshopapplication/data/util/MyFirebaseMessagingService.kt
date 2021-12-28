@@ -1,9 +1,5 @@
 package com.teampym.onlineclothingshopapplication.data.util
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -27,17 +23,13 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val TAG = "MyFCMService"
-const val CHANNEL_ID = "my_channel"
+const val CHANNEL_ID = "midnightmares_ch_here_we_go"
 const val ORDER_NOTIFICATION_ID = 777
 const val PRODUCT_NOTIFICATION_ID = 778
 const val POST_NOTIFICATION_ID = 779
 
 @AndroidEntryPoint
 class MyFirebaseMessagingService : FirebaseMessagingService() {
-
-    init {
-        createNotificationChannel()
-    }
 
     @Inject
     lateinit var userInformationDao: UserInformationDao
@@ -166,23 +158,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             }
         } catch (e: JsonSyntaxException) {
             Log.d(TAG, "onMessageReceived: ${e.message}")
-        }
-    }
-
-    private fun createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = applicationContext.getString(R.string.app_name)
-            val descriptionText = getString(R.string.channel_description)
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
-            }
-            // Register the channel with the system
-            val notificationManager: NotificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
         }
     }
 }

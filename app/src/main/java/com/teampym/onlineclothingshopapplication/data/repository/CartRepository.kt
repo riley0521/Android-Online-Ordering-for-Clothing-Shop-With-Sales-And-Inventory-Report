@@ -48,15 +48,20 @@ class CartRepository @Inject constructor(
                             var cartItem = document
                                 .toObject(Cart::class.java)!!.copy(id = document.id)
 
-                            val foundProduct =
-                                cartItem.product.copy(roomId = cartItem.id, cartId = cartItem.id)
-                            val foundInventory = cartItem.inventory.copy(pCartId = cartItem.id)
+                            val foundProduct = cartItem.product
+                            foundProduct.roomId = cartItem.id
+                            foundProduct.cartId = cartItem.id
+
+                            val foundInventory = cartItem.inventory
+                            foundInventory.pCartId = cartItem.id
 
                             cartItem.product = foundProduct
                             cartItem.inventory = foundInventory
 
                             // get corresponding product (cartItem.id == product.id)
-                            cartItem = getUpdatedPriceAndStock(cartItem, userId)
+                            CoroutineScope(Dispatchers.IO).launch {
+                                cartItem = getUpdatedPriceAndStock(cartItem, userId)
+                            }
                             cartList.add(cartItem)
                         }
                     }
@@ -68,54 +73,53 @@ class CartRepository @Inject constructor(
         }
     }
 
-    private fun getUpdatedPriceAndStock(
+    private suspend fun getUpdatedPriceAndStock(
         cart: Cart,
         userId: String
     ): Cart {
-        productsCollectionRef
-            .document(cart.product.productId)
-            .get()
-            .addOnSuccessListener { prod ->
-                val fetchedUpdatedProduct = prod.toObject<Product>()!!
+        return withContext(Dispatchers.IO) {
+            val mProduct = productsCollectionRef
+                .document(cart.product.productId)
+                .get()
+                .await()
+
+            if (mProduct != null) {
+                val fetchedUpdatedProduct = mProduct.toObject<Product>()!!
                     .copy(
-                        productId = prod.id,
+                        productId = mProduct.id,
                         roomId = cart.id,
                         cartId = cart.id
                     )
 
                 // get corresponding inventory of a single product (product.id == inventory.productId)
-                productsCollectionRef
+                val mInventory = productsCollectionRef
                     .document(fetchedUpdatedProduct.productId)
                     .collection(INVENTORIES_SUB_COLLECTION)
                     .document(cart.inventory.inventoryId)
                     .get()
-                    .addOnSuccessListener { inv ->
-                        val fetchedUpdatedInventory = inv.toObject<Inventory>()!!
-                            .copy(
-                                inventoryId = inv.id,
-                                pid = cart.product.productId,
-                                pCartId = cart.id
-                            )
+                    .await()
 
-                        cart.product = fetchedUpdatedProduct
-                        cart.inventory = fetchedUpdatedInventory
+                if (mInventory != null) {
+                    val fetchedUpdatedInventory = mInventory.toObject<Inventory>()!!
+                        .copy(
+                            inventoryId = mInventory.id,
+                            pid = cart.product.productId,
+                            pCartId = cart.id
+                        )
 
-                        userCartCollectionRef
-                            .document(userId)
-                            .collection(CART_SUB_COLLECTION)
-                            .document(cart.id)
-                            .set(cart, SetOptions.merge())
-                            .addOnSuccessListener {
-                            }.addOnFailureListener {
-                                return@addOnFailureListener
-                            }
-                    }.addOnFailureListener {
-                        return@addOnFailureListener
-                    }
-            }.addOnFailureListener {
-                return@addOnFailureListener
+                    cart.product = fetchedUpdatedProduct
+                    cart.inventory = fetchedUpdatedInventory
+
+                    userCartCollectionRef
+                        .document(userId)
+                        .collection(CART_SUB_COLLECTION)
+                        .document(cart.id)
+                        .set(cart, SetOptions.merge())
+                        .await()
+                }
             }
-        return cart
+            cart
+        }
     }
 
     suspend fun insert(

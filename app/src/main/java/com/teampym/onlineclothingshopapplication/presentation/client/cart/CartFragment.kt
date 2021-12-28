@@ -1,12 +1,12 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.cart
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
@@ -17,9 +17,7 @@ import com.teampym.onlineclothingshopapplication.data.util.CartFlag
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCartBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.android.synthetic.main.fragment_cart.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.collectLatest
 import java.math.BigDecimal
 
 private const val TAG = "CartFragment"
@@ -34,8 +32,6 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
     private val viewModel: CartViewModel by viewModels()
 
     private var userId = ""
-
-    private var cartList: List<Cart> = emptyList()
 
     private var total: BigDecimal = 0.toBigDecimal()
 
@@ -63,24 +59,25 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
         binding.apply {
             btnCheckOut.setOnClickListener {
-                val outOfStockList = cartList.filter { it.inventory.stock == 0L }
+                val outOfStockList = adapter.currentList.filter { it.inventory.stock == 0L }
 
                 if (outOfStockList.isNotEmpty()) {
                     AlertDialog.Builder(requireContext())
                         .setTitle("DELETE OUT OF STOCK ITEMS")
                         .setMessage("Are you sure you want to proceed? You cannot reverse this action.")
                         .setPositiveButton("YES") { _, _ ->
-                            loadingDialog.show()
-
                             viewModel.onDeleteOutOfStockItems(userId, outOfStockList)
+
+                            navigateToCheckOut()
                         }.setNegativeButton("NO") { dialog, _ ->
                             dialog.dismiss()
                         }
                         .show()
                 } else {
-                    loadingDialog.show()
+                    Log.d(TAG, "onViewCreated: jetits")
+                    viewModel.onCartUpdated(userId)
 
-                    viewModel.onCartUpdated(userId, adapter.currentList)
+                    navigateToCheckOut()
                 }
             }
 
@@ -89,14 +86,10 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
         }
 
         viewModel.cart.observe(viewLifecycleOwner) { cart ->
-            if (loadingDialog.isActive()) {
-                loadingDialog.dismiss()
-            }
+            loadingDialog.dismiss()
 
             adapter.submitList(cart)
-            btnCheckOut.isEnabled = cart.isNotEmpty()
-
-            cartList = cart
+            binding.btnCheckOut.isEnabled = cart.isNotEmpty()
 
             if (cart.isEmpty()) {
                 binding.recyclerViewCart.visibility = View.INVISIBLE
@@ -107,24 +100,13 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
             val totalText = "$" + String.format("%.2f", total)
             binding.tvMerchandiseTotal.text = totalText
         }
+    }
 
-        lifecycleScope.launchWhenStarted {
-            viewModel.cartEvent.collectLatest { event ->
-                when (event) {
-                    is CartViewModel.CartEvent.ShowMessage -> {
-                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
-                    }
-                    is CartViewModel.CartEvent.NavigateToCheckOutFragment -> {
-                        loadingDialog.dismiss()
-
-                        val action = CartFragmentDirections.actionCartFragmentToCheckOutFragment(
-                            cart = Checkout(userId, cartList, total)
-                        )
-                        findNavController().navigate(action)
-                    }
-                }
-            }
-        }
+    private fun navigateToCheckOut() {
+        val action = CartFragmentDirections.actionCartFragmentToCheckOutFragment(
+            cart = Checkout(userId, adapter.currentList, total)
+        )
+        findNavController().navigate(action)
     }
 
     private fun getFirebaseUser() = FirebaseAuth.getInstance().currentUser
@@ -148,6 +130,9 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
             .setPositiveButton("YES") { _, _ ->
                 viewModel.onDeleteItemSelected(userId, cartId)
                 adapter.notifyItemRemoved(pos)
+
+                Snackbar.make(requireView(), "Item deleted successfully!", Snackbar.LENGTH_SHORT)
+                    .show()
             }.setNegativeButton("NO") { dialog, _ ->
                 dialog.dismiss()
             }
@@ -156,5 +141,10 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
     override fun onFailure(msg: String) {
         Snackbar.make(requireView(), msg, Snackbar.LENGTH_SHORT).show()
+    }
+
+    override fun onStop() {
+        viewModel.onCartUpdated(userId)
+        super.onStop()
     }
 }

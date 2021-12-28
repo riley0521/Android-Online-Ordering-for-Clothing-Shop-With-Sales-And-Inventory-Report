@@ -10,7 +10,6 @@ import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -36,9 +35,7 @@ class ProductDetailViewModel @Inject constructor(
         product.postValue(p)
     }
 
-    val userFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
-        userInformationDao.get(sessionPref.userId)
-    }
+    val userSession = preferencesManager.preferencesFlow
 
     fun getProductById(productId: String) = viewModelScope.launch {
         val res = async { productRepository.getOne(productId) }.await()

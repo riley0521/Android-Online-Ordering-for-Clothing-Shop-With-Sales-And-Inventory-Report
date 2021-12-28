@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Midnightmares</string>
+    <string name="simple_desc_of_app">Simple Description</string>
 
     <string-array name="product_types_array">
         <item>SHIRTS</item>
@@ -195,7 +196,6 @@
     <string name="hint_input_stock_to_add">Input Stock to Add</string>
     <string name="label_variant_size">Variant/Size: %1$s</string>
     <string name="hint_input_description_of_your_feedback">Input Description of your feedback</string>
-    <string name="channel_description">Simple Description</string>
     <string name="placeholder_cart_price">$ %1$.2f</string>
     <string name="placeholder_cart_size">(%1$s)</string>
 

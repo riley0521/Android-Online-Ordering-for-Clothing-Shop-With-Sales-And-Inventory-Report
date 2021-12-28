@@ -45,15 +45,14 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
         loadingDialog = LoadingDialog(requireActivity())
 
         adapter = CheckOutAdapter()
+        adapter.submitList(args.cart.cart)
 
-        viewModel.finalCartList.observe(viewLifecycleOwner) { cart ->
-            adapter.submitList(cart)
-            finalUser.cartList = cart
-            binding.recyclerFinalItems.setHasFixedSize(true)
-            binding.recyclerFinalItems.adapter = adapter
-        }
+        finalUser.cartList = adapter.currentList
 
         binding.apply {
+            recyclerFinalItems.setHasFixedSize(true)
+            recyclerFinalItems.adapter = adapter
+
             btnChangeAddress.setOnClickListener {
                 findNavController().navigate(R.id.action_global_deliveryInformationFragment)
             }
@@ -126,41 +125,41 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
             }
         }
 
-        viewModel.userWithDeliveryInfo.observe(viewLifecycleOwner) { userWithDeliveryInfo ->
-            userWithDeliveryInfo?.let { user ->
-                Log.d(TAG, user.toString())
+        lifecycleScope.launchWhenCreated {
+            viewModel.userWithDeliveryInfo.collectLatest { userWithDeliveryInfo ->
+                userWithDeliveryInfo?.let { user ->
+                    Log.d(TAG, user.toString())
 
-                finalUser = user.user
-                finalUser.deliveryInformationList = user.deliveryInformation
+                    finalUser = user.user
+                    finalUser.deliveryInformationList = user.deliveryInformation
 
-                val defaultDeliveryInfo = user.deliveryInformation.firstOrNull { it.isPrimary }
-                binding.apply {
-                    defaultDeliveryInfo?.let { del ->
-                        val contact = if (del.contactNo[0].toString() == "0")
-                            del.contactNo.substring(
-                                1,
-                                del.contactNo.length - 1
-                            ) else del.contactNo
+                    val defaultDeliveryInfo = user.deliveryInformation.firstOrNull { it.isPrimary }
+                    binding.apply {
+                        defaultDeliveryInfo?.let { del ->
+                            val contact = if (del.contactNo[0].toString() == "0")
+                                del.contactNo.substring(
+                                    1,
+                                    del.contactNo.length - 1
+                                ) else del.contactNo
 
-                        val nameAndContact = "${del.name} | (+63) $contact"
-                        tvNameAndContactNo.visibility = View.VISIBLE
-                        tvNameAndContactNo.text = nameAndContact
+                            val nameAndContact = "${del.name} | (+63) $contact"
+                            tvNameAndContactNo.visibility = View.VISIBLE
+                            tvNameAndContactNo.text = nameAndContact
 
-                        val completeAddress = "${del.streetNumber} " +
-                            "${del.city}, " +
-                            "${del.province}, " +
-                            "${del.province}, " +
-                            del.postalCode
-                        tvCompleteAddress.visibility = View.VISIBLE
-                        tvCompleteAddress.text = completeAddress
+                            val completeAddress = "${del.streetNumber} " +
+                                "${del.city}, " +
+                                "${del.province}, " +
+                                "${del.province}, " +
+                                del.postalCode
+                            tvCompleteAddress.visibility = View.VISIBLE
+                            tvCompleteAddress.text = completeAddress
 
-                        tvNoAddressYet.visibility = View.INVISIBLE
+                            tvNoAddressYet.visibility = View.INVISIBLE
+                        }
                     }
                 }
             }
-        }
 
-        lifecycleScope.launchWhenCreated {
             viewModel.checkOutEvent.collectLatest { event ->
                 when (event) {
                     is CheckOutSharedViewModel.CheckOutEvent.ShowSuccessfulMessage -> {
