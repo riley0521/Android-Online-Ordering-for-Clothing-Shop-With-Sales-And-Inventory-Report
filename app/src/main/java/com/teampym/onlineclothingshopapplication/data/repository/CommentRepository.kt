@@ -10,6 +10,7 @@ import com.teampym.onlineclothingshopapplication.data.util.POSTS_COLLECTION
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -44,57 +45,52 @@ class CommentRepository @Inject constructor(
         }
     }
 
-    suspend fun insert(postId: String, comment: Comment?): Comment? {
+    suspend fun insert(postId: String, comment: Comment): Comment? {
         return withContext(dispatcher) {
-            var createdComment = comment
-            createdComment?.let { c ->
-                postCollectionRef
-                    .document(postId)
-                    .collection(COMMENTS_SUB_COLLECTION)
-                    .add(c)
-                    .addOnSuccessListener {
-                    }.addOnFailureListener {
-                        createdComment = null
-                        return@addOnFailureListener
-                    }
+            val result = postCollectionRef
+                .document(postId)
+                .collection(COMMENTS_SUB_COLLECTION)
+                .add(comment)
+                .await()
+
+            if (result != null) {
+                return@withContext comment.copy(id = result.id)
             }
-            createdComment
+            return@withContext null
         }
     }
 
-    suspend fun update(postId: String, comment: Comment?): Comment? {
+    suspend fun update(postId: String, comment: Comment): Comment? {
         return withContext(dispatcher) {
-            var updatedComment = comment
-            updatedComment?.let { c ->
+            try {
                 postCollectionRef
                     .document(postId)
                     .collection(COMMENTS_SUB_COLLECTION)
-                    .document(c.id)
-                    .set(c, SetOptions.merge())
-                    .addOnSuccessListener {
-                    }.addOnFailureListener {
-                        updatedComment = null
-                        return@addOnFailureListener
-                    }
+                    .document(comment.id)
+                    .set(comment, SetOptions.merge())
+                    .await()
+
+                return@withContext comment
+            } catch (ex: Exception) {
+                return@withContext null
             }
-            updatedComment
         }
     }
 
     suspend fun delete(postId: String, commentId: String): Boolean {
         return withContext(dispatcher) {
-            var isSuccessful = true
-            postCollectionRef
-                .document(postId)
-                .collection(COMMENTS_SUB_COLLECTION)
-                .document(commentId)
-                .delete()
-                .addOnSuccessListener {
-                }.addOnFailureListener {
-                    isSuccessful = false
-                    return@addOnFailureListener
-                }
-            isSuccessful
+            try {
+                postCollectionRef
+                    .document(postId)
+                    .collection(COMMENTS_SUB_COLLECTION)
+                    .document(commentId)
+                    .delete()
+                    .await()
+
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
+            }
         }
     }
 }

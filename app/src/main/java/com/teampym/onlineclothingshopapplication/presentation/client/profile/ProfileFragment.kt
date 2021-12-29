@@ -6,9 +6,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -21,6 +21,8 @@ import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProfileBinding
+import com.teampym.onlineclothingshopapplication.presentation.registration.ADD_EDIT_PROFILE_REQUEST
+import com.teampym.onlineclothingshopapplication.presentation.registration.ADD_EDIT_PROFILE_RESULT
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 
@@ -44,6 +46,55 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         loadingDialog = LoadingDialog(requireActivity())
 
+        setupViews()
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.profileEvent.collectLatest { event ->
+                when (event) {
+                    is ProfileViewModel.ProfileEvent.VerificationSent -> {
+                        Snackbar.make(
+                            requireView(),
+                            "Verification sent to your email. Please check it.",
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    }
+                    ProfileViewModel.ProfileEvent.NotRegistered -> {
+                        val action =
+                            ProfileFragmentDirections.actionProfileFragmentToRegistrationFragment(
+                                false
+                            )
+                        findNavController().navigate(action)
+                    }
+                    ProfileViewModel.ProfileEvent.SignedOut -> {
+                        resetInformation()
+                    }
+                    is ProfileViewModel.ProfileEvent.ShowSuccessMessage -> {
+                        Snackbar.make(
+                            requireView(),
+                            event.msg,
+                            Snackbar.LENGTH_LONG
+                        ).show()
+
+                        getFirebaseUser()?.let {
+                            // Re-fetch the userInformation from local db
+                            // Then update the View Automatically
+                            // There is an observer above
+                            viewModel.fetchUserFromLocalDb(it.uid)
+                        }
+                    }
+                    is ProfileViewModel.ProfileEvent.ShowErrorMessage -> {
+                        Snackbar.make(
+                            requireView(),
+                            event.msg,
+                            Snackbar.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun setupViews() {
         binding.apply {
 
             tvAddress.setOnClickListener {
@@ -51,11 +102,19 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             }
 
             tvProfile.setOnClickListener {
-                Toast.makeText(requireContext(), tvProfile.text, Toast.LENGTH_SHORT).show()
+                val action =
+                    ProfileFragmentDirections.actionProfileFragmentToRegistrationFragment(editMode = true)
+                findNavController().navigate(action)
+            }
+
+            setFragmentResultListener(ADD_EDIT_PROFILE_REQUEST) { _, bundle ->
+                val result = bundle.getInt(ADD_EDIT_PROFILE_RESULT)
+                Log.d(TAG, "setupViews: $result")
+                viewModel.onAddEditProfileResult(result)
             }
 
             tvWishList.setOnClickListener {
-                Toast.makeText(requireContext(), tvWishList.text, Toast.LENGTH_SHORT).show()
+                findNavController().navigate(R.id.action_profileFragment_to_wishListFragment)
             }
 
             tvToc.setOnClickListener {
@@ -132,29 +191,6 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 }
             }
         }
-
-        lifecycleScope.launchWhenStarted {
-            viewModel.profileEvent.collectLatest { event ->
-                when (event) {
-                    is ProfileViewModel.ProfileEvent.VerificationSent -> {
-                        Snackbar.make(
-                            requireView(),
-                            "Verification sent to your email. Please check it.",
-                            Snackbar.LENGTH_LONG
-                        ).show()
-                    }
-                    ProfileViewModel.ProfileEvent.NotRegistered -> {
-                        val action =
-                            ProfileFragmentDirections.actionProfileFragmentToRegistrationFragment(
-                                false
-                            )
-                        findNavController().navigate(action)
-                    }
-                    ProfileViewModel.ProfileEvent.SignedIn -> TODO()
-                    ProfileViewModel.ProfileEvent.SignedOut -> TODO()
-                }
-            }
-        }
     }
 
     private fun getFirebaseUser() = FirebaseAuth.getInstance().currentUser
@@ -177,7 +213,6 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
     private fun signOut(auth: FirebaseAuth) {
         viewModel.signOut(auth)
-        resetInformation()
     }
 
     private fun resetInformation() {
@@ -224,7 +259,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     user.sendEmailVerification()
 
                 loadingDialog.show()
-                viewModel.fetchUserInformation(user)
+                viewModel.fetchUserFromRemoteDb(user)
             }
         }
     }

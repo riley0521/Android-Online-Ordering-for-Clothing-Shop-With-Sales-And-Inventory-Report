@@ -3,6 +3,7 @@ package com.teampym.onlineclothingshopapplication.presentation.client.productdet
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.repository.ProductRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
@@ -35,7 +36,7 @@ class ProductDetailViewModel @Inject constructor(
         product.postValue(p)
     }
 
-    val userSession = preferencesManager.preferencesFlow
+    fun getUserSession() = preferencesManager.preferencesFlow.asLiveData()
 
     fun getProductById(productId: String) = viewModelScope.launch {
         val res = async { productRepository.getOne(productId) }.await()

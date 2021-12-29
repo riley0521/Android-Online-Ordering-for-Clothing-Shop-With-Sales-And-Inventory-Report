@@ -14,6 +14,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -145,26 +146,30 @@ class CartRepository @Inject constructor(
                     cartItemFromDb.quantity += 1
                     cartItemFromDb.subTotal = cartItemFromDb.calculatedTotalPrice.toDouble()
 
-                    val result = userCartCollectionRef
-                        .document(userId)
-                        .collection(CART_SUB_COLLECTION)
-                        .document(cartItem.id)
-                        .set(cartItemFromDb, SetOptions.merge())
-                        .await()
-
-                    isSuccessful = result != null
+                    try {
+                        userCartCollectionRef
+                            .document(userId)
+                            .collection(CART_SUB_COLLECTION)
+                            .document(cartItem.id)
+                            .set(cartItemFromDb, SetOptions.merge())
+                            .await()
+                    } catch (ex: Exception) {
+                        isSuccessful = false
+                    }
                 }
             } else {
                 cartItem.subTotal = cartItem.calculatedTotalPrice.toDouble()
 
-                val result = userCartCollectionRef
-                    .document(userId)
-                    .collection(CART_SUB_COLLECTION)
-                    .document(cartItem.id)
-                    .set(cartItem, SetOptions.merge())
-                    .await()
-
-                isSuccessful = result != null
+                try {
+                    userCartCollectionRef
+                        .document(userId)
+                        .collection(CART_SUB_COLLECTION)
+                        .document(cartItem.id)
+                        .set(cartItem, SetOptions.merge())
+                        .await()
+                } catch (ex: Exception) {
+                    isSuccessful = false
+                }
             }
             isSuccessful
         }
@@ -179,14 +184,16 @@ class CartRepository @Inject constructor(
             for (item in cart) {
                 item.subTotal = item.calculatedTotalPrice.toDouble()
 
-                val result = userCartCollectionRef
-                    .document(userId)
-                    .collection(CART_SUB_COLLECTION)
-                    .document(item.inventory.inventoryId)
-                    .set(item, SetOptions.merge())
-                    .await()
-
-                isSuccessful = result != null
+                try {
+                    userCartCollectionRef
+                        .document(userId)
+                        .collection(CART_SUB_COLLECTION)
+                        .document(item.inventory.inventoryId)
+                        .set(item, SetOptions.merge())
+                        .await()
+                } catch (ex: Exception) {
+                    isSuccessful = false
+                }
             }
             isSuccessful
         }
@@ -197,14 +204,19 @@ class CartRepository @Inject constructor(
         cartId: String
     ): Boolean {
         return withContext(dispatcher) {
-            val result = userCartCollectionRef
-                .document(userId)
-                .collection(CART_SUB_COLLECTION)
-                .document(cartId)
-                .delete()
-                .await()
 
-            result != null
+            try {
+                userCartCollectionRef
+                    .document(userId)
+                    .collection(CART_SUB_COLLECTION)
+                    .document(cartId)
+                    .delete()
+                    .await()
+
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
+            }
         }
     }
 
@@ -215,14 +227,16 @@ class CartRepository @Inject constructor(
         return withContext(dispatcher) {
             var isSuccessful = true
             for (item in cartList) {
-                val result = userCartCollectionRef
-                    .document(userId)
-                    .collection(CART_SUB_COLLECTION)
-                    .document(item.id)
-                    .delete()
-                    .await()
-
-                isSuccessful = result != null
+                try {
+                    userCartCollectionRef
+                        .document(userId)
+                        .collection(CART_SUB_COLLECTION)
+                        .document(item.id)
+                        .delete()
+                        .await()
+                } catch (ex: Exception) {
+                    isSuccessful = false
+                }
             }
             isSuccessful
         }
@@ -241,14 +255,17 @@ class CartRepository @Inject constructor(
 
             if (cartDocuments.documents.isNotEmpty()) {
                 for (item in cartDocuments.documents) {
-                    val result = userCartCollectionRef
-                        .document(userId)
-                        .collection(CART_SUB_COLLECTION)
-                        .document(item.id)
-                        .delete()
-                        .await()
 
-                    isSuccessful = result != null
+                    try {
+                        userCartCollectionRef
+                            .document(userId)
+                            .collection(CART_SUB_COLLECTION)
+                            .document(item.id)
+                            .delete()
+                            .await()
+                    } catch (ex: Exception) {
+                        isSuccessful = false
+                    }
                 }
             }
             isSuccessful

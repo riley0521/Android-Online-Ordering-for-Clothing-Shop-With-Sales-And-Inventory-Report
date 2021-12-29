@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -52,21 +53,18 @@ class PostRepository @Inject constructor(
         }
     }
 
-    suspend fun insert(post: Post?): Post? {
+    suspend fun insert(post: Post): Post? {
         return withContext(dispatcher) {
-            var createdPostTemp = post
-            createdPostTemp?.let { p ->
-                p.dateCreated = System.currentTimeMillis()
-                postCollectionRef
-                    .add(p)
-                    .addOnSuccessListener {
-                        p.id = it.id
-                    }.addOnFailureListener {
-                        createdPostTemp = null
-                        return@addOnFailureListener
-                    }
+            try {
+                post.dateCreated = System.currentTimeMillis()
+                val result = postCollectionRef
+                    .add(post)
+                    .await()
+
+                return@withContext post.copy(id = result.id)
+            } catch (ex: Exception) {
+                return@withContext null
             }
-            createdPostTemp
         }
     }
 

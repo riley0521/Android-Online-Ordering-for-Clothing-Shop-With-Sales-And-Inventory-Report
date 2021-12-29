@@ -70,7 +70,7 @@ class CategoryAdapter(
 
         fun bind(category: Category) {
             binding.apply {
-                Glide.with(imageCategory)
+                Glide.with(itemView)
                     .load(category.imageUrl)
                     .centerCrop()
                     .transition(DrawableTransitionOptions.withCrossFade())

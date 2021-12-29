@@ -39,7 +39,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.observeOn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.* // ktlint-disable no-wildcard-imports
 
 @AndroidEntryPoint
@@ -67,39 +69,54 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
         val status = args.status
         viewModel.statusQuery.value = status
 
-        lifecycleScope.launchWhenStarted {
-            val user = viewModel.userFlow.first()
-            if (user != null) {
-                CoroutineScope(Dispatchers.Main).launch {
-                    userInfo = user
-                    adapter = OrderListAdapter(
-                        user.userType,
-                        this@OrderListFragment,
-                        requireActivity()
-                    )
+        viewModel.getOrders()
 
-                    binding.apply {
-                        recyclerOrders.setHasFixedSize(true)
-                        recyclerOrders.adapter = adapter
-                    }
-                }.join()
-                viewModel.ordersFlow.collectLatest {
-                    currentPagingData = it
-                    adapter.submitData(it)
-                }
+        viewModel.userSession.observe(viewLifecycleOwner) {
+            adapter = OrderListAdapter(
+                it.userType,
+                this@OrderListFragment,
+                requireActivity()
+            )
+
+            binding.apply {
+                recyclerOrders.setHasFixedSize(true)
+                recyclerOrders.adapter = adapter
             }
 
+            collectOrderPagingData()
+        }
+
+        lifecycleScope.launchWhenStarted {
             viewModel.orderEvent.collectLatest { event ->
                 when (event) {
                     is OrderListViewModel.OrderListEvent.ShowMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
-                        adapter.submitData(event.currentPagingData)
+
+                        // Set the RefreshLayout to true
+                        // And refresh the adapter to fetch fresh data.
+                        binding.refreshLayout.isRefreshing = true
+                        adapter.refresh()
                     }
                 }
             }
         }
 
         setHasOptionsMenu(true)
+    }
+
+    private fun collectOrderPagingData() {
+        viewModel.orders.observe(viewLifecycleOwner) {
+            currentPagingData = it
+            adapter.submitData(viewLifecycleOwner.lifecycle, it)
+
+            binding.refreshLayout.isRefreshing = false
+        }
+
+        binding.apply {
+            refreshLayout.setOnRefreshListener {
+                adapter.refresh()
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

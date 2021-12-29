@@ -28,7 +28,7 @@ class CategoryViewModel @Inject constructor(
     private val _categoryChannel = Channel<CategoryEvent>()
     val categoryEvent = _categoryChannel.receiveAsFlow()
 
-    fun loadCategories() = viewModelScope.launch {
+    fun onLoadCategories() = viewModelScope.launch {
         _categories.value = categoryRepository.getAll()
     }
 

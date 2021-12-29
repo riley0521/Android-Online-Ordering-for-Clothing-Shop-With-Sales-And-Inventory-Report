@@ -33,19 +33,24 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
 
     private lateinit var loadingDialog: LoadingDialog
 
-    private var myMenu: Menu? = null
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentCategoryBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
 
-        viewModel.loadCategories()
-        loadingDialog.show()
+        fetchCategories()
+
+        binding.apply {
+            refreshLayout.setOnRefreshListener {
+                viewModel.onLoadCategories()
+            }
+        }
 
         viewModel.categories.observe(viewLifecycleOwner) {
             loadingDialog.dismiss()
+            binding.refreshLayout.isRefreshing = false
+
             adapter.submitList(it)
 
             binding.recyclerCategories.setHasFixedSize(true)
@@ -77,6 +82,11 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
         }
 
         setHasOptionsMenu(true)
+    }
+
+    private fun fetchCategories() {
+        viewModel.onLoadCategories()
+        loadingDialog.show()
     }
 
     override fun onItemClick(category: Category) {
@@ -118,8 +128,6 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.category_action_menu, menu)
-
-        myMenu = menu
 
         viewModel.getUserSession().observe(viewLifecycleOwner) { session ->
 

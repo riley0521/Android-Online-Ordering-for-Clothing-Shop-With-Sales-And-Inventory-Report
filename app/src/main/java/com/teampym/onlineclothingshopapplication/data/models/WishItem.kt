@@ -13,6 +13,7 @@ data class WishItem(
     var categoryId: String,
     var name: String,
     var description: String,
+    var fileName: String,
     var imageUrl: String,
     var price: Double,
     var productId: String,
@@ -23,9 +24,13 @@ data class WishItem(
     @get:Exclude
     var roomId: String = "",
     var type: String = ProductType.HOODIES.name,
-    var dateAdded: Long = 0
+    var dateAdded: Long = 0,
+    var dateModified: Long = 0,
+    var totalRate: Double = 0.0,
+    var numberOfReviews: Long = 0
 ) : Parcelable {
     constructor() : this(
+        "",
         "",
         "",
         "",
@@ -35,4 +40,7 @@ data class WishItem(
         "",
         ""
     )
+
+    @get:Exclude
+    val avgRate: Double get() = totalRate / numberOfReviews
 }

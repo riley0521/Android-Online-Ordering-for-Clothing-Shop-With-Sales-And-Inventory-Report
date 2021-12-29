@@ -14,6 +14,7 @@ import com.teampym.onlineclothingshopapplication.presentation.client.reviews.Rev
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -67,7 +68,7 @@ class ReviewRepository @Inject constructor(
         productId: String,
     ): Review? {
         return withContext(dispatcher) {
-            var createdReview: Review? = Review(
+            var createdReview = Review(
                 userId = userInformation.userId,
                 productId = productId,
                 userAvatar = userInformation.avatarUrl ?: "",
@@ -77,19 +78,17 @@ class ReviewRepository @Inject constructor(
                 dateReview = System.currentTimeMillis()
             )
 
-            createdReview?.let { r ->
-                reviewCollectionRef
+            try {
+                val result = reviewCollectionRef
                     .document(productId)
                     .collection(REVIEWS_SUB_COLLECTION)
-                    .add(r)
-                    .addOnSuccessListener {
-                        createdReview?.id = it.id
-                    }.addOnFailureListener {
-                        createdReview = null
-                        return@addOnFailureListener
-                    }
+                    .add(createdReview)
+                    .await()
+
+                return@withContext createdReview.copy(id = result.id)
+            } catch (ex: Exception) {
+                return@withContext null
             }
-            createdReview
         }
     }
 }

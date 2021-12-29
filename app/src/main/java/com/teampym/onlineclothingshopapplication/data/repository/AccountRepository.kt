@@ -9,6 +9,7 @@ import com.teampym.onlineclothingshopapplication.data.util.Utils
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.* // ktlint-disable no-wildcard-imports
 import javax.inject.Inject
@@ -49,7 +50,7 @@ class AccountRepository @Inject constructor(
         avatarUrl: String
     ): UserInformation? {
         return withContext(dispatcher) {
-            var newUser: UserInformation? = UserInformation(
+            val newUser = UserInformation(
                 firstName = firstName,
                 lastName = lastName,
                 birthDate = birthDate,
@@ -57,56 +58,68 @@ class AccountRepository @Inject constructor(
                 userId = userId
             )
 
-            newUser?.let { user ->
-                val res = userCollectionRef
+            try {
+                userCollectionRef
                     .document(userId)
-                    .set(user)
+                    .set(newUser)
                     .await()
-                if (res == null) {
-                    newUser = null
-                }
+
+                return@withContext newUser
+            } catch (ex: Exception) {
+                return@withContext null
             }
-            newUser
         }
     }
 
+    // Account Repository
+    // Update the user information
     suspend fun update(
         userId: String,
         firstName: String,
         lastName: String,
-        birthDate: String
+        birthDate: String,
+        avatarUrl: String
     ): Boolean {
         return withContext(dispatcher) {
-            var isSuccessful = true
+            val isValid = firstName.isNotEmpty() && birthDate.isNotEmpty()
 
-            if (firstName.isNotEmpty() && birthDate.isNotEmpty()) {
-
+            if (isValid) {
+                // Parsing the date string "01/01/2000" to a date object
                 val date = SimpleDateFormat("MM/dd/yyyy", Locale.ENGLISH).parse(birthDate)
+
+                // Creating an instance of calendar object
                 val calendarDate = Calendar.getInstance()
-                if (date != null) {
-                    calendarDate.time = date
+                // Set the time with the date variable
+                calendarDate.time = date!!
 
-                    // Check if the user is in the right age to use the application
-                    if (Calendar.getInstance().get(Calendar.YEAR)
-                        .minus(calendarDate.get(Calendar.YEAR)) >= 12
-                    ) {
+                // Check if the user is in the right age to use the application
+                // User should be 12 years old and above to access this app
+                if (Calendar.getInstance().get(Calendar.YEAR)
+                    .minus(calendarDate.get(Calendar.YEAR)) >= 12
+                ) {
 
-                        val updateUserMap = mapOf<String, Any>(
-                            "firstName" to firstName,
-                            "lastName" to lastName,
-                            "birthDate" to birthDate,
-                            "dateModified" to Utils.getTimeInMillisUTC()
-                        )
+                    // Create a map to update fields in the firebase
+                    val updateUserMap = mapOf<String, Any>(
+                        "avatarUrl" to avatarUrl,
+                        "firstName" to firstName,
+                        "lastName" to lastName,
+                        "birthDate" to birthDate,
+                        "dateModified" to Utils.getTimeInMillisUTC()
+                    )
 
-                        val result = userCollectionRef
-                            .document(userId)
-                            .set(updateUserMap, SetOptions.merge())
-                            .await()
-                        isSuccessful = result != null
-                    }
+                    // Execute the query in fireStore
+                    // I'm using ktx gradle library
+                    // This line executes. It reflects the changes in the fireStore
+                    userCollectionRef
+                        .document(userId)
+                        .set(updateUserMap, SetOptions.merge())
+                        .await()
+
+                    return@withContext true
                 }
             }
-            isSuccessful
+            // Returns false if the above operation fails
+            false
         }
     }
 }

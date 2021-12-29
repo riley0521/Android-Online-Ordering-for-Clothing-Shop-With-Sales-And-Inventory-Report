@@ -123,20 +123,16 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             }
         }
 
-        lifecycleScope.launchWhenStarted {
-            showAvailableMenus()
-        }
-
-        lifecycleScope.launchWhenResumed {
-            showAvailableMenus()
-        }
-
         setHasOptionsMenu(true)
     }
 
-    private suspend fun showAvailableMenus() {
-        viewModel.userSession.collectLatest { user ->
-            when (user.userType) {
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.product_detail_action_menu, menu)
+
+        myMenu = menu
+
+        viewModel.getUserSession().observe(viewLifecycleOwner) { session ->
+            when (session.userType) {
                 UserType.CUSTOMER.name -> {
                     myMenu?.let {
                         it.findItem(R.id.action_cart).isVisible = true
@@ -150,12 +146,6 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                 }
             }
         }
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.product_detail_action_menu, menu)
-
-        myMenu = menu
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

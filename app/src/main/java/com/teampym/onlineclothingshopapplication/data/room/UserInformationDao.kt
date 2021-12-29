@@ -1,7 +1,10 @@
 package com.teampym.onlineclothingshopapplication.data.room
 
-import androidx.room.* // ktlint-disable no-wildcard-imports
+import androidx.room.Dao
+import androidx.room.Insert
 import androidx.room.OnConflictStrategy.REPLACE
+import androidx.room.Query
+import androidx.room.Transaction
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import kotlinx.coroutines.flow.Flow
 
@@ -20,8 +23,9 @@ interface UserInformationDao {
     @Query("SELECT * FROM table_users WHERE userId = :userId")
     suspend fun getCurrentUser(userId: String): UserInformation?
 
-    @Query("UPDATE table_users SET firstName = :firstName, lastName = :lastName, birthDate = :birthDate WHERE userId = :userId")
+    @Query("UPDATE table_users SET avatarUrl = :avatarUrl, firstName = :firstName, lastName = :lastName, birthDate = :birthDate WHERE userId = :userId")
     suspend fun updateBasicInfo(
+        avatarUrl: String,
         firstName: String,
         lastName: String,
         birthDate: String,

@@ -3,9 +3,13 @@ package com.teampym.onlineclothingshopapplication.presentation.registration
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -15,14 +19,21 @@ import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
-import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentRegistrationBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_registration.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.* // ktlint-disable no-wildcard-imports
+
+const val ADD_EDIT_PROFILE_REQUEST = "add_edit_profile_request"
+const val ADD_EDIT_PROFILE_RESULT = "add_edit_profile_result"
+
+const val TAG = "RegistrationFragment"
 
 @AndroidEntryPoint
 class RegistrationFragment : Fragment(R.layout.fragment_registration) {
@@ -35,50 +46,50 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
     private val args by navArgs<RegistrationFragmentArgs>()
 
-    private var userInfo: UserInformation? = null
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentRegistrationBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
-        loadingDialog.show()
 
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        if (currentUser != null) {
-            viewModel.userId = currentUser.uid
-            viewModel.fetchNotificationTokensAndWishList(currentUser.uid)
+        FirebaseAuth.getInstance().currentUser?.let {
+            viewModel.userId = it.uid
+            Log.d(TAG, "auth: ${viewModel.userId}")
+            viewModel.fetchNotificationTokensAndWishList(it.uid)
+            loadingDialog.show()
         }
 
         // Reuse this fragment when the user is editing his firstName, lastName, and birthDate
         val editMode = args.editMode
-        if (!editMode) {
-            if (loadingDialog.isActive()) {
-                loadingDialog.dismiss()
-            }
-        }
 
         viewModel.user.observe(viewLifecycleOwner) {
+            loadingDialog.dismiss()
+
             if (it != null && editMode) {
-                if (loadingDialog.isActive()) {
-                    loadingDialog.dismiss()
-                }
+
+                (requireActivity() as AppCompatActivity).supportActionBar?.title = getString(R.string.label_update_information)
 
                 tvInstruction.isVisible = false
                 btnRegister.text = getString(R.string.label_update_information)
 
-                userInfo = it
-                binding.edtFirstName.text.apply { it.firstName }
-                binding.edtLastName.text.apply { it.lastName }
-                binding.tvBirthdate.text = it.birthDate
+                viewModel.firstName = it.firstName
+                viewModel.lastName = it.lastName
+                viewModel.birthDate = it.birthDate
+
+                binding.apply {
+                    edtFirstName.setText(viewModel.firstName)
+                    edtLastName.setText(viewModel.lastName)
+                    tvBirthdate.text = viewModel.birthDate
+                }
             }
         }
 
         binding.apply {
             btnSelectDate.setOnClickListener {
-                // TODO("Show material date picker and get selected date and display it to tvBirthdate textview")
 
+                // Getting the date today
                 val today = MaterialDatePicker.todayInUtcMilliseconds()
+                // Setting the time TimeZone to UTC +0
                 val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
 
                 calendar.timeInMillis = today
@@ -108,10 +119,7 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
             }
 
             btnRegister.setOnClickListener {
-                viewModel.onSubmitClicked(
-                    editMode,
-                    currentUser?.photoUrl.toString()
-                )
+                submitForm()
             }
 
             edtFirstName.setText(viewModel.firstName)
@@ -160,16 +168,42 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         lifecycleScope.launchWhenStarted {
             viewModel.registrationEvent.collectLatest { event ->
                 when (event) {
-                    is RegistrationViewModel.RegistrationEvent.ShowSuccessfulMessage -> {
+                    is RegistrationViewModel.RegistrationEvent.ShowAddingSuccessAndNavigateBack -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
+                        setFragmentResult(
+                            ADD_EDIT_PROFILE_REQUEST,
+                            bundleOf(ADD_EDIT_PROFILE_RESULT to event.result)
+                        )
                         findNavController().popBackStack()
                     }
-                    is RegistrationViewModel.RegistrationEvent.ShowErrorMessage -> {
+                    is RegistrationViewModel.RegistrationEvent.ShowUpdatingSuccessAndNavigateBack -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
+                        setFragmentResult(
+                            ADD_EDIT_PROFILE_REQUEST,
+                            bundleOf(ADD_EDIT_PROFILE_RESULT to event.result)
+                        )
+                        findNavController().popBackStack()
+                    }
+                    is RegistrationViewModel.RegistrationEvent.ShowFormErrorMessage -> {
+                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
+                    }
+                    is RegistrationViewModel.RegistrationEvent.ShowErrorMessageAndNavigateBack -> {
+                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
+                        setFragmentResult(
+                            ADD_EDIT_PROFILE_REQUEST,
+                            bundleOf(ADD_EDIT_PROFILE_RESULT to event.result)
+                        )
                         findNavController().popBackStack()
                     }
                 }
             }
         }
+    }
+
+    private fun submitForm() = CoroutineScope(Dispatchers.IO).launch {
+        viewModel.onSubmitClicked(
+            args.editMode,
+            FirebaseAuth.getInstance().currentUser?.let { it.photoUrl.toString() } ?: ""
+        )
     }
 }

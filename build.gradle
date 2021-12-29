@@ -5,7 +5,7 @@ buildscript {
         googleMaterialVersion = "1.4.0"
         fragmentVersion = "1.4.0"
         navigationVersion = "2.3.5"
-        lifecycleVersion = "2.4.0"
+        lifecycleVersion = "2.3.0"
         retrofitVersion = "2.9.0"
         pagingVersion = "3.1.0"
         glideVersion = "4.12.0"

@@ -21,6 +21,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.lang.Exception
 import java.util.* // ktlint-disable no-wildcard-imports
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -144,7 +145,7 @@ class OrderRepository @Inject constructor(
         return withContext(dispatcher) {
 
             // Change Status to Canceled
-            changeStatusToCancelled(orderId, Status.CANCELED.name, true, isCommitted)
+            changeStatusToCancelled(orderId, Status.CANCELED.name, isCommitted)
 
             val isSuccessful = notificationTokenRepository.notifyAllAdmins(
                 null,
@@ -237,7 +238,7 @@ class OrderRepository @Inject constructor(
                     isCompleted = changeStatusToReturned(userType, orderId, status, isCompleted)
                 }
                 Status.CANCELED.name -> {
-                    isCompleted = changeStatusToCancelled(orderId, status, isCompleted, false)
+                    isCompleted = changeStatusToCancelled(orderId, status, false)
                     notificationTokenRepository.notifyCustomer(
                         obj = null,
                         userId = userId,
@@ -253,21 +254,19 @@ class OrderRepository @Inject constructor(
     private suspend fun changeStatusToCancelled(
         orderId: String,
         status: String,
-        isCompleted: Boolean,
         isCommitted: Boolean,
     ): Boolean {
-        var isSuccess = isCompleted
         val orderDetailList = mutableListOf<OrderDetail>()
         val updateOrderStatus = mapOf<String, Any>(
             "status" to status
         )
 
-        val result = orderCollectionRef
-            .document(orderId)
-            .set(updateOrderStatus, SetOptions.merge())
-            .await()
+        try {
+            orderCollectionRef
+                .document(orderId)
+                .set(updateOrderStatus, SetOptions.merge())
+                .await()
 
-        if (result != null) {
             if (isCommitted) {
                 val anotherRes = orderCollectionRef
                     .document(orderId)
@@ -282,14 +281,13 @@ class OrderRepository @Inject constructor(
                         orderDetailList.add(item)
                     }
 
-                    isSuccess = productRepository.deductCommittedToStockCount(orderDetailList)
+                    return productRepository.deductCommittedToStockCount(orderDetailList)
                 }
             }
-        } else {
-            isSuccess = false
+        } catch (ex: Exception) {
+            return false
         }
-
-        return isSuccess
+        return false
     }
 
     private fun changeStatusToReturned(
@@ -375,8 +373,7 @@ class OrderRepository @Inject constructor(
         orderCollectionRef
             .document(orderId)
             .set(updateOrderStatus, SetOptions.merge())
-            .addOnSuccessListener {
-            }.addOnFailureListener {
+            .addOnFailureListener {
                 isSuccess = false
                 return@addOnFailureListener
             }

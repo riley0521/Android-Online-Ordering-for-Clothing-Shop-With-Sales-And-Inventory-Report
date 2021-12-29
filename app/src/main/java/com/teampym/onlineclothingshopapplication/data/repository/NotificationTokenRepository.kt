@@ -18,6 +18,7 @@ import com.teampym.onlineclothingshopapplication.data.util.UserType
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -76,7 +77,7 @@ class NotificationTokenRepositoryImpl @Inject constructor(
         token: String
     ): NotificationToken? {
         return withContext(dispatcher) {
-            var createdToken: NotificationToken? = NotificationToken(
+            var createdToken = NotificationToken(
                 userId = userId,
                 token = token,
                 dateModified = System.currentTimeMillis(),
@@ -93,23 +94,22 @@ class NotificationTokenRepositoryImpl @Inject constructor(
 
             if (tokenDocument.documents.size == 1) {
                 if (tokenDocument.documents[0]["token"].toString() == token) {
-                    createdToken = null
+                    return@withContext null
                 }
             } else {
-                createdToken?.let { nf ->
+                try {
                     val result = userCollectionRef
                         .document(userId)
                         .collection(NOTIFICATION_TOKENS_SUB_COLLECTION)
-                        .add(nf)
+                        .add(createdToken)
                         .await()
-                    if (result != null) {
-                        createdToken?.id = result.id
-                    } else {
-                        createdToken = null
-                    }
+
+                    return@withContext createdToken.copy(id = result.id)
+                } catch (ex: Exception) {
+                    return@withContext null
                 }
             }
-            createdToken
+            null
         }
     }
 
@@ -135,7 +135,7 @@ class NotificationTokenRepositoryImpl @Inject constructor(
 
             val notificationTokenList = getAll(userId)
 
-            if(notificationTokenList.isNotEmpty()) {
+            if (notificationTokenList.isNotEmpty()) {
                 val tokenList: List<String> = notificationTokenList.map {
                     it.token
                 }

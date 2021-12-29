@@ -10,12 +10,12 @@ import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
-import com.teampym.onlineclothingshopapplication.data.models.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.models.*
 import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.SortOrder
 import com.teampym.onlineclothingshopapplication.data.room.UserWithWishList
-import com.teampym.onlineclothingshopapplication.data.util.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.util.*
 import com.teampym.onlineclothingshopapplication.presentation.client.products.ProductPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
@@ -24,6 +24,7 @@ import kotlinx.coroutines.withContext
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
+import java.lang.Exception as JavaLangException
 
 @Singleton
 class ProductRepository @Inject constructor(
@@ -82,20 +83,16 @@ class ProductRepository @Inject constructor(
 
     suspend fun create(product: Product): Product? {
         return withContext(dispatcher) {
-            var createdProduct: Product? = product
-            if (createdProduct != null) {
-                createdProduct.dateAdded = System.currentTimeMillis()
+            product.dateAdded = System.currentTimeMillis()
+            try {
                 val result = productCollectionRef
-                    .add(createdProduct)
+                    .add(product)
                     .await()
 
-                if (result != null) {
-                    createdProduct.productId = result.id
-                } else {
-                    createdProduct = null
-                }
+                return@withContext product.copy(productId = result.id)
+            } catch (ex: JavaLangException) {
+                return@withContext null
             }
-            createdProduct
         }
     }
 
@@ -114,11 +111,16 @@ class ProductRepository @Inject constructor(
     suspend fun update(product: Product): Boolean {
         return withContext(dispatcher) {
             product.dateModified = System.currentTimeMillis()
-            val result = productCollectionRef
-                .document(product.productId)
-                .set(product, SetOptions.merge())
-                .await()
-            result != null
+            try {
+                productCollectionRef
+                    .document(product.productId)
+                    .set(product, SetOptions.merge())
+                    .await()
+
+                return@withContext true
+            } catch (ex: JavaLangException) {
+                return@withContext false
+            }
         }
     }
 
@@ -132,34 +134,31 @@ class ProductRepository @Inject constructor(
             var updatedProduct: Product? = getOne(item.product.productId)
 
             if (updatedProduct != null) {
-
-                val addedReview = async {
-                    reviewRepository.insert(
-                        userInformation,
-                        rate,
-                        desc,
-                        item.product.productId
-                    )
-                }.await()
+                val addedReview = reviewRepository.insert(
+                    userInformation,
+                    rate,
+                    desc,
+                    item.product.productId
+                )
 
                 if (addedReview != null) {
 
                     updatedProduct.totalRate += rate
                     updatedProduct.numberOfReviews + 1
 
-                    val res = productCollectionRef
-                        .document(updatedProduct.productId)
-                        .set(updatedProduct, SetOptions.merge())
-                        .await()
+                    try {
+                        productCollectionRef
+                            .document(updatedProduct.productId)
+                            .set(updatedProduct, SetOptions.merge())
+                            .await()
 
-                    if (res != null) {
                         item.canAddReview = false
                         item.hasAddedReview = true
                         val updated = orderDetailRepository.update(item)
                         if (!updated) {
                             updatedProduct = null
                         }
-                    } else {
+                    } catch (ex: JavaLangException) {
                         updatedProduct = null
                     }
                 }
@@ -170,20 +169,30 @@ class ProductRepository @Inject constructor(
 
     suspend fun delete(productId: String): Boolean {
         return withContext(dispatcher) {
-            val result = productCollectionRef
-                .document(productId)
-                .delete()
-                .await()
-            result != null
+            try {
+                productCollectionRef
+                    .document(productId)
+                    .delete()
+                    .await()
+
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
+            }
         }
     }
 
     suspend fun deleteImage(fileName: String): Boolean {
         return withContext(dispatcher) {
-            val deleted = imageRef.child(PRODUCT_PATH + fileName)
-                .delete()
-                .await()
-            deleted != null
+            try {
+                imageRef.child(PRODUCT_PATH + fileName)
+                    .delete()
+                    .await()
+
+                return@withContext true
+            } catch (ex: JavaLangException) {
+                return@withContext false
+            }
         }
     }
 
@@ -232,16 +241,16 @@ class ProductRepository @Inject constructor(
                         inventory.stock -= orderDetail.quantity
                         inventory.committed += orderDetail.quantity
 
-                        productCollectionRef
-                            .document(orderDetail.product.productId)
-                            .collection(INVENTORIES_SUB_COLLECTION)
-                            .document(orderDetail.inventoryId)
-                            .set(inventory, SetOptions.merge())
-                            .addOnSuccessListener {
-                            }.addOnFailureListener {
-                                isSuccessful = false
-                                return@addOnFailureListener
-                            }
+                        try {
+                            productCollectionRef
+                                .document(orderDetail.product.productId)
+                                .collection(INVENTORIES_SUB_COLLECTION)
+                                .document(orderDetail.inventoryId)
+                                .set(inventory, SetOptions.merge())
+                                .await()
+                        } catch (ex: JavaLangException) {
+                            isSuccessful = false
+                        }
                     } else {
                         isSuccessful = false
                     }
@@ -273,13 +282,14 @@ class ProductRepository @Inject constructor(
                     inventory.committed -= orderDetail.quantity
                     inventory.stock += orderDetail.quantity
 
-                    val result = productCollectionRef
-                        .document(orderDetail.product.productId)
-                        .collection(INVENTORIES_SUB_COLLECTION)
-                        .document(orderDetail.inventoryId)
-                        .set(inventory, SetOptions.merge())
-                        .await()
-                    if (result == null) {
+                    try {
+                        productCollectionRef
+                            .document(orderDetail.product.productId)
+                            .collection(INVENTORIES_SUB_COLLECTION)
+                            .document(orderDetail.inventoryId)
+                            .set(inventory, SetOptions.merge())
+                            .await()
+                    } catch (ex: JavaLangException) {
                         isSuccessful = false
                     }
                 } else {
@@ -315,16 +325,16 @@ class ProductRepository @Inject constructor(
                         inventory.committed -= orderDetail.quantity
                         inventory.sold += orderDetail.quantity
 
-                        productCollectionRef
-                            .document(orderDetail.product.productId)
-                            .collection(INVENTORIES_SUB_COLLECTION)
-                            .document(orderDetail.inventoryId)
-                            .set(inventory, SetOptions.merge())
-                            .addOnSuccessListener {
-                            }.addOnFailureListener {
-                                isSuccessful = false
-                                return@addOnFailureListener
-                            }
+                        try {
+                            productCollectionRef
+                                .document(orderDetail.product.productId)
+                                .collection(INVENTORIES_SUB_COLLECTION)
+                                .document(orderDetail.inventoryId)
+                                .set(inventory, SetOptions.merge())
+                                .await()
+                        } catch (ex: JavaLangException) {
+                            isSuccessful = false
+                        }
                     } else {
                         isSuccessful = false
                     }
@@ -358,16 +368,16 @@ class ProductRepository @Inject constructor(
                         inventory.sold -= orderDetail.quantity
                         inventory.returned += orderDetail.quantity
 
-                        productCollectionRef
-                            .document(orderDetail.product.productId)
-                            .collection(INVENTORIES_SUB_COLLECTION)
-                            .document(orderDetail.inventoryId)
-                            .set(inventory, SetOptions.merge())
-                            .addOnSuccessListener {
-                            }.addOnFailureListener {
-                                isSuccessful = false
-                                return@addOnFailureListener
-                            }
+                        try {
+                            productCollectionRef
+                                .document(orderDetail.product.productId)
+                                .collection(INVENTORIES_SUB_COLLECTION)
+                                .document(orderDetail.inventoryId)
+                                .set(inventory, SetOptions.merge())
+                                .await()
+                        } catch (ex: JavaLangException) {
+                            isSuccessful = false
+                        }
                     } else {
                         isSuccessful = false
                     }

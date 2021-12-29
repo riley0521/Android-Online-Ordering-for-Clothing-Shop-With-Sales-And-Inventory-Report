@@ -7,6 +7,10 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.teampym.onlineclothingshopapplication.ADD_PROFILE_ERR
+import com.teampym.onlineclothingshopapplication.ADD_PROFILE_OK
+import com.teampym.onlineclothingshopapplication.EDIT_PROFILE_ERR
+import com.teampym.onlineclothingshopapplication.EDIT_PROFILE_OK
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.AccountRepository
 import com.teampym.onlineclothingshopapplication.data.repository.DeliveryInformationRepository
@@ -70,6 +74,8 @@ class ProfileViewModel @Inject constructor(
         // And this user Id to store session.
         resetSession()
         user.signOut()
+
+        _profileChannel.send(ProfileEvent.SignedOut)
     }
 
     private fun resetSession() = viewModelScope.launch {
@@ -84,7 +90,7 @@ class ProfileViewModel @Inject constructor(
         preferencesManager.updateUserType(userType)
     }
 
-    fun fetchUserInformation(user: FirebaseUser) = viewModelScope.launch {
+    fun fetchUserFromRemoteDb(user: FirebaseUser) = viewModelScope.launch {
         val fetchedUser = accountRepository.get(user.uid)
         if (fetchedUser != null) {
             val fetchedWishList = async { wishListRepository.getAll(fetchedUser.userId) }
@@ -124,11 +130,23 @@ class ProfileViewModel @Inject constructor(
         _profileChannel.send(ProfileEvent.VerificationSent)
     }
 
+    fun onAddEditProfileResult(result: Int) = viewModelScope.launch {
+        when (result) {
+            ADD_PROFILE_OK, EDIT_PROFILE_OK -> {
+                _profileChannel.send(ProfileEvent.ShowSuccessMessage("Profile updated successfully!"))
+            }
+            ADD_PROFILE_ERR, EDIT_PROFILE_ERR -> {
+                _profileChannel.send(ProfileEvent.ShowErrorMessage("Updating profile failed. Please try again."))
+            }
+        }
+    }
+
     // Events used to notify the UI about what's happening.
     sealed class ProfileEvent {
         object VerificationSent : ProfileEvent()
-        object SignedIn : ProfileEvent()
         object SignedOut : ProfileEvent()
         object NotRegistered : ProfileEvent()
+        data class ShowSuccessMessage(val msg: String) : ProfileEvent()
+        data class ShowErrorMessage(val msg: String) : ProfileEvent()
     }
 }

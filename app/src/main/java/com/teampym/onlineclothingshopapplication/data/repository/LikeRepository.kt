@@ -9,6 +9,7 @@ import com.teampym.onlineclothingshopapplication.data.util.POSTS_COLLECTION
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -42,18 +43,17 @@ class LikeRepository @Inject constructor(
 
     suspend fun add(postId: String, like: Like): Boolean {
         return withContext(dispatcher) {
-            var isCompleted = true
-            val result = postCollectionRef
-                .document(postId)
-                .collection(LIKES_SUB_COLLECTION)
-                .add(like)
-                .await()
-            if (result != null) {
-                like.id = result.id
-            } else {
-                isCompleted = false
+            try {
+                postCollectionRef
+                    .document(postId)
+                    .collection(LIKES_SUB_COLLECTION)
+                    .add(like)
+                    .await()
+
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
             }
-            isCompleted
         }
     }
 

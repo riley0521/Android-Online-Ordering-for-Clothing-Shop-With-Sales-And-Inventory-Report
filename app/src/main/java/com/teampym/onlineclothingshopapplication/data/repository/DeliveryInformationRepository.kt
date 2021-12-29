@@ -12,6 +12,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -84,23 +85,19 @@ class DeliveryInformationRepository @Inject constructor(
 
     suspend fun create(
         userId: String,
-        deliveryInformation: DeliveryInformation?
+        deliveryInformation: DeliveryInformation
     ): DeliveryInformation? {
         return withContext(dispatcher) {
-            var createdDeliveryInfo = deliveryInformation
-            createdDeliveryInfo?.let { d ->
-                userCollectionRef
-                    .document(userId)
-                    .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
-                    .add(d)
-                    .addOnSuccessListener {
-                        createdDeliveryInfo?.id = it.id
-                    }.addOnFailureListener {
-                        createdDeliveryInfo = null
-                        return@addOnFailureListener
-                    }
+            val result = userCollectionRef
+                .document(userId)
+                .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
+                .add(deliveryInformation)
+                .await()
+
+            if(result != null) {
+                return@withContext deliveryInformation.copy(id = result.id)
             }
-            createdDeliveryInfo
+            null
         }
     }
 
@@ -200,18 +197,18 @@ class DeliveryInformationRepository @Inject constructor(
 
     suspend fun delete(userId: String, deliveryInformation: DeliveryInformation): Boolean {
         return withContext(dispatcher) {
-            var isSuccessful = true
-            userCollectionRef
-                .document(userId)
-                .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
-                .document(deliveryInformation.id)
-                .delete()
-                .addOnSuccessListener {
-                }.addOnFailureListener {
-                    isSuccessful = false
-                    return@addOnFailureListener
-                }
-            isSuccessful
+            try {
+                userCollectionRef
+                    .document(userId)
+                    .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
+                    .document(deliveryInformation.id)
+                    .delete()
+                    .await()
+
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
+            }
         }
     }
 }

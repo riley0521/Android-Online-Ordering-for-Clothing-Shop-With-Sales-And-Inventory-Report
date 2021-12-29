@@ -91,24 +91,6 @@ class ProductAdapter(
                     }
                     true
                 }
-
-                btnAddToWishList.setOnClickListener {
-                    val position = bindingAdapterPosition
-                    if (position != RecyclerView.NO_POSITION) {
-                        val item = getItem(position)
-                        if (item != null) {
-                            val isWishListed = if (!item.isWishListedByUser) {
-                                btnAddToWishList.setImageResource(R.drawable.ic_fav_checked)
-                                true
-                            } else {
-                                btnAddToWishList.setImageResource(R.drawable.ic_fav_unchecked)
-                                false
-                            }
-
-                            listener.onAddToWishListClicked(item, isWishListed)
-                        }
-                    }
-                }
             }
         }
 
@@ -145,17 +127,12 @@ class ProductAdapter(
                 if (!product.avgRate.isNaN()) {
                     labelRate.text = product.avgRate.toString()
                 }
-
-                if (product.isWishListedByUser) {
-                    btnAddToWishList.setImageResource(R.drawable.ic_fav_checked)
-                }
             }
         }
     }
 
     interface OnProductListener {
         fun onItemClicked(product: Product)
-        fun onAddToWishListClicked(product: Product, isWishListed: Boolean)
         fun onEditClicked(product: Product)
         fun onDeleteClicked(product: Product)
     }

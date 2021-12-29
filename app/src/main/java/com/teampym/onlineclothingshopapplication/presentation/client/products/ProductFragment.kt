@@ -1,6 +1,7 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.products
 
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
@@ -24,9 +25,8 @@ import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
+import kotlinx.android.synthetic.main.fragment_news.*
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.withContext
 
 private const val TAG = "ProductFragment"
 
@@ -49,8 +49,6 @@ class ProductFragment :
 
     private lateinit var loadingDialog: LoadingDialog
 
-    private var myMenu: Menu? = null
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -59,9 +57,9 @@ class ProductFragment :
 
         adminAdapter = ProductAdminAdapter(this)
 
-        lifecycleScope.launchWhenStarted {
-            collectUserSession()
+        viewModel.getProducts()
 
+        lifecycleScope.launchWhenStarted {
             viewModel.productEvent.collectLatest { event ->
                 when (event) {
                     is ProductViewModel.ProductEvent.ShowSuccessMessage -> {
@@ -75,99 +73,13 @@ class ProductFragment :
             }
         }
 
-        lifecycleScope.launchWhenResumed {
-            collectUserSession()
-        }
-
         setHasOptionsMenu(true)
     }
 
-    private suspend fun collectUserSession() {
-        viewModel.userSession.collectLatest { userSession ->
-            withContext(Dispatchers.Main) {
-                Log.d(TAG, "onViewCreated: $userSession")
-            }
-
-            revalidateUser(userSession)
-
-            viewModel.productsFlow.collectLatest {
-                when (userSession.userType) {
-                    UserType.ADMIN.name -> {
-                        Log.d(TAG, "productsFlow: here")
-
-                        adminAdapter.submitData(it)
-                    }
-                    UserType.CUSTOMER.name -> {
-                        showAdapterForCustomer(it)
-                    }
-                    else -> {
-                        showAdapterForCustomer(it)
-                    }
-                }
-            }
-        }
-    }
-
-    private fun revalidateUser(userSession: SessionPreferences) {
-        // Check if the user is customer then hide admin functions when true
-
-        Log.d(TAG, "onViewCreated: ${userSession.userType}")
-
-        when (userSession.userType) {
-            UserType.CUSTOMER.name -> {
-                showAvailableMenus(userSession.userType)
-
-                // Product Adapter For Customer
-                instantiateProductAdapterForCustomer(userSession.userId)
-            }
-            UserType.ADMIN.name -> {
-                showAvailableMenus(userSession.userType)
-
-                // Product Adapter For Admin
-                instantiateProductAdapterForAdmin()
-            }
-            else -> {
-                showAvailableMenus(userSession.userType)
-
-                // Product Adapter For Customer
-                instantiateProductAdapterForCustomer(userSession.userId)
-            }
-        }
-        viewModel.fetchWishList(userSession.userId)
-    }
-
-    private fun showAvailableMenus(userType: String) {
-        Log.d(TAG, "showAvailableMenus: $userType")
-
-        when (userType) {
-            UserType.CUSTOMER.name -> {
-                myMenu?.let {
-                    it.findItem(R.id.action_add).isVisible = false
-                    it.findItem(R.id.action_cart).isVisible = true
-                    it.findItem(R.id.action_sort).isVisible = true
-                }
-            }
-            UserType.ADMIN.name -> {
-                myMenu?.let {
-                    it.findItem(R.id.action_add).isVisible = true
-                    it.findItem(R.id.action_cart).isVisible = false
-                    it.findItem(R.id.action_sort).isVisible = false
-                }
-            }
-            else -> {
-                myMenu?.let {
-                    it.findItem(R.id.action_add).isVisible = false
-                    it.findItem(R.id.action_cart).isVisible = false
-                    it.findItem(R.id.action_sort).isVisible = true
-                }
-            }
-        }
-    }
-
-    private suspend fun showAdapterForCustomer(pagingData: PagingData<Product>) {
+    private fun showAdapterForCustomer(pagingData: PagingData<Product>) {
         Log.d(TAG, "showAdapterForCustomer: here")
 
-        adapter.submitData(pagingData)
+        adapter.submitData(viewLifecycleOwner.lifecycle, pagingData)
     }
 
     private fun instantiateProductAdapterForCustomer(userId: String?) {
@@ -209,18 +121,6 @@ class ProductFragment :
         findNavController().navigate(action)
     }
 
-    override fun onAddToWishListClicked(product: Product, isWishListed: Boolean) {
-        if (viewModel.userWishList.value?.user != null) {
-//            viewModel.addOrRemoveToWishList(
-//                userAndWishList?.user!!.userId,
-//                product,
-//                currentPagingData!!,
-//                ProductUpdateRemove.Edit(product),
-//                isWishListed
-//            )
-        }
-    }
-
     override fun onEditClicked(product: Product) {
         val action = ProductFragmentDirections.actionProductFragmentToAddEditProductFragment(
             "Edit Product (${product.productId})",
@@ -251,7 +151,9 @@ class ProductFragment :
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.product_action_menu, menu)
 
-        myMenu = menu
+        viewModel.getUserSession().observe(viewLifecycleOwner) {
+            collectUserSession(it, menu)
+        }
 
         val searchItem = menu.findItem(R.id.action_search)
         searchView = searchItem.actionView as SearchView
@@ -274,6 +176,84 @@ class ProductFragment :
                 return true
             }
         })
+    }
+
+    private fun collectUserSession(userSession: SessionPreferences, menu: Menu) {
+        // Check if the user is customer then hide admin functions when true
+
+        when (userSession.userType) {
+            UserType.CUSTOMER.name -> {
+                showAvailableMenus(userSession.userType, menu)
+
+                // Product Adapter For Customer
+                instantiateProductAdapterForCustomer(userSession.userId)
+            }
+            UserType.ADMIN.name -> {
+                showAvailableMenus(userSession.userType, menu)
+
+                // Product Adapter For Admin
+                instantiateProductAdapterForAdmin()
+            }
+            else -> {
+                showAvailableMenus(userSession.userType, menu)
+
+                // Product Adapter For Customer
+                instantiateProductAdapterForCustomer(userSession.userId)
+            }
+        }
+
+        collectProductPagingData(userSession)
+    }
+
+    private fun collectProductPagingData(userSession: SessionPreferences) {
+        viewModel.products.observe(viewLifecycleOwner) { pagingData ->
+            refreshLayout.isRefreshing = false
+
+            when (userSession.userType) {
+                UserType.ADMIN.name -> {
+                    Log.d(TAG, "productsFlow: here")
+
+                    adminAdapter.submitData(viewLifecycleOwner.lifecycle, pagingData)
+                }
+                UserType.CUSTOMER.name -> {
+                    showAdapterForCustomer(pagingData)
+                }
+                else -> {
+                    showAdapterForCustomer(pagingData)
+                }
+            }
+        }
+
+        Log.d(TAG, "collectProductPagingData: calling binding object")
+
+        binding.apply {
+            refreshLayout.setOnRefreshListener {
+                Log.d(TAG, "setOnRefreshListener: here")
+                adapter.refresh()
+            }
+        }
+    }
+
+    private fun showAvailableMenus(userType: String, menu: Menu) {
+        Log.d(TAG, "showAvailableMenus: $userType")
+
+        when (userType) {
+            UserType.CUSTOMER.name -> {
+                menu.findItem(R.id.action_add).isVisible = false
+                menu.findItem(R.id.action_cart).isVisible = true
+                menu.findItem(R.id.action_sort).isVisible = true
+            }
+            UserType.ADMIN.name -> {
+                menu.findItem(R.id.action_add).isVisible = true
+                menu.findItem(R.id.action_cart).isVisible = false
+                menu.findItem(R.id.action_sort).isVisible = false
+            }
+            else -> {
+                menu.findItem(R.id.action_add).isVisible = false
+                menu.findItem(R.id.action_cart).isVisible = false
+                menu.findItem(R.id.action_sort).isVisible = true
+            }
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

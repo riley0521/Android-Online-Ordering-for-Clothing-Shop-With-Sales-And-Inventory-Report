@@ -10,6 +10,7 @@ import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -44,18 +45,17 @@ class ProductInventoryRepository @Inject constructor(
 
     suspend fun create(inventory: Inventory): Inventory? {
         return withContext(dispatcher) {
-            var createdInventory: Inventory? = inventory
-            val result = productCollectionRef
-                .document(inventory.pid)
-                .collection(INVENTORIES_SUB_COLLECTION)
-                .add(inventory)
-                .await()
-            if (result != null) {
-                createdInventory?.inventoryId = result.id
-            } else {
-                createdInventory = null
+            try {
+                val result = productCollectionRef
+                    .document(inventory.pid)
+                    .collection(INVENTORIES_SUB_COLLECTION)
+                    .add(inventory)
+                    .await()
+
+                return@withContext inventory.copy(inventoryId = result.id)
+            } catch (ex: Exception) {
+                return@withContext null
             }
-            createdInventory
         }
     }
 
@@ -78,13 +78,17 @@ class ProductInventoryRepository @Inject constructor(
                 val inventory = inventoryDocument.toObject<Inventory>()!!
                     .copy(inventoryId = inventoryDocument.id)
                 inventory.stock += stockToAdd
-                val result = productCollectionRef
-                    .document(productId)
-                    .collection(INVENTORIES_SUB_COLLECTION)
-                    .document(inventoryId)
-                    .set(inventory, SetOptions.merge())
-                    .await()
-                isSuccessful = result != null
+
+                try {
+                    productCollectionRef
+                        .document(productId)
+                        .collection(INVENTORIES_SUB_COLLECTION)
+                        .document(inventoryId)
+                        .set(inventory, SetOptions.merge())
+                        .await()
+                } catch (ex: Exception) {
+                    isSuccessful = false
+                }
             }
             isSuccessful
         }
@@ -92,13 +96,18 @@ class ProductInventoryRepository @Inject constructor(
 
     suspend fun delete(productId: String, inventoryId: String): Boolean {
         return withContext(dispatcher) {
-            val result = productCollectionRef
-                .document(productId)
-                .collection(INVENTORIES_SUB_COLLECTION)
-                .document(inventoryId)
-                .delete()
-                .await()
-            result != null
+            try {
+                productCollectionRef
+                    .document(productId)
+                    .collection(INVENTORIES_SUB_COLLECTION)
+                    .document(inventoryId)
+                    .delete()
+                    .await()
+
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
+            }
         }
     }
 }

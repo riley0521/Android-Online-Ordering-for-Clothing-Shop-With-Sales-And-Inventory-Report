@@ -88,6 +88,9 @@
         <action
             android:id="@+id/action_profileFragment_to_sizeChartFragment"
             app:destination="@id/sizeChartFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_wishListFragment"
+            app:destination="@id/wishListFragment" />
     </fragment>
     <action
         android:id="@+id/action_global_profileFragment"
@@ -361,4 +364,9 @@
             android:name="title"
             app:argType="string" />
     </fragment>
+    <fragment
+        android:id="@+id/wishListFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.wishlist.WishListFragment"
+        android:label="Wish List"
+        tools:layout="@layout/fragment_wish_list" />
 </navigation>

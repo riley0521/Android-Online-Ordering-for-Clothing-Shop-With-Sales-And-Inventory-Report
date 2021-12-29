@@ -11,6 +11,7 @@ import com.teampym.onlineclothingshopapplication.data.util.WISH_LIST_SUB_COLLECT
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -48,45 +49,51 @@ class WishItemRepository @Inject constructor(
         product: Product
     ): WishItem? {
         return withContext(dispatcher) {
-            var createdWishItem: WishItem? = WishItem(
+            val createdWishItem = WishItem(
                 categoryId = product.categoryId,
                 name = product.name,
                 description = product.description,
+                fileName = product.fileName,
                 imageUrl = product.imageUrl,
                 price = product.price,
                 productId = product.productId,
                 userId = userId,
                 cartId = "",
                 type = product.type,
-                dateAdded = System.currentTimeMillis()
+                dateAdded = product.dateAdded,
+                dateModified = product.dateModified,
+                totalRate = product.totalRate,
+                numberOfReviews = product.numberOfReviews
             )
 
-            if (createdWishItem != null) {
-                val result = userWishListRef.document(userId)
+            try {
+                userWishListRef.document(userId)
                     .collection(WISH_LIST_SUB_COLLECTION)
                     .document(createdWishItem.productId)
                     .set(createdWishItem, SetOptions.merge())
                     .await()
 
-                if (result == null) {
-                    createdWishItem = null
-                }
+                return@withContext createdWishItem
+            } catch (ex: Exception) {
+                return@withContext null
             }
-
-            createdWishItem
         }
     }
 
     suspend fun remove(userId: String, product: Product): Boolean {
         return withContext(dispatcher) {
-            val result = userWishListRef
-                .document(userId)
-                .collection(WISH_LIST_SUB_COLLECTION)
-                .document(product.productId)
-                .delete()
-                .await()
+            try {
+                userWishListRef
+                    .document(userId)
+                    .collection(WISH_LIST_SUB_COLLECTION)
+                    .document(product.productId)
+                    .delete()
+                    .await()
 
-            result != null
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
+            }
         }
     }
 }

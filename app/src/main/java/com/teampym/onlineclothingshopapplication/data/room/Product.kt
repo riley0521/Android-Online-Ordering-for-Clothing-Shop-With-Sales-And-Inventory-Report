@@ -9,7 +9,6 @@ import com.teampym.onlineclothingshopapplication.data.models.ProductImage
 import com.teampym.onlineclothingshopapplication.data.models.Review
 import com.teampym.onlineclothingshopapplication.data.util.ProductType
 import kotlinx.android.parcel.Parcelize
-import java.math.BigDecimal
 
 @Entity(tableName = "table_products")
 @Parcelize

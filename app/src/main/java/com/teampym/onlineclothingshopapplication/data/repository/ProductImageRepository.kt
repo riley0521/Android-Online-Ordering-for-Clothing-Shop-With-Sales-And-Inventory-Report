@@ -14,6 +14,7 @@ import com.teampym.onlineclothingshopapplication.data.util.PRODUCT_PATH
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.lang.Exception
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -67,13 +68,16 @@ class ProductImageRepository @Inject constructor(
         return withContext(dispatcher) {
             var isSuccessful = true
             for (item in productImageList) {
-                val result = productCollectionRef
-                    .document(item.productId)
-                    .collection(PRODUCT_IMAGES_SUB_COLLECTION)
-                    .document(item.id)
-                    .set(item, SetOptions.merge())
-                    .await()
-                isSuccessful = result != null
+                try {
+                    productCollectionRef
+                        .document(item.productId)
+                        .collection(PRODUCT_IMAGES_SUB_COLLECTION)
+                        .document(item.id)
+                        .set(item, SetOptions.merge())
+                        .await()
+                } catch (ex: Exception) {
+                    isSuccessful = false
+                }
             }
             isSuccessful
         }
@@ -103,28 +107,6 @@ class ProductImageRepository @Inject constructor(
         }
     }
 
-    suspend fun delete(productImage: ProductImage): Boolean {
-        return withContext(dispatcher) {
-            var isSuccess = true
-            val result = productCollectionRef
-                .document(productImage.productId)
-                .collection(PRODUCT_IMAGES_SUB_COLLECTION)
-                .document(productImage.id)
-                .delete()
-                .await()
-
-            if(result != null) {
-                val deleted = imageRef.child(PRODUCT_PATH + productImage.fileName)
-                    .delete()
-                    .await()
-
-                isSuccess = deleted != null
-            }
-
-            isSuccess
-        }
-    }
-
     suspend fun deleteAll(listOfImages: List<ProductImage>): Boolean {
         return withContext(dispatcher) {
             var isSuccess = true
@@ -132,6 +114,27 @@ class ProductImageRepository @Inject constructor(
                 isSuccess = delete(item)
             }
             isSuccess
+        }
+    }
+
+    suspend fun delete(productImage: ProductImage): Boolean {
+        return withContext(dispatcher) {
+            try {
+                productCollectionRef
+                    .document(productImage.productId)
+                    .collection(PRODUCT_IMAGES_SUB_COLLECTION)
+                    .document(productImage.id)
+                    .delete()
+                    .await()
+
+                imageRef.child(PRODUCT_PATH + productImage.fileName)
+                    .delete()
+                    .await()
+
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
+            }
         }
     }
 }

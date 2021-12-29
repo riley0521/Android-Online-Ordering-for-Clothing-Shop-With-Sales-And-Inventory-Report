@@ -15,6 +15,7 @@ import com.teampym.onlineclothingshopapplication.data.util.Utils
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.lang.Exception
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -78,49 +79,55 @@ class CategoryRepository @Inject constructor(
         }
     }
 
-    suspend fun update(category: Category?): Category? {
+    suspend fun update(category: Category?): Boolean {
         return withContext(dispatcher) {
-            var updatedCategory: Category? = category
-            if (updatedCategory != null) {
-                updatedCategory.dateModified = Utils.getTimeInMillisUTC()
+            if (category != null) {
+                category.dateModified = Utils.getTimeInMillisUTC()
 
-                val result = categoriesCollectionRef
-                    .document(updatedCategory.id)
-                    .set(updatedCategory, SetOptions.merge())
-                    .await()
+                try {
+                    categoriesCollectionRef
+                        .document(category.id)
+                        .set(category, SetOptions.merge())
+                        .await()
 
-                if (result == null) {
-                    updatedCategory = null
+                    return@withContext true
+
+                } catch (ex: Exception) {
+                    return@withContext false
                 }
             }
-            updatedCategory
+            false
         }
     }
 
     // Delete All Products in selected category
     suspend fun delete(categoryId: String): Boolean {
         return withContext(dispatcher) {
-            var isSuccessful = true
 
-            val result = categoriesCollectionRef
-                .document(categoryId)
-                .delete()
-                .await()
+            try {
+                categoriesCollectionRef
+                    .document(categoryId)
+                    .delete()
+                    .await()
 
-            if (result != null) {
-                isSuccessful = productRepository.deleteAll(categoryId)
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
             }
-
-            isSuccessful
         }
     }
 
     suspend fun deleteImage(fileName: String): Boolean {
         return withContext(dispatcher) {
-            val deleted = imageRef.child(CATEGORY_PATH + fileName)
-                .delete()
-                .await()
-            deleted != null
+            try {
+                imageRef.child(CATEGORY_PATH + fileName)
+                    .delete()
+                    .await()
+
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
+            }
         }
     }
 }

@@ -1,6 +1,6 @@
 package com.teampym.onlineclothingshopapplication.data.room
 
-import androidx.room.*
+import androidx.room.* // ktlint-disable no-wildcard-imports
 import androidx.room.OnConflictStrategy.REPLACE
 import kotlinx.coroutines.flow.Flow
 

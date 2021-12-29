@@ -12,6 +12,7 @@ import com.teampym.onlineclothingshopapplication.data.util.UserType
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -105,14 +106,18 @@ class OrderDetailRepository @Inject constructor(
 
     suspend fun update(orderDetail: OrderDetail): Boolean {
         return withContext(dispatcher) {
-            val res = orderCollectionRef
-                .document(orderDetail.orderId)
-                .collection(ORDER_DETAILS_SUB_COLLECTION)
-                .document(orderDetail.id)
-                .set(orderDetail, SetOptions.merge())
-                .await()
+            try {
+                orderCollectionRef
+                    .document(orderDetail.orderId)
+                    .collection(ORDER_DETAILS_SUB_COLLECTION)
+                    .document(orderDetail.id)
+                    .set(orderDetail, SetOptions.merge())
+                    .await()
 
-            res != null
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
+            }
         }
     }
 

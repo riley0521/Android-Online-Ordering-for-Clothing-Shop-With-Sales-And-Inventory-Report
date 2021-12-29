@@ -198,5 +198,9 @@
     <string name="hint_input_description_of_your_feedback">Input Description of your feedback</string>
     <string name="placeholder_cart_price">$ %1$.2f</string>
     <string name="placeholder_cart_size">(%1$s)</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="btn_remove_from_wish_list">Remove From Wish List</string>
+    <string name="label_no_item_added_in_your_wish_list">No Item/s Added In Your Wish List.</string>
 
 </resources>

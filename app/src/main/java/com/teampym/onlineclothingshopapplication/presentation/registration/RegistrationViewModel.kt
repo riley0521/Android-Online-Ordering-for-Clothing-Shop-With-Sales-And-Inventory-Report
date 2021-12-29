@@ -5,6 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.teampym.onlineclothingshopapplication.ADD_PROFILE_ERR
+import com.teampym.onlineclothingshopapplication.ADD_PROFILE_OK
+import com.teampym.onlineclothingshopapplication.EDIT_PROFILE_ERR
+import com.teampym.onlineclothingshopapplication.EDIT_PROFILE_OK
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.AccountRepository
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
@@ -70,43 +74,65 @@ class RegistrationViewModel @Inject constructor(
             birthDate.isNotBlank()
     }
 
-    fun onSubmitClicked(
+    suspend fun onSubmitClicked(
         isEditMode: Boolean,
         photoUrl: String
-    ) = viewModelScope.launch {
+    ) {
         if (isEditMode) {
             if (isFormValid()) {
-                val res = async {
+
+                // Update the userInformation and return if the operation succeed
+                // returns Boolean
+                val res = viewModelScope.async {
                     accountRepository.update(
                         userId,
                         firstName,
                         lastName,
-                        birthDate
+                        birthDate,
+                        photoUrl
                     )
-                }.await()
-                if (res) {
+                }
+
+                // This should execute
+                if (res.await()) {
+
+                    // Save to local database as well
+                    userInformationDao.updateBasicInfo(
+                        avatarUrl = photoUrl,
+                        firstName,
+                        lastName,
+                        birthDate,
+                        userId
+                    )
+
+                    // We can finally reset the Ui State after saving it to local database
+                    resetAllUiState()
+
                     _registrationEventChannel.send(
-                        RegistrationEvent.ShowSuccessfulMessage(
-                            "Updated user successfully!"
+                        RegistrationEvent.ShowUpdatingSuccessAndNavigateBack(
+                            "Updated user successfully!",
+                            EDIT_PROFILE_OK
                         )
                     )
                 } else {
+                    // But it always goes here
                     _registrationEventChannel.send(
-                        RegistrationEvent.ShowErrorMessage(
-                            "Failed to update user. Please try again later."
+                        RegistrationEvent.ShowErrorMessageAndNavigateBack(
+                            "Failed to update user. Please try again later.",
+                            EDIT_PROFILE_ERR
                         )
                     )
                 }
             } else {
                 _registrationEventChannel.send(
-                    RegistrationEvent.ShowErrorMessage(
+                    RegistrationEvent.ShowFormErrorMessage(
                         "Please fill the form."
                     )
                 )
             }
         } else {
             if (isFormValid()) {
-                val res = async {
+                val res = viewModelScope.async {
                     accountRepository.create(
                         userId,
                         firstName,
@@ -116,21 +142,30 @@ class RegistrationViewModel @Inject constructor(
                     )
                 }.await()
                 if (res != null) {
+
+                    // Save to local database
+                    userInformationDao.insert(res)
+
+                    // We can finally reset the Ui State after saving it to local database
+                    resetAllUiState()
+
                     _registrationEventChannel.send(
-                        RegistrationEvent.ShowSuccessfulMessage(
-                            "Created user successfully!"
+                        RegistrationEvent.ShowAddingSuccessAndNavigateBack(
+                            "Created user successfully!",
+                            ADD_PROFILE_OK
                         )
                     )
                 } else {
                     _registrationEventChannel.send(
-                        RegistrationEvent.ShowErrorMessage(
-                            "Created user failed. Please try again."
+                        RegistrationEvent.ShowErrorMessageAndNavigateBack(
+                            "Created user failed. Please try again.",
+                            ADD_PROFILE_ERR
                         )
                     )
                 }
             } else {
                 _registrationEventChannel.send(
-                    RegistrationEvent.ShowErrorMessage(
+                    RegistrationEvent.ShowFormErrorMessage(
                         "Please fill the form."
                     )
                 )
@@ -151,7 +186,15 @@ class RegistrationViewModel @Inject constructor(
     }
 
     sealed class RegistrationEvent {
-        data class ShowSuccessfulMessage(val msg: String) : RegistrationEvent()
-        data class ShowErrorMessage(val msg: String) : RegistrationEvent()
+        data class ShowAddingSuccessAndNavigateBack(val msg: String, val result: Int) :
+            RegistrationEvent()
+
+        data class ShowUpdatingSuccessAndNavigateBack(val msg: String, val result: Int) :
+            RegistrationEvent()
+
+        data class ShowErrorMessageAndNavigateBack(val msg: String, val result: Int) :
+            RegistrationEvent()
+
+        data class ShowFormErrorMessage(val msg: String) : RegistrationEvent()
     }
 }
