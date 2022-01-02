@@ -22,6 +22,10 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+
+                <data
+                    android:host="midnightmares.page.link"
+                    android:scheme="https" />
             </intent-filter>
         </activity>
 

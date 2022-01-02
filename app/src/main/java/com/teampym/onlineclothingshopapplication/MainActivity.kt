@@ -7,8 +7,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.os.bundleOf
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
@@ -16,8 +18,11 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.teampym.onlineclothingshopapplication.data.util.CHANNEL_ID
 import dagger.hilt.android.AndroidEntryPoint
+
+private const val TAG = "MainActivity"
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -66,6 +71,47 @@ class MainActivity : AppCompatActivity() {
         // set up app bar with current destination's label.
         setupActionBarWithNavController(navController, appBarConfiguration)
         bottomNav.setupWithNavController(navController)
+
+        listenToDynamicLinks()
+    }
+
+    private fun listenToDynamicLinks() {
+        FirebaseDynamicLinks.getInstance()
+            .getDynamicLink(intent)
+            .addOnSuccessListener(this) { pendingDynamicLinkData ->
+
+                val deepLink = pendingDynamicLinkData.link
+
+                deepLink?.let { uri ->
+                    val path = uri.toString().substring(deepLink.toString().lastIndexOf("/") + 1)
+
+                    // In case if you have multiple shareable items such as User Post, User Profile,
+                    // you can check if
+                    // the uri contains the required string.
+                    // In our case we will check if the path contains the string, 'post'
+
+                    when {
+                        uri.toString().contains("post") -> {
+                            val postId = path
+                            // Call your API or DB to get the post with the ID [postId]
+                            // and open the required screen here.
+                        }
+                        uri.toString().contains("product") -> {
+                            // Open the required screen here.
+                            navController.navigate(
+                                R.id.productDetailFragment,
+                                bundleOf(
+                                    "productId" to path
+                                )
+                            )
+                        }
+                    }
+                }
+            }.addOnFailureListener {
+                // This lambda will be triggered when there is a failure.
+                // Handle
+                Log.d(TAG, "handleIncomingDeepLinks: ${it.message}")
+            }
     }
 
     override fun onSupportNavigateUp(): Boolean {

@@ -84,6 +84,12 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
         setHasOptionsMenu(true)
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        requireActivity().invalidateOptionsMenu()
+    }
+
     private fun fetchCategories() {
         viewModel.onLoadCategories()
         loadingDialog.show()

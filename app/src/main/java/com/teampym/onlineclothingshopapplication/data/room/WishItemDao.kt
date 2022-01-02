@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy.REPLACE
 import androidx.room.Query
 import com.teampym.onlineclothingshopapplication.data.models.WishItem
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WishItemDao {
@@ -17,7 +16,10 @@ interface WishItemDao {
     suspend fun insertAll(wishList: List<WishItem>)
 
     @Query("SELECT * FROM table_wish_list WHERE userId = :userId")
-    fun getAll(userId: String): Flow<List<WishItem>>
+    suspend fun getAll(userId: String): List<WishItem>
+
+    @Query("SELECT * FROM table_wish_list WHERE productId = :productId")
+    suspend fun checkIfExisting(productId: String): WishItem?
 
     @Query("DELETE FROM table_wish_list WHERE productId = :productId")
     suspend fun delete(productId: String)

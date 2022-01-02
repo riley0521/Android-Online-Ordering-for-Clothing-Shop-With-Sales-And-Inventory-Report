@@ -35,13 +35,7 @@ import com.teampym.onlineclothingshopapplication.presentation.client.others.CANC
 import com.teampym.onlineclothingshopapplication.presentation.client.others.SHIPPING_FEE_REQUEST
 import com.teampym.onlineclothingshopapplication.presentation.client.others.SHIPPING_FEE_RESULT
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.observeOn
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.* // ktlint-disable no-wildcard-imports
 
 @AndroidEntryPoint
@@ -76,6 +70,10 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
                 it.userType,
                 this@OrderListFragment,
                 requireActivity()
+            )
+            adapter.withLoadStateHeaderAndFooter(
+                header = OrderListLoadStateAdapter(adapter),
+                footer = OrderListLoadStateAdapter(adapter)
             )
 
             binding.apply {
@@ -185,9 +183,8 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
         if (userInfo != null) {
             val action =
                 OrderListFragmentDirections.actionOrderListFragmentToOrderDetailListFragment(
-                    "Order ${item.id}",
-                    item,
-                    userInfo!!
+                    title = "Order ${item.id}",
+                    order = item,
                 )
             findNavController().navigate(action)
         }

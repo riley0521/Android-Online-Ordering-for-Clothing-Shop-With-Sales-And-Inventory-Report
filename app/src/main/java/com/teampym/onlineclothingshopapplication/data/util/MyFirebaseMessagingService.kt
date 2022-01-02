@@ -12,14 +12,9 @@ import com.google.gson.JsonSyntaxException
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.Post
-import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val TAG = "MyFCMService"
@@ -119,42 +114,32 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         try {
             val order = Gson().fromJson(notificationData["obj"], Order::class.java)
 
-            var userInfo: UserInformation? = null
+            val pendingIntent = NavDeepLinkBuilder(this)
+                .setGraph(R.navigation.nav_graph)
+                .setDestination(R.id.orderDetailListFragment)
+                .setArguments(
+                    bundleOf(
+                        "title" to "Order ${order.id}",
+                        "order" to order
+                    )
+                )
+                .createPendingIntent()
 
-            CoroutineScope(Dispatchers.IO).launch {
-                userInfo = async { userInformationDao.getCurrentUser(order.userId) }.await()
-            }.invokeOnCompletion {
-                // Create an explicit intent for an Activity in your app
-                userInfo?.let { u ->
-                    val pendingIntent = NavDeepLinkBuilder(this)
-                        .setGraph(R.navigation.nav_graph)
-                        .setDestination(R.id.orderDetailListFragment)
-                        .setArguments(
-                            bundleOf(
-                                "title" to "Order ${order.id}",
-                                "order" to order,
-                                "userInfo" to u
-                            )
-                        )
-                        .createPendingIntent()
+            val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_orders)
+                .setContentTitle(notificationData["title"].toString())
+                .setContentText(notificationData["body"].toString())
+                .setStyle(
+                    NotificationCompat.BigTextStyle()
+                        .bigText(notificationData["body"].toString())
+                )
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
 
-                    val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-                        .setSmallIcon(R.drawable.ic_orders)
-                        .setContentTitle(notificationData["title"].toString())
-                        .setContentText(notificationData["body"].toString())
-                        .setStyle(
-                            NotificationCompat.BigTextStyle()
-                                .bigText(notificationData["body"].toString())
-                        )
-                        .setPriority(NotificationCompat.PRIORITY_HIGH)
-                        .setContentIntent(pendingIntent)
-                        .setAutoCancel(true)
-
-                    with(NotificationManagerCompat.from(this)) {
-                        // notificationId is a unique int for each notification that you must define
-                        notify(ORDER_NOTIFICATION_ID, builder.build())
-                    }
-                }
+            with(NotificationManagerCompat.from(this)) {
+                // notificationId is a unique int for each notification that you must define
+                notify(ORDER_NOTIFICATION_ID, builder.build())
             }
         } catch (e: JsonSyntaxException) {
             Log.d(TAG, "onMessageReceived: ${e.message}")

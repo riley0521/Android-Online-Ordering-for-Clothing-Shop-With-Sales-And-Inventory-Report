@@ -283,9 +283,6 @@
         <action
             android:id="@+id/action_orderDetailListFragment_to_addReviewFragment"
             app:destination="@id/addReviewFragment" />
-        <argument
-            android:name="userInfo"
-            app:argType="com.teampym.onlineclothingshopapplication.data.models.UserInformation" />
     </fragment><action android:id="@+id/action_global_categoryFragment" app:destination="@id/categoryFragment"/>
     <fragment
         android:id="@+id/addEditCategoryFragment"

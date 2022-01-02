@@ -10,8 +10,10 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
+import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentOrderDetailListBinding
@@ -39,6 +41,8 @@ class OrderDetailListFragment :
 
     private lateinit var loadingDialog: LoadingDialog
 
+    private var userInfo: UserInformation? = null
+
     @SuppressLint("SetTextI18n", "SimpleDateFormat")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -46,79 +50,84 @@ class OrderDetailListFragment :
         binding = FragmentOrderDetailListBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
 
-        var order = args.order
-        viewModel.updateOrder(order)
+        viewModel.updateOrder(args.order)
 
-        // Reassign order variable in case process death took place.
-        order = viewModel.order
-
-        binding.apply {
-
-            // Set details of the order object again here
-            tvOrderId.text = order.id
-            tvUsername.text = order.deliveryInformation.name
-
-            val totalCostStr = "$" + order.totalCost
-            tvTotalCost.text = totalCostStr
-
-            if (order.suggestedShippingFee > 0.0) {
-                val shippingFee = "$" + order.suggestedShippingFee
-                tvSuggestedSf.text = shippingFee
-
-                val grandTotalStr = "$" + order.totalPaymentWithShippingFee
-                tvGrandTotal.text = grandTotalStr
-            } else {
-                labelShippingFee.isVisible = false
-                tvSuggestedSf.isVisible = false
-
-                labelGrandTotal.isVisible = false
-                tvGrandTotal.isVisible = false
-            }
-
-            if (order.isUserAgreedToShippingFee) {
-                tvUserAgreedToSf.text = "Yes"
-            } else {
-                labelUserAgreedToSf.isVisible = false
-                tvUserAgreedToSf.isVisible = false
-            }
-
-            val completeAddress = "${order.deliveryInformation.streetNumber} " +
-                "${order.deliveryInformation.city}, " +
-                "${order.deliveryInformation.province}, " +
-                "${order.deliveryInformation.region}, " +
-                order.deliveryInformation.postalCode
-            tvDeliveryAddress.text = completeAddress
-
-            tvStatus.text = order.status
-            tvNumberOfItems.text = order.orderDetailList.count().toString()
-
-            val calendarDate = Calendar.getInstance()
-            calendarDate.timeInMillis = order.dateOrdered
-            calendarDate.timeZone = TimeZone.getTimeZone("GMT+8:00")
-            val formattedDate =
-                SimpleDateFormat("MM/dd/yyyy hh:mm:ss a").format(calendarDate.time)
-
-            tvDateOrdered.text = formattedDate
-            tvAdditionalNote.text = order.additionalNote
-
-            rvOrderDetails.setHasFixedSize(true)
-            rvOrderDetails.adapter = adapter
-        }
+        setupViews()
 
         lifecycleScope.launchWhenStarted {
             viewModel.userFlow.collectLatest { user ->
                 if (user != null) {
+                    userInfo = user
+
                     adapter = OrderDetailListAdapter(
                         this@OrderDetailListFragment,
                         requireContext(),
                         user
                     )
-                    adapter.submitList(order.orderDetailList)
+                    adapter.submitList(viewModel.order?.orderDetailList)
 
                     if (user.userType == UserType.ADMIN.name) {
                         binding.orderBanner.isVisible = true
                     }
                 }
+            }
+        }
+    }
+
+    @SuppressLint("SimpleDateFormat")
+    private fun setupViews() {
+        binding.apply {
+            val order = viewModel.order
+            order?.let { o ->
+                // Set details of the order object again here
+                tvOrderId.text = o.id
+                tvUsername.text = o.deliveryInformation.name
+
+                val totalCostStr = "$" + o.totalCost
+                tvTotalCost.text = totalCostStr
+
+                if (o.suggestedShippingFee > 0.0) {
+                    val shippingFee = "$" + o.suggestedShippingFee
+                    tvSuggestedSf.text = shippingFee
+
+                    val grandTotalStr = "$" + o.totalPaymentWithShippingFee
+                    tvGrandTotal.text = grandTotalStr
+                } else {
+                    labelShippingFee.isVisible = false
+                    tvSuggestedSf.isVisible = false
+
+                    labelGrandTotal.isVisible = false
+                    tvGrandTotal.isVisible = false
+                }
+
+                if (o.isUserAgreedToShippingFee) {
+                    tvUserAgreedToSf.text = "Yes"
+                } else {
+                    labelUserAgreedToSf.isVisible = false
+                    tvUserAgreedToSf.isVisible = false
+                }
+
+                val completeAddress = "${o.deliveryInformation.streetNumber} " +
+                    "${o.deliveryInformation.city}, " +
+                    "${o.deliveryInformation.province}, " +
+                    "${o.deliveryInformation.region}, " +
+                    o.deliveryInformation.postalCode
+                tvDeliveryAddress.text = completeAddress
+
+                tvStatus.text = o.status
+                tvNumberOfItems.text = o.orderDetailList.count().toString()
+
+                val calendarDate = Calendar.getInstance()
+                calendarDate.timeInMillis = o.dateOrdered
+                calendarDate.timeZone = TimeZone.getTimeZone("GMT+8:00")
+                val formattedDate =
+                    SimpleDateFormat("MM/dd/yyyy hh:mm:ss a").format(calendarDate.time)
+
+                tvDateOrdered.text = formattedDate
+                tvAdditionalNote.text = o.additionalNote
+
+                rvOrderDetails.setHasFixedSize(true)
+                rvOrderDetails.adapter = adapter
             }
         }
     }
@@ -133,11 +142,19 @@ class OrderDetailListFragment :
         withContext(Dispatchers.Main) {
             loadingDialog.dismiss()
 
-            Toast.makeText(
-                requireContext(),
-                "item ${item.product.productId} clicked",
-                Toast.LENGTH_SHORT
-            ).show()
+            if (isExchangeable) {
+                Toast.makeText(
+                    requireContext(),
+                    "item ${item.product.productId} is exchangeable",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "item ${item.product.productId} clicked",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
@@ -153,13 +170,21 @@ class OrderDetailListFragment :
             loadingDialog.dismiss()
 
             if (canAddReview) {
-                val action = OrderDetailListFragmentDirections
-                    .actionOrderDetailListFragmentToAddReviewFragment(
-                        item,
-                        args.userInfo,
-                        item.product.name
-                    )
-                findNavController().navigate(action)
+                userInfo?.let { u ->
+                    val action = OrderDetailListFragmentDirections
+                        .actionOrderDetailListFragmentToAddReviewFragment(
+                            item,
+                            u,
+                            item.product.name
+                        )
+                    findNavController().navigate(action)
+                }
+            } else {
+                Snackbar.make(
+                    requireView(),
+                    "$item ${item.product.productId} clicked",
+                    Snackbar.LENGTH_SHORT
+                ).show()
             }
         }
     }

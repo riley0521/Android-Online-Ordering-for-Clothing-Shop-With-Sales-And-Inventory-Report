@@ -4,6 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <item
+        android:id="@+id/action_add_to_wishlist"
+        android:icon="@drawable/ic_fav_unchecked"
+        android:title="@string/btn_share"
+        android:visible="false"
+        app:showAsAction="always|collapseActionView" />
+
+    <item
         android:id="@+id/action_share"
         android:icon="@drawable/ic_share"
         android:title="@string/btn_share"

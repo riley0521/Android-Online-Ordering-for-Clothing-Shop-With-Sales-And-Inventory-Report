@@ -13,7 +13,6 @@ import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.WishItem
 import com.teampym.onlineclothingshopapplication.databinding.FragmentWishListBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collectLatest
 
 @AndroidEntryPoint
 class WishListFragment : Fragment(R.layout.fragment_wish_list), WishListAdapter.WishListListener {
@@ -30,30 +29,41 @@ class WishListFragment : Fragment(R.layout.fragment_wish_list), WishListAdapter.
         binding = FragmentWishListBinding.bind(view)
         adapter = WishListAdapter(this)
 
+        fetchWishList()
+    }
+
+    private fun fetchWishList() {
         FirebaseAuth.getInstance().currentUser?.let {
             lifecycleScope.launchWhenStarted {
-                viewModel.getAllWishList(it.uid).collectLatest { wishList ->
-                    if (wishList.isNotEmpty()) {
-                        adapter.submitList(wishList)
+                viewModel.getAllWishList(it.uid)
+            }
+        }
 
-                        binding.apply {
-                            rvWishList.setHasFixedSize(true)
-                            rvWishList.layoutManager = LinearLayoutManager(
-                                requireContext(),
-                                LinearLayoutManager.VERTICAL,
-                                false
-                            )
-                            rvWishList.adapter = adapter
-                        }
-                    } else {
-                        binding.apply {
-                            labelNoItem.isVisible = true
-                            rvWishList.isVisible = false
-                        }
-                    }
+        viewModel.wishList.observe(viewLifecycleOwner) { wishList ->
+            if (wishList.isNotEmpty()) {
+                adapter.submitList(wishList)
+
+                binding.apply {
+                    rvWishList.setHasFixedSize(true)
+                    rvWishList.layoutManager = LinearLayoutManager(
+                        requireContext(),
+                        LinearLayoutManager.VERTICAL,
+                        false
+                    )
+                    rvWishList.adapter = adapter
+                }
+            } else {
+                binding.apply {
+                    labelNoItem.isVisible = true
+                    rvWishList.isVisible = false
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        fetchWishList()
+        super.onResume()
     }
 
     override fun onItemClicked(item: WishItem) {

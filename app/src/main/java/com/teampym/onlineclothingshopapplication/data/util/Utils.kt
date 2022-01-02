@@ -1,5 +1,7 @@
 package com.teampym.onlineclothingshopapplication.data.util
 
+import android.content.Intent
+import androidx.fragment.app.Fragment
 import java.util.*
 
 const val CATEGORIES_COLLECTION = "Categories"
@@ -27,6 +29,8 @@ const val AUDIT_TRAILS_COLLECTION = "AuditTrails"
 const val SALES_COLLECTION = "Sales"
 const val MONTHS_SUB_COLLECTION = "months"
 const val DAYS_SUB_COLLECTION = "days"
+
+const val PREFIX = "https://midnightmares.page.link"
 
 const val CANCEL_BUTTON = "Cancel"
 const val SUGGEST_BUTTON = "Suggest Shipping Fee"
@@ -57,6 +61,36 @@ object Utils {
         newDate.timeZone = TimeZone.getTimeZone("UTC")
         return newDate.timeInMillis
     }
+}
+
+fun Fragment.shareDeepLink(deepLink: String, linkType: LinkType) {
+
+    val intent = Intent(Intent.ACTION_SEND)
+    intent.type = "text/plain"
+    when (linkType) {
+        LinkType.POST -> {
+            intent.putExtra(
+                Intent.EXTRA_SUBJECT,
+                "New Post, check it out ->"
+            )
+        }
+        LinkType.PRODUCT -> {
+            intent.putExtra(
+                Intent.EXTRA_SUBJECT,
+                "New Product, check it out ->"
+            )
+        }
+    }
+
+    intent.putExtra(Intent.EXTRA_TEXT, deepLink)
+    if (isAdded) {
+        requireContext().startActivity(intent)
+    }
+}
+
+enum class LinkType {
+    POST,
+    PRODUCT
 }
 
 enum class Status {

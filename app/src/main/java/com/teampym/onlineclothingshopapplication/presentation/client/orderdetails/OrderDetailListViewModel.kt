@@ -5,12 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
+import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.OrderDetailRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -39,11 +41,11 @@ class OrderDetailListViewModel @Inject constructor(
         order = o
     }
 
-    suspend fun checkItemIfExchangeable(item: OrderDetail): Boolean = viewModelScope.async {
-        return@async orderDetailRepository.isExchangeable(item)
-    }.await()
+    suspend fun checkItemIfExchangeable(item: OrderDetail): Boolean {
+        return orderDetailRepository.isExchangeable(item)
+    }
 
-    suspend fun checkItemIfCanAddReview(item: OrderDetail): Boolean = viewModelScope.async {
-        return@async orderDetailRepository.canAddReview(item)
-    }.await()
+    suspend fun checkItemIfCanAddReview(item: OrderDetail): Boolean {
+        return orderDetailRepository.canAddReview(item)
+    }
 }

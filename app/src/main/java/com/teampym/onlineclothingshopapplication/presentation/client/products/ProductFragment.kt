@@ -1,7 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.products
 
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
@@ -56,6 +55,10 @@ class ProductFragment :
         loadingDialog = LoadingDialog(requireActivity())
 
         adminAdapter = ProductAdminAdapter(this)
+        adminAdapter.withLoadStateHeaderAndFooter(
+            header = ProductLoadStateAdapter(adminAdapter),
+            footer = ProductLoadStateAdapter(adminAdapter)
+        )
 
         viewModel.getProducts()
 
@@ -76,6 +79,12 @@ class ProductFragment :
         setHasOptionsMenu(true)
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        requireActivity().invalidateOptionsMenu()
+    }
+
     private fun showAdapterForCustomer(pagingData: PagingData<Product>) {
         Log.d(TAG, "showAdapterForCustomer: here")
 
@@ -86,6 +95,10 @@ class ProductFragment :
         Log.d(TAG, "instantiateProductAdapterForCustomer: here")
 
         adapter = ProductAdapter(userId, this, requireContext())
+        adapter.withLoadStateHeaderAndFooter(
+            header = ProductLoadStateAdapter(adapter),
+            footer = ProductLoadStateAdapter(adapter)
+        )
 
         binding.apply {
             recyclerProducts.setHasFixedSize(true)

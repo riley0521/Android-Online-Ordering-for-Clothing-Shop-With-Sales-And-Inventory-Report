@@ -202,5 +202,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="btn_remove_from_wish_list">Remove From Wish List</string>
     <string name="label_no_item_added_in_your_wish_list">No Item/s Added In Your Wish List.</string>
+    <string name="btn_retry">Retry</string>
+    <string name="label_no_internet_connection">No Internet Connection</string>
 
 </resources>

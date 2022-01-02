@@ -78,20 +78,10 @@ class ProductPagingSource(
                 // Each Product has 1 inventory and it will repeat every item with different sizes.
                 for (item in productList) {
                     for (inv in item.inventoryList) {
-                        val mappedProduct = Product(
-                            categoryId = item.categoryId,
-                            name = item.name,
-                            description = item.description,
-                            fileName = item.fileName,
-                            imageUrl = item.imageUrl,
-                            price = item.price,
-                            productId = item.productId,
-                            type = item.type,
-                            dateAdded = item.dateAdded,
-                            dateModified = item.dateModified,
-                            totalRate = item.totalRate,
-                            numberOfReviews = item.numberOfReviews
-                        )
+                        val mappedProduct = item.copy()
+                        // I don't know if the copy() method will pass this 2 properties
+                        // That are outside the primary constructor
+                        // So let me put this here
                         mappedProduct.productImageList = item.productImageList
                         mappedProduct.reviewList = item.reviewList
 

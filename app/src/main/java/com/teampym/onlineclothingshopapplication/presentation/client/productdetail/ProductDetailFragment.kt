@@ -1,84 +1,124 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.productdetail
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
-import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.R
+import com.teampym.onlineclothingshopapplication.data.room.Product
+import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductDetailBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
 
     private lateinit var binding: FragmentProductDetailBinding
 
+    private lateinit var loadingDialog: LoadingDialog
+
     private val args by navArgs<ProductDetailFragmentArgs>()
 
     private val viewModel: ProductDetailViewModel by viewModels()
-
-    @Inject
-    lateinit var db: FirebaseFirestore
 
     private lateinit var adapter: ReviewAdapter
 
     private var myMenu: Menu? = null
 
+    private var userId = ""
+
+    @SuppressLint("NotifyDataSetChanged")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentProductDetailBinding.bind(view)
+        loadingDialog = LoadingDialog(requireActivity())
+
         adapter = ReviewAdapter()
 
-        var product = args.product
-        val productId = args.productId
-
-        if (product == null) {
+        if (args.product == null) {
             // Product ID Should not be null if Product Parcelable is null
-            viewModel.getProductById(productId!!)
+            viewModel.getProductById(args.productId!!)
         } else {
-            viewModel.updateProduct(product)
+            viewModel.updateProduct(args.product!!)
         }
 
-        viewModel.product.observe(viewLifecycleOwner) {
-            product = it
+        // Re-assign product variable in-case if it's null and to survive process death
+        viewModel.product.observe(viewLifecycleOwner) { product ->
+            product?.let { p ->
+                (requireActivity() as AppCompatActivity).supportActionBar?.title = p.name
+
+                setupViews(p)
+            }
         }
 
+        lifecycleScope.launchWhenStarted {
+            viewModel.productDetailEvent.collectLatest { event ->
+                when (event) {
+                    is ProductDetailViewModel.ProductDetailEvent.ShowErrorMessage -> {
+                        loadingDialog.dismiss()
+
+                        Snackbar.make(
+                            requireView(),
+                            event.msg,
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                    }
+                    is ProductDetailViewModel.ProductDetailEvent.ShowSuccessMessage -> {
+                        loadingDialog.dismiss()
+
+                        Snackbar.make(
+                            requireView(),
+                            event.msg,
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                        requireActivity().invalidateOptionsMenu()
+                    }
+                }
+            }
+        }
+
+        setHasOptionsMenu(true)
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private fun setupViews(product: Product) {
         binding.apply {
             btnAddToCart.setOnClickListener {
                 val action =
                     ProductDetailFragmentDirections.actionProductDetailFragmentToInventoryModalFragment(
-                        product!!
+                        product
                     )
                 findNavController().navigate(action)
             }
 
-            val priceStr = "$" + product?.price
-            tvProductName.text = product?.name
+            val priceStr = "$" + product.price
+            tvProductName.text = product.name
             tvPrice.text = priceStr
-            val descStr = if (product!!.description.isBlank()) {
+            val descStr = if (product.description.isBlank()) {
                 "No Available Description"
             } else {
-                product?.description
+                product.description
             }
 
             tvDescription.text = descStr
             btnAddToCart.setOnClickListener {
                 val action =
                     ProductDetailFragmentDirections.actionProductDetailFragmentToInventoryModalFragment(
-                        product!!
+                        product
                     )
                 findNavController().navigate(action)
             }
@@ -86,7 +126,7 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             // submit list to the image adapter
             val viewPager = carouselViewPager.apply {
                 adapter = ImagePagerAdapter(requireActivity()).apply {
-                    submitList(product?.productImageList)
+                    submitList(product.productImageList)
                     notifyDataSetChanged()
                 }
             }
@@ -95,20 +135,20 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             TabLayoutMediator(indicatorTabLayout, viewPager) { _, _ -> }.attach()
 
             // submit list to the adapter if the reviewList is not empty.
-            adapter.submitList(product!!.reviewList)
+            adapter.submitList(product.reviewList)
 
             var rate = 0.0
-            if (product!!.totalRate > 0.0 && product!!.numberOfReviews > 0L) {
-                rate = product!!.avgRate.toDouble()
+            if (product.totalRate > 0.0 && product.numberOfReviews > 0L) {
+                rate = product.avgRate.toDouble()
             }
 
             val rateStr = "- $rate"
             tvRate.text = rateStr
             ratingBar.rating = rate.toFloat()
 
-            if (product!!.numberOfReviews > 5L) {
+            if (product.numberOfReviews > 5L) {
                 tvShowMoreReviews.text =
-                    getString(R.string.label_show_more_reviews, product!!.numberOfReviews)
+                    getString(R.string.label_show_more_reviews, product.numberOfReviews)
             } else {
                 tvShowMoreReviews.isVisible = false
             }
@@ -122,8 +162,12 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                 recyclerReviews.adapter = adapter
             }
         }
+    }
 
-        setHasOptionsMenu(true)
+    override fun onResume() {
+        super.onResume()
+
+        requireActivity().invalidateOptionsMenu()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -132,10 +176,29 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
         myMenu = menu
 
         viewModel.getUserSession().observe(viewLifecycleOwner) { session ->
+            if (session.userId.isNotBlank()) {
+                userId = session.userId
+            }
+
             when (session.userType) {
                 UserType.CUSTOMER.name -> {
-                    myMenu?.let {
-                        it.findItem(R.id.action_cart).isVisible = true
+                    myMenu?.let { menu ->
+                        menu.findItem(R.id.action_add_to_wishlist).isVisible = true
+                        menu.findItem(R.id.action_cart).isVisible = true
+
+                        viewModel.product.value?.let { p ->
+                            viewModel.checkIfProductExistInWishList(p.productId)
+                        }
+
+                        viewModel.isExisting.observe(viewLifecycleOwner) {
+                            if (it) {
+                                menu.findItem(R.id.action_add_to_wishlist)
+                                    .setIcon(R.drawable.ic_fav_checked)
+                            } else {
+                                menu.findItem(R.id.action_add_to_wishlist)
+                                    .setIcon(R.drawable.ic_fav_unchecked)
+                            }
+                        }
                     }
                 }
                 UserType.ADMIN.name -> {
@@ -180,7 +243,21 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                 true
             }
             R.id.action_stock_in -> {
-                // TODO("Navigate to stock in layout when admin")
+                val action = ProductDetailFragmentDirections
+                    .actionProductDetailFragmentToStockInModalFragment(
+                        viewModel.product.value!!
+                    )
+                findNavController().navigate(action)
+                true
+            }
+            R.id.action_add_to_wishlist -> {
+                if (userId.isNotBlank()) {
+                    viewModel.onAddOrRemoveToWishListClick(
+                        viewModel.product.value!!,
+                        userId
+                    )
+                }
+                loadingDialog.show()
                 true
             }
             else -> false
