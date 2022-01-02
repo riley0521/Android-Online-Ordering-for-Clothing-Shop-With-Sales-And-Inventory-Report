@@ -134,11 +134,11 @@ object RepositoryModule {
     @Provides
     fun providePostRepository(
         db: FirebaseFirestore,
-        notificationTokenRepository: NotificationTokenRepositoryImpl,
+        likeRepository: LikeRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = PostRepository(
         db,
-        notificationTokenRepository,
+        likeRepository,
         dispatcher
     )
 

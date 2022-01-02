@@ -50,6 +50,7 @@ class NewsPagingSource(
             userId?.let {
                 postList.map { p ->
                     p.isLikedByCurrentUser = likeRepository.isLikedByCurrentUser(p.id, it)
+                    p.haveUserId = true
                 }
             }
 

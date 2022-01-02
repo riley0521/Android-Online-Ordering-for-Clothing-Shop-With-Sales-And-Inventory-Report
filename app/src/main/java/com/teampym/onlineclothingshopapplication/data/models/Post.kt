@@ -26,4 +26,7 @@ data class Post(
 
     @get:Exclude
     var isLikedByCurrentUser: Boolean = false
+
+    @get:Exclude
+    var haveUserId: Boolean = false
 }

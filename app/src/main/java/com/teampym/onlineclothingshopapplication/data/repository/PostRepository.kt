@@ -1,57 +1,44 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.util.POSTS_COLLECTION
+import com.teampym.onlineclothingshopapplication.presentation.client.news.NewsPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class PostRepository @Inject constructor(
     db: FirebaseFirestore,
-    private val notificationTokenRepositoryImpl: NotificationTokenRepositoryImpl,
+    private val likeRepository: LikeRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
     private val postCollectionRef = db.collection(POSTS_COLLECTION)
 
-    // TODO("Should be changed to paging source")
-    @ExperimentalCoroutinesApi
-    fun getAll(): Flow<List<Post>> = callbackFlow {
-        val postListener = postCollectionRef
-            .addSnapshotListener { value, error ->
-                if (error != null) {
-                    cancel(message = "Error fetching posts", error)
-                    return@addSnapshotListener
-                }
-
-                val postList = mutableListOf<Post>()
-                value?.let { querySnapshot ->
-                    for (doc in querySnapshot.documents) {
-                        val post = doc.toObject<Post>()!!.copy(
-                            id = doc.id,
-                        )
-                        postList.add(post)
-                    }
-                    offer(postList)
-                }
-            }
-        awaitClose {
-            postListener.remove()
+    fun getSome(userId: String?, queryPost: Query) =
+        Pager(
+            PagingConfig(
+                pageSize = 30,
+                prefetchDistance = 30,
+                enablePlaceholders = false
+            )
+        ) {
+            NewsPagingSource(
+                userId,
+                likeRepository,
+                queryPost
+            )
         }
-    }
 
     suspend fun insert(post: Post): Post? {
         return withContext(dispatcher) {
@@ -69,14 +56,12 @@ class PostRepository @Inject constructor(
     }
 
     suspend fun update(
-        postId: String,
         post: Post
     ): Boolean {
         return withContext(dispatcher) {
-            var isSuccessful = true
 
             val postDocument = postCollectionRef
-                .document(postId)
+                .document(post.id)
                 .get()
                 .await()
 
@@ -93,24 +78,23 @@ class PostRepository @Inject constructor(
                     "dateCreated" to System.currentTimeMillis()
                 )
 
-                postCollectionRef
-                    .document(postId)
-                    .set(updatePostMap, SetOptions.merge())
-                    .addOnSuccessListener {
-                    }.addOnFailureListener {
-                        isSuccessful = false
-                        return@addOnFailureListener
-                    }
-            } else {
-                isSuccessful = false
+                try {
+                    postCollectionRef
+                        .document(post.id)
+                        .set(updatePostMap, SetOptions.merge())
+                        .await()
+
+                    return@withContext true
+                } catch (ex: Exception) {
+                    return@withContext false
+                }
             }
-            isSuccessful
+            return@withContext false
         }
     }
 
     suspend fun updateLikeCount(postId: String, count: Long): Boolean {
         return withContext(dispatcher) {
-            var isCompleted = true
 
             val postDocument = postCollectionRef
                 .document(postId)
@@ -119,23 +103,24 @@ class PostRepository @Inject constructor(
 
             postDocument?.let { doc ->
                 val post = doc.toObject<Post>()!!.copy(id = doc.id)
-                post.numberOfLikes += count
+                post.numberOfLikes = count
 
-                doc.reference.set(post, SetOptions.merge())
-                    .addOnSuccessListener {
-                    }.addOnFailureListener {
-                        isCompleted = false
-                        return@addOnFailureListener
-                    }
+                try {
+                    doc.reference
+                        .set(post, SetOptions.merge())
+                        .await()
+
+                    return@withContext true
+                } catch (ex: Exception) {
+                    return@withContext false
+                }
             }
-            isCompleted
+            return@withContext false
         }
     }
 
     suspend fun updateCommentCount(postId: String, count: Long): Boolean {
         return withContext(dispatcher) {
-            var isCompleted = true
-
             val postDocument = postCollectionRef
                 .document(postId)
                 .get()
@@ -143,16 +128,19 @@ class PostRepository @Inject constructor(
 
             postDocument?.let { doc ->
                 val post = doc.toObject<Post>()!!.copy(id = doc.id)
-                post.numberOfComments += count
+                post.numberOfComments = count
 
-                doc.reference.set(post, SetOptions.merge())
-                    .addOnSuccessListener {
-                    }.addOnFailureListener {
-                        isCompleted = false
-                        return@addOnFailureListener
-                    }
+                try {
+                    doc.reference
+                        .set(post, SetOptions.merge())
+                        .await()
+
+                    return@withContext true
+                } catch (ex: Exception) {
+                    return@withContext false
+                }
             }
-            isCompleted
+            return@withContext false
         }
     }
 }

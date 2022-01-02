@@ -182,7 +182,7 @@ class OrderDetailListFragment :
             } else {
                 Snackbar.make(
                     requireView(),
-                    "$item ${item.product.productId} clicked",
+                    "item ${item.product.productId} clicked",
                     Snackbar.LENGTH_SHORT
                 ).show()
             }
