@@ -5,6 +5,7 @@ import com.google.firebase.firestore.Exclude
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
 import com.teampym.onlineclothingshopapplication.data.util.Status
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
@@ -13,15 +14,14 @@ data class Order(
     var totalCost: Double,
     var numberOfItems: Long,
     var additionalNote: String,
+    var deliveryInformation: DeliveryInformation,
     var id: String = "",
     var suggestedShippingFee: Double = 0.0,
     var isUserAgreedToShippingFee: Boolean = false,
     var paymentMethod: String = PaymentMethod.COD.name,
     var status: String = Status.SHIPPING.toString(),
-    var dateOrdered: Long = 0,
-    var deliveryInformation: DeliveryInformation = DeliveryInformation(),
+    var dateOrdered: Long = Utils.getTimeInMillisUTC(),
 ) : Parcelable {
-    constructor() : this("", 0.0, 0, "")
 
     @get:Exclude
     val totalPaymentWithShippingFee: Double get() = totalCost * suggestedShippingFee

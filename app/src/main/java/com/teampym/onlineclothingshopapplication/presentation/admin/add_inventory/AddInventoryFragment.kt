@@ -1,4 +1,4 @@
-package com.teampym.onlineclothingshopapplication.presentation.admin.addinventory
+package com.teampym.onlineclothingshopapplication.presentation.admin.add_inventory
 
 import android.os.Bundle
 import android.text.Editable

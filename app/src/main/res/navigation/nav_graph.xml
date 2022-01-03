@@ -39,8 +39,12 @@
     <fragment
         android:id="@+id/newsFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.news.NewsFragment"
-        android:label="News"
-        tools:layout="@layout/fragment_news" />
+        android:label="News Feed"
+        tools:layout="@layout/fragment_news">
+        <action
+            android:id="@+id/action_newsFragment_to_addNewsFragment"
+            app:destination="@id/addNewsFragment" />
+    </fragment>
     <fragment
         android:id="@+id/orderFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.orders.OrderFragment"
@@ -286,7 +290,7 @@
     </fragment><action android:id="@+id/action_global_categoryFragment" app:destination="@id/categoryFragment"/>
     <fragment
         android:id="@+id/addEditCategoryFragment"
-        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.addeditcategory.AddEditCategoryFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.add_edit_category.AddEditCategoryFragment"
         android:label="{title}"
         tools:layout="@layout/fragment_add_edit_category">
         <argument
@@ -305,7 +309,7 @@
     </fragment>
     <fragment
         android:id="@+id/addEditProductFragment"
-        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.addeditproduct.AddEditProductFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.add_edit_product.AddEditProductFragment"
         android:label="{title}"
         tools:layout="@layout/fragment_add_edit_product" >
         <argument
@@ -330,7 +334,7 @@
     </fragment>
     <fragment
         android:id="@+id/addInventoryFragment"
-        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.addinventory.AddInventoryFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.add_inventory.AddInventoryFragment"
         android:label="Add Inventory"
         tools:layout="@layout/fragment_add_inventory" >
         <argument
@@ -366,4 +370,9 @@
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.wishlist.WishListFragment"
         android:label="Wish List"
         tools:layout="@layout/fragment_wish_list" />
+    <fragment
+        android:id="@+id/addNewsFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.add_news.AddNewsFragment"
+        android:label="Add Post"
+        tools:layout="@layout/fragment_add_news" />
 </navigation>

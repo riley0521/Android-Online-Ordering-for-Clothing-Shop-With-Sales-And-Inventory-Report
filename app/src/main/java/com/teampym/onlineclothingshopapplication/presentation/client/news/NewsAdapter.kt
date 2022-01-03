@@ -2,7 +2,11 @@ package com.teampym.onlineclothingshopapplication.presentation.client.news
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.view.ContextMenu
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -13,6 +17,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Post
+import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.NewsItemBinding
 import java.text.SimpleDateFormat
 import java.util.* // ktlint-disable no-wildcard-imports
@@ -49,7 +54,9 @@ class NewsAdapter constructor(
     }
 
     inner class NewsViewHolder(private val binding: NewsItemBinding) :
-        RecyclerView.ViewHolder(binding.root) {
+        RecyclerView.ViewHolder(binding.root),
+        View.OnCreateContextMenuListener,
+        MenuItem.OnMenuItemClickListener {
 
         init {
             binding.imgLike.setOnClickListener {
@@ -68,7 +75,7 @@ class NewsAdapter constructor(
                 commentClick()
             }
 
-            // TODO(Add share button)
+            binding.imgMenu.setOnCreateContextMenuListener(this)
         }
 
         private fun commentClick() {
@@ -96,7 +103,7 @@ class NewsAdapter constructor(
             }
         }
 
-        @SuppressLint("SimpleDateFormat")
+        @SuppressLint("SimpleDateFormat", "SetTextI18n")
         fun bind(item: Post) {
             binding.apply {
                 Glide.with(itemView)
@@ -114,40 +121,92 @@ class NewsAdapter constructor(
                     .into(imgAvatar)
 
                 txtCreatedBy.text = item.createdBy
+
                 val calendarDate = Calendar.getInstance()
                 calendarDate.timeInMillis = item.dateCreated
                 calendarDate.timeZone = TimeZone.getTimeZone("GMT+8:00")
-                val formattedDate =
-                    SimpleDateFormat("MM/dd/yyyy hh:mm:ss a").format(calendarDate.time)
-
+                val formattedDate = SimpleDateFormat("MM/dd/yyyy hh:mm:ss a")
+                    .format(calendarDate.time)
                 txtDateCreated.text = formattedDate
+
                 txtTitle.text = item.title
                 txtDescription.text = item.description
 
-                var likedByUser = ""
-                var numOfLikes = item.numberOfLikes
-
                 if (item.isLikedByCurrentUser) {
-                    likedByUser = "You, and "
-                    numOfLikes -= 1
-
                     imgLike.setColorFilter(ContextCompat.getColor(context, R.color.purple_500))
                     tvLike.setTextColor(ContextCompat.getColor(context, R.color.purple_500))
-                }
-                tvLikeDescription.text = context.getString(
-                    R.string.placeholder_like_description,
-                    likedByUser,
-                    numOfLikes
-                )
 
-                tvComment.text =
-                    context.getString(R.string.placeholder_comment, item.numberOfComments)
+                    tvLike.text = context.getString(R.string.btn_liked)
+                } else {
+                    imgLike.setColorFilter(ContextCompat.getColor(context, android.R.color.black))
+                    tvLike.setTextColor(ContextCompat.getColor(context, android.R.color.black))
+
+                    tvLike.text = context.getString(R.string.btn_like)
+                }
+
+                if (item.numberOfLikes == 0L) {
+                    tvLikeDescription.visibility = View.INVISIBLE
+                } else if (item.isLikedByCurrentUser && item.numberOfLikes == 1L) {
+                    tvLikeDescription.text = "You liked this post."
+                } else if (item.numberOfLikes == 1L) {
+                    tvLikeDescription.text = "1 person liked this post."
+                } else if (item.numberOfLikes > 1L) {
+                    tvLikeDescription.text = "${item.numberOfLikes} people liked this post."
+                } else if (item.isLikedByCurrentUser && item.numberOfLikes > 1L) {
+                    tvLikeDescription.text = context.getString(
+                        R.string.placeholder_like_description,
+                        "You, and",
+                        item.numberOfLikes - 1
+                    )
+                }
+
+                tvComment.text = context.getString(
+                    R.string.placeholder_comment,
+                    item.numberOfComments
+                )
 
                 if (!item.haveUserId) {
                     imgLike.isVisible = false
                     tvLike.isVisible = false
                 }
             }
+        }
+
+        override fun onCreateContextMenu(
+            menu: ContextMenu?,
+            v: View?,
+            menuInfo: ContextMenu.ContextMenuInfo?
+        ) {
+//            val share = menu?.add(Menu.NONE, 1, 1, "Share")
+//            share?.setOnMenuItemClickListener(this)
+
+            viewModel.userType?.let { type ->
+                if (type == UserType.ADMIN.name) {
+                    val delete = menu?.add(Menu.NONE, 1, 1, "Delete")
+                    delete?.setOnMenuItemClickListener(this)
+                }
+            }
+        }
+
+        override fun onMenuItemClick(item: MenuItem?): Boolean {
+            val position = absoluteAdapterPosition
+            if (position != RecyclerView.NO_POSITION) {
+                val post = getItem(position)
+
+                if (post != null) {
+                    when (item?.itemId) {
+//                        1 -> {
+//                            listener.onShareClicked(post)
+//                            return true
+//                        }
+                        1 -> {
+                            viewModel.onViewEvent(NewsFragment.NewsPagerEvent.Remove(post))
+                            return true
+                        }
+                    }
+                }
+            }
+            return false
         }
     }
 

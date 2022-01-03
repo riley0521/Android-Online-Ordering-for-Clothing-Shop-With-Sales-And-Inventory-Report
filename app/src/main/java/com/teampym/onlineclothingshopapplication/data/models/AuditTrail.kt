@@ -11,6 +11,4 @@ data class AuditTrail(
     var type: String = AuditType.CATEGORY.name,
     var dateOfLog: Long = 0,
     var id: String = ""
-) : Parcelable {
-    constructor() : this("", "", "")
-}
+) : Parcelable

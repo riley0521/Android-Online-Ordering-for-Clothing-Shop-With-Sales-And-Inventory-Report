@@ -18,10 +18,8 @@ import com.teampym.onlineclothingshopapplication.data.util.Status
 import com.teampym.onlineclothingshopapplication.data.util.Utils
 import com.teampym.onlineclothingshopapplication.presentation.client.orderlist.OrderListPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.lang.Exception
 import java.util.* // ktlint-disable no-wildcard-imports
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -111,8 +109,6 @@ class OrderRepository @Inject constructor(
         orderDetailList: List<OrderDetail>
     ): Boolean {
         return withContext(dispatcher) {
-            val isSuccessful: Boolean
-
             val body = ""
             var count = 1
 
@@ -126,13 +122,11 @@ class OrderRepository @Inject constructor(
                 count++
             }
 
-            isSuccessful = notificationTokenRepository.notifyAllAdmins(
+            return@withContext notificationTokenRepository.notifyAllAdmins(
                 null,
-                "$username wants to return:",
+                "$username wish to return $count item/s:",
                 body
             )
-
-            isSuccessful
         }
     }
 
@@ -204,41 +198,50 @@ class OrderRepository @Inject constructor(
         // I think cancel should be made before the order is shipped (while in shipping mode)
 
         return withContext(dispatcher) {
-            var isCompleted = true
-            when (status) {
+            return@withContext when (status) {
                 Status.SHIPPED.name -> {
                     // This is a nested method that will eventually notify the customer in the end.
-                    isCompleted = changeStatusToShipped(
+                    changeStatusToShipped(
                         suggestedShippingFee,
                         orderId,
                         status,
-                        userType,
-                        isCompleted
+                        userType
                     )
+                    true
                 }
                 Status.DELIVERY.name -> {
-                    isCompleted = changeStatusToDelivery(status, orderId, isCompleted)
+                    changeStatusToDelivery(status, orderId)
                     notificationTokenRepository.notifyCustomer(
                         obj = null,
                         userId = userId,
                         title = "Order (${orderId.take(orderId.length / 2)}...) is on it's way.",
                         body = "Buckle up because your order is on it's way to your home!"
                     )
+                    true
                 }
                 Status.COMPLETED.name -> {
-                    isCompleted = changeStatusToCompleted(userType, orderId, status, isCompleted)
+                    // Change the status to completed first
+                    // Then deduct the committed to sold
+                    val salesOrderList = changeStatusToCompleted(userType, orderId, status)
+
+                    // TODO(Audit trail and add to sales... Use the salesOrderList above)
+
+                    // Then notify the customer
                     notificationTokenRepository.notifyCustomer(
                         obj = null,
                         userId = userId,
                         title = "Order (${orderId.take(orderId.length / 2)}...) is completed!",
                         body = "Yey! Now you can enjoy your newly bought items!"
                     )
+
+                    true
                 }
                 Status.RETURNED.name -> {
-                    isCompleted = changeStatusToReturned(userType, orderId, status, isCompleted)
+                    changeStatusToReturned(userType, orderId, status)
+                    true
                 }
                 Status.CANCELED.name -> {
-                    isCompleted = changeStatusToCancelled(orderId, status, false)
+                    changeStatusToCancelled(orderId, status, false)
                     notificationTokenRepository.notifyCustomer(
                         obj = null,
                         userId = userId,
@@ -246,8 +249,8 @@ class OrderRepository @Inject constructor(
                         body = cancelReason ?: ""
                     )
                 }
+                else -> false
             }
-            isCompleted
         }
     }
 
@@ -290,186 +293,180 @@ class OrderRepository @Inject constructor(
         return false
     }
 
-    private fun changeStatusToReturned(
+    private suspend fun changeStatusToReturned(
         userType: String,
         orderId: String,
-        status: String,
-        isCompleted: Boolean
+        status: String
     ): Boolean {
-        var isSuccess = isCompleted
-        val orderDetailList = mutableListOf<OrderDetail>()
-        val updateOrderStatus = mapOf<String, Any>(
-            "status" to status
-        )
+        return withContext(dispatcher) {
+            val orderDetailList = mutableListOf<OrderDetail>()
+            val updateOrderStatus = mapOf<String, Any>(
+                "status" to status
+            )
 
-        orderCollectionRef
-            .document(orderId)
-            .set(updateOrderStatus, SetOptions.merge())
-            .addOnSuccessListener {
+            try {
                 orderCollectionRef
+                    .document(orderId)
+                    .set(updateOrderStatus, SetOptions.merge())
+                    .await()
+
+                val orderDoc = orderCollectionRef
                     .document(orderId)
                     .collection(ORDER_DETAILS_SUB_COLLECTION)
                     .get()
-                    .addOnSuccessListener {
-                        runBlocking {
-                            for (document in it.documents) {
-                                val orderDetailItem = document
-                                    .toObject(OrderDetail::class.java)!!.copy(id = document.id)
+                    .await()
 
-                                orderDetailList.add(orderDetailItem)
-                            }
-                            isSuccess =
-                                productRepository.deductSoldToReturnedCount(
-                                    userType,
-                                    orderDetailList
-                                )
-                        }
-                    }.addOnFailureListener {
-                        isSuccess = false
-                        return@addOnFailureListener
+                orderDoc?.let { order ->
+                    for (document in order.documents) {
+                        val orderDetailItem = document
+                            .toObject(OrderDetail::class.java)!!.copy(
+                            id = document.id,
+                            orderId = orderId
+                        )
+
+                        orderDetailList.add(orderDetailItem)
                     }
-            }.addOnFailureListener {
-                isSuccess = false
-                return@addOnFailureListener
+                    return@withContext productRepository.deductSoldToReturnedCount(
+                        userType,
+                        orderDetailList
+                    )
+                }
+            } catch (ex: java.lang.Exception) {
+                return@withContext false
             }
-        return isSuccess
+            return@withContext false
+        }
     }
 
-    private fun changeStatusToCompleted(
+    private suspend fun changeStatusToCompleted(
         userType: String,
         orderId: String,
-        status: String,
-        isCompleted: Boolean
-    ): Boolean {
-        var isSuccess = isCompleted
-        val updateOrderStatus = mapOf<String, Any>(
-            "status" to status
-        )
+        status: String
+    ): List<OrderDetail> {
+        return withContext(dispatcher) {
+            val updateOrderStatus = mapOf<String, Any>(
+                "status" to status
+            )
 
-        orderCollectionRef
-            .document(orderId)
-            .set(updateOrderStatus, SetOptions.merge())
-            .addOnSuccessListener {
-                runBlocking {
-                    isSuccess = updateOrderDetailsToSold(orderId, userType, isSuccess)
-                }
-            }.addOnFailureListener {
-                isSuccess = false
-                return@addOnFailureListener
+            try {
+                orderCollectionRef
+                    .document(orderId)
+                    .set(updateOrderStatus, SetOptions.merge())
+                    .await()
+
+                return@withContext updateOrderDetailsToSold(orderId, userType)
+            } catch (ex: java.lang.Exception) {
+                return@withContext emptyList()
             }
-        return isSuccess
+        }
     }
 
-    private fun changeStatusToDelivery(
+    private suspend fun changeStatusToDelivery(
         status: String,
-        orderId: String,
-        isCompleted: Boolean
+        orderId: String
     ): Boolean {
-        var isSuccess = isCompleted
-        val updateOrderStatus = mapOf<String, Any>(
-            "status" to status
-        )
+        return withContext(dispatcher) {
+            val updateOrderStatus = mapOf<String, Any>(
+                "status" to status
+            )
 
-        orderCollectionRef
-            .document(orderId)
-            .set(updateOrderStatus, SetOptions.merge())
-            .addOnFailureListener {
-                isSuccess = false
-                return@addOnFailureListener
+            try {
+                orderCollectionRef
+                    .document(orderId)
+                    .set(updateOrderStatus, SetOptions.merge())
+                    .await()
+
+                return@withContext true
+            } catch (ex: java.lang.Exception) {
+                return@withContext false
             }
-        return isSuccess
+        }
     }
 
-    private fun changeStatusToShipped(
+    private suspend fun changeStatusToShipped(
         suggestedShippingFee: Double?,
         orderId: String,
         status: String,
-        userId: String,
-        isCompleted: Boolean
+        userId: String
     ): Boolean {
+        return withContext(dispatcher) {
+            var sf = 0.0
+            suggestedShippingFee?.let {
+                sf = it
+            }
 
-        var isSuccess = isCompleted
+            val orderDoc = orderCollectionRef
+                .document(orderId)
+                .get()
+                .await()
 
-        var sf = 0.0
-        suggestedShippingFee?.let {
-            sf = it
-        }
-
-        orderCollectionRef
-            .document(orderId)
-            .get()
-            .addOnSuccessListener {
-                val updatedOrder = it.toObject<Order>()!!.copy(id = it.id)
+            orderDoc?.let { order ->
+                val updatedOrder = order.toObject<Order>()!!.copy(id = order.id)
                 val updateOrderStatus = mapOf<String, Any>(
                     "status" to status,
                     "suggestedShippingFee" to sf
                 )
 
-                it.reference.set(updateOrderStatus)
-                    .addOnSuccessListener {
-                        runBlocking {
-                            updatedOrder.status = status
-                            updatedOrder.suggestedShippingFee = sf
+                try {
+                    order.reference
+                        .set(updateOrderStatus)
+                        .await()
 
-                            val orderDetailDocuments = orderCollectionRef
-                                .document(orderId)
-                                .collection(ORDER_DETAILS_SUB_COLLECTION)
-                                .get()
-                                .await()
+                    updatedOrder.status = status
+                    updatedOrder.suggestedShippingFee = sf
 
-                            isSuccess = if (orderDetailDocuments.documents.isNotEmpty()) {
-                                changeInventoryShipped(
-                                    orderDetailDocuments,
-                                    userId,
-                                    updatedOrder,
-                                    suggestedShippingFee
-                                )
-                            } else {
-                                false
-                            }
-                        }
-                    }.addOnFailureListener {
-                        isSuccess = false
-                        return@addOnFailureListener
-                    }
-            }.addOnFailureListener {
-                isSuccess = false
-                return@addOnFailureListener
+                    val orderDetailDocuments = orderCollectionRef
+                        .document(orderId)
+                        .collection(ORDER_DETAILS_SUB_COLLECTION)
+                        .get()
+                        .await()
+
+                    return@withContext changeInventoryShipped(
+                        orderDetailDocuments,
+                        userId,
+                        updatedOrder,
+                        suggestedShippingFee
+                    )
+                } catch (ex: Exception) {
+                    return@withContext false
+                }
             }
-        return isSuccess
+            return@withContext false
+        }
     }
 
-    private fun changeInventoryShipped(
+    private suspend fun changeInventoryShipped(
         orderDetailDocuments: QuerySnapshot,
         userId: String,
         order: Order,
         suggestedShippingFee: Double?
     ): Boolean {
-        var isCompleted: Boolean
-
-        val orderDetailList = mutableListOf<OrderDetail>()
-        for (document in orderDetailDocuments.documents) {
-            val orderDetailItem =
-                document.toObject(OrderDetail::class.java)!!.copy(id = document.id)
-            orderDetailList.add(orderDetailItem)
-        }
-        runBlocking {
-            isCompleted = if (productRepository.deductStockToCommittedCount(
+        return withContext(dispatcher) {
+            val orderDetailList = mutableListOf<OrderDetail>()
+            for (document in orderDetailDocuments.documents) {
+                val orderDetailItem =
+                    document.toObject(OrderDetail::class.java)!!.copy(
+                        id = document.id,
+                        orderId = order.id
+                    )
+                orderDetailList.add(orderDetailItem)
+            }
+            if (
+                productRepository.deductStockToCommittedCount(
                     userId,
                     orderDetailList
                 )
             ) {
-                notifyUserAboutShippingFeeOrMadeADeal(
+                return@withContext notifyUserAboutShippingFeeOrMadeADeal(
                     userId,
                     order,
                     suggestedShippingFee,
                     null
                 )
-            } else {
-                false
             }
+
+            return@withContext false
         }
-        return isCompleted
     }
 
     private suspend fun notifyUserAboutShippingFeeOrMadeADeal(
@@ -478,66 +475,68 @@ class OrderRepository @Inject constructor(
         suggestedShippingFee: Double?,
         isUserAgreedToShippingFee: Boolean?
     ): Boolean {
-        val isSuccessful = withContext(dispatcher) {
-            var isCompleted = true
+        return withContext(dispatcher) {
 
             if (suggestedShippingFee != null && suggestedShippingFee > 0.0) {
-                isCompleted = notificationTokenRepository.notifyCustomer(
+                return@withContext notificationTokenRepository.notifyCustomer(
                     order,
                     userId,
                     "Order (${order.id.take(order.id.length / 2)}...)",
                     "Admin suggests that the order fee should be $suggestedShippingFee"
                 )
             } else if (isUserAgreedToShippingFee != null && isUserAgreedToShippingFee) {
-                isCompleted = notificationTokenRepository.notifyAllAdmins(
+                return@withContext notificationTokenRepository.notifyAllAdmins(
                     order,
                     "Order (${order.id.take(order.id.length / 2)}...)",
                     "User ($userId) has agreed to the suggested shipping fee."
                 )
             }
-            return@withContext isCompleted
+            return@withContext false
         }
-        return isSuccessful
     }
 
     private suspend fun updateOrderDetailsToSold(
         orderId: String,
-        userId: String,
-        currentStatus: Boolean
-    ): Boolean {
+        userId: String
+    ): List<OrderDetail> {
         return withContext(dispatcher) {
-            var isCompleted = currentStatus
-
-            val orderDetailDocuments = db.collectionGroup(ORDER_DETAILS_SUB_COLLECTION)
+            val orderDetailDocs = db.collectionGroup(ORDER_DETAILS_SUB_COLLECTION)
                 .whereEqualTo("orderId", orderId)
                 .get()
                 .await()
 
-            if (orderDetailDocuments.documents.isNotEmpty()) {
+            if (orderDetailDocs.documents.isNotEmpty()) {
+
                 val orderDetailList = mutableListOf<OrderDetail>()
-                for (document in orderDetailDocuments.documents) {
+                for (document in orderDetailDocs.documents) {
                     val orderDetailItem = document
-                        .toObject(OrderDetail::class.java)!!.copy(id = document.id)
+                        .toObject(OrderDetail::class.java)!!.copy(
+                        id = document.id,
+                        orderId = orderId
+                    )
 
                     orderDetailItem.dateSold = System.currentTimeMillis()
                     orderDetailItem.isExchangeable = true
                     orderDetailItem.canAddReview = true
 
-                    val result = orderCollectionRef.document(orderId)
-                        .collection(ORDER_DETAILS_SUB_COLLECTION)
-                        .document(orderDetailItem.id)
-                        .set(orderDetailItem, SetOptions.merge())
-                        .await()
-                    if (result != null) {
+                    try {
+                        orderCollectionRef.document(orderId)
+                            .collection(ORDER_DETAILS_SUB_COLLECTION)
+                            .document(orderDetailItem.id)
+                            .set(orderDetailItem, SetOptions.merge())
+                            .await()
+
                         orderDetailList.add(orderDetailItem)
+                    } catch (ex: Exception) {
+                        return@withContext emptyList()
                     }
                 }
-                isCompleted = productRepository.deductCommittedToSoldCount(
+                return@withContext productRepository.deductCommittedToSoldCount(
                     userId,
                     orderDetailList
                 )
             }
-            isCompleted
+            return@withContext emptyList()
         }
     }
 }

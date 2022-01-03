@@ -1,4 +1,4 @@
-package com.teampym.onlineclothingshopapplication.presentation.admin.addeditproduct
+package com.teampym.onlineclothingshopapplication.presentation.admin.add_edit_product
 
 import android.net.Uri
 import androidx.lifecycle.MutableLiveData
@@ -176,8 +176,7 @@ class AddEditProductViewModel @Inject constructor(
                     fileName = fileName.value!!,
                     imageUrl = imageUrl.value!!,
                     price = productPrice,
-                    type = productType,
-                    dateAdded = Utils.getTimeInMillisUTC()
+                    type = productType
                 )
                 val res = async { productRepository.create(newProd) }.await()
                 if (res != null) {

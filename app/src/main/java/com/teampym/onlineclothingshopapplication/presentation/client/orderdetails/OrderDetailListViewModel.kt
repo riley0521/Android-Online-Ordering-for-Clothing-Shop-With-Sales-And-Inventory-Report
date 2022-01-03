@@ -31,7 +31,7 @@ class OrderDetailListViewModel @Inject constructor(
         userInformationDao.get(sessionPref.userId)
     }
 
-    var order = state.get<Order>(ORDER) ?: Order()
+    var order = state.get<Order>(ORDER)
         set(value) {
             field = value
             state.set(ORDER, value)

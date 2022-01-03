@@ -1,4 +1,4 @@
-package com.teampym.onlineclothingshopapplication.presentation.admin.addeditproduct
+package com.teampym.onlineclothingshopapplication.presentation.admin.add_edit_product
 
 import android.app.Activity
 import android.content.Intent

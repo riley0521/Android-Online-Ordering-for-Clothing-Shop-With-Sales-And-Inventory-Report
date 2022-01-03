@@ -83,7 +83,6 @@ class ProductRepository @Inject constructor(
 
     suspend fun create(product: Product): Product? {
         return withContext(dispatcher) {
-            product.dateAdded = System.currentTimeMillis()
             try {
                 val result = productCollectionRef
                     .add(product)
@@ -110,7 +109,7 @@ class ProductRepository @Inject constructor(
 
     suspend fun update(product: Product): Boolean {
         return withContext(dispatcher) {
-            product.dateModified = System.currentTimeMillis()
+            product.dateModified = Utils.getTimeInMillisUTC()
             try {
                 productCollectionRef
                     .document(product.productId)
@@ -305,9 +304,8 @@ class ProductRepository @Inject constructor(
     suspend fun deductCommittedToSoldCount(
         userType: String,
         orderDetailList: List<OrderDetail>
-    ): Boolean {
+    ): List<OrderDetail> {
         return withContext(dispatcher) {
-            var isSuccessful = true
 
             if (userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
@@ -333,14 +331,13 @@ class ProductRepository @Inject constructor(
                                 .set(inventory, SetOptions.merge())
                                 .await()
                         } catch (ex: JavaLangException) {
-                            isSuccessful = false
+                            return@withContext emptyList()
                         }
-                    } else {
-                        isSuccessful = false
                     }
                 }
+                return@withContext orderDetailList
             }
-            isSuccessful
+            return@withContext emptyList()
         }
     }
 

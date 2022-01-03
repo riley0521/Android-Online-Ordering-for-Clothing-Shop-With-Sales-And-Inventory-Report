@@ -1,4 +1,4 @@
-package com.teampym.onlineclothingshopapplication.presentation.admin.addinventory
+package com.teampym.onlineclothingshopapplication.presentation.admin.add_inventory
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle

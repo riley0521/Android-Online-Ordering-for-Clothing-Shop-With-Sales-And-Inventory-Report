@@ -7,6 +7,7 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.filter
 import androidx.paging.map
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -17,11 +18,14 @@ import com.teampym.onlineclothingshopapplication.data.repository.PostRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.SessionPreferences
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
+import com.teampym.onlineclothingshopapplication.data.util.UserType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -42,8 +46,12 @@ class NewsViewModel @Inject constructor(
     val userSession: LiveData<SessionPreferences> get() = _userSession
 
     val userId = MutableLiveData<String?>(null)
+    var userType: String? = null
 
     private val events = MutableStateFlow<List<NewsFragment.NewsPagerEvent>>(emptyList())
+
+    private val _newsChannel = Channel<NewsEvent>()
+    val newsEvent = _newsChannel.receiveAsFlow()
 
     fun onViewEvent(
         event: NewsFragment.NewsPagerEvent
@@ -54,6 +62,7 @@ class NewsViewModel @Inject constructor(
     suspend fun fetchUserSession() {
         _userSession.value = preferencesManager.preferencesFlow.first()
         userId.value = _userSession.value?.userId
+        userType = _userSession.value?.userType
     }
 
     fun getPostsPagingData() {
@@ -84,6 +93,7 @@ class NewsViewModel @Inject constructor(
                     val postToUpdate =
                         postRepository.updateLikeCount(postId = post.id, count = count)
                     if (postToUpdate) {
+                        _newsChannel.send(NewsEvent.ShowMessage("You Liked this post."))
                     }
                 }
             }
@@ -95,7 +105,19 @@ class NewsViewModel @Inject constructor(
                     val postToUpdate =
                         postRepository.updateLikeCount(postId = post.id, count = count)
                     if (postToUpdate) {
+                        _newsChannel.send(NewsEvent.ShowMessage("You unlike this post."))
                     }
+                }
+            }
+        }
+    }
+
+    private fun onDeletePostClicked(post: Post) = viewModelScope.launch {
+        userType?.let { type ->
+            if (type == UserType.ADMIN.name) {
+                val res = postRepository.delete(post.id)
+                if (res) {
+                    _newsChannel.send(NewsEvent.ShowMessage("Post deleted successfully!"))
                 }
             }
         }
@@ -116,6 +138,15 @@ class NewsViewModel @Inject constructor(
                     } else return@map it
                 }
             }
+            is NewsFragment.NewsPagerEvent.Remove -> {
+                onDeletePostClicked(event.post)
+
+                paging.filter { event.post.id != it.id }
+            }
         }
+    }
+
+    sealed class NewsEvent {
+        data class ShowMessage(val msg: String) : NewsEvent()
     }
 }

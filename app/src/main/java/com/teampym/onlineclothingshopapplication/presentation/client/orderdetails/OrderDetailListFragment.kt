@@ -74,7 +74,7 @@ class OrderDetailListFragment :
         }
     }
 
-    @SuppressLint("SimpleDateFormat")
+    @SuppressLint("SimpleDateFormat", "SetTextI18n")
     private fun setupViews() {
         binding.apply {
             val order = viewModel.order

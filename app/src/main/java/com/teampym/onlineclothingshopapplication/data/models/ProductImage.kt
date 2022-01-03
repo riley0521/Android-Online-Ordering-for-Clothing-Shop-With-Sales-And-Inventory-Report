@@ -9,6 +9,4 @@ data class ProductImage(
     var fileName: String,
     var imageUrl: String,
     var id: String = ""
-) : Parcelable {
-    constructor() : this("", "", "")
-}
+) : Parcelable

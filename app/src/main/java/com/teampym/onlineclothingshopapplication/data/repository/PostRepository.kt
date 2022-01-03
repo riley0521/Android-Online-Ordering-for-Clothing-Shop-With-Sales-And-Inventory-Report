@@ -9,6 +9,7 @@ import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.util.POSTS_COLLECTION
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import com.teampym.onlineclothingshopapplication.presentation.client.news.NewsPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
@@ -43,7 +44,6 @@ class PostRepository @Inject constructor(
     suspend fun insert(post: Post): Post? {
         return withContext(dispatcher) {
             try {
-                post.dateCreated = System.currentTimeMillis()
                 val result = postCollectionRef
                     .add(post)
                     .await()
@@ -75,7 +75,7 @@ class PostRepository @Inject constructor(
                     "createdBy" to post.createdBy,
                     "avatarUrl" to avatarUrl,
                     "imageUrl" to imageUrl,
-                    "dateCreated" to System.currentTimeMillis()
+                    "dateCreated" to Utils.getTimeInMillisUTC()
                 )
 
                 try {
@@ -141,6 +141,23 @@ class PostRepository @Inject constructor(
                 }
             }
             return@withContext false
+        }
+    }
+
+    // Deleting post will delete it's
+    // subCollection which is likes and comments
+    suspend fun delete(postId: String): Boolean {
+        return withContext(dispatcher) {
+            try {
+                postCollectionRef
+                    .document(postId)
+                    .delete()
+                    .await()
+
+                return@withContext true
+            } catch (ex: java.lang.Exception) {
+                return@withContext false
+            }
         }
     }
 }

@@ -38,7 +38,7 @@ class AddEditDeliveryInformationFragment :
 
     private var regionId = 0L
 
-    private var newDeliveryInformation = DeliveryInformation()
+    private lateinit var newDeliveryInformation: DeliveryInformation
 
     private var editDeliveryInformation: DeliveryInformation? = null
 
@@ -66,6 +66,7 @@ class AddEditDeliveryInformationFragment :
 
                 selectedCity = it.city
                 edtCity.text = it.city
+
                 edtPostalCode.setText(it.postalCode)
                 edtDetailedAddress.setText(it.streetNumber)
                 switchDefaultAddress.isChecked = it.isPrimary
@@ -198,17 +199,26 @@ class AddEditDeliveryInformationFragment :
             btnSubmit.setOnClickListener {
                 when {
                     isNewFormValid() -> {
-                        newDeliveryInformation.name = edtFullName.text.toString()
-                        newDeliveryInformation.contactNo = edtPhoneNo.text.toString()
-                        newDeliveryInformation.streetNumber = edtDetailedAddress.text.toString()
-                        newDeliveryInformation.postalCode = edtPostalCode.text.toString()
-                        newDeliveryInformation.userId = userId
-                        newDeliveryInformation.isPrimary = switchDefaultAddress.isChecked
+                        newDeliveryInformation = DeliveryInformation(
+                            name = edtFullName.text.toString().trim(),
+                            contactNo = edtPhoneNo.text.toString().trim(),
+                            region = selectedRegion,
+                            province = selectedProvince,
+                            city = selectedCity,
+                            streetNumber = edtDetailedAddress.text.toString().trim(),
+                            postalCode = edtPostalCode.text.toString().trim(),
+                            userId = userId,
+                            isPrimary = switchDefaultAddress.isChecked
+                        )
+
                         viewModel.onSubmitClicked(newDeliveryInformation, false)
                     }
                     isEditFormValid() -> {
                         editDeliveryInformation?.name = edtFullName.text.toString()
                         editDeliveryInformation?.contactNo = edtPhoneNo.text.toString()
+                        editDeliveryInformation?.region = selectedRegion
+                        editDeliveryInformation?.province = selectedProvince
+                        editDeliveryInformation?.city = selectedCity
                         editDeliveryInformation?.streetNumber = edtDetailedAddress.text.toString()
                         editDeliveryInformation?.postalCode = edtPostalCode.text.toString()
                         editDeliveryInformation?.userId = userId
@@ -257,7 +267,6 @@ class AddEditDeliveryInformationFragment :
             if (it.name.isNotBlank()) {
                 selectedRegion = it.name
                 binding.edtRegion.text = it.name
-                newDeliveryInformation.region = it.name
                 editDeliveryInformation?.region = it.name
             }
         }
@@ -266,7 +275,6 @@ class AddEditDeliveryInformationFragment :
             if (it.name.isNotBlank()) {
                 selectedProvince = it.name
                 binding.edtProvince.text = it.name
-                newDeliveryInformation.province = it.name
                 editDeliveryInformation?.province = it.name
             }
         }
@@ -275,7 +283,6 @@ class AddEditDeliveryInformationFragment :
             if (it.name.isNotBlank()) {
                 selectedCity = it.name
                 binding.edtCity.text = it.name
-                newDeliveryInformation.city = it.name
                 editDeliveryInformation?.city = it.name
             }
         }
@@ -364,9 +371,9 @@ class AddEditDeliveryInformationFragment :
                 edtPhoneNo.text.isNotBlank() &&
                 edtPostalCode.text.isNotBlank() &&
                 edtDetailedAddress.text.isNotBlank() &&
-                newDeliveryInformation.region.isNotBlank() &&
-                newDeliveryInformation.province.isNotBlank() &&
-                newDeliveryInformation.city.isNotBlank() &&
+                selectedRegion.isNotBlank() &&
+                selectedProvince.isNotBlank() &&
+                selectedCity.isNotBlank() &&
                 userId.isNotBlank()
         }
     }

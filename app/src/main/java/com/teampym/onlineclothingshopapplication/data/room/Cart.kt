@@ -14,14 +14,12 @@ import java.math.BigDecimal
 data class Cart(
     var userId: String,
     var subTotal: Double,
+    @Embedded var product: Product,
+    @Embedded var inventory: Inventory,
     @PrimaryKey
     var id: String = "",
-    var quantity: Long = 1,
-    @Embedded var product: Product = Product(),
-    @Embedded var inventory: Inventory = Inventory()
+    var quantity: Long = 1
 ) : Parcelable {
-
-    constructor() : this("", 0.0)
 
     @IgnoredOnParcel
     @get:Exclude

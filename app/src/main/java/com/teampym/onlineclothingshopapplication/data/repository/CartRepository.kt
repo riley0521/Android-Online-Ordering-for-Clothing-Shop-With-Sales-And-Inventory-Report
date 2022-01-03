@@ -60,7 +60,7 @@ class CartRepository @Inject constructor(
                             cartItem.inventory = foundInventory
 
                             // get corresponding product (cartItem.id == product.id)
-                            CoroutineScope(Dispatchers.IO).launch {
+                            CoroutineScope(dispatcher).launch {
                                 cartItem = getUpdatedPriceAndStock(cartItem, userId)
                             }
                             cartList.add(cartItem)
@@ -78,7 +78,7 @@ class CartRepository @Inject constructor(
         cart: Cart,
         userId: String
     ): Cart {
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcher) {
             val mProduct = productsCollectionRef
                 .document(cart.product.productId)
                 .get()

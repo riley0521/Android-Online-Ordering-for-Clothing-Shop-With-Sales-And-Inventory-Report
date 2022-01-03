@@ -1,6 +1,7 @@
 package com.teampym.onlineclothingshopapplication.data.models
 
 import android.os.Parcelable
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
@@ -12,7 +13,5 @@ data class Review(
     var rate: Double,
     var description: String,
     var id: String = "",
-    var dateReview: Long = 0
-) : Parcelable {
-    constructor() : this("", "", "", "", 0.0, "")
-}
+    var dateReview: Long = Utils.getTimeInMillisUTC()
+) : Parcelable

@@ -1,4 +1,4 @@
-package com.teampym.onlineclothingshopapplication.presentation.admin.addeditproduct
+package com.teampym.onlineclothingshopapplication.presentation.admin.add_edit_product
 
 import android.net.Uri
 import android.view.LayoutInflater

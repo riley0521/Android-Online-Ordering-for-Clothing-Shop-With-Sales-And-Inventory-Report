@@ -1,4 +1,4 @@
-package com.teampym.onlineclothingshopapplication.presentation.admin.addeditcategory
+package com.teampym.onlineclothingshopapplication.presentation.admin.add_edit_category
 
 import android.net.Uri
 import androidx.lifecycle.MutableLiveData

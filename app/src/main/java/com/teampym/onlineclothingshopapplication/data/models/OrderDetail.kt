@@ -8,20 +8,19 @@ import java.math.BigDecimal
 
 @Parcelize
 data class OrderDetail(
-    val userId: String,
-    val orderId: String,
-    val inventoryId: String,
-    val size: String,
-    val quantity: Long,
-    val subTotal: Double,
-    val id: String = "",
+    var userId: String,
+    var orderId: String,
+    var inventoryId: String,
+    var size: String,
+    var quantity: Long,
+    var subTotal: Double,
+    var product: Product,
+    var id: String = "",
     var dateSold: Long = 0,
-    val product: Product = Product(),
     var isExchangeable: Boolean = false,
     var canAddReview: Boolean = false,
     var hasAddedReview: Boolean = false
 ) : Parcelable {
-    constructor() : this("", "", "", "", 0L, 0.0)
 
     @get:Exclude
     val calculatedPrice: BigDecimal get() = (quantity * product.price).toBigDecimal()

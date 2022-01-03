@@ -179,31 +179,31 @@
 
             <RatingBar
                 android:id="@+id/ratingBar"
+                style="?attr/ratingBarStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:clickable="false"
+                android:isIndicator="true"
                 android:numStars="5"
                 android:rating="1"
-                style="?attr/ratingBarStyleSmall"
-                android:isIndicator="true"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toEndOf="@+id/tvRate"
                 app:layout_constraintTop_toBottomOf="@+id/tvDescription" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
+
     </ScrollView>
 
     <Button
         android:id="@+id/btnAddToCart"
-        android:layout_alignParentBottom="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
         android:gravity="center_horizontal"
         android:text="@string/btn_add_to_cart" />
-
 
 </RelativeLayout>
 

@@ -1,6 +1,8 @@
 package com.teampym.onlineclothingshopapplication.data.network
 
-data class NotificationTopic<T>(
-    val data: NotificationData<T>,
+import com.teampym.onlineclothingshopapplication.data.models.Post
+
+data class NotificationTopic(
+    val data: NotificationData<Post>,
     val to: String = "/topics/news"
 )

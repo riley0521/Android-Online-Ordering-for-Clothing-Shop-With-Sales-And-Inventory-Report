@@ -8,10 +8,12 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.ktx.messaging
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.NotificationToken
+import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.network.FCMService
 import com.teampym.onlineclothingshopapplication.data.network.NotificationData
 import com.teampym.onlineclothingshopapplication.data.network.NotificationSingle
+import com.teampym.onlineclothingshopapplication.data.network.NotificationTopic
 import com.teampym.onlineclothingshopapplication.data.util.NOTIFICATION_TOKENS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
@@ -198,6 +200,31 @@ class NotificationTokenRepositoryImpl @Inject constructor(
                 isCompleted = false
             }
             isCompleted
+        }
+    }
+
+    suspend fun submitToPostTopic(
+        post: Post,
+        title: String,
+        body: String
+    ): Boolean {
+        return withContext(dispatcher) {
+            try {
+                val data = NotificationData(
+                    title = title,
+                    body = body,
+                    obj = post
+                )
+
+                val notifyTopic = NotificationTopic(
+                    data
+                )
+
+                service.notifyToTopics(notifyTopic)
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
+            }
         }
     }
 }

@@ -8,6 +8,7 @@ import com.google.firebase.firestore.Exclude
 import com.teampym.onlineclothingshopapplication.data.models.ProductImage
 import com.teampym.onlineclothingshopapplication.data.models.Review
 import com.teampym.onlineclothingshopapplication.data.util.ProductType
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import kotlinx.android.parcel.Parcelize
 
 @Entity(tableName = "table_products")
@@ -26,7 +27,7 @@ data class Product(
     @get:Exclude
     var cartId: String = "",
     var type: String = ProductType.HOODIES.name,
-    var dateAdded: Long = 0,
+    var dateAdded: Long = Utils.getTimeInMillisUTC(),
     var dateModified: Long = 0,
     var totalRate: Double = 0.0,
     var numberOfReviews: Long = 0,

@@ -1,12 +1,16 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.Comment
 import com.teampym.onlineclothingshopapplication.data.util.COMMENTS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.POSTS_COLLECTION
+import com.teampym.onlineclothingshopapplication.presentation.client.news.NewsPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -24,7 +28,6 @@ class CommentRepository @Inject constructor(
     private val postCollectionRef = db.collection(POSTS_COLLECTION)
 
     // TODO("Create a paging source.")
-
     suspend fun getAll(postId: String): List<Comment> {
         return withContext(dispatcher) {
             val commentList = mutableListOf<Comment>()

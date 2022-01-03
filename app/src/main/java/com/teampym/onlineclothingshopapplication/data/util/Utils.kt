@@ -1,8 +1,12 @@
 package com.teampym.onlineclothingshopapplication.data.util
 
 import android.content.Intent
+import android.net.Uri
 import androidx.fragment.app.Fragment
-import java.util.*
+import com.google.firebase.dynamiclinks.DynamicLink
+import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
+import com.google.firebase.dynamiclinks.ktx.androidParameters
+import java.util.* // ktlint-disable no-wildcard-imports
 
 const val CATEGORIES_COLLECTION = "Categories"
 
@@ -60,6 +64,51 @@ object Utils {
         val newDate = Calendar.getInstance()
         newDate.timeZone = TimeZone.getTimeZone("UTC")
         return newDate.timeInMillis
+    }
+
+    fun generateSharingLink(
+        title: String,
+        deepLink: Uri,
+        previewImageLink: Uri,
+        getShareableLink: (String) -> Unit = {},
+    ) {
+        FirebaseDynamicLinks.getInstance().createDynamicLink().run {
+            // What is this link parameter? You will get to know when we will actually use this function.
+            link = deepLink
+
+            // [domainUriPrefix] will be the domain name you added when setting up Dynamic Links at Firebase Console.
+            // You can find it in the Dynamic Links dashboard.
+            domainUriPrefix = PREFIX
+
+            // Pass your preview Image Link here;
+            setSocialMetaTagParameters(
+                DynamicLink.SocialMetaTagParameters.Builder()
+                    .setTitle(title)
+                    .setImageUrl(previewImageLink)
+                    .build()
+            )
+
+            // Required
+            androidParameters {
+                build()
+            }
+
+            // Finally
+            buildShortDynamicLink()
+        }.also {
+            it.addOnSuccessListener { dynamicLink ->
+                // This lambda will be triggered when short link generation is successful
+
+                // Retrieve the newly created dynamic link so that we can use it further for sharing via Intent.
+                getShareableLink.invoke(dynamicLink.shortLink.toString())
+            }
+            it.addOnFailureListener {
+                // This lambda will be triggered when short link generation failed due to an exception
+
+                // Handle
+                getShareableLink.invoke("None")
+            }
+        }
     }
 }
 

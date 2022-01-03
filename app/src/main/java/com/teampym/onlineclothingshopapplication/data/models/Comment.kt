@@ -10,10 +10,4 @@ data class Comment(
     var commentBy: String,
     var id: String = "",
     var dateCommented: Long = 0
-) : Parcelable {
-    constructor() : this(
-        "",
-        "",
-        ""
-    )
-}
+) : Parcelable

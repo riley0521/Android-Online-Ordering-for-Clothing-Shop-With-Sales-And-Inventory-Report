@@ -57,7 +57,7 @@
     <string name="label_price">Price:</string>
     <string name="label_size">Size:</string>
     <string name="label_like">Like</string>
-    <string name="placeholder_like_description">%1$s(%2$d) others like this post.</string>
+    <string name="placeholder_like_description">%1$s %2$d others liked this post.</string>
     <string name="placeholder_comment">Comment (%1$d)</string>
     <string name="label_view_shipping_orders">View Shipping Orders</string>
     <string name="label_view_shipped_orders">View Shipped Orders</string>
@@ -204,5 +204,8 @@
     <string name="label_no_item_added_in_your_wish_list">No Item/s Added In Your Wish List.</string>
     <string name="btn_retry">Retry</string>
     <string name="label_no_internet_connection">No Internet Connection</string>
+    <string name="btn_like">Like</string>
+    <string name="btn_liked">Liked</string>
+    <string name="hint_add_comment">Add Comment</string>
 
 </resources>

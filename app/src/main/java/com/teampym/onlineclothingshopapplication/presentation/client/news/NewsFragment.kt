@@ -1,14 +1,16 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.news
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.paging.PagingData
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.util.UserType
@@ -16,6 +18,7 @@ import com.teampym.onlineclothingshopapplication.databinding.FragmentNewsBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 private const val TAG = "NewsFragment"
@@ -77,7 +80,21 @@ class NewsFragment : Fragment(R.layout.fragment_news), NewsAdapter.NewsListener 
             if (it.userType == UserType.ADMIN.name) {
                 binding.fabNewPost.isVisible = true
                 binding.fabNewPost.setOnClickListener {
-                    Log.d(TAG, "fab: here")
+                    findNavController().navigate(R.id.action_newsFragment_to_addNewsFragment)
+                }
+            }
+        }
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.newsEvent.collectLatest { event ->
+                when (event) {
+                    is NewsViewModel.NewsEvent.ShowMessage -> {
+                        Snackbar.make(
+                            requireView(),
+                            event.msg,
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
         }
@@ -101,5 +118,6 @@ class NewsFragment : Fragment(R.layout.fragment_news), NewsAdapter.NewsListener 
 
     sealed class NewsPagerEvent {
         data class Update(val post: Post, val isLikeByUser: Boolean) : NewsPagerEvent()
+        data class Remove(val post: Post) : NewsPagerEvent()
     }
 }
