@@ -95,6 +95,12 @@
         <action
             android:id="@+id/action_profileFragment_to_wishListFragment"
             app:destination="@id/wishListFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_historyLogFragment"
+            app:destination="@id/historyLogFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_salesFragment"
+            app:destination="@id/salesFragment" />
     </fragment>
     <action
         android:id="@+id/action_global_profileFragment"
@@ -338,10 +344,13 @@
     <fragment
         android:id="@+id/addInventoryFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.admin.add_inventory.AddInventoryFragment"
-        android:label="Add Inventory"
-        tools:layout="@layout/fragment_add_inventory" >
+        android:label="Add Inventory for ({productName})"
+        tools:layout="@layout/fragment_add_inventory">
         <argument
             android:name="productId"
+            app:argType="string" />
+        <argument
+            android:name="productName"
             app:argType="string" />
     </fragment>
     <dialog
@@ -387,4 +396,14 @@
             android:name="productId"
             app:argType="string" />
     </fragment>
+    <fragment
+        android:id="@+id/historyLogFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.audit_history.HistoryLogFragment"
+        android:label="History Logs"
+        tools:layout="@layout/fragment_history_log" />
+    <fragment
+        android:id="@+id/salesFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.sales.SalesFragment"
+        android:label="Sales"
+        tools:layout="@layout/fragment_sales" />
 </navigation>

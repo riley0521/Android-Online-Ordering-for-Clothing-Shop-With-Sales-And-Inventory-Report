@@ -139,9 +139,6 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             // Attach viewPager and the tabLayout together so that they can work altogether
             TabLayoutMediator(indicatorTabLayout, viewPager) { _, _ -> }.attach()
 
-            // submit list to the adapter if the reviewList is not empty.
-            adapter.submitList(product.reviewList)
-
             var rate = 0.0
             if (product.totalRate > 0.0 && product.numberOfReviews > 0L) {
                 rate = product.avgRate.toDouble()
@@ -154,6 +151,15 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             if (product.numberOfReviews > 5L) {
                 tvShowMoreReviews.text =
                     getString(R.string.label_show_more_reviews, product.numberOfReviews)
+
+                // Navigate the user to show all reviews of this product
+                // To let them know if the product is worth buying.
+                tvShowMoreReviews.setOnClickListener {
+                    val action = ProductDetailFragmentDirections.actionProductDetailFragmentToReviewsFragment(
+                        productId = product.productId
+                    )
+                    findNavController().navigate(action)
+                }
             } else {
                 tvShowMoreReviews.isVisible = false
             }
@@ -161,8 +167,10 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             if (rate == 0.0) {
                 labelNoReviews.isVisible = true
             } else {
+                // submit list to the adapter if the reviewList is not empty.
+                adapter.submitList(product.reviewList)
 
-                // Load Reviews here.
+                // Show the items in the adapter in this recyclerViewReviews.
                 recyclerReviews.setHasFixedSize(true)
                 recyclerReviews.adapter = adapter
             }
@@ -260,7 +268,8 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                 // Navigate to add inventory layout when admin
                 val action = ProductDetailFragmentDirections
                     .actionProductDetailFragmentToAddInventoryFragment(
-                        viewModel.product.value!!.productId
+                        productId = viewModel.product.value!!.productId,
+                        productName = viewModel.product.value!!.name
                     )
                 findNavController().navigate(action)
                 true

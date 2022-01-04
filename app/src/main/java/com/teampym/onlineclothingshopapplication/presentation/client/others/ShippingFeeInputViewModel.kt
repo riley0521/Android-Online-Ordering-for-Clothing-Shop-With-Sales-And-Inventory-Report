@@ -12,6 +12,7 @@ import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.Status
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
@@ -53,7 +54,10 @@ class ShippingFeeInputViewModel @Inject constructor(
 
     fun submitSuggestedShippingFee(order: Order, shippingFee: BigDecimal) = appScope.launch {
         if (_userType.value != null) {
+            val userInformation = userFlow.first()
+
             _isSuccessful.value = orderRepository.updateOrderStatus(
+                username = "${userInformation?.firstName} ${userInformation?.lastName}",
                 userId,
                 _userType.value!!,
                 order.id,

@@ -29,9 +29,9 @@ object RepositoryModule {
     @Provides
     fun provideCategoryRepository(
         db: FirebaseFirestore,
-        productRepository: ProductRepository,
+        auditTrailRepository: AuditTrailRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
-    ) = CategoryRepository(db, productRepository, dispatcher)
+    ) = CategoryRepository(db, auditTrailRepository, dispatcher)
 
     @Provides
     fun provideAccountRepository(
@@ -79,6 +79,7 @@ object RepositoryModule {
         productInventoryRepository: ProductInventoryRepository,
         reviewRepository: ReviewRepository,
         orderDetailRepository: OrderDetailRepository,
+        auditTrailRepository: AuditTrailRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = ProductRepository(
         db,
@@ -86,6 +87,7 @@ object RepositoryModule {
         productInventoryRepository,
         reviewRepository,
         orderDetailRepository,
+        auditTrailRepository,
         dispatcher
     )
 
@@ -98,8 +100,9 @@ object RepositoryModule {
     @Provides
     fun provideProductInventoryRepository(
         db: FirebaseFirestore,
+        auditTrailRepository: AuditTrailRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
-    ) = ProductInventoryRepository(db, dispatcher)
+    ) = ProductInventoryRepository(db, auditTrailRepository, dispatcher)
 
     @Provides
     fun provideReviewRepository(
@@ -113,12 +116,16 @@ object RepositoryModule {
         orderDetailRepository: OrderDetailRepository,
         productRepository: ProductRepository,
         notificationTokenRepository: NotificationTokenRepository,
+        auditTrailRepository: AuditTrailRepository,
+        salesRepository: SalesRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = OrderRepository(
         db,
         orderDetailRepository,
         productRepository,
         notificationTokenRepository,
+        auditTrailRepository,
+        salesRepository,
         dispatcher
     )
 
@@ -169,6 +176,15 @@ object RepositoryModule {
         db: FirebaseFirestore,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = AuditTrailRepository(
+        db,
+        dispatcher
+    )
+
+    @Provides
+    fun provideSalesRepository(
+        db: FirebaseFirestore,
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = SalesRepository(
         db,
         dispatcher
     )

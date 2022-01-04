@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.teampym.onlineclothingshopapplication.data.util.AuditType
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -31,6 +32,7 @@ enum class PaymentMethod {
 data class SessionPreferences(
     val sortOrder: SortOrder = SortOrder.BY_NAME,
     val paymentMethod: PaymentMethod = PaymentMethod.COD,
+    val filterLogType: AuditType = AuditType.CATEGORY,
     val userId: String = "",
     val userType: String = "",
     val categoryId: String = ""
@@ -61,12 +63,15 @@ class PreferencesManager @Inject constructor(
             val paymentMethod = PaymentMethod.valueOf(
                 preferences[PreferencesKeys.PAYMENT_METHOD] ?: PaymentMethod.COD.name
             )
+            val logType = AuditType.valueOf(
+                preferences[PreferencesKeys.LOG_TYPE] ?: AuditType.CATEGORY.name
+            )
 
             val userId = preferences[PreferencesKeys.USER_ID] ?: ""
             val userType = preferences[PreferencesKeys.USER_TYPE] ?: ""
             val categoryId = preferences[PreferencesKeys.CATEGORY_ID] ?: ""
 
-            SessionPreferences(sortOrder, paymentMethod, userId, userType, categoryId)
+            SessionPreferences(sortOrder, paymentMethod, logType, userId, userType, categoryId)
         }
 
     suspend fun updateSortOrder(sortOrder: SortOrder) {
@@ -78,6 +83,12 @@ class PreferencesManager @Inject constructor(
     suspend fun updatePaymentMethod(paymentMethod: PaymentMethod) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.PAYMENT_METHOD] = paymentMethod.name
+        }
+    }
+
+    suspend fun updateFilterLogType(auditType: AuditType) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.LOG_TYPE] = auditType.name
         }
     }
 
@@ -103,6 +114,7 @@ class PreferencesManager @Inject constructor(
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.SORT_ORDER] = SortOrder.BY_NAME.name
             preferences[PreferencesKeys.PAYMENT_METHOD] = PaymentMethod.COD.name
+            preferences[PreferencesKeys.LOG_TYPE] = AuditType.CATEGORY.name
             preferences[PreferencesKeys.USER_ID] = ""
             preferences[PreferencesKeys.USER_TYPE] = ""
             preferences[PreferencesKeys.CATEGORY_ID] = ""
@@ -112,6 +124,7 @@ class PreferencesManager @Inject constructor(
     private object PreferencesKeys {
         val SORT_ORDER = stringPreferencesKey("sort_order")
         val PAYMENT_METHOD = stringPreferencesKey("payment_method")
+        val LOG_TYPE = stringPreferencesKey("log_type")
         val USER_ID = stringPreferencesKey("user_id")
         val USER_TYPE = stringPreferencesKey("user_type")
         val CATEGORY_ID = stringPreferencesKey("category_id")

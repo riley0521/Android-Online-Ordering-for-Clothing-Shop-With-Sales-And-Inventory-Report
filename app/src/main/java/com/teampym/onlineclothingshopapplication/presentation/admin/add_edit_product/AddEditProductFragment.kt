@@ -262,11 +262,13 @@ class AddEditProductFragment :
 
                         val action = AddEditProductFragmentDirections
                             .actionAddEditProductFragmentToAddInventoryFragment(
-                                viewModel.productId
+                                productId = viewModel.productId,
+                                productName = viewModel.productName
                             )
 
                         // Remove productId from state after passing it in action variable
                         viewModel.productId = ""
+                        viewModel.productName = ""
 
                         findNavController().navigate(action)
                     }

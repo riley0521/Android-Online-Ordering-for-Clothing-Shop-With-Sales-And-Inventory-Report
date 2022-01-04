@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import com.google.firebase.dynamiclinks.DynamicLink
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.google.firebase.dynamiclinks.ktx.androidParameters
+import java.text.DateFormatSymbols
 import java.util.* // ktlint-disable no-wildcard-imports
 
 const val CATEGORIES_COLLECTION = "Categories"
@@ -32,7 +33,7 @@ const val AUDIT_TRAILS_COLLECTION = "AuditTrails"
 
 const val SALES_COLLECTION = "Sales"
 const val MONTHS_SUB_COLLECTION = "months"
-const val DAYS_SUB_COLLECTION = "days"
+const val DAYS_SUB_COLLECTION_OF_MONTHS = "days"
 
 const val PREFIX = "https://midnightmares.page.link"
 
@@ -65,6 +66,15 @@ object Utils {
         val newDate = Calendar.getInstance()
         newDate.timeZone = TimeZone.getTimeZone("UTC")
         return newDate.timeInMillis
+    }
+
+    fun getMonthNames() = DateFormatSymbols().months.map { it.uppercase() }
+
+    fun getCurrentMonth(monthIndex: Int): String {
+        val dfs = DateFormatSymbols()
+        val months = dfs.months
+
+        return months[monthIndex].uppercase()
     }
 
     fun generateSharingLink(
@@ -173,7 +183,5 @@ enum class AuditType {
     CATEGORY,
     PRODUCT,
     INVENTORY,
-    STOCK,
     ORDER,
-    POST
 }

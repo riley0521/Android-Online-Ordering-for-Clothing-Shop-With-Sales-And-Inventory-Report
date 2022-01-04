@@ -41,6 +41,7 @@ class StockInModalFragment : BottomSheetDialogFragment() {
         binding = FragmentStockInModalBinding.bind(view)
 
         val product = args.product
+        viewModel.productName = product.name
 
         binding.apply {
             if (product.inventoryList.isNotEmpty()) {

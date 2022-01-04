@@ -6,9 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.repository.ProductInventoryRepository
 import com.teampym.onlineclothingshopapplication.data.room.Inventory
+import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
+import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -16,11 +19,14 @@ import javax.inject.Inject
 @HiltViewModel
 class AddInventoryViewModel @Inject constructor(
     private val inventoryRepository: ProductInventoryRepository,
+    private val userInformationDao: UserInformationDao,
+    private val preferencesManager: PreferencesManager,
     private val state: SavedStateHandle
 ) : ViewModel() {
 
     companion object {
         private const val PRODUCT_ID = "product_id"
+        private const val PRODUCT_NAME = "product_name"
         private const val INVENTORY_SIZE = "inventory_size"
         private const val INVENTORY_STOCK = "inventory_stock"
         private const val INVENTORY_RESTOCK_LEVEL = "inventory_restock_level"
@@ -31,6 +37,12 @@ class AddInventoryViewModel @Inject constructor(
         set(value) {
             field = value
             state.set(PRODUCT_ID, value)
+        }
+
+    var productName = state.get(PRODUCT_NAME) ?: ""
+        set(value) {
+            field = value
+            state.set(PRODUCT_NAME, value)
         }
 
     var inventorySize = state.get(INVENTORY_SIZE) ?: ""
@@ -77,6 +89,9 @@ class AddInventoryViewModel @Inject constructor(
     }
 
     fun onSubmitClicked(isAddingAnother: Boolean) = viewModelScope.launch {
+        val userSession = preferencesManager.preferencesFlow.first()
+        val userInformation = userInformationDao.getCurrentUser(userSession.userId)
+
         if (isFormValid()) {
             val newInv = Inventory(
                 pid = productId,
@@ -84,7 +99,13 @@ class AddInventoryViewModel @Inject constructor(
                 stock = inventoryStock.toLong(),
                 restockLevel = inventoryRestockLevel.toLong()
             )
-            val res = async { inventoryRepository.create(newInv) }.await()
+            val res = async {
+                inventoryRepository.create(
+                    username = "${userInformation?.firstName} ${userInformation?.lastName}",
+                    productName = productName,
+                    newInv
+                )
+            }.await()
             if (res != null) {
                 resetAllUiState()
                 if (isAddingAnother) {

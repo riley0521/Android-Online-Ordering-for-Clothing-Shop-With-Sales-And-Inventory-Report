@@ -8,10 +8,12 @@ import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
+import com.teampym.onlineclothingshopapplication.data.models.AuditTrail
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
 import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
+import com.teampym.onlineclothingshopapplication.data.util.AuditType
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.ORDER_DETAILS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.Status
@@ -30,6 +32,8 @@ class OrderRepository @Inject constructor(
     private val orderDetailRepository: OrderDetailRepository,
     private val productRepository: ProductRepository,
     private val notificationTokenRepository: NotificationTokenRepository,
+    private val auditTrailRepository: AuditTrailRepository,
+    private val salesRepository: SalesRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
@@ -64,7 +68,7 @@ class OrderRepository @Inject constructor(
     ): Order? {
         return withContext(dispatcher) {
 
-            var newOrder: Order? = Order(
+            val newOrder = Order(
                 userId = userId,
                 totalCost = cartList.sumOf { it.subTotal },
                 paymentMethod = paymentMethod,
@@ -75,31 +79,30 @@ class OrderRepository @Inject constructor(
                 numberOfItems = cartList.size.toLong()
             )
 
-            if (newOrder != null) {
-                val result = orderCollectionRef
-                    .add(newOrder)
-                    .await()
+            val result = orderCollectionRef
+                .add(newOrder)
+                .await()
 
-                if (result != null) {
-                    newOrder.id = result.id
+            if (result != null) {
+                newOrder.id = result.id
 
-                    // Insert all items in the cart after adding order in database
-                    newOrder.orderDetailList = orderDetailRepository.insertAll(
-                        result.id,
-                        userId,
-                        cartList
-                    )
+                // Insert all items in the cart after adding order in database
+                newOrder.orderDetailList = orderDetailRepository.insertAll(
+                    result.id,
+                    userId,
+                    cartList
+                )
 
-                    notificationTokenRepository.notifyAllAdmins(
-                        newOrder,
-                        "New Order ($newOrder.id)",
-                        "You have a new order!"
-                    )
-                } else {
-                    newOrder = null
-                }
+                notificationTokenRepository.notifyAllAdmins(
+                    newOrder,
+                    "New Order ($newOrder.id)",
+                    "You have a new order!"
+                )
+
+                return@withContext newOrder.copy(id = result.id)
+            } else {
+                return@withContext null
             }
-            newOrder
         }
     }
 
@@ -139,7 +142,7 @@ class OrderRepository @Inject constructor(
         return withContext(dispatcher) {
 
             // Change Status to Canceled
-            changeStatusToCancelled(orderId, Status.CANCELED.name, isCommitted)
+            changeStatusToCancelled("", false, orderId, Status.CANCELED.name, isCommitted)
 
             val isSuccessful = notificationTokenRepository.notifyAllAdmins(
                 null,
@@ -182,6 +185,7 @@ class OrderRepository @Inject constructor(
 
     // This will be executed by admins only.
     suspend fun updateOrderStatus(
+        username: String,
         userId: String,
         userType: String,
         orderId: String,
@@ -202,6 +206,7 @@ class OrderRepository @Inject constructor(
                 Status.SHIPPED.name -> {
                     // This is a nested method that will eventually notify the customer in the end.
                     changeStatusToShipped(
+                        username,
                         suggestedShippingFee,
                         orderId,
                         status,
@@ -210,7 +215,7 @@ class OrderRepository @Inject constructor(
                     true
                 }
                 Status.DELIVERY.name -> {
-                    changeStatusToDelivery(status, orderId)
+                    changeStatusToDelivery(username, status, orderId)
                     notificationTokenRepository.notifyCustomer(
                         obj = null,
                         userId = userId,
@@ -222,9 +227,9 @@ class OrderRepository @Inject constructor(
                 Status.COMPLETED.name -> {
                     // Change the status to completed first
                     // Then deduct the committed to sold
-                    val salesOrderList = changeStatusToCompleted(userType, orderId, status)
+                    val salesOrderList = changeStatusToCompleted(username, userType, orderId, status)
 
-                    // TODO(Audit trail and add to sales... Use the salesOrderList above)
+                    salesRepository.insert(salesOrderList)
 
                     // Then notify the customer
                     notificationTokenRepository.notifyCustomer(
@@ -237,11 +242,11 @@ class OrderRepository @Inject constructor(
                     true
                 }
                 Status.RETURNED.name -> {
-                    changeStatusToReturned(userType, orderId, status)
+                    changeStatusToReturned(username, userType, orderId, status)
                     true
                 }
                 Status.CANCELED.name -> {
-                    changeStatusToCancelled(orderId, status, false)
+                    changeStatusToCancelled(username, true, orderId, status, false)
                     notificationTokenRepository.notifyCustomer(
                         obj = null,
                         userId = userId,
@@ -255,6 +260,8 @@ class OrderRepository @Inject constructor(
     }
 
     private suspend fun changeStatusToCancelled(
+        username: String,
+        isAdmin: Boolean,
         orderId: String,
         status: String,
         isCommitted: Boolean,
@@ -269,6 +276,16 @@ class OrderRepository @Inject constructor(
                 .document(orderId)
                 .set(updateOrderStatus, SetOptions.merge())
                 .await()
+
+            if (isAdmin) {
+                auditTrailRepository.insert(
+                    AuditTrail(
+                        username = username,
+                        description = "$username UPDATED order - $orderId to $status",
+                        type = AuditType.ORDER.name
+                    )
+                )
+            }
 
             if (isCommitted) {
                 val anotherRes = orderCollectionRef
@@ -294,6 +311,7 @@ class OrderRepository @Inject constructor(
     }
 
     private suspend fun changeStatusToReturned(
+        username: String,
         userType: String,
         orderId: String,
         status: String
@@ -309,6 +327,14 @@ class OrderRepository @Inject constructor(
                     .document(orderId)
                     .set(updateOrderStatus, SetOptions.merge())
                     .await()
+
+                auditTrailRepository.insert(
+                    AuditTrail(
+                        username = username,
+                        description = "$username UPDATED order - $orderId to $status",
+                        type = AuditType.ORDER.name
+                    )
+                )
 
                 val orderDoc = orderCollectionRef
                     .document(orderId)
@@ -339,6 +365,7 @@ class OrderRepository @Inject constructor(
     }
 
     private suspend fun changeStatusToCompleted(
+        username: String,
         userType: String,
         orderId: String,
         status: String
@@ -354,6 +381,14 @@ class OrderRepository @Inject constructor(
                     .set(updateOrderStatus, SetOptions.merge())
                     .await()
 
+                auditTrailRepository.insert(
+                    AuditTrail(
+                        username = username,
+                        description = "$username UPDATED order - $orderId to $status",
+                        type = AuditType.ORDER.name
+                    )
+                )
+
                 return@withContext updateOrderDetailsToSold(orderId, userType)
             } catch (ex: java.lang.Exception) {
                 return@withContext emptyList()
@@ -362,6 +397,7 @@ class OrderRepository @Inject constructor(
     }
 
     private suspend fun changeStatusToDelivery(
+        username: String,
         status: String,
         orderId: String
     ): Boolean {
@@ -376,6 +412,14 @@ class OrderRepository @Inject constructor(
                     .set(updateOrderStatus, SetOptions.merge())
                     .await()
 
+                auditTrailRepository.insert(
+                    AuditTrail(
+                        username = username,
+                        description = "$username UPDATED order - $orderId to $status",
+                        type = AuditType.ORDER.name
+                    )
+                )
+
                 return@withContext true
             } catch (ex: java.lang.Exception) {
                 return@withContext false
@@ -384,6 +428,7 @@ class OrderRepository @Inject constructor(
     }
 
     private suspend fun changeStatusToShipped(
+        username: String,
         suggestedShippingFee: Double?,
         orderId: String,
         status: String,
@@ -411,6 +456,14 @@ class OrderRepository @Inject constructor(
                     order.reference
                         .set(updateOrderStatus)
                         .await()
+
+                    auditTrailRepository.insert(
+                        AuditTrail(
+                            username = username,
+                            description = "$username UPDATED order - $orderId to $status",
+                            type = AuditType.ORDER.name
+                        )
+                    )
 
                     updatedOrder.status = status
                     updatedOrder.suggestedShippingFee = sf

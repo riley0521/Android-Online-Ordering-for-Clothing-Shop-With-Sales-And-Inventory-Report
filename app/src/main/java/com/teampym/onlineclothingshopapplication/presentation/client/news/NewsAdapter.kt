@@ -8,6 +8,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.paging.PagingDataAdapter
@@ -165,6 +166,10 @@ class NewsAdapter constructor(
                     item.numberOfComments
                 )
 
+                if (viewModel.userType != null && viewModel.userType == UserType.ADMIN.name) {
+                    imgMenu.isVisible = true
+                }
+
                 if (!item.haveUserId ||
                     (viewModel.userType != null && viewModel.userType == UserType.ADMIN.name)
                 ) {
@@ -202,7 +207,14 @@ class NewsAdapter constructor(
 //                            return true
 //                        }
                         1 -> {
-                            viewModel.onViewEvent(NewsFragment.NewsPagerEvent.Remove(post))
+                            AlertDialog.Builder(context)
+                                .setTitle("DELETE POST")
+                                .setMessage("Are you sure you want to delete this post?")
+                                .setPositiveButton("Yes") { _, _ ->
+                                    viewModel.onViewEvent(NewsFragment.NewsPagerEvent.Remove(post))
+                                }.setNegativeButton("No") { dialog, _ ->
+                                    dialog.dismiss()
+                                }.show()
                             return true
                         }
                     }

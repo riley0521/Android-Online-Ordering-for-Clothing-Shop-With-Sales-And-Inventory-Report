@@ -9,9 +9,11 @@ import com.teampym.onlineclothingshopapplication.data.models.Category
 import com.teampym.onlineclothingshopapplication.data.repository.CategoryRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.SessionPreferences
+import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,6 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class CategoryViewModel @Inject constructor(
     private val categoryRepository: CategoryRepository,
+    private val userInformationDao: UserInformationDao,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
@@ -41,7 +44,16 @@ class CategoryViewModel @Inject constructor(
     }
 
     fun onDeleteCategoryClicked(category: Category, position: Int) = viewModelScope.launch {
-        val res = async { categoryRepository.delete(category.id) }.await()
+        val userSession = preferencesManager.preferencesFlow.first()
+        val userInformation = userInformationDao.getCurrentUser(userSession.userId)
+
+        val res = async {
+            categoryRepository.delete(
+                username = "${userInformation?.firstName} ${userInformation?.lastName}",
+                categoryName = category.name,
+                category.id
+            )
+        }.await()
         if (res) {
             _categoryChannel.send(
                 CategoryEvent.ShowSuccessMessage(

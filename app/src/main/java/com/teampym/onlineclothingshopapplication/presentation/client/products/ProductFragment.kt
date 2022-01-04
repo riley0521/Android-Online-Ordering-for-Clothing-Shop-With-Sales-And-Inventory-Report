@@ -6,7 +6,6 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -54,7 +53,7 @@ class ProductFragment :
         binding = FragmentProductBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
 
-        adminAdapter = ProductAdminAdapter(this)
+        adminAdapter = ProductAdminAdapter(requireContext(), this)
         adminAdapter.withLoadStateHeaderAndFooter(
             header = ProductLoadStateAdapter(adminAdapter),
             footer = ProductLoadStateAdapter(adminAdapter)
@@ -145,20 +144,10 @@ class ProductFragment :
     }
 
     override fun onDeleteClicked(product: Product) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("DELETE PRODUCT")
-            .setMessage(
-                "Are you sure you want to delete this product?\n" +
-                    "All corresponding inventory, additional images, and reviews will be deleted as well."
-            )
-            .setPositiveButton("Yes") { _, _ ->
-                loadingDialog.show()
-                viewModel.onDeleteProductClicked(
-                    product
-                )
-            }.setNegativeButton("No") { dialog, _ ->
-                dialog.dismiss()
-            }.show()
+        loadingDialog.show()
+        viewModel.onDeleteProductClicked(
+            product
+        )
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -290,7 +279,11 @@ class ProductFragment :
             R.id.action_new_product -> {
                 // Navigate to add/edit product layout when admin
                 val action = ProductFragmentDirections
-                    .actionProductFragmentToAddEditProductFragment(categoryId = args.categoryId)
+                    .actionProductFragmentToAddEditProductFragment(
+                        categoryId = args.categoryId,
+                        title = "Add New Product",
+                        editMode = false
+                    )
                 findNavController().navigate(action)
                 true
             }

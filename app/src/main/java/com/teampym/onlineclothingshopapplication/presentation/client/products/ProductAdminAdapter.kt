@@ -1,8 +1,14 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.products
 
+import android.content.Context
 import android.util.Log
+import android.view.ContextMenu
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -13,6 +19,7 @@ import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.databinding.ProductItemAdminBinding
 
 class ProductAdminAdapter(
+    private val context: Context,
     private val listener: OnProductAdminListener
 ) : PagingDataAdapter<Product, ProductAdminAdapter.ProductAdminViewHolder>(PRODUCT_COMPARATOR) {
 
@@ -40,7 +47,9 @@ class ProductAdminAdapter(
     }
 
     inner class ProductAdminViewHolder(private val binding: ProductItemAdminBinding) :
-        RecyclerView.ViewHolder(binding.root) {
+        RecyclerView.ViewHolder(binding.root),
+        View.OnCreateContextMenuListener,
+        MenuItem.OnMenuItemClickListener {
 
         init {
             binding.apply {
@@ -53,6 +62,8 @@ class ProductAdminAdapter(
                     }
                 }
             }
+
+            binding.imgMenu.setOnCreateContextMenuListener(this)
         }
 
         fun bind(product: Product) {
@@ -72,9 +83,54 @@ class ProductAdminAdapter(
                 tvRemainingStockCount.text = product.inventoryList[0].stock.toString()
             }
         }
+
+        override fun onCreateContextMenu(
+            menu: ContextMenu?,
+            v: View?,
+            menuInfo: ContextMenu.ContextMenuInfo?
+        ) {
+            val edit = menu?.add(Menu.NONE, 1, 1, "Edit")
+            edit?.setOnMenuItemClickListener(this)
+
+            val delete = menu?.add(Menu.NONE, 2, 2, "Delete")
+            delete?.setOnMenuItemClickListener(this)
+        }
+
+        override fun onMenuItemClick(item: MenuItem?): Boolean {
+            val position = absoluteAdapterPosition
+            if (position != RecyclerView.NO_POSITION) {
+                val product = getItem(position)
+
+                if (product != null) {
+                    when (item?.itemId) {
+                        1 -> {
+                            listener.onEditClicked(product)
+                            return true
+                        }
+                        2 -> {
+                            AlertDialog.Builder(context)
+                                .setTitle("DELETE PRODUCT")
+                                .setMessage(
+                                    "Are you sure you want to delete this product?\n" +
+                                        "All inventories and reviews of this product will also be deleted."
+                                )
+                                .setPositiveButton("Yes") { _, _ ->
+                                    listener.onDeleteClicked(product)
+                                }.setNegativeButton("No") { dialog, _ ->
+                                    dialog.dismiss()
+                                }.show()
+                            return true
+                        }
+                    }
+                }
+            }
+            return false
+        }
     }
 
     interface OnProductAdminListener {
         fun onItemClicked(product: Product)
+        fun onEditClicked(product: Product)
+        fun onDeleteClicked(product: Product)
     }
 }

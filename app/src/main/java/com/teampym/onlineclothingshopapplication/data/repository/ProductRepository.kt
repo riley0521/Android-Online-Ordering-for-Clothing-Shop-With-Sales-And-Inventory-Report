@@ -10,18 +10,18 @@ import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
-import com.teampym.onlineclothingshopapplication.data.models.*
+import com.teampym.onlineclothingshopapplication.data.models.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.SortOrder
 import com.teampym.onlineclothingshopapplication.data.room.UserWithWishList
-import com.teampym.onlineclothingshopapplication.data.util.*
+import com.teampym.onlineclothingshopapplication.data.util.* // ktlint-disable no-wildcard-imports
 import com.teampym.onlineclothingshopapplication.presentation.client.products.ProductPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.util.*
+import java.util.* // ktlint-disable no-wildcard-imports
 import javax.inject.Inject
 import javax.inject.Singleton
 import java.lang.Exception as JavaLangException
@@ -33,6 +33,7 @@ class ProductRepository @Inject constructor(
     private val productInventoryRepository: ProductInventoryRepository,
     private val reviewRepository: ReviewRepository,
     private val orderDetailRepository: OrderDetailRepository,
+    private val auditTrailRepository: AuditTrailRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
@@ -81,15 +82,24 @@ class ProductRepository @Inject constructor(
         }
     }
 
-    suspend fun create(product: Product): Product? {
+    suspend fun create(username: String, product: Product): Product? {
         return withContext(dispatcher) {
-            try {
-                val result = productCollectionRef
-                    .add(product)
-                    .await()
+            val result = productCollectionRef
+                .add(product)
+                .await()
+
+            if (result != null) {
+
+                auditTrailRepository.insert(
+                    AuditTrail(
+                        username = username,
+                        description = "$username CREATED product - ${product.name}",
+                        type = AuditType.PRODUCT.name
+                    )
+                )
 
                 return@withContext product.copy(productId = result.id)
-            } catch (ex: JavaLangException) {
+            } else {
                 return@withContext null
             }
         }
@@ -107,7 +117,7 @@ class ProductRepository @Inject constructor(
         }
     }
 
-    suspend fun update(product: Product): Boolean {
+    suspend fun update(username: String, product: Product): Boolean {
         return withContext(dispatcher) {
             product.dateModified = Utils.getTimeInMillisUTC()
             try {
@@ -115,6 +125,14 @@ class ProductRepository @Inject constructor(
                     .document(product.productId)
                     .set(product, SetOptions.merge())
                     .await()
+
+                auditTrailRepository.insert(
+                    AuditTrail(
+                        username = username,
+                        description = "$username UPDATED product - ${product.name}",
+                        type = AuditType.PRODUCT.name
+                    )
+                )
 
                 return@withContext true
             } catch (ex: JavaLangException) {
@@ -167,13 +185,21 @@ class ProductRepository @Inject constructor(
         }
     }
 
-    suspend fun delete(productId: String): Boolean {
+    suspend fun delete(username: String, productName: String, productId: String): Boolean {
         return withContext(dispatcher) {
             try {
                 productCollectionRef
                     .document(productId)
                     .delete()
                     .await()
+
+                auditTrailRepository.insert(
+                    AuditTrail(
+                        username = username,
+                        description = "$username DELETED product - $productName",
+                        type = AuditType.PRODUCT.name
+                    )
+                )
 
                 return@withContext true
             } catch (ex: Exception) {

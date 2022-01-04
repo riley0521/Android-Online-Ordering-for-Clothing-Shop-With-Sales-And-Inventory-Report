@@ -1,16 +1,14 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ktx.toObject
+import com.google.firebase.firestore.Query
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.AuditTrail
 import com.teampym.onlineclothingshopapplication.data.util.AUDIT_TRAILS_COLLECTION
+import com.teampym.onlineclothingshopapplication.presentation.admin.audit_history.HistoryLogPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -24,44 +22,28 @@ class AuditTrailRepository @Inject constructor(
 
     private val auditCollectionRef = db.collection(AUDIT_TRAILS_COLLECTION)
 
-    // TODO("Convert this into a paging source.")
-    @ExperimentalCoroutinesApi
-    suspend fun getAll(): Flow<List<AuditTrail>> = callbackFlow {
-        val auditTrailListener = auditCollectionRef
-            .addSnapshotListener { value, error ->
-                if (error != null) {
-                    cancel(message = "Error fetching audits", error)
-                    return@addSnapshotListener
-                }
-
-                val auditTrailList = mutableListOf<AuditTrail>()
-                value?.let { querySnapshot ->
-                    for (doc in querySnapshot) {
-                        val audit = doc.toObject<AuditTrail>().copy(id = doc.id)
-                        auditTrailList.add(audit)
-                    }
-                    offer(auditTrailList)
-                }
-            }
-        awaitClose {
-            auditTrailListener.remove()
-        }
+    fun getSome(queryHistoryLogs: Query) = Pager(
+        PagingConfig(
+            pageSize = 30,
+            prefetchDistance = 30,
+            enablePlaceholders = false
+        )
+    ) {
+        HistoryLogPagingSource(
+            queryHistoryLogs
+        )
     }
 
-    suspend fun insert(audit: AuditTrail?): AuditTrail? {
+    suspend fun insert(audit: AuditTrail): AuditTrail? {
         return withContext(dispatcher) {
-            var createdAudit: AuditTrail? = audit
-            audit?.let { a ->
-                val result = auditCollectionRef
-                    .add(a)
-                    .await()
-                if (result != null) {
-                    createdAudit?.id = result.id
-                } else {
-                    createdAudit = null
-                }
+            val result = auditCollectionRef
+                .add(audit)
+                .await()
+            if (result != null) {
+                return@withContext audit.copy(id = result.id)
+            } else {
+                return@withContext null
             }
-            createdAudit
         }
     }
 }

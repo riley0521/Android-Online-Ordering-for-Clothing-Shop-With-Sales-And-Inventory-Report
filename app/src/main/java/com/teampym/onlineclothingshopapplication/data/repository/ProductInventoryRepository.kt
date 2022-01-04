@@ -4,19 +4,21 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
+import com.teampym.onlineclothingshopapplication.data.models.AuditTrail
 import com.teampym.onlineclothingshopapplication.data.room.Inventory
+import com.teampym.onlineclothingshopapplication.data.util.AuditType
 import com.teampym.onlineclothingshopapplication.data.util.INVENTORIES_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ProductInventoryRepository @Inject constructor(
     db: FirebaseFirestore,
+    private val auditTrailRepository: AuditTrailRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
@@ -43,23 +45,33 @@ class ProductInventoryRepository @Inject constructor(
         }
     }
 
-    suspend fun create(inventory: Inventory): Inventory? {
+    suspend fun create(username: String, productName: String, inventory: Inventory): Inventory? {
         return withContext(dispatcher) {
-            try {
-                val result = productCollectionRef
-                    .document(inventory.pid)
-                    .collection(INVENTORIES_SUB_COLLECTION)
-                    .add(inventory)
-                    .await()
+            val result = productCollectionRef
+                .document(inventory.pid)
+                .collection(INVENTORIES_SUB_COLLECTION)
+                .add(inventory)
+                .await()
+
+            if (result != null) {
+                auditTrailRepository.insert(
+                    AuditTrail(
+                        username = username,
+                        description = "$username CREATED inventory with size of ${inventory.size} for $productName",
+                        type = AuditType.INVENTORY.name
+                    )
+                )
 
                 return@withContext inventory.copy(inventoryId = result.id)
-            } catch (ex: Exception) {
+            } else {
                 return@withContext null
             }
         }
     }
 
     suspend fun addStock(
+        username: String,
+        productName: String,
         productId: String,
         inventoryId: String,
         stockToAdd: Long
@@ -86,6 +98,14 @@ class ProductInventoryRepository @Inject constructor(
                         .document(inventoryId)
                         .set(inventory, SetOptions.merge())
                         .await()
+
+                    auditTrailRepository.insert(
+                        AuditTrail(
+                            username = username,
+                            description = "$username ADDED $stockToAdd STOCKS of ${inventory.size} for $productName",
+                            type = AuditType.INVENTORY.name
+                        )
+                    )
                 } catch (ex: Exception) {
                     isSuccessful = false
                 }

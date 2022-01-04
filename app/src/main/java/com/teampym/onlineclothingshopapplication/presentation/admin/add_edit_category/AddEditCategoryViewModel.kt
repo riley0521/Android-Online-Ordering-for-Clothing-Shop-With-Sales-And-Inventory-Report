@@ -7,10 +7,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.models.Category
 import com.teampym.onlineclothingshopapplication.data.repository.CategoryRepository
+import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
+import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -18,6 +21,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AddEditCategoryViewModel @Inject constructor(
     private val categoryRepository: CategoryRepository,
+    private val userInformationDao: UserInformationDao,
+    private val preferencesManager: PreferencesManager,
     private val state: SavedStateHandle
 ) : ViewModel() {
 
@@ -63,16 +68,23 @@ class AddEditCategoryViewModel @Inject constructor(
     }
 
     fun onSubmitClicked(category: Category?, isEditMode: Boolean) = viewModelScope.launch {
+        val userSession = preferencesManager.preferencesFlow.first()
+        val userInformation = userInformationDao.getCurrentUser(userSession.userId)
+
         if (isEditMode && category != null && categoryId.isNotBlank()) {
             if (isFormValid()) {
-
                 // Upload image to cloud and pass new value
                 // of fileName and imageUrl to category object
                 async { uploadImage() }.await()
                 category.fileName = fileName.value!!
                 category.imageUrl = fileName.value!!
 
-                val res = async { categoryRepository.update(category) }.await()
+                val res = async {
+                    categoryRepository.update(
+                        username = "${userInformation?.firstName} ${userInformation?.lastName}",
+                        category
+                    )
+                }.await()
                 if (res != null) {
                     resetAllUiState()
                     _categoryChannel.send(CategoryEvent.NavigateBackWithMessage("Updated Category Successfully!"))
@@ -94,7 +106,12 @@ class AddEditCategoryViewModel @Inject constructor(
                     imageUrl.value!!,
                     dateAdded = Utils.getTimeInMillisUTC()
                 )
-                val res = async { categoryRepository.create(newCategory) }.await()
+                val res = async {
+                    categoryRepository.create(
+                        username = "${userInformation?.firstName} ${userInformation?.lastName}",
+                        newCategory
+                    )
+                }.await()
                 if (res != null) {
                     resetAllUiState()
                     _categoryChannel.send(CategoryEvent.NavigateBackWithMessage("Added Category Successfully!"))

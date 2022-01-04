@@ -8,12 +8,14 @@ import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.models.ProductImage
 import com.teampym.onlineclothingshopapplication.data.repository.ProductImageRepository
 import com.teampym.onlineclothingshopapplication.data.repository.ProductRepository
+import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.Product
+import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.ProductType
-import com.teampym.onlineclothingshopapplication.data.util.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -22,6 +24,8 @@ import javax.inject.Inject
 class AddEditProductViewModel @Inject constructor(
     private val productRepository: ProductRepository,
     private val productImageRepository: ProductImageRepository,
+    private val userInformationDao: UserInformationDao,
+    private val preferencesManager: PreferencesManager,
     private val state: SavedStateHandle
 ) : ViewModel() {
 
@@ -112,7 +116,6 @@ class AddEditProductViewModel @Inject constructor(
 
     private fun resetAllUiState() = viewModelScope.launch {
         categoryId = ""
-        productName = ""
         productDesc = ""
         productPrice = 0.0
         productType = ProductType.HOODIES.name
@@ -134,13 +137,21 @@ class AddEditProductViewModel @Inject constructor(
     }
 
     fun onSubmitClicked(product: Product?, isEditMode: Boolean) = viewModelScope.launch {
+        val userSession = preferencesManager.preferencesFlow.first()
+        val userInformation = userInformationDao.getCurrentUser(userSession.userId)
+
         if (isEditMode && product != null && categoryId.isNotBlank()) {
             if (isFormValid()) {
 
                 async { uploadProductImage() }.await()
                 product.fileName = fileName.value!!
                 product.imageUrl = imageUrl.value!!
-                val res = async { productRepository.update(product) }.await()
+                val res = async {
+                    productRepository.update(
+                        username = "${userInformation?.firstName} ${userInformation?.lastName}",
+                        product
+                    )
+                }.await()
                 if (res) {
 
                     async { uploadAdditionalImages() }.await()
@@ -178,7 +189,12 @@ class AddEditProductViewModel @Inject constructor(
                     price = productPrice,
                     type = productType
                 )
-                val res = async { productRepository.create(newProd) }.await()
+                val res = async {
+                    productRepository.create(
+                        username = "${userInformation?.firstName} ${userInformation?.lastName}",
+                        newProd
+                    )
+                }.await()
                 if (res != null) {
 
                     async { uploadAdditionalImages() }.await()

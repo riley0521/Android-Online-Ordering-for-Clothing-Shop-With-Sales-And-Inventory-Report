@@ -7,15 +7,16 @@ import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
+import com.teampym.onlineclothingshopapplication.data.models.AuditTrail
 import com.teampym.onlineclothingshopapplication.data.models.Category
 import com.teampym.onlineclothingshopapplication.data.models.UploadedImage
+import com.teampym.onlineclothingshopapplication.data.util.AuditType
 import com.teampym.onlineclothingshopapplication.data.util.CATEGORIES_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.CATEGORY_PATH
 import com.teampym.onlineclothingshopapplication.data.util.Utils
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.lang.Exception
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -23,7 +24,7 @@ import javax.inject.Singleton
 @Singleton
 class CategoryRepository @Inject constructor(
     db: FirebaseFirestore,
-    private val productRepository: ProductRepository,
+    private val auditTrailRepository: AuditTrailRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
@@ -48,21 +49,25 @@ class CategoryRepository @Inject constructor(
         }
     }
 
-    suspend fun create(category: Category?): Category? {
+    suspend fun create(username: String, category: Category): Category? {
         return withContext(dispatcher) {
-            var createdCategory: Category? = category
-            if (createdCategory != null) {
-                val result = categoriesCollectionRef
-                    .add(createdCategory)
-                    .await()
+            val result = categoriesCollectionRef
+                .add(category)
+                .await()
 
-                if (result != null) {
-                    createdCategory.id = result.id
-                } else {
-                    createdCategory = null
-                }
+            if (result != null) {
+                auditTrailRepository.insert(
+                    AuditTrail(
+                        username = username,
+                        description = "$username CREATED a category - ${category.name}",
+                        type = AuditType.CATEGORY.name
+                    )
+                )
+
+                return@withContext category.copy(id = result.id)
+            } else {
+                return@withContext null
             }
-            createdCategory
         }
     }
 
@@ -79,7 +84,7 @@ class CategoryRepository @Inject constructor(
         }
     }
 
-    suspend fun update(category: Category?): Boolean {
+    suspend fun update(username: String, category: Category?): Boolean {
         return withContext(dispatcher) {
             if (category != null) {
                 category.dateModified = Utils.getTimeInMillisUTC()
@@ -90,8 +95,15 @@ class CategoryRepository @Inject constructor(
                         .set(category, SetOptions.merge())
                         .await()
 
-                    return@withContext true
+                    auditTrailRepository.insert(
+                        AuditTrail(
+                            username = username,
+                            description = "$username UPDATED category - ${category.name}",
+                            type = AuditType.CATEGORY.name
+                        )
+                    )
 
+                    return@withContext true
                 } catch (ex: Exception) {
                     return@withContext false
                 }
@@ -101,7 +113,7 @@ class CategoryRepository @Inject constructor(
     }
 
     // Delete All Products in selected category
-    suspend fun delete(categoryId: String): Boolean {
+    suspend fun delete(username: String, categoryName: String, categoryId: String): Boolean {
         return withContext(dispatcher) {
 
             try {
@@ -109,6 +121,14 @@ class CategoryRepository @Inject constructor(
                     .document(categoryId)
                     .delete()
                     .await()
+
+                auditTrailRepository.insert(
+                    AuditTrail(
+                        username = username,
+                        description = "$username DELETED category - $categoryName",
+                        type = AuditType.CATEGORY.name
+                    )
+                )
 
                 return@withContext true
             } catch (ex: Exception) {

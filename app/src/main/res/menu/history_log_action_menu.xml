@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_sort"
+        android:icon="@drawable/ic_sort"
+        android:title="@string/action_sort"
+        android:visible="false"
+        app:showAsAction="ifRoom">
+
+        <menu>
+            <item
+                android:id="@+id/by_category"
+                android:title="@string/menu_category" />
+
+            <item
+                android:id="@+id/by_product"
+                android:title="@string/menu_product" />
+
+            <item
+                android:id="@+id/by_inventory"
+                android:title="@string/menu_inventory" />
+
+            <item
+                android:id="@+id/by_order"
+                android:title="@string/menu_order" />
+        </menu>
+
+    </item>
+
+</menu>

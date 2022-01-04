@@ -117,6 +117,14 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 findNavController().navigate(R.id.action_profileFragment_to_wishListFragment)
             }
 
+            tvHistoryLog.setOnClickListener {
+                findNavController().navigate(R.id.action_profileFragment_to_historyLogFragment)
+            }
+
+            tvSales.setOnClickListener {
+                findNavController().navigate(R.id.action_profileFragment_to_salesFragment)
+            }
+
             tvToc.setOnClickListener {
                 findNavController().navigate(R.id.action_profileFragment_to_termsAndConditionFragment)
             }
@@ -176,6 +184,9 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         if (currentUser != null) {
                             cardViewBanner.isVisible = !currentUser.isEmailVerified
                         }
+                    } else if (userInformation.userType == UserType.ADMIN.name) {
+                        tvHistoryLog.isVisible = true
+                        tvSales.isVisible = true
                     }
 
                     // Instantiate view

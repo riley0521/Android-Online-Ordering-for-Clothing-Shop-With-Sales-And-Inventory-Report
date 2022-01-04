@@ -38,6 +38,7 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
         loadingDialog = LoadingDialog(requireActivity())
 
         val productId = args.productId
+        viewModel.productName = args.productName
 
         if (productId.isBlank()) {
             Toast.makeText(

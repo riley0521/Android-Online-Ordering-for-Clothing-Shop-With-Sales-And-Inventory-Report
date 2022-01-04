@@ -15,5 +15,5 @@ interface FCMService<T> {
 
     @Headers("Content-Type: application/json", "Authorization: $BEARER_KEY")
     @POST()
-    suspend fun notifyToTopics(notificationTopic: NotificationTopic<T>)
+    suspend fun notifyToTopics(notificationTopic: NotificationTopic)
 }

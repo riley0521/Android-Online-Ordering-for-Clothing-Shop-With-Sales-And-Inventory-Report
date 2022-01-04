@@ -212,5 +212,16 @@
     <string name="btn_add_post">Add Post</string>
     <string name="hint_title_of_your_post">Title Of Your Post</string>
     <string name="btn_remove_image">Remove Image</string>
+    <string name="label_history_logs">History Logs</string>
+    <string name="label_sales">Sales</string>
+    <string name="placeholder_username">Username: %1$s</string>
+    <string name="placeholder_description">Description: %1$s</string>
+    <string name="placeholder_type">Type: %1$s</string>
+    <string name="placeholder_date_of_log">Date: %1$s</string>
+    <string name="menu_category">Category</string>
+    <string name="menu_product">Product</string>
+    <string name="menu_inventory">Inventory</string>
+    <string name="menu_order">Order</string>
+    <string name="placeholder_history_log_title">History Logs (%1$s)</string>
 
 </resources>

@@ -1,6 +1,5 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.products
 
-import androidx.lifecycle.LiveDataScope
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
@@ -15,11 +14,11 @@ import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.SortOrder
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
-import com.teampym.onlineclothingshopapplication.data.room.UserWithWishList
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -115,7 +114,14 @@ class ProductViewModel @Inject constructor(
     fun onDeleteProductClicked(
         product: Product
     ) = viewModelScope.launch {
-        val res = productRepository.delete(product.productId)
+        val userSession = preferencesManager.preferencesFlow.first()
+        val userInformation = userInformationDao.getCurrentUser(userSession.userId)
+
+        val res = productRepository.delete(
+            username = "${userInformation?.firstName} ${userInformation?.lastName}",
+            productName = product.name,
+            product.productId
+        )
         if (res) {
             _productChannel.send(ProductEvent.ShowSuccessMessage("Deleted product successfully!"))
         } else {
