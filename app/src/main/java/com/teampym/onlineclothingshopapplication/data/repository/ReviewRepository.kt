@@ -8,6 +8,7 @@ import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.Review
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
+import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.REVIEWS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.presentation.client.reviews.ReviewPagingSource
@@ -66,16 +67,17 @@ class ReviewRepository @Inject constructor(
         rate: Double,
         desc: String,
         productId: String,
+        size: String
     ): Review? {
         return withContext(dispatcher) {
-            var createdReview = Review(
+            val createdReview = Review(
                 userId = userInformation.userId,
                 productId = productId,
                 userAvatar = userInformation.avatarUrl ?: "",
                 username = "${userInformation.firstName} ${userInformation.lastName}",
                 rate = rate,
                 description = desc,
-                dateReview = System.currentTimeMillis()
+                productSize = size
             )
 
             try {

@@ -55,7 +55,7 @@ object RepositoryModule {
     fun provideNotificationTokenRepository(
         db: FirebaseFirestore,
         @IoDispatcher dispatcher: CoroutineDispatcher
-    ) = NotificationTokenRepositoryImpl(
+    ) = NotificationTokenRepository(
         db,
         dispatcher
     )
@@ -112,7 +112,7 @@ object RepositoryModule {
         db: FirebaseFirestore,
         orderDetailRepository: OrderDetailRepository,
         productRepository: ProductRepository,
-        notificationTokenRepository: NotificationTokenRepositoryImpl,
+        notificationTokenRepository: NotificationTokenRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = OrderRepository(
         db,
@@ -145,16 +145,18 @@ object RepositoryModule {
     @Provides
     fun provideLikeRepository(
         db: FirebaseFirestore,
+        notificationTokenRepository: NotificationTokenRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = LikeRepository(
         db,
+        notificationTokenRepository,
         dispatcher
     )
 
     @Provides
     fun provideCommentRepository(
         db: FirebaseFirestore,
-        notificationTokenRepository: NotificationTokenRepositoryImpl,
+        notificationTokenRepository: NotificationTokenRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = CommentRepository(
         db,

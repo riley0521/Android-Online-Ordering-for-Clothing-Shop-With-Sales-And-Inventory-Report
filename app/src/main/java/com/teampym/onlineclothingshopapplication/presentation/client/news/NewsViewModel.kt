@@ -20,6 +20,7 @@ import com.teampym.onlineclothingshopapplication.data.room.SessionPreferences
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -81,34 +83,42 @@ class NewsViewModel @Inject constructor(
             }
     }
 
-    private fun onLikePostClicked(
+    private suspend fun onLikePostClicked(
         post: Post,
         isLikeByUser: Boolean
-    ) = viewModelScope.launch {
-        if (isLikeByUser) {
-            userId.value?.let { userId ->
-                val res = likeRepository.add(postId = post.id, Like(postId = post.id, userId = userId))
-                if (res) {
-                    val count = post.numberOfLikes + 1
-                    val postToUpdate =
-                        postRepository.updateLikeCount(postId = post.id, count = count)
-                    if (postToUpdate) {
-                        _newsChannel.send(NewsEvent.ShowMessage("You Liked this post."))
+    ): Long {
+        return withContext(Dispatchers.IO) {
+            if (isLikeByUser) {
+                userId.value?.let { userId ->
+                    val res = likeRepository.add(
+                        post,
+                        Like(postId = post.id, userId = userId)
+                    )
+                    if (res) {
+                        val count = post.numberOfLikes + 1
+                        val postToUpdate =
+                            postRepository.updateLikeCount(postId = post.id, count = count)
+                        if (postToUpdate) {
+                            _newsChannel.send(NewsEvent.ShowMessage("You Liked this post."))
+                            return@withContext count
+                        }
+                    }
+                }
+            } else {
+                userId.value?.let { userId ->
+                    val res = likeRepository.remove(postId = post.id, userId = userId)
+                    if (res) {
+                        val count = post.numberOfLikes - 1
+                        val postToUpdate =
+                            postRepository.updateLikeCount(postId = post.id, count = count)
+                        if (postToUpdate) {
+                            _newsChannel.send(NewsEvent.ShowMessage("You unlike this post."))
+                            return@withContext count
+                        }
                     }
                 }
             }
-        } else {
-            userId.value?.let { userId ->
-                val res = likeRepository.remove(postId = post.id, userId = userId)
-                if (res) {
-                    val count = post.numberOfLikes - 1
-                    val postToUpdate =
-                        postRepository.updateLikeCount(postId = post.id, count = count)
-                    if (postToUpdate) {
-                        _newsChannel.send(NewsEvent.ShowMessage("You unlike this post."))
-                    }
-                }
-            }
+            return@withContext 0L
         }
     }
 
@@ -131,10 +141,10 @@ class NewsViewModel @Inject constructor(
             is NewsFragment.NewsPagerEvent.Update -> {
                 paging.map {
                     if (event.post.id == it.id) {
-                        onLikePostClicked(event.post, event.isLikeByUser)
+                        val newCount = onLikePostClicked(event.post, event.isLikeByUser)
 
                         it.isLikedByCurrentUser = event.isLikeByUser
-                        return@map it
+                        return@map it.copy(numberOfLikes = newCount)
                     } else return@map it
                 }
             }

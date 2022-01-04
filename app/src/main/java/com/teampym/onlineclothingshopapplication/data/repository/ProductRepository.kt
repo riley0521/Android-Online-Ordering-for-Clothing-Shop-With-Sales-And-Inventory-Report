@@ -137,13 +137,14 @@ class ProductRepository @Inject constructor(
                     userInformation,
                     rate,
                     desc,
-                    item.product.productId
+                    item.product.productId,
+                    item.size
                 )
 
                 if (addedReview != null) {
 
                     updatedProduct.totalRate += rate
-                    updatedProduct.numberOfReviews + 1
+                    updatedProduct.numberOfReviews++
 
                     try {
                         productCollectionRef

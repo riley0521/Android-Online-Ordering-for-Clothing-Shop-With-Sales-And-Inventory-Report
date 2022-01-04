@@ -13,9 +13,7 @@ import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.room.Product
-import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 private const val TAG = "MyFCMService"
 const val CHANNEL_ID = "midnightmares_ch_here_we_go"
@@ -25,9 +23,6 @@ const val POST_NOTIFICATION_ID = 779
 
 @AndroidEntryPoint
 class MyFirebaseMessagingService : FirebaseMessagingService() {
-
-    @Inject
-    lateinit var userInformationDao: UserInformationDao
 
     override fun onNewToken(token: String) {
         Log.d(TAG, "Refreshed token: $token")

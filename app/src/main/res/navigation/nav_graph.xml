@@ -135,6 +135,9 @@
         <action
             android:id="@+id/action_productDetailFragment_to_stockInModalFragment"
             app:destination="@id/stockInModalFragment" />
+        <action
+            android:id="@+id/action_productDetailFragment_to_reviewsFragment"
+            app:destination="@id/reviewsFragment" />
     </fragment>
     <dialog
         android:id="@+id/inventoryModalFragment"
@@ -375,4 +378,13 @@
         android:name="com.teampym.onlineclothingshopapplication.presentation.admin.add_news.AddNewsFragment"
         android:label="Add Post"
         tools:layout="@layout/fragment_add_news" />
+    <fragment
+        android:id="@+id/reviewsFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.reviews.ReviewsFragment"
+        android:label="Reviews"
+        tools:layout="@layout/fragment_review" >
+        <argument
+            android:name="productId"
+            app:argType="string" />
+    </fragment>
 </navigation>

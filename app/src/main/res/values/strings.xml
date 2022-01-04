@@ -194,7 +194,7 @@
     <string name="btn_add_review">Add Review</string>
     <string name="label_add_stock_available">Add Stock (Available: %1$d)</string>
     <string name="hint_input_stock_to_add">Input Stock to Add</string>
-    <string name="label_variant_size">Variant/Size: %1$s</string>
+    <string name="placeholder_variant_size">Variant/Size: %1$s</string>
     <string name="hint_input_description_of_your_feedback">Input Description of your feedback</string>
     <string name="placeholder_cart_price">$ %1$.2f</string>
     <string name="placeholder_cart_size">(%1$s)</string>
@@ -207,5 +207,10 @@
     <string name="btn_like">Like</string>
     <string name="btn_liked">Liked</string>
     <string name="hint_add_comment">Add Comment</string>
+    <string name="hint_what_s_on_your_mind">What\'s on your mind?</string>
+    <string name="btn_add_image">Add Image</string>
+    <string name="btn_add_post">Add Post</string>
+    <string name="hint_title_of_your_post">Title Of Your Post</string>
+    <string name="btn_remove_image">Remove Image</string>
 
 </resources>

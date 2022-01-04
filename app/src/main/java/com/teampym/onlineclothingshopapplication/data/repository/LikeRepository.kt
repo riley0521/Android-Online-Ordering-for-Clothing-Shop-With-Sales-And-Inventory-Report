@@ -4,6 +4,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.Like
+import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.util.LIKES_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.POSTS_COLLECTION
 import kotlinx.coroutines.CoroutineDispatcher
@@ -15,6 +16,7 @@ import javax.inject.Singleton
 @Singleton
 class LikeRepository @Inject constructor(
     db: FirebaseFirestore,
+    private val notificationTokenRepository: NotificationTokenRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
@@ -40,14 +42,19 @@ class LikeRepository @Inject constructor(
         }
     }
 
-    suspend fun add(postId: String, like: Like): Boolean {
+    suspend fun add(post: Post, like: Like): Boolean {
         return withContext(dispatcher) {
             val res = postCollectionRef
-                .document(postId)
+                .document(post.id)
                 .collection(LIKES_SUB_COLLECTION)
                 .add(like)
                 .await()
 
+            notificationTokenRepository.notifyAllAdmins(
+                post,
+                "${like.userId} liked your post",
+                "Post with id ${like.postId}"
+            )
             res != null
         }
     }

@@ -6,7 +6,6 @@ import androidx.core.view.isVisible
 import androidx.paging.LoadState
 import androidx.paging.LoadStateAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.databinding.PagingLoadStateBinding
 
 class NewsLoadStateAdapter(
@@ -17,9 +16,10 @@ class NewsLoadStateAdapter(
         parent: ViewGroup,
         loadState: LoadState
     ): NewsLoadStateViewHolder {
-        val binding = PagingLoadStateBinding.bind(
-            LayoutInflater.from(parent.context)
-                .inflate(R.layout.paging_load_state, parent, false)
+        val binding = PagingLoadStateBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
         )
         return NewsLoadStateViewHolder(binding) {
             adapter.retry()
@@ -33,7 +33,7 @@ class NewsLoadStateAdapter(
     inner class NewsLoadStateViewHolder(
         private val binding: PagingLoadStateBinding,
         private val retry: () -> Unit
-    ): RecyclerView.ViewHolder(binding.root) {
+    ) : RecyclerView.ViewHolder(binding.root) {
 
         init {
             binding.btnRetry.setOnClickListener { retry() }
@@ -46,6 +46,5 @@ class NewsLoadStateAdapter(
                 tvError.isVisible = loadState is LoadState.Error
             }
         }
-
     }
 }

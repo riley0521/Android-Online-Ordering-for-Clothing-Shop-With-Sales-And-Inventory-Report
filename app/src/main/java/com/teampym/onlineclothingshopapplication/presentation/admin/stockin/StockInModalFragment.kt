@@ -51,9 +51,11 @@ class StockInModalFragment : BottomSheetDialogFragment() {
                     chip.isCheckable = true
                     chip.isEnabled = inventory.stock > 0
                     chip.setOnClickListener {
+                        binding.tvAvailableStocks.text = getString(
+                            R.string.label_add_stock_available,
+                            inventory.stock
+                        )
                         selectedInv = inventory
-                        binding.tvAvailableStocks.text =
-                            getString(R.string.label_add_stock_available, selectedInv!!.stock)
                     }
                     binding.chipSizeGroup.addView(chip)
                 }
@@ -62,18 +64,28 @@ class StockInModalFragment : BottomSheetDialogFragment() {
 
             btnSubmit.setOnClickListener {
                 if (selectedInv != null) {
-                    val stockToAdd = etAddStock.text.toString().toInt()
-                    viewModel.onSubmitClicked(
-                        product.productId,
-                        selectedInv!!.inventoryId,
-                        stockToAdd
-                    )
-                    Toast.makeText(
-                        requireContext(),
-                        "Adding stock...",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    findNavController().popBackStack()
+                    etAddStock.text.toString().let { stockToAdd ->
+                        if(stockToAdd.isNotBlank()) {
+                            viewModel.onSubmitClicked(
+                                product.productId,
+                                selectedInv!!.inventoryId,
+                                stockToAdd.toInt()
+                            )
+                            Toast.makeText(
+                                requireContext(),
+                                "Adding stock...",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            findNavController().popBackStack()
+                        } else {
+                            Toast.makeText(
+                                requireContext(),
+                                "Please enter the number of stocks you want to add",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+
                 } else {
                     Toast.makeText(
                         requireContext(),

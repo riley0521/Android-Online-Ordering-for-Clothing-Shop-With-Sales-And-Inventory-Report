@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Set splash screen here
+        setTheme(R.style.Theme_OnlineClothingShop)
         setContentView(R.layout.activity_main)
 
         // Create notification channel when opening your app

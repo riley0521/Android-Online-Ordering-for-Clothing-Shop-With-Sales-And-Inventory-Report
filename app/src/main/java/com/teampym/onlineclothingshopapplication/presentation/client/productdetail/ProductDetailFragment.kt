@@ -7,6 +7,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -17,8 +18,12 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.room.Product
+import com.teampym.onlineclothingshopapplication.data.util.LinkType
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
+import com.teampym.onlineclothingshopapplication.data.util.PREFIX
 import com.teampym.onlineclothingshopapplication.data.util.UserType
+import com.teampym.onlineclothingshopapplication.data.util.Utils
+import com.teampym.onlineclothingshopapplication.data.util.shareDeepLink
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductDetailBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -214,7 +219,25 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_share -> {
-                // TODO("Create copy link")
+
+                // Create a shareable link that will be interpreted by messenger
+                // WhatsApp, Telegram, Discord, etc...
+                viewModel.product.value?.let { p ->
+                    Utils.generateSharingLink(
+                        p.name,
+                        "$PREFIX/product/${p.productId}".toUri(),
+                        p.imageUrl.toUri()
+                    ) {
+
+                        // It means that the creation of shortDynamicLink was successful
+                        if (it != "None") {
+                            this@ProductDetailFragment.shareDeepLink(
+                                it,
+                                LinkType.PRODUCT
+                            )
+                        }
+                    }
+                }
                 true
             }
             R.id.action_cart -> {

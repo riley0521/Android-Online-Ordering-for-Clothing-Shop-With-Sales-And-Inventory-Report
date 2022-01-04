@@ -6,7 +6,6 @@ import androidx.core.view.isVisible
 import androidx.paging.LoadState
 import androidx.paging.LoadStateAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.databinding.PagingLoadStateBinding
 
 class ProductLoadStateAdapter(
@@ -17,9 +16,10 @@ class ProductLoadStateAdapter(
         parent: ViewGroup,
         loadState: LoadState
     ): ProductLoadStateViewHolder {
-        val binding = PagingLoadStateBinding.bind(
-            LayoutInflater.from(parent.context)
-                .inflate(R.layout.paging_load_state, parent, false)
+        val binding = PagingLoadStateBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
         )
         return ProductLoadStateViewHolder(binding) {
             when (adapter) {

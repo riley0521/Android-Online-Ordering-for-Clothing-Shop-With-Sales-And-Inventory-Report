@@ -23,7 +23,7 @@ import com.teampym.onlineclothingshopapplication.databinding.FragmentAddEditCate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 
-const val SELECT_FROM_GALLERY_REQUEST = 2424
+private const val SELECT_CATEGORY_IMG_REQUEST = 2424
 
 @AndroidEntryPoint
 class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
@@ -114,7 +114,7 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
                 // Create an intent to select image from gallery.
                 Intent(Intent.ACTION_GET_CONTENT).also {
                     it.type = "image/*"
-                    startActivityForResult(it, SELECT_FROM_GALLERY_REQUEST)
+                    startActivityForResult(it, SELECT_CATEGORY_IMG_REQUEST)
                 }
             }
 
@@ -166,7 +166,7 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (resultCode == Activity.RESULT_OK && requestCode == SELECT_FROM_GALLERY_REQUEST) {
+        if (resultCode == Activity.RESULT_OK && requestCode == SELECT_CATEGORY_IMG_REQUEST) {
             data?.data?.let {
 
                 // Show selected image from gallery to the imageView

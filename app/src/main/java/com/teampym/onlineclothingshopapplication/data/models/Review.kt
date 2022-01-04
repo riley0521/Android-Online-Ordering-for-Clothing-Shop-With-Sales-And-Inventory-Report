@@ -12,6 +12,7 @@ data class Review(
     var username: String,
     var rate: Double,
     var description: String,
+    var productSize: String,
     var id: String = "",
     var dateReview: Long = Utils.getTimeInMillisUTC()
 ) : Parcelable

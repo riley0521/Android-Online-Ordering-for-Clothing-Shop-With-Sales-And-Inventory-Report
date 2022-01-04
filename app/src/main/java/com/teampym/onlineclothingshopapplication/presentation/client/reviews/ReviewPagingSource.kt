@@ -47,10 +47,12 @@ class ReviewPagingSource(
 
             // Move user's review to the very top of the reviews.
             userId?.let { id ->
-                val currentUser = reviewList.firstOrNull { it.userId == id }
-                if(currentUser != null) {
-                    reviewList.removeAt(reviewList.indexOf(currentUser))
-                    reviewList.add(0, currentUser)
+                val currentUserReviews = reviewList.filter { it.userId == id }
+                if (currentUserReviews.isNotEmpty()) {
+                    currentUserReviews.forEach { review ->
+                        reviewList.removeAt(reviewList.indexOf(review))
+                        reviewList.add(0, review)
+                    }
                 }
             }
 

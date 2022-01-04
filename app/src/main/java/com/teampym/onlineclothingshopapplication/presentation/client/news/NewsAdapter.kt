@@ -165,7 +165,9 @@ class NewsAdapter constructor(
                     item.numberOfComments
                 )
 
-                if (!item.haveUserId) {
+                if (!item.haveUserId ||
+                    (viewModel.userType != null && viewModel.userType == UserType.ADMIN.name)
+                ) {
                     imgLike.isVisible = false
                     tvLike.isVisible = false
                 }

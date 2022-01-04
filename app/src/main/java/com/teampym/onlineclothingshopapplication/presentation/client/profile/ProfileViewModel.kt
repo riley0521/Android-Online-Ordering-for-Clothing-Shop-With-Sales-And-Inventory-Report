@@ -14,7 +14,7 @@ import com.teampym.onlineclothingshopapplication.EDIT_PROFILE_OK
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.AccountRepository
 import com.teampym.onlineclothingshopapplication.data.repository.DeliveryInformationRepository
-import com.teampym.onlineclothingshopapplication.data.repository.NotificationTokenRepositoryImpl
+import com.teampym.onlineclothingshopapplication.data.repository.NotificationTokenRepository
 import com.teampym.onlineclothingshopapplication.data.repository.WishItemRepository
 import com.teampym.onlineclothingshopapplication.data.room.CartDao
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformationDao
@@ -33,7 +33,7 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
     private val wishListRepository: WishItemRepository,
-    private val notificationTokenRepository: NotificationTokenRepositoryImpl,
+    private val notificationTokenRepository: NotificationTokenRepository,
     private val deliveryInformationRepository: DeliveryInformationRepository,
     private val userInformationDao: UserInformationDao,
     private val deliveryInformationDao: DeliveryInformationDao,

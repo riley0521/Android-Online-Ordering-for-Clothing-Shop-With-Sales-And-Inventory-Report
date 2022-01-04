@@ -89,12 +89,16 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
                 chip.isCheckable = true
                 chip.isEnabled = inventory.stock > 0
                 chip.setOnClickListener {
-                    binding.btnAddToCart.isEnabled =
-                        binding.chipSizeGroup.checkedChipIds.count() == 1 && userId.isNotEmpty()
-                    selectedInv = inventory
+                    binding.btnAddToCart.isEnabled = binding.chipSizeGroup
+                        .checkedChipIds
+                        .count() == 1 && userId.isNotEmpty()
 
-                    val numberOfAvailableStocksForSize = "(Available: ${selectedInv?.stock ?: 0})"
+                    val numberOfAvailableStocksForSize = "(Available: ${inventory.stock})"
                     binding.tvAvailableStocks.text = numberOfAvailableStocksForSize
+
+                    // Set the inventory object to global variable
+                    // When chip is selected
+                    selectedInv = inventory
                 }
                 binding.chipSizeGroup.addView(chip)
             }

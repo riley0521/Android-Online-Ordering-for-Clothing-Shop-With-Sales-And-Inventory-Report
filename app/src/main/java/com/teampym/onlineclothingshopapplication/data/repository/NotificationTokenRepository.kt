@@ -25,7 +25,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class NotificationTokenRepositoryImpl @Inject constructor(
+class NotificationTokenRepository @Inject constructor(
     private val db: FirebaseFirestore,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {

@@ -29,7 +29,7 @@ class OrderRepository @Inject constructor(
     val db: FirebaseFirestore,
     private val orderDetailRepository: OrderDetailRepository,
     private val productRepository: ProductRepository,
-    private val notificationTokenRepository: NotificationTokenRepositoryImpl,
+    private val notificationTokenRepository: NotificationTokenRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 

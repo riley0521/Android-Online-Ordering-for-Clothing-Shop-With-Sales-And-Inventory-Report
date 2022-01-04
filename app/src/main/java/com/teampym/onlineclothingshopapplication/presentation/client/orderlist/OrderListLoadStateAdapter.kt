@@ -17,9 +17,10 @@ class OrderListLoadStateAdapter(
         parent: ViewGroup,
         loadState: LoadState
     ): OrderListLoadStateViewHolder {
-        val binding = PagingLoadStateBinding.bind(
-            LayoutInflater.from(parent.context)
-                .inflate(R.layout.paging_load_state, parent, false)
+        val binding = PagingLoadStateBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
         )
         return OrderListLoadStateViewHolder(binding) {
             adapter.retry()

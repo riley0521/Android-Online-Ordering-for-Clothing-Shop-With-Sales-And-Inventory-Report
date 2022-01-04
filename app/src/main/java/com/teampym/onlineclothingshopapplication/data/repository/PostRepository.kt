@@ -1,19 +1,25 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
+import android.net.Uri
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.Post
+import com.teampym.onlineclothingshopapplication.data.models.UploadedImage
 import com.teampym.onlineclothingshopapplication.data.util.POSTS_COLLECTION
+import com.teampym.onlineclothingshopapplication.data.util.POST_PATH
 import com.teampym.onlineclothingshopapplication.data.util.Utils
 import com.teampym.onlineclothingshopapplication.presentation.client.news.NewsPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,6 +31,8 @@ class PostRepository @Inject constructor(
 ) {
 
     private val postCollectionRef = db.collection(POSTS_COLLECTION)
+
+    private val imageRef = Firebase.storage.reference
 
     fun getSome(userId: String?, queryPost: Query) =
         Pager(
@@ -52,6 +60,19 @@ class PostRepository @Inject constructor(
             } catch (ex: Exception) {
                 return@withContext null
             }
+        }
+    }
+
+    suspend fun uploadImage(postImage: Uri): UploadedImage {
+        return withContext(dispatcher) {
+            val fileName = UUID.randomUUID().toString()
+            val uploadImage = imageRef
+                .child(POST_PATH + fileName)
+                .putFile(postImage)
+                .await()
+
+            val url = uploadImage.storage.downloadUrl.await().toString()
+            UploadedImage(url, fileName)
         }
     }
 

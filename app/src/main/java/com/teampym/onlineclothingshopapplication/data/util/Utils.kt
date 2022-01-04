@@ -58,6 +58,7 @@ const val CANCELLED_ORDERS = "Cancelled Orders"
 const val ROOT_PATH = "public/"
 const val CATEGORY_PATH = "public/categories/"
 const val PRODUCT_PATH = "public/products/"
+const val POST_PATH = "public/posts/"
 
 object Utils {
     fun getTimeInMillisUTC(): Long {
