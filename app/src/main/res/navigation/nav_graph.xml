@@ -405,5 +405,21 @@
         android:id="@+id/salesFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.admin.sales.SalesFragment"
         android:label="Sales"
-        tools:layout="@layout/fragment_sales" />
+        tools:layout="@layout/fragment_sales" >
+        <action
+            android:id="@+id/action_salesFragment_to_dailySalesFragment"
+            app:destination="@id/dailySalesFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/dailySalesFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.sales_daily.DailySalesFragment"
+        android:label="Sales For Month of {month}"
+        tools:layout="@layout/fragment_daily_sales" >
+        <argument
+            android:name="year"
+            app:argType="string" />
+        <argument
+            android:name="month"
+            app:argType="string" />
+    </fragment>
 </navigation>

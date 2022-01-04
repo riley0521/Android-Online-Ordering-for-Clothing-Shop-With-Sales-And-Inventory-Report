@@ -68,6 +68,17 @@ object Utils {
         return newDate.timeInMillis
     }
 
+    fun getAvailableYears() = listOf(
+        "2022",
+        "2021",
+        "2020",
+        "2019",
+        "2018",
+        "2017",
+        "2016",
+        "2015"
+    )
+
     fun getMonthNames() = DateFormatSymbols().months.map { it.uppercase() }
 
     fun getCurrentMonth(monthIndex: Int): String {

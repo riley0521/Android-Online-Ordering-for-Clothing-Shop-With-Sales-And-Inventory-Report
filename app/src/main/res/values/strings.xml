@@ -223,5 +223,12 @@
     <string name="menu_inventory">Inventory</string>
     <string name="menu_order">Order</string>
     <string name="placeholder_history_log_title">History Logs (%1$s)</string>
+    <string name="label_year">Year:</string>
+    <string name="label_month">Month:</string>
+    <string name="placeholder_total_sale_for_year">Total Sale For Year %1$s:</string>
+    <string name="placeholder_total_sale_for_month_of">Total Sale For Month of %1$s:</string>
+    <string name="btn_view_sales_for_each_day">View Sales For Each Day</string>
+    <string name="placeholder_day">Day %1$d</string>
+    <string name="placeholder_total_sales">Total Sales: $ %1$.2f</string>
 
 </resources>
