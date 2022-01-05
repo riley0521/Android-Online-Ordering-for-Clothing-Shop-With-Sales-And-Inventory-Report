@@ -186,7 +186,7 @@
     <string name="hint_input_product_price">Input Product Price</string>
     <string name="label_product_images">Product Images</string>
     <string name="label_product_type">Product Type:</string>
-    <string name="label_available_sizes">"Available Sizes: %1$s"</string>
+    <string name="label_available_sizes">Available Sizes: %1$s</string>
     <string name="hint_input_size">Input Size</string>
     <string name="hint_input_available_stocks">Input Available Stocks</string>
     <string name="btn_add_another_size">Add Another Size</string>

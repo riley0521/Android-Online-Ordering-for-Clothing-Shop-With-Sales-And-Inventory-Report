@@ -115,7 +115,7 @@ class AddEditProductViewModel @Inject constructor(
         imageUrl.postValue(url)
     }
 
-    fun resetAllUiState() {
+    private fun resetAllUiState() {
         categoryId = ""
         productDesc = ""
         productPrice = 0.0

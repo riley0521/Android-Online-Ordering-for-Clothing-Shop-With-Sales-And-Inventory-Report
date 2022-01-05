@@ -61,16 +61,18 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
             if (listOfSizes.isNotEmpty()) {
                 availableSizeList = listOfSizes
 
-                val sizes = "["
+                val sizes = StringBuilder()
+                sizes.append("[")
                 for (i in listOfSizes.indices) {
                     if (listOfSizes.lastIndex == i) {
-                        sizes.plus("${listOfSizes[i]}]")
+                        sizes.append("${listOfSizes[i]}]")
                     } else {
-                        sizes.plus("${listOfSizes[i]}, ")
+                        sizes.append("${listOfSizes[i]}, ")
                     }
                 }
 
-                binding.tvAvailableSizes.text = getString(R.string.label_available_sizes, sizes)
+                binding.tvAvailableSizes.text =
+                    getString(R.string.label_available_sizes, sizes.toString())
                 binding.tvAvailableSizes.isVisible = true
             }
         }
@@ -78,6 +80,7 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
         binding.apply {
             etSize.setText(viewModel.inventorySize)
             etAvailableStocks.setText(viewModel.inventoryStock.toString())
+            etRestockLevel.setText(viewModel.inventoryRestockLevel.toString())
 
             etSize.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(
@@ -109,7 +112,9 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    viewModel.inventoryStock = s.toString().toInt()
+                    if (s.toString().isNotEmpty()) {
+                        viewModel.inventoryStock = s.toString().toInt()
+                    }
                 }
 
                 override fun afterTextChanged(s: Editable?) {
@@ -128,7 +133,9 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    viewModel.inventoryRestockLevel = s.toString().toInt()
+                    if (s.toString().isNotEmpty()) {
+                        viewModel.inventoryRestockLevel = s.toString().toInt()
+                    }
                 }
 
                 override fun afterTextChanged(s: Editable?) {
@@ -154,6 +161,12 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
                     Snackbar.make(
                         requireView(),
                         "Size is already existing in database. Avoid duplicates",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                } else if (viewModel.inventoryRestockLevel > viewModel.inventoryStock) {
+                    Snackbar.make(
+                        requireView(),
+                        "Stock should be greater than restock level.",
                         Snackbar.LENGTH_SHORT
                     ).show()
                 } else {

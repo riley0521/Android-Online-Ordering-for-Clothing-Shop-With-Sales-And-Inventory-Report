@@ -35,9 +35,10 @@ class ProductInventoryRepository @Inject constructor(
 
             if (inventoryDocuments.documents.isNotEmpty()) {
                 for (document in inventoryDocuments.documents) {
-                    val copy =
-                        document.toObject<Inventory>()!!
-                            .copy(inventoryId = document.id, pid = productId)
+                    val copy = document.toObject<Inventory>()!!.copy(
+                        inventoryId = document.id,
+                        pid = productId
+                    )
                     inventoryList.add(copy)
                 }
             }

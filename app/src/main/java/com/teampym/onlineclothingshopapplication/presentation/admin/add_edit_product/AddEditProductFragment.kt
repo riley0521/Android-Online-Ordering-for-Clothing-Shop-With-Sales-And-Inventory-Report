@@ -330,12 +330,6 @@ class AddEditProductFragment :
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-
-        viewModel.resetAllUiState()
-    }
-
     private fun overwriteFields(product: Product) {
         viewModel.categoryId = product.categoryId
         viewModel.productName = product.name
