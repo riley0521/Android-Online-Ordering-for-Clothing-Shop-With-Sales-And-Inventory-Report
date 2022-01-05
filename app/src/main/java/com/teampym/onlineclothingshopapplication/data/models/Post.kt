@@ -19,6 +19,15 @@ data class Post(
     var numberOfComments: Long = 0
 ) : Parcelable {
 
+    constructor() : this(
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+    )
+
     @get:Exclude
     var isLikedByCurrentUser: Boolean = false
 

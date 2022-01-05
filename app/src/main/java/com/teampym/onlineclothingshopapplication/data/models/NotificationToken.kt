@@ -15,4 +15,11 @@ data class NotificationToken(
     var id: String = "",
     var dateModified: Long = 0,
     var userType: String = UserType.CUSTOMER.name
-) : Parcelable
+) : Parcelable {
+
+    constructor() : this(
+        "",
+        ""
+    )
+
+}

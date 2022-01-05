@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
@@ -76,6 +75,8 @@ class AgreeToShippingFeeDialogFragment : BottomSheetDialogFragment() {
         viewModel.hasAgreed.observe(viewLifecycleOwner) {
             if (it) {
                 loadingDialog.dismiss()
+
+                // Go back to the parent fragment
                 setFragmentResult(
                     AGREE_TO_SF_REQUEST,
                     bundleOf(AGREE_TO_SF_REQUEST to "Agreed to suggested shipping fee successfully!")
@@ -87,6 +88,8 @@ class AgreeToShippingFeeDialogFragment : BottomSheetDialogFragment() {
         viewModel.isCanceled.observe(viewLifecycleOwner) {
             if (it) {
                 loadingDialog.dismiss()
+
+                // Go back to the parent fragment
                 setFragmentResult(
                     AGREE_TO_SF_REQUEST,
                     bundleOf(AGREE_TO_SF_REQUEST to "Disagreed to suggested shipping fee and canceled the order.")

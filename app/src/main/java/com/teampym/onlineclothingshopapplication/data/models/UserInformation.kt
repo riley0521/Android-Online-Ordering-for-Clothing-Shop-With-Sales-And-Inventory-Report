@@ -5,7 +5,6 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.firebase.firestore.Exclude
-import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import kotlinx.android.parcel.Parcelize
@@ -32,13 +31,11 @@ data class UserInformation(
 
     @Ignore
     @get:Exclude
-    var deliveryInformationList: List<DeliveryInformation> = emptyList()
+    var defaultDeliveryAddress: DeliveryInformation = DeliveryInformation()
+
     @Ignore
     @get:Exclude
     var wishList: List<WishItem> = emptyList()
-    @Ignore
-    @get:Exclude
-    var cartList: List<Cart> = emptyList()
 }
 
 fun getDate(date: Long): String {

@@ -77,7 +77,7 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
 
         binding.apply {
             etSize.setText(viewModel.inventorySize)
-            etAvailableStocks.setText(viewModel.inventoryStock)
+            etAvailableStocks.setText(viewModel.inventoryStock.toString())
 
             etSize.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(

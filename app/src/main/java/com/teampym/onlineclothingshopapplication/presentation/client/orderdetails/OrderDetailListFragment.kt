@@ -20,11 +20,11 @@ import com.teampym.onlineclothingshopapplication.databinding.FragmentOrderDetail
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
-import java.util.* // ktlint-disable no-wildcard-imports
+import java.util.*
 
 @AndroidEntryPoint
 class OrderDetailListFragment :
@@ -52,30 +52,29 @@ class OrderDetailListFragment :
 
         viewModel.updateOrder(args.order)
 
-        setupViews()
-
         lifecycleScope.launchWhenStarted {
-            viewModel.userFlow.collectLatest { user ->
-                if (user != null) {
-                    userInfo = user
+            val user = viewModel.userFlow.first()
+            if (user != null) {
+                userInfo = user
 
-                    adapter = OrderDetailListAdapter(
-                        this@OrderDetailListFragment,
-                        requireContext(),
-                        user
-                    )
-                    adapter.submitList(viewModel.order?.orderDetailList)
+                adapter = OrderDetailListAdapter(
+                    this@OrderDetailListFragment,
+                    requireContext(),
+                    user
+                )
+                adapter.submitList(viewModel.order?.orderDetailList)
 
-                    if (user.userType == UserType.ADMIN.name) {
-                        binding.orderBanner.isVisible = true
-                    }
+                if (user.userType == UserType.ADMIN.name) {
+                    binding.orderBanner.isVisible = true
                 }
+
+                setupViews()
             }
         }
     }
 
     @SuppressLint("SimpleDateFormat", "SetTextI18n")
-    private fun setupViews() {
+    private fun setupViews() = CoroutineScope(Dispatchers.Main).launch {
         binding.apply {
             val order = viewModel.order
             order?.let { o ->

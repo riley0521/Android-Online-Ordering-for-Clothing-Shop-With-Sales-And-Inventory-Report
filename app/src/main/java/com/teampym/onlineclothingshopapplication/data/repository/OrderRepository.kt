@@ -63,19 +63,15 @@ class OrderRepository @Inject constructor(
         userId: String,
         cartList: List<Cart>,
         deliveryInformation: DeliveryInformation,
-        paymentMethod: String,
         additionalNote: String
     ): Order? {
         return withContext(dispatcher) {
 
             val newOrder = Order(
                 userId = userId,
-                totalCost = cartList.sumOf { it.subTotal },
-                paymentMethod = paymentMethod,
-                deliveryInformation = deliveryInformation,
-                suggestedShippingFee = 0.0,
                 additionalNote = additionalNote,
-                dateOrdered = Utils.getTimeInMillisUTC(),
+                deliveryInformation = deliveryInformation,
+                totalCost = cartList.sumOf { it.subTotal },
                 numberOfItems = cartList.size.toLong()
             )
 
@@ -84,21 +80,6 @@ class OrderRepository @Inject constructor(
                 .await()
 
             if (result != null) {
-                newOrder.id = result.id
-
-                // Insert all items in the cart after adding order in database
-                newOrder.orderDetailList = orderDetailRepository.insertAll(
-                    result.id,
-                    userId,
-                    cartList
-                )
-
-                notificationTokenRepository.notifyAllAdmins(
-                    newOrder,
-                    "New Order ($newOrder.id)",
-                    "You have a new order!"
-                )
-
                 return@withContext newOrder.copy(id = result.id)
             } else {
                 return@withContext null

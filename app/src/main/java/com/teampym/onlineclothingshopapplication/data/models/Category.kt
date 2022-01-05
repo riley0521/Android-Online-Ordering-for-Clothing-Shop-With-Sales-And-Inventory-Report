@@ -11,4 +11,12 @@ data class Category(
     var id: String = "",
     var dateAdded: Long = 0,
     var dateModified: Long = 0
-) : Parcelable
+) : Parcelable {
+
+    constructor() : this(
+        "",
+        "",
+        ""
+    )
+
+}

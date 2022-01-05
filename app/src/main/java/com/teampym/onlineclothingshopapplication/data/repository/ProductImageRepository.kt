@@ -28,21 +28,20 @@ class ProductImageRepository @Inject constructor(
     private val productCollectionRef = db.collection(PRODUCTS_COLLECTION)
     private val imageRef = Firebase.storage.reference
 
-    // TODO("ProductImages Collection operation - Add and Delete")
     suspend fun getAll(productId: String): List<ProductImage> {
         return withContext(dispatcher) {
             val productImageList = mutableListOf<ProductImage>()
-            val productImageDocuments = productCollectionRef
+            val productImageDocs = productCollectionRef
                 .document(productId)
                 .collection(PRODUCT_IMAGES_SUB_COLLECTION)
                 .get()
                 .await()
 
-            if (productImageDocuments.documents.isNotEmpty()) {
-                for (document in productImageDocuments.documents) {
-                    val copy = document.toObject<ProductImage>()!!
+            if (productImageDocs.documents.isNotEmpty()) {
+                for (document in productImageDocs.documents) {
+                    val productImageObj = document.toObject<ProductImage>()!!
                         .copy(id = document.id, productId = productId)
-                    productImageList.add(copy)
+                    productImageList.add(productImageObj)
                 }
             }
             productImageList

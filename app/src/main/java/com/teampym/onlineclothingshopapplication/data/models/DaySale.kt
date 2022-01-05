@@ -7,4 +7,8 @@ import kotlinx.android.parcel.Parcelize
 data class DaySale(
     val totalSale: Double = 0.0,
     val id: String = ""
-) : Parcelable
+) : Parcelable {
+
+    constructor() : this(0.0)
+
+}

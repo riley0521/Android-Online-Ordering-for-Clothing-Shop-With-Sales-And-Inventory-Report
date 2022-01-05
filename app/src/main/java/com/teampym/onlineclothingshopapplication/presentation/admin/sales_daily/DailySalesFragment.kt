@@ -38,9 +38,15 @@ class DailySalesFragment : Fragment(R.layout.fragment_daily_sales) {
                 false
             )
             rvDailySales.adapter = adapter
+
+            refreshLayout.setOnRefreshListener {
+                viewModel.fetchDailySales(args.year, args.month)
+            }
         }
 
         viewModel.dailySales.observe(viewLifecycleOwner) { dayList ->
+            binding.refreshLayout.isRefreshing = false
+
             adapter.submitList(dayList.sortedBy { it.id })
         }
     }

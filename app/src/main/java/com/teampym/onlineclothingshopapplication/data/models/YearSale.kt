@@ -10,6 +10,8 @@ data class YearSale(
     val id: String = ""
 ) : Parcelable {
 
+    constructor() : this(0.0)
+
     @get:Exclude
     var listOfMonth: List<MonthSale> = emptyList()
 }

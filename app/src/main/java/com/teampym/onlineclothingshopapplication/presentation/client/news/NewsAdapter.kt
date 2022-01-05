@@ -2,13 +2,12 @@ package com.teampym.onlineclothingshopapplication.presentation.client.news
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.view.ContextMenu
 import android.view.LayoutInflater
 import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.paging.PagingDataAdapter
@@ -18,6 +17,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Post
+import com.teampym.onlineclothingshopapplication.data.util.REMOVE_BUTTON
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.NewsItemBinding
 import java.text.SimpleDateFormat
@@ -55,9 +55,7 @@ class NewsAdapter constructor(
     }
 
     inner class NewsViewHolder(private val binding: NewsItemBinding) :
-        RecyclerView.ViewHolder(binding.root),
-        View.OnCreateContextMenuListener,
-        MenuItem.OnMenuItemClickListener {
+        RecyclerView.ViewHolder(binding.root) {
 
         init {
             binding.imgLike.setOnClickListener {
@@ -76,7 +74,39 @@ class NewsAdapter constructor(
                 commentClick()
             }
 
-            binding.imgMenu.setOnCreateContextMenuListener(this)
+            binding.imgMenu.setOnClickListener {
+                val position = bindingAdapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    val post = getItem(position)
+                    if (post != null) {
+                        val showPopUpMenu = PopupMenu(
+                            context,
+                            binding.imgMenu
+                        )
+
+                        showPopUpMenu.menu.add(Menu.NONE, 1, 1, REMOVE_BUTTON)
+
+                        showPopUpMenu.setOnMenuItemClickListener { menuItem ->
+                            when (menuItem.itemId) {
+                                1 -> {
+                                    AlertDialog.Builder(context)
+                                        .setTitle("DELETE POST")
+                                        .setMessage("Are you sure you want to delete this post?")
+                                        .setPositiveButton("Yes") { _, _ ->
+                                            viewModel.onViewEvent(NewsFragment.NewsPagerEvent.Remove(post))
+                                        }.setNegativeButton("No") { dialog, _ ->
+                                            dialog.dismiss()
+                                        }.show()
+                                    true
+                                }
+                                else -> false
+                            }
+                        }
+
+                        showPopUpMenu.show()
+                    }
+                }
+            }
         }
 
         private fun commentClick() {
@@ -177,50 +207,6 @@ class NewsAdapter constructor(
                     tvLike.isVisible = false
                 }
             }
-        }
-
-        override fun onCreateContextMenu(
-            menu: ContextMenu?,
-            v: View?,
-            menuInfo: ContextMenu.ContextMenuInfo?
-        ) {
-//            val share = menu?.add(Menu.NONE, 1, 1, "Share")
-//            share?.setOnMenuItemClickListener(this)
-
-            viewModel.userType?.let { type ->
-                if (type == UserType.ADMIN.name) {
-                    val delete = menu?.add(Menu.NONE, 1, 1, "Delete")
-                    delete?.setOnMenuItemClickListener(this)
-                }
-            }
-        }
-
-        override fun onMenuItemClick(item: MenuItem?): Boolean {
-            val position = absoluteAdapterPosition
-            if (position != RecyclerView.NO_POSITION) {
-                val post = getItem(position)
-
-                if (post != null) {
-                    when (item?.itemId) {
-//                        1 -> {
-//                            listener.onShareClicked(post)
-//                            return true
-//                        }
-                        1 -> {
-                            AlertDialog.Builder(context)
-                                .setTitle("DELETE POST")
-                                .setMessage("Are you sure you want to delete this post?")
-                                .setPositiveButton("Yes") { _, _ ->
-                                    viewModel.onViewEvent(NewsFragment.NewsPagerEvent.Remove(post))
-                                }.setNegativeButton("No") { dialog, _ ->
-                                    dialog.dismiss()
-                                }.show()
-                            return true
-                        }
-                    }
-                }
-            }
-            return false
         }
     }
 

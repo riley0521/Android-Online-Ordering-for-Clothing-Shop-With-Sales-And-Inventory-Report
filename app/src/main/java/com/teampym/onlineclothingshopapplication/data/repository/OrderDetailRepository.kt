@@ -86,8 +86,8 @@ class OrderDetailRepository @Inject constructor(
                     inventoryId = item.inventory.inventoryId,
                     size = item.inventory.size,
                     quantity = item.quantity,
-                    product = item.product,
                     subTotal = item.subTotal,
+                    product = item.product,
                 )
 
                 val result = orderCollectionRef

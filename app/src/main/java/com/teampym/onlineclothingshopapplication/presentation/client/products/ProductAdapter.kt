@@ -2,9 +2,7 @@ package com.teampym.onlineclothingshopapplication.presentation.client.products
 
 import android.content.Context
 import android.view.LayoutInflater
-import android.view.Menu
 import android.view.ViewGroup
-import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.isVisible
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
@@ -13,14 +11,9 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.room.Product
-import com.teampym.onlineclothingshopapplication.data.util.EDIT_BUTTON
-import com.teampym.onlineclothingshopapplication.data.util.REMOVE_BUTTON
 import com.teampym.onlineclothingshopapplication.databinding.ProductItemBinding
 
-private const val TAG = "ProductAdapter"
-
 class ProductAdapter(
-    private val userId: String?,
     private val listener: OnProductListener,
     private val context: Context
 ) : PagingDataAdapter<Product, ProductAdapter.ProductViewHolder>(PRODUCT_COMPARATOR) {
@@ -59,37 +52,6 @@ class ProductAdapter(
                         if (item != null)
                             listener.onItemClicked(item)
                     }
-                }
-
-                root.setOnLongClickListener {
-                    val position = bindingAdapterPosition
-                    if (position != RecyclerView.NO_POSITION) {
-                        val item = getItem(position)
-                        if (item != null) {
-                            val showPopUpMenu = PopupMenu(
-                                context,
-                                binding.root
-                            )
-
-                            showPopUpMenu.menu.add(Menu.NONE, 0, 0, EDIT_BUTTON)
-                            showPopUpMenu.menu.add(Menu.NONE, 1, 1, REMOVE_BUTTON)
-
-                            showPopUpMenu.setOnMenuItemClickListener { menuItem ->
-                                when (menuItem.itemId) {
-                                    0 -> {
-                                        listener.onEditClicked(item)
-                                        true
-                                    }
-                                    1 -> {
-                                        listener.onDeleteClicked(item)
-                                        true
-                                    }
-                                    else -> false
-                                }
-                            }
-                        }
-                    }
-                    true
                 }
             }
         }

@@ -12,6 +12,7 @@ import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.ProductType
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -70,7 +71,7 @@ class AddEditProductViewModel @Inject constructor(
     var productPrice = state.get<Double>(PRODUCT_PRICE) ?: 0.0
         set(value) {
             field = value
-            state.set(PRODUCT_FILE_NAME, value)
+            state.set(PRODUCT_PRICE, value)
         }
 
     var productType = state.get(PRODUCT_TYPE) ?: ""
@@ -92,11 +93,19 @@ class AddEditProductViewModel @Inject constructor(
     val imageList: MutableLiveData<MutableList<ProductImage>> =
         state.getLiveData(PRODUCT_IMAGE_LIST, mutableListOf())
 
-    var additionalImageList: MutableLiveData<MutableList<Uri>> =
+    val additionalImageList: MutableLiveData<MutableList<Uri>> =
         state.getLiveData(ADDITIONAL_IMAGES, mutableListOf())
 
     private val _addEditProductChannel = Channel<AddEditProductEvent>()
     val addEditProductEvent = _addEditProductChannel.receiveAsFlow()
+
+    private fun updateImageList(list: List<ProductImage>) {
+        imageList.postValue(list.toMutableList())
+    }
+
+    fun updateAdditionalImages(list: List<Uri>) {
+        additionalImageList.postValue(list.toMutableList())
+    }
 
     fun updateFileName(name: String) {
         fileName.postValue(name)
@@ -106,15 +115,7 @@ class AddEditProductViewModel @Inject constructor(
         imageUrl.postValue(url)
     }
 
-    fun updateImageList(list: List<ProductImage>) {
-        imageList.postValue(list.toMutableList())
-    }
-
-    fun updateAdditionalImages(list: List<Uri>) {
-        additionalImageList.postValue(list.toMutableList())
-    }
-
-    private fun resetAllUiState() = viewModelScope.launch {
+    fun resetAllUiState() {
         categoryId = ""
         productDesc = ""
         productPrice = 0.0
@@ -136,6 +137,11 @@ class AddEditProductViewModel @Inject constructor(
             imageList.value!!.isNotEmpty()
     }
 
+    fun fetchProductImages(productId: String) = viewModelScope.launch {
+        val images = productImageRepository.getAll(productId)
+        updateImageList(images)
+    }
+
     fun onSubmitClicked(product: Product?, isEditMode: Boolean) = viewModelScope.launch {
         val userSession = preferencesManager.preferencesFlow.first()
         val userInformation = userInformationDao.getCurrentUser(userSession.userId)
@@ -146,6 +152,7 @@ class AddEditProductViewModel @Inject constructor(
                 async { uploadProductImage() }.await()
                 product.fileName = fileName.value!!
                 product.imageUrl = imageUrl.value!!
+                product.dateModified = Utils.getTimeInMillisUTC()
                 val res = async {
                     productRepository.update(
                         username = "${userInformation?.firstName} ${userInformation?.lastName}",
@@ -187,7 +194,8 @@ class AddEditProductViewModel @Inject constructor(
                     fileName = fileName.value!!,
                     imageUrl = imageUrl.value!!,
                     price = productPrice,
-                    type = productType
+                    type = productType,
+                    dateAdded = Utils.getTimeInMillisUTC()
                 )
                 val res = async {
                     productRepository.create(

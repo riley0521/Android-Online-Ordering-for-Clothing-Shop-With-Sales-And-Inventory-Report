@@ -93,7 +93,7 @@ class ProductFragment :
     private fun instantiateProductAdapterForCustomer(userId: String?) {
         Log.d(TAG, "instantiateProductAdapterForCustomer: here")
 
-        adapter = ProductAdapter(userId, this, requireContext())
+        adapter = ProductAdapter(this, requireContext())
         adapter.withLoadStateHeaderAndFooter(
             header = ProductLoadStateAdapter(adapter),
             footer = ProductLoadStateAdapter(adapter)

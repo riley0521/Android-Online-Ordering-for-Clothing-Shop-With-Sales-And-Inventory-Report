@@ -58,7 +58,7 @@ class ShippingFeeDialogFragment : BottomSheetDialogFragment() {
                     count: Int,
                     after: Int
                 ) {
-                    etShippingFee.setText(viewModel.shippingFee.toString())
+                    etShippingFee.setText(String.format("%.2f", viewModel.shippingFee))
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -83,21 +83,25 @@ class ShippingFeeDialogFragment : BottomSheetDialogFragment() {
                 }
             }
 
-            viewModel.isSuccessful.observe(viewLifecycleOwner) {
-                if (it) {
-                    loadingDialog.dismiss()
-                    setFragmentResult(
-                        SHIPPING_FEE_REQUEST,
-                        bundleOf(SHIPPING_FEE_RESULT to "Submitted suggested shipping fee successfully!")
-                    )
-                    findNavController().popBackStack()
-                }
-            }
-
             lifecycleScope.launchWhenStarted {
                 viewModel.userFlow.collectLatest { user ->
                     if (user != null) {
                         viewModel.updateUserType(user.userType)
+                    }
+                }
+
+                viewModel.otherDialogEvent.collectLatest { event ->
+                    when(event) {
+                        OtherDialogFragmentEvent.NavigateBack -> {
+                            loadingDialog.dismiss()
+
+                            // Go back to the parent fragment with result
+                            setFragmentResult(
+                                SHIPPING_FEE_REQUEST,
+                                bundleOf(SHIPPING_FEE_RESULT to "Submitted suggested shipping fee successfully!")
+                            )
+                            findNavController().popBackStack()
+                        }
                     }
                 }
             }

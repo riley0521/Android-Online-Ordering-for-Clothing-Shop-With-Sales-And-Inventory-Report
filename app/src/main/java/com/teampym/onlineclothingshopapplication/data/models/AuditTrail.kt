@@ -12,4 +12,11 @@ data class AuditTrail(
     var type: String = AuditType.CATEGORY.name,
     var dateOfLog: Long = Utils.getTimeInMillisUTC(),
     var id: String = ""
-) : Parcelable
+) : Parcelable {
+
+    constructor() : this(
+        "",
+        ""
+    )
+
+}

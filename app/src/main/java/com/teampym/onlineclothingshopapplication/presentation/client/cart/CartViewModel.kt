@@ -1,6 +1,5 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.cart
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
@@ -13,7 +12,9 @@ import com.teampym.onlineclothingshopapplication.data.util.CartFlag
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,10 +32,13 @@ class CartViewModel @Inject constructor(
         cartRepository.getAll(sessionPref.userId)
     }
 
-    val cart = _cartFlow.asLiveData() as MutableLiveData<MutableList<Cart>>
+    val cart = _cartFlow.asLiveData()
 
-    fun onQuantityUpdated(cartId: String, flag: String) = viewModelScope.launch {
-        cart.value?.forEach {
+    private val _cartChannel = Channel<CartEvent>()
+    val cartEvent = _cartChannel.receiveAsFlow()
+
+    fun onQuantityUpdated(cartId: String, flag: String, position: Int) = viewModelScope.launch {
+        cart.value?.map {
             if (it.id == cartId) {
                 when (flag) {
                     CartFlag.ADDING.toString() -> {
@@ -48,15 +52,23 @@ class CartViewModel @Inject constructor(
                 }
             }
         }
-        cart.value = cart.value
+        _cartChannel.send(
+            CartEvent.ItemModifiedOrRemoved(
+                position,
+                false,
+                cart.value!!.sumOf { it.calculatedTotalPrice.toDouble() }
+            )
+        )
     }
 
     fun onCartUpdated(userId: String) = appScope.launch {
-        val res = cartRepository.update(userId, cart.value!!)
-        if (res) {
-            async {
-                cartDao.insertAll(cart.value!!)
-            }.await()
+        cart.value?.let {
+            val res = cartRepository.update(userId, cart.value!!)
+            if (res) {
+                async {
+                    cartDao.insertAll(cart.value!!)
+                }.await()
+            }
         }
     }
 
@@ -67,10 +79,26 @@ class CartViewModel @Inject constructor(
         }
     }
 
-    fun onDeleteItemSelected(userId: String, cartId: String) = viewModelScope.launch {
+    fun onDeleteItemSelected(userId: String, cartId: String, position: Int) = viewModelScope.launch {
         val res = cartRepository.delete(userId, cartId)
         if (res) {
             async { cartDao.delete(cartId) }.await()
+
+            _cartChannel.send(
+                CartEvent.ItemModifiedOrRemoved(
+                    position,
+                    true,
+                    cart.value!!.sumOf { it.calculatedTotalPrice.toDouble() }
+                )
+            )
         }
+    }
+
+    sealed class CartEvent {
+        data class ItemModifiedOrRemoved(
+            val position: Int,
+            val isRemoved: Boolean,
+            val currentTotalPrice: Double
+        ) : CartEvent()
     }
 }

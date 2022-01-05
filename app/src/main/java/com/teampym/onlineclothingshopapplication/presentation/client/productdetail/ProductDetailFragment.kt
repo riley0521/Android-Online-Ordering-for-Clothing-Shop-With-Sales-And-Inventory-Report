@@ -26,6 +26,7 @@ import com.teampym.onlineclothingshopapplication.data.util.Utils
 import com.teampym.onlineclothingshopapplication.data.util.shareDeepLink
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductDetailBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 
 @AndroidEntryPoint
@@ -83,6 +84,8 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                         ).show()
                     }
                     is ProductDetailViewModel.ProductDetailEvent.ShowSuccessMessage -> {
+                        requireActivity().invalidateOptionsMenu()
+                        delay(1000)
                         loadingDialog.dismiss()
 
                         Snackbar.make(
@@ -90,7 +93,6 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                             event.msg,
                             Snackbar.LENGTH_SHORT
                         ).show()
-                        requireActivity().invalidateOptionsMenu()
                     }
                 }
             }

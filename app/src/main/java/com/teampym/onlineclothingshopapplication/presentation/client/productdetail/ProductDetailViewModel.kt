@@ -57,9 +57,8 @@ class ProductDetailViewModel @Inject constructor(
     }
 
     fun checkIfProductExistInWishList(productId: String) = viewModelScope.launch {
-        wishItemDao.checkIfExisting(productId)?.let {
-            _isExisting.value = true
-        }
+        val isWishItemExist = wishItemDao.checkIfExisting(productId)
+        _isExisting.value = isWishItemExist != null
     }
 
     fun onAddOrRemoveToWishListClick(

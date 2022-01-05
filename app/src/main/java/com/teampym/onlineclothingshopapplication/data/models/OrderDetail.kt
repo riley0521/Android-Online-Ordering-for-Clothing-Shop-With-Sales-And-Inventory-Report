@@ -22,6 +22,16 @@ data class OrderDetail(
     var hasAddedReview: Boolean = false
 ) : Parcelable {
 
+    constructor() : this(
+        "",
+        "",
+        "",
+        "",
+        0L,
+        0.0,
+        Product()
+    )
+
     @get:Exclude
     val calculatedPrice: BigDecimal get() = (quantity * product.price).toBigDecimal()
 }

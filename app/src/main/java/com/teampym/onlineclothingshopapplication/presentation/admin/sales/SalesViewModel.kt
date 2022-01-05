@@ -45,7 +45,7 @@ class SalesViewModel @Inject constructor(
         month.asFlow()
     ) { year, month ->
         Pair(year, month)
-    }.flatMapLatest { (year, month) ->
+    }.flatMapLatest { (year, _) ->
         flowOf(salesRepository.getSalesForWholeYear(year))
     }
 }

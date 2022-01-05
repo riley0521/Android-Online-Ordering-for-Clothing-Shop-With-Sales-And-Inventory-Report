@@ -20,4 +20,11 @@ data class Inventory(
     var sold: Long = 0,
     var returned: Long = 0,
     var restockLevel: Long = 0
-) : Parcelable
+) : Parcelable {
+
+    constructor() : this(
+        "",
+        "",
+        0L
+    )
+}

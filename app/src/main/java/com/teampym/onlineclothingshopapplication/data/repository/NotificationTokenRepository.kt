@@ -125,8 +125,8 @@ class NotificationTokenRepository @Inject constructor(
             var isCompleted = true
 
             var objNotNull = Any()
-            if (obj != null) {
-                objNotNull = obj
+            obj?.let {
+                objNotNull = it
             }
 
             val data = NotificationData(
@@ -176,6 +176,7 @@ class NotificationTokenRepository @Inject constructor(
 
                 if (res != null && res.documents.isNotEmpty()) {
                     val tokenList = mutableListOf<String>()
+
                     for (doc in res.documents) {
                         val token = doc.toObject<NotificationToken>()!!.copy(id = doc.id)
                         tokenList.add(token.token)

@@ -30,6 +30,18 @@ data class WishItem(
     var numberOfReviews: Long = 0
 ) : Parcelable {
 
+    constructor() : this(
+        "",
+        "",
+        "",
+        "",
+        "",
+        0.0,
+        "",
+        "",
+        ""
+    )
+
     @get:Exclude
     val avgRate: Double get() = totalRate / numberOfReviews
 }

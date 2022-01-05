@@ -62,8 +62,8 @@ class NewsViewModel @Inject constructor(
     }
 
     suspend fun fetchUserSession() {
-        _userSession.value = preferencesManager.preferencesFlow.first()
-        userId.value = _userSession.value?.userId
+        _userSession.postValue(preferencesManager.preferencesFlow.first())
+        userId.postValue(_userSession.value?.userId)
         userType = _userSession.value?.userType
     }
 

@@ -9,5 +9,5 @@ import java.math.BigDecimal
 data class Checkout(
     val userId: String,
     val cart: List<Cart> = emptyList(),
-    val totalCost: BigDecimal
+    val totalCost: Double
 ) : Parcelable

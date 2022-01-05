@@ -23,11 +23,9 @@ class ProductImageAdapter(
     }
 
     override fun onBindViewHolder(holder: ProductImageViewHolder, position: Int) {
-        val item = additionalImageList.get(position)
+        val item = additionalImageList[position]
 
-        if (item != null) {
-            holder.bind(item)
-        }
+        holder.bind(item)
     }
 
     override fun getItemCount() = additionalImageList.size
@@ -39,10 +37,7 @@ class ProductImageAdapter(
             binding.imgRemove.setOnClickListener {
                 val position = absoluteAdapterPosition
                 if (position != RecyclerView.NO_POSITION) {
-                    val item = additionalImageList.get(position)
-                    if (item != null) {
-                        listener.onRemoveClicked(position)
-                    }
+                    listener.onRemoveClicked(position)
                 }
             }
         }

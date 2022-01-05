@@ -1,20 +1,19 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.others
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.repository.OrderRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.Status
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,8 +22,7 @@ class CancelReasonViewModel @Inject constructor(
     private val orderRepository: OrderRepository,
     private val userInformationDao: UserInformationDao,
     private val state: SavedStateHandle,
-    private val preferencesManager: PreferencesManager,
-    @ApplicationScope val appScope: CoroutineScope
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     companion object {
@@ -33,9 +31,6 @@ class CancelReasonViewModel @Inject constructor(
 
     private var userId = ""
     private var _userType = MutableLiveData("")
-
-    private var _isSuccessful = MutableLiveData<Boolean>(false)
-    val isSuccessful: LiveData<Boolean> get() = _isSuccessful
 
     val userFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
         userId = sessionPref.userId
@@ -48,15 +43,18 @@ class CancelReasonViewModel @Inject constructor(
             state.set(CANCEL_REASON, value)
         }
 
+    private val _othersChannel = Channel<OtherDialogFragmentEvent>()
+    val otherDialogEvent = _othersChannel.receiveAsFlow()
+
     fun updateUserType(userType: String) = viewModelScope.launch {
         _userType.value = userType
     }
 
-    fun cancelOrderAdmin(order: Order, cancelReason: String) = appScope.launch {
+    fun cancelOrderAdmin(order: Order, cancelReason: String) = viewModelScope.launch {
         if (_userType.value != null) {
             val userInformation = userFlow.first()
 
-            _isSuccessful.value = orderRepository.updateOrderStatus(
+            orderRepository.updateOrderStatus(
                 username = "${userInformation?.firstName} ${userInformation?.lastName}",
                 userId,
                 _userType.value!!,
@@ -65,6 +63,8 @@ class CancelReasonViewModel @Inject constructor(
                 cancelReason,
                 null
             )
+
+            _othersChannel.send(OtherDialogFragmentEvent.NavigateBack)
         }
     }
 }

@@ -80,30 +80,30 @@ class MainActivity : AppCompatActivity() {
             .getDynamicLink(intent)
             .addOnSuccessListener(this) { pendingDynamicLinkData ->
 
-                val deepLink = pendingDynamicLinkData.link
+                if (pendingDynamicLinkData != null) {
+                    pendingDynamicLinkData.link?.let { uri ->
+                        val path = uri.toString().substring(uri.toString().lastIndexOf("/") + 1)
 
-                deepLink?.let { uri ->
-                    val path = uri.toString().substring(deepLink.toString().lastIndexOf("/") + 1)
+                        // In case if you have multiple shareable items such as User Post, User Profile,
+                        // you can check if
+                        // the uri contains the required string.
+                        // In our case we will check if the path contains the string, 'post'
 
-                    // In case if you have multiple shareable items such as User Post, User Profile,
-                    // you can check if
-                    // the uri contains the required string.
-                    // In our case we will check if the path contains the string, 'post'
-
-                    when {
-                        uri.toString().contains("post") -> {
-                            val postId = path
-                            // Call your API or DB to get the post with the ID [postId]
-                            // and open the required screen here.
-                        }
-                        uri.toString().contains("product") -> {
-                            // Open the required screen here.
-                            navController.navigate(
-                                R.id.productDetailFragment,
-                                bundleOf(
-                                    "productId" to path
+                        when {
+                            uri.toString().contains("post") -> {
+                                val postId = path
+                                // Call your API or DB to get the post with the ID [postId]
+                                // and open the required screen here.
+                            }
+                            uri.toString().contains("product") -> {
+                                // Open the required screen here.
+                                navController.navigate(
+                                    R.id.productDetailFragment,
+                                    bundleOf(
+                                        "productId" to path
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
                 }

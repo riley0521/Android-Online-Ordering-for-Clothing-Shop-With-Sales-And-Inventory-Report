@@ -21,6 +21,13 @@ data class Cart(
     var quantity: Long = 1
 ) : Parcelable {
 
+    constructor() : this(
+        "",
+        0.0,
+        Product(),
+        Inventory()
+    )
+
     @IgnoredOnParcel
     @get:Exclude
     val calculatedTotalPrice: BigDecimal get() = quantity.toBigDecimal() * product.price.toBigDecimal()

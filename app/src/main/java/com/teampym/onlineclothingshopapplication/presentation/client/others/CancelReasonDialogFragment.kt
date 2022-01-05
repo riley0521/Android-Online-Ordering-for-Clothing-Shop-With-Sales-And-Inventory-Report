@@ -75,21 +75,25 @@ class CancelReasonDialogFragment : BottomSheetDialogFragment() {
             }
         }
 
-        viewModel.isSuccessful.observe(viewLifecycleOwner) {
-            if (it) {
-                loadingDialog.dismiss()
-                setFragmentResult(
-                    CANCEL_REASON_REQUEST,
-                    bundleOf(CANCEL_REASON_RESULT to "Canceled Order Successfully!")
-                )
-                findNavController().popBackStack()
-            }
-        }
-
         lifecycleScope.launchWhenStarted {
             viewModel.userFlow.collectLatest { user ->
                 if (user != null) {
                     viewModel.updateUserType(user.userType)
+                }
+            }
+
+            viewModel.otherDialogEvent.collectLatest { event ->
+                when(event) {
+                    OtherDialogFragmentEvent.NavigateBack -> {
+                        loadingDialog.dismiss()
+
+                        // Go back to the parent fragment with result
+                        setFragmentResult(
+                            CANCEL_REASON_REQUEST,
+                            bundleOf(CANCEL_REASON_RESULT to "Canceled Order Successfully!")
+                        )
+                        findNavController().popBackStack()
+                    }
                 }
             }
         }

@@ -18,7 +18,6 @@ import androidx.paging.PagingData
 import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Order
-import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.util.CANCELLED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.COMPLETED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.DELIVERY_ORDERS
@@ -52,8 +51,6 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
     private lateinit var adapter: OrderListAdapter
 
     private var currentPagingData: PagingData<Order>? = null
-
-    private var userInfo: UserInformation? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -180,14 +177,12 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
     }
 
     override fun onItemClicked(item: Order) {
-        if (userInfo != null) {
-            val action =
-                OrderListFragmentDirections.actionOrderListFragmentToOrderDetailListFragment(
-                    title = "Order ${item.id}",
-                    order = item,
-                )
-            findNavController().navigate(action)
-        }
+        val action =
+            OrderListFragmentDirections.actionOrderListFragmentToOrderDetailListFragment(
+                title = "Order ${item.id}",
+                order = item,
+            )
+        findNavController().navigate(action)
     }
 
     override fun onCancelClicked(item: Order, userType: String) {

@@ -7,18 +7,17 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Checkout
-import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.util.CartFlag
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCartBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import java.math.BigDecimal
+import kotlinx.coroutines.flow.collectLatest
 
 private const val TAG = "CartFragment"
 
@@ -33,7 +32,7 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
     private var userId = ""
 
-    private var total: BigDecimal = 0.toBigDecimal()
+    private var total: Double = 0.0
 
     private lateinit var loadingDialog: LoadingDialog
 
@@ -96,10 +95,32 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
                 binding.labelNoCartItem.visibility = View.VISIBLE
             }
 
-            total = cart.sumOf { it.calculatedTotalPrice }
-            val totalText = "$" + String.format("%.2f", total)
-            binding.tvMerchandiseTotal.text = totalText
+            setTotalPrice(cart.sumOf { it.calculatedTotalPrice.toDouble() })
         }
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.cartEvent.collectLatest { event ->
+                when (event) {
+                    is CartViewModel.CartEvent.ItemModifiedOrRemoved -> {
+                        if (event.isRemoved) {
+                            adapter.notifyItemRemoved(event.position)
+
+                            setTotalPrice(event.currentTotalPrice)
+                        } else {
+                            adapter.notifyItemChanged(event.position)
+
+                            setTotalPrice(event.currentTotalPrice)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun setTotalPrice(totalPrice: Double) {
+        total = totalPrice
+        val totalText = "$" + String.format("%.2f", total)
+        binding.tvMerchandiseTotal.text = totalText
     }
 
     private fun navigateToCheckOut() {
@@ -111,16 +132,12 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
     private fun getFirebaseUser() = FirebaseAuth.getInstance().currentUser
 
-    @ExperimentalCoroutinesApi
     override fun onAddQuantity(cartId: String, pos: Int) {
-        viewModel.onQuantityUpdated(cartId, CartFlag.ADDING.toString())
-        adapter.notifyItemChanged(pos)
+        viewModel.onQuantityUpdated(cartId, CartFlag.ADDING.toString(), pos)
     }
 
-    @ExperimentalCoroutinesApi
     override fun onRemoveQuantity(cartId: String, pos: Int) {
-        viewModel.onQuantityUpdated(cartId, CartFlag.REMOVING.toString())
-        adapter.notifyItemChanged(pos)
+        viewModel.onQuantityUpdated(cartId, CartFlag.REMOVING.toString(), pos)
     }
 
     override fun onDeleteItemClicked(cartId: String, pos: Int) {
@@ -128,9 +145,7 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
             .setTitle("DELETE ITEM")
             .setMessage("Are you sure you want to delete this item?")
             .setPositiveButton("YES") { _, _ ->
-                viewModel.onDeleteItemSelected(userId, cartId)
-                adapter.notifyItemRemoved(pos)
-
+                viewModel.onDeleteItemSelected(userId, cartId, pos)
                 Snackbar.make(requireView(), "Item deleted successfully!", Snackbar.LENGTH_SHORT)
                     .show()
             }.setNegativeButton("NO") { dialog, _ ->

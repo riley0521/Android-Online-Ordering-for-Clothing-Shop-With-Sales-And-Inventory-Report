@@ -5,7 +5,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -13,11 +13,14 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
+import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
 import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCheckOutBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 private const val TAG = "CheckOutFragment"
 
@@ -26,7 +29,7 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
     private lateinit var binding: FragmentCheckOutBinding
 
-    private val viewModel: CheckOutSharedViewModel by activityViewModels()
+    private val viewModel by viewModels<CheckOutViewModel>()
 
     private val args by navArgs<CheckOutFragmentArgs>()
 
@@ -34,7 +37,7 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
     private var finalUser: UserInformation = UserInformation()
 
-    private lateinit var paymentMethodEnum: PaymentMethod
+    private var paymentMethodEnum = PaymentMethod.COD
 
     private lateinit var loadingDialog: LoadingDialog
 
@@ -46,8 +49,6 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
         adapter = CheckOutAdapter()
         adapter.submitList(args.cart.cart)
-
-        finalUser.cartList = adapter.currentList
 
         binding.apply {
             recyclerFinalItems.setHasFixedSize(true)
@@ -75,21 +76,25 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 //            }
 
             btnPlaceOrder.setOnClickListener {
+                loadingDialog.show()
+
                 // check if the user is verified, get the final info and cartList. Then,
                 // Place Order
                 val currentUser = getFirebaseUser()
-                // Check if the user is signed based on the documentation.
-                // TODO("No additional note yet.")
                 if (currentUser != null) {
                     if (currentUser.isEmailVerified) {
-                        loadingDialog.show()
+                        Log.d(TAG, "placing order: ${args.cart.cart.size.toLong()}")
+                        Log.d(TAG, "placing order: ${args.cart.cart[0].subTotal}")
+                        Log.d(TAG, "final user: $finalUser")
+
                         viewModel.placeOrder(
                             finalUser,
-                            finalUser.cartList,
-                            paymentMethodEnum.name,
+                            args.cart.cart,
                             ""
                         )
                     } else {
+                        loadingDialog.dismiss()
+
                         Snackbar.make(
                             requireView(),
                             "Please verify your email first to place your order.",
@@ -97,6 +102,8 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                         ).show()
                     }
                 } else {
+                    loadingDialog.dismiss()
+
                     Snackbar.make(
                         requireView(),
                         "Please sign in first.",
@@ -125,17 +132,23 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
             }
         }
 
-        lifecycleScope.launchWhenCreated {
-            viewModel.userWithDeliveryInfo.collectLatest { userWithDeliveryInfo ->
-                userWithDeliveryInfo?.let { user ->
-                    Log.d(TAG, user.toString())
+        lifecycleScope.launchWhenStarted {
+            launch {
+                val userWithDeliveryInfo = viewModel.userWithDeliveryInfo.first()
+                userWithDeliveryInfo?.let {
+                    Log.d(TAG, userWithDeliveryInfo.toString())
 
-                    finalUser = user.user
-                    finalUser.deliveryInformationList = user.deliveryInformation
+                    finalUser = userWithDeliveryInfo.user
 
-                    val defaultDeliveryInfo = user.deliveryInformation.firstOrNull { it.isPrimary }
+                    finalUser.defaultDeliveryAddress =
+                        userWithDeliveryInfo.deliveryInformation.firstOrNull { it.isPrimary }
+                            ?: DeliveryInformation()
+
                     binding.apply {
-                        defaultDeliveryInfo?.let { del ->
+
+                        if (finalUser.defaultDeliveryAddress.id.isNotBlank()) {
+                            val del = finalUser.defaultDeliveryAddress
+
                             val contact = if (del.contactNo[0].toString() == "0")
                                 del.contactNo.substring(
                                     1,
@@ -160,17 +173,19 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                 }
             }
 
-            viewModel.checkOutEvent.collectLatest { event ->
-                when (event) {
-                    is CheckOutSharedViewModel.CheckOutEvent.ShowSuccessfulMessage -> {
-                        loadingDialog.dismiss()
-                        Toast.makeText(requireContext(), event.msg, Toast.LENGTH_SHORT)
-                            .show()
-                        findNavController().navigate(R.id.action_global_categoryFragment)
-                    }
-                    is CheckOutSharedViewModel.CheckOutEvent.ShowFailedMessage -> {
-                        loadingDialog.dismiss()
-                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
+            launch {
+                viewModel.checkOutEvent.collectLatest { event ->
+                    when (event) {
+                        is CheckOutViewModel.CheckOutEvent.ShowSuccessfulMessage -> {
+                            loadingDialog.dismiss()
+                            Toast.makeText(requireContext(), event.msg, Toast.LENGTH_SHORT)
+                                .show()
+                            findNavController().navigate(R.id.action_global_categoryFragment)
+                        }
+                        is CheckOutViewModel.CheckOutEvent.ShowFailedMessage -> {
+                            loadingDialog.dismiss()
+                            Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }

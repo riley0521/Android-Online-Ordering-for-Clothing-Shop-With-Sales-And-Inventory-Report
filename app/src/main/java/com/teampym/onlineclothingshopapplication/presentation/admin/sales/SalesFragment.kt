@@ -16,7 +16,10 @@ import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.data.util.Utils
 import com.teampym.onlineclothingshopapplication.databinding.FragmentSalesBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import java.util.* // ktlint-disable no-wildcard-imports
 
 private const val TAG = "SalesFragment"
@@ -53,39 +56,18 @@ class SalesFragment : Fragment(R.layout.fragment_sales), AdapterView.OnItemSelec
             viewModel.salesForSelectedMonthAndYear.collectLatest { yearSale ->
                 loadingDialog.dismiss()
 
-                yearSale?.let {
+                if (yearSale != null) {
                     setupViews(yearSale)
+                } else {
+                    setupSpinners()
                 }
             }
         }
     }
 
-    private fun setupViews(yearSale: YearSale) {
+    private fun setupViews(yearSale: YearSale) = CoroutineScope(Dispatchers.Main).launch {
         binding.apply {
-            ArrayAdapter(
-                requireContext(),
-                android.R.layout.simple_spinner_item,
-                Utils.getAvailableYears()
-            ).also { adapter ->
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                spYear.adapter = adapter
-
-                spYear.setSelection(adapter.getPosition(viewModel.year.value))
-            }
-
-            ArrayAdapter(
-                requireContext(),
-                android.R.layout.simple_spinner_item,
-                Utils.getMonthNames()
-            ).also { adapter ->
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                spMonth.adapter = adapter
-
-                spMonth.setSelection(adapter.getPosition(viewModel.month.value))
-            }
-
-            spYear.onItemSelectedListener = this@SalesFragment
-            spMonth.onItemSelectedListener = this@SalesFragment
+            setupSpinners()
 
             tvSelectedYear.text = getString(
                 R.string.placeholder_total_sale_for_year,
@@ -122,6 +104,35 @@ class SalesFragment : Fragment(R.layout.fragment_sales), AdapterView.OnItemSelec
                     ).show()
                 }
             }
+        }
+    }
+
+    private fun setupSpinners() {
+        binding.apply {
+            ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                Utils.getAvailableYears()
+            ).also { adapter ->
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                spYear.adapter = adapter
+
+                spYear.setSelection(adapter.getPosition(viewModel.year.value))
+            }
+
+            ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                Utils.getMonthNames()
+            ).also { adapter ->
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                spMonth.adapter = adapter
+
+                spMonth.setSelection(adapter.getPosition(viewModel.month.value))
+            }
+
+            spYear.onItemSelectedListener = this@SalesFragment
+            spMonth.onItemSelectedListener = this@SalesFragment
         }
     }
 

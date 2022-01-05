@@ -8,4 +8,11 @@ data class Like(
     var postId: String,
     var userId: String,
     var id: String = ""
-) : Parcelable
+) : Parcelable {
+
+    constructor() : this(
+        "",
+        ""
+    )
+
+}

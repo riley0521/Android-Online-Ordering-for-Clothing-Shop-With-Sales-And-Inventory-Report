@@ -52,7 +52,7 @@ class NewsFragment : Fragment(R.layout.fragment_news), NewsAdapter.NewsListener 
         }
     }
 
-    private fun setupViews() {
+    private fun setupViews() = CoroutineScope(Dispatchers.Main).launch {
         viewModel.getPostsPagingData()
 
         binding.apply {

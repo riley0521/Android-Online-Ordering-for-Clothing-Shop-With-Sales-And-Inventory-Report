@@ -15,4 +15,16 @@ data class Review(
     var productSize: String,
     var id: String = "",
     var dateReview: Long = Utils.getTimeInMillisUTC()
-) : Parcelable
+) : Parcelable {
+
+    constructor() : this(
+        "",
+        "",
+        "",
+        "",
+        0.0,
+        "",
+        ""
+    )
+
+}

@@ -15,7 +15,6 @@ import com.teampym.onlineclothingshopapplication.data.util.Utils
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.lang.Exception
 import java.util.* // ktlint-disable no-wildcard-imports
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -33,7 +32,7 @@ class SalesRepository @Inject constructor(
 
             val calendarDate = Calendar.getInstance()
             calendarDate.timeInMillis = Utils.getTimeInMillisUTC()
-            calendarDate.timeZone = TimeZone.getTimeZone("GMT+8:00")
+
             val year = calendarDate.get(Calendar.YEAR).toString()
             val month = Utils.getCurrentMonth(calendarDate.get(Calendar.MONTH))
             val day = calendarDate.get(Calendar.DAY_OF_MONTH).toString()
@@ -101,27 +100,29 @@ class SalesRepository @Inject constructor(
                 .get()
                 .await()
 
-            yearDoc?.let { docRef ->
-                val yearObj = docRef.toObject<YearSale>()!!.copy(id = docRef.id)
+            try {
+                yearDoc?.let { docRef ->
+                    val yearObj = docRef.toObject<YearSale>()!!.copy(id = docRef.id)
 
-                val monthDocs = salesCollectionRef.document(year)
-                    .collection(MONTHS_SUB_COLLECTION)
-                    .get()
-                    .await()
+                    val monthDocs = salesCollectionRef.document(year)
+                        .collection(MONTHS_SUB_COLLECTION)
+                        .get()
+                        .await()
 
-                val listOfMonth = mutableListOf<MonthSale>()
-                monthDocs?.let { months ->
-                    for (doc in months.documents) {
-                        val monthObj = doc.toObject<MonthSale>()!!.copy(id = doc.id)
-                        listOfMonth.add(monthObj)
+                    val listOfMonth = mutableListOf<MonthSale>()
+                    monthDocs?.let { months ->
+                        for (doc in months.documents) {
+                            val monthObj = doc.toObject<MonthSale>()!!.copy(id = doc.id)
+                            listOfMonth.add(monthObj)
+                        }
                     }
+
+                    yearObj.listOfMonth = listOfMonth
+                    return@withContext yearObj
                 }
-
-                yearObj.listOfMonth = listOfMonth
-                return@withContext yearObj
+            } catch (ex: Exception) {
+                return@withContext null
             }
-
-            return@withContext null
         }
     }
 
