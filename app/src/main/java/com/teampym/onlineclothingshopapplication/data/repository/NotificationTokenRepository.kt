@@ -1,5 +1,6 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ktx.toObject
@@ -23,6 +24,8 @@ import kotlinx.coroutines.withContext
 import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
+
+private const val TAG = "NotificationRepository"
 
 @Singleton
 class NotificationTokenRepository @Inject constructor(
@@ -67,7 +70,9 @@ class NotificationTokenRepository @Inject constructor(
 
             // Subscribe to news or else navigate to admin view
             if (user.userType == UserType.CUSTOMER.name) {
-                Firebase.messaging.subscribeToTopic("news").await()
+                Firebase.messaging.subscribeToTopic("news").addOnCompleteListener {
+                    Log.d(TAG, "getNewAndSubscribeToTopics: SUBSCRIBED!")
+                }
             }
             createdToken
         }

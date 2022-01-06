@@ -13,7 +13,6 @@ import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.AccountRepository
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -60,8 +59,8 @@ class RegistrationViewModel @Inject constructor(
     private val _registrationEventChannel = Channel<RegistrationEvent>()
     val registrationEvent = _registrationEventChannel.receiveAsFlow()
 
-    private val _user = MutableLiveData<UserInformation>()
-    val user: LiveData<UserInformation> get() = _user
+    private val _user = MutableLiveData<UserInformation?>()
+    val user: LiveData<UserInformation?> get() = _user
 
     private fun resetAllUiState() {
         firstName = ""
@@ -74,27 +73,22 @@ class RegistrationViewModel @Inject constructor(
             birthDate.isNotBlank()
     }
 
-    suspend fun onSubmitClicked(
+    fun onSubmitClicked(
         isEditMode: Boolean,
         photoUrl: String
-    ) {
+    ) = viewModelScope.launch {
         if (isEditMode) {
             if (isFormValid()) {
-
-                // Update the userInformation and return if the operation succeed
-                // returns Boolean
-                val res = viewModelScope.async {
-                    accountRepository.update(
-                        userId,
-                        firstName,
-                        lastName,
-                        birthDate,
-                        photoUrl
-                    )
-                }
+                val isAccountUpdated = accountRepository.update(
+                    userId,
+                    firstName,
+                    lastName,
+                    birthDate,
+                    photoUrl
+                )
 
                 // This should execute
-                if (res.await()) {
+                if (isAccountUpdated) {
 
                     // Save to local database as well
                     userInformationDao.updateBasicInfo(
@@ -117,9 +111,8 @@ class RegistrationViewModel @Inject constructor(
                 } else {
                     // But it always goes here
                     _registrationEventChannel.send(
-                        RegistrationEvent.ShowErrorMessageAndNavigateBack(
-                            "Failed to update user. Please try again later.",
-                            EDIT_PROFILE_ERR
+                        RegistrationEvent.ShowErrorMessage(
+                            "Failed to update user. Please try again later."
                         )
                     )
                 }
@@ -132,19 +125,17 @@ class RegistrationViewModel @Inject constructor(
             }
         } else {
             if (isFormValid()) {
-                val res = viewModelScope.async {
-                    accountRepository.create(
-                        userId,
-                        firstName,
-                        lastName,
-                        birthDate,
-                        photoUrl
-                    )
-                }.await()
-                if (res != null) {
+                val accountCreated = accountRepository.create(
+                    userId,
+                    firstName,
+                    lastName,
+                    birthDate,
+                    photoUrl
+                )
+                if (accountCreated != null) {
 
                     // Save to local database
-                    userInformationDao.insert(res)
+                    userInformationDao.insert(accountCreated)
 
                     // We can finally reset the Ui State after saving it to local database
                     resetAllUiState()
@@ -157,9 +148,8 @@ class RegistrationViewModel @Inject constructor(
                     )
                 } else {
                     _registrationEventChannel.send(
-                        RegistrationEvent.ShowErrorMessageAndNavigateBack(
-                            "Created user failed. Please try again.",
-                            ADD_PROFILE_ERR
+                        RegistrationEvent.ShowErrorMessage(
+                            "Created user failed. Please try again."
                         )
                     )
                 }
@@ -173,15 +163,14 @@ class RegistrationViewModel @Inject constructor(
         }
     }
 
-    fun fetchNotificationTokensAndWishList(userId: String) = viewModelScope.launch {
+    fun fetchUser(userId: String) = viewModelScope.launch {
         val userWithWishList = userInformationDao.getUserWithWishList()
             .firstOrNull { it.user?.userId == userId }
 
         val finalUser = userWithWishList?.user
-        finalUser?.wishList = userWithWishList?.wishList ?: emptyList()
 
         if (finalUser != null) {
-            _user.value = finalUser!!
+            _user.value = finalUser
         }
     }
 
@@ -192,7 +181,7 @@ class RegistrationViewModel @Inject constructor(
         data class ShowUpdatingSuccessAndNavigateBack(val msg: String, val result: Int) :
             RegistrationEvent()
 
-        data class ShowErrorMessageAndNavigateBack(val msg: String, val result: Int) :
+        data class ShowErrorMessage(val msg: String) :
             RegistrationEvent()
 
         data class ShowFormErrorMessage(val msg: String) : RegistrationEvent()

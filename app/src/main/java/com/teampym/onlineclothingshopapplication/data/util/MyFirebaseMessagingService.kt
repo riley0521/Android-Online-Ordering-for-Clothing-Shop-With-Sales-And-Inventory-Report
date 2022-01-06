@@ -13,7 +13,6 @@ import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.room.Product
-import dagger.hilt.android.AndroidEntryPoint
 
 private const val TAG = "MyFCMService"
 const val CHANNEL_ID = "midnightmares_ch_here_we_go"
@@ -21,7 +20,6 @@ private const val ORDER_NOTIFICATION_ID = 777
 private const val PRODUCT_NOTIFICATION_ID = 778
 private const val POST_NOTIFICATION_ID = 779
 
-@AndroidEntryPoint
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
@@ -32,6 +30,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         remoteMessage.data.let { notificationData ->
             // Create notification handler here.
 
+            Log.d(TAG, "onMessageReceived: $notificationData")
+
             showOrderNotification(notificationData)
 
             showProductNotification(notificationData)
@@ -40,7 +40,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
-    private fun showPostNotification(notificationData: Map<String, String>) =
+    private fun showPostNotification(notificationData: Map<String, String>) {
         try {
             val news = Gson().fromJson(notificationData["obj"], Post::class.java)
 
@@ -66,6 +66,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         } catch (e: JsonSyntaxException) {
             Log.d(TAG, "onMessageReceived: ${e.message}")
         }
+    }
 
     private fun showProductNotification(notificationData: Map<String, String>) {
         try {

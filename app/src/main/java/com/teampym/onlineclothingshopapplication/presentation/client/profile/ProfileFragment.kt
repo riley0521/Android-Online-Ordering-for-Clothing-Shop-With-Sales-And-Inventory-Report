@@ -24,7 +24,11 @@ import com.teampym.onlineclothingshopapplication.databinding.FragmentProfileBind
 import com.teampym.onlineclothingshopapplication.presentation.registration.ADD_EDIT_PROFILE_REQUEST
 import com.teampym.onlineclothingshopapplication.presentation.registration.ADD_EDIT_PROFILE_RESULT
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 private const val RC_SIGN_IN = 699
 
@@ -49,52 +53,77 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         setupViews()
 
         lifecycleScope.launchWhenStarted {
-            viewModel.profileEvent.collectLatest { event ->
-                when (event) {
-                    is ProfileViewModel.ProfileEvent.VerificationSent -> {
-                        Snackbar.make(
-                            requireView(),
-                            "Verification sent to your email. Please check it.",
-                            Snackbar.LENGTH_LONG
-                        ).show()
-                    }
-                    ProfileViewModel.ProfileEvent.NotRegistered -> {
-                        val action =
-                            ProfileFragmentDirections.actionProfileFragmentToRegistrationFragment(
-                                false
-                            )
-                        findNavController().navigate(action)
-                    }
-                    ProfileViewModel.ProfileEvent.SignedOut -> {
-                        resetInformation()
-                    }
-                    is ProfileViewModel.ProfileEvent.ShowSuccessMessage -> {
-                        Snackbar.make(
-                            requireView(),
-                            event.msg,
-                            Snackbar.LENGTH_LONG
-                        ).show()
+            val userSession = viewModel.userSession.first()
+            if (userSession.userId.isNotBlank()) {
+                Log.d(TAG, userSession.userId)
+                loadingDialog.show()
 
-                        getFirebaseUser()?.let {
-                            // Re-fetch the userInformation from local db
-                            // Then update the View Automatically
-                            // There is an observer above
-                            viewModel.fetchUserFromLocalDb(it.uid)
+                viewModel.fetchUserFromLocalDb(userSession.userId)
+            }
+
+            launch {
+                viewModel.profileEvent.collectLatest { event ->
+                    when (event) {
+                        is ProfileViewModel.ProfileEvent.VerificationSent -> {
+                            loadingDialog.dismiss()
+
+                            Snackbar.make(
+                                requireView(),
+                                "Verification sent to your email. Please check it.",
+                                Snackbar.LENGTH_LONG
+                            ).show()
                         }
-                    }
-                    is ProfileViewModel.ProfileEvent.ShowErrorMessage -> {
-                        Snackbar.make(
-                            requireView(),
-                            event.msg,
-                            Snackbar.LENGTH_LONG
-                        ).show()
+                        ProfileViewModel.ProfileEvent.NotRegistered -> {
+                            loadingDialog.dismiss()
+
+                            setFragmentResultListener(ADD_EDIT_PROFILE_REQUEST) { _, bundle ->
+                                val result = bundle.getInt(ADD_EDIT_PROFILE_RESULT)
+                                viewModel.onAddEditProfileResult(result)
+                            }
+
+                            val action =
+                                ProfileFragmentDirections.actionProfileFragmentToRegistrationFragment(
+                                    false
+                                )
+                            findNavController().navigate(action)
+                        }
+                        ProfileViewModel.ProfileEvent.SignedOut -> {
+                            loadingDialog.dismiss()
+
+                            resetInformation()
+                        }
+                        is ProfileViewModel.ProfileEvent.ShowSuccessMessage -> {
+                            loadingDialog.dismiss()
+
+                            Snackbar.make(
+                                requireView(),
+                                event.msg,
+                                Snackbar.LENGTH_LONG
+                            ).show()
+
+                            getFirebaseUser()?.let {
+                                // Re-fetch the userInformation from local db
+                                // Then update the View Automatically because of observers
+                                loadingDialog.show()
+                                viewModel.fetchUserFromLocalDb(it.uid)
+                            }
+                        }
+                        is ProfileViewModel.ProfileEvent.ShowErrorMessage -> {
+                            loadingDialog.dismiss()
+
+                            Snackbar.make(
+                                requireView(),
+                                event.msg,
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                        }
                     }
                 }
             }
         }
     }
 
-    private fun setupViews() {
+    private fun setupViews() = CoroutineScope(Dispatchers.Main).launch {
         binding.apply {
 
             tvAddress.setOnClickListener {
@@ -105,12 +134,6 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 val action =
                     ProfileFragmentDirections.actionProfileFragmentToRegistrationFragment(editMode = true)
                 findNavController().navigate(action)
-            }
-
-            setFragmentResultListener(ADD_EDIT_PROFILE_REQUEST) { _, bundle ->
-                val result = bundle.getInt(ADD_EDIT_PROFILE_RESULT)
-                Log.d(TAG, "setupViews: $result")
-                viewModel.onAddEditProfileResult(result)
             }
 
             tvWishList.setOnClickListener {
@@ -153,20 +176,12 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             }
         }
 
-        viewModel.userSession.observe(viewLifecycleOwner) { sessionPref ->
-            if (sessionPref.userId.isNotBlank()) {
-                Log.d(TAG, sessionPref.userId)
-                loadingDialog.show()
-                viewModel.fetchUserFromLocalDb(sessionPref.userId)
-            }
-        }
-
         viewModel.user.observe(viewLifecycleOwner) { userInformation ->
-            userInformation?.let {
-                if (loadingDialog.isActive()) {
-                    loadingDialog.dismiss()
-                }
+            if (loadingDialog.isActive()) {
+                loadingDialog.dismiss()
+            }
 
+            if (userInformation != null) {
                 // Check if the user is already registered in the remote db
                 if (userInformation.firstName.isBlank()) {
                     viewModel.navigateUserToRegistrationModule()
@@ -200,6 +215,8 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     val fullName = "${userInformation.firstName} ${userInformation.lastName}"
                     tvUsername.text = fullName
                 }
+            } else {
+                viewModel.navigateUserToRegistrationModule()
             }
         }
     }

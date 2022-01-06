@@ -37,6 +37,8 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
     private var finalUser: UserInformation = UserInformation()
 
+    private var selectedDeliveryInformation: DeliveryInformation? = null
+
     private var paymentMethodEnum = PaymentMethod.COD
 
     private lateinit var loadingDialog: LoadingDialog
@@ -82,6 +84,18 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                 // Place Order
                 val currentUser = getFirebaseUser()
                 if (currentUser != null) {
+                    if (selectedDeliveryInformation == null) {
+                        loadingDialog.dismiss()
+
+                        Snackbar.make(
+                            requireView(),
+                            "Please create a delivery information.",
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+
+                        return@setOnClickListener
+                    }
+
                     if (currentUser.isEmailVerified) {
                         Log.d(TAG, "placing order: ${args.cart.cart.size.toLong()}")
                         Log.d(TAG, "placing order: ${args.cart.cart[0].subTotal}")
@@ -140,9 +154,11 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
                     finalUser = userWithDeliveryInfo.user
 
-                    finalUser.defaultDeliveryAddress =
-                        userWithDeliveryInfo.deliveryInformation.firstOrNull { it.isPrimary }
-                            ?: DeliveryInformation()
+                    finalUser.defaultDeliveryAddress = userWithDeliveryInfo.deliveryInformation
+                        .firstOrNull { it.isPrimary } ?: DeliveryInformation()
+
+                    selectedDeliveryInformation = userWithDeliveryInfo.deliveryInformation
+                        .firstOrNull { it.isPrimary } ?: DeliveryInformation()
 
                     binding.apply {
 

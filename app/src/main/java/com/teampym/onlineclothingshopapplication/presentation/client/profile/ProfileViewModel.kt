@@ -3,7 +3,6 @@ package com.teampym.onlineclothingshopapplication.presentation.client.profile
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -46,7 +45,7 @@ class ProfileViewModel @Inject constructor(
     private val _profileChannel = Channel<ProfileEvent>()
     val profileEvent = _profileChannel.receiveAsFlow()
 
-    val userSession = preferencesManager.preferencesFlow.asLiveData()
+    val userSession = preferencesManager.preferencesFlow
 
     private val _user = MutableLiveData<UserInformation>()
     val user: LiveData<UserInformation> get() = _user
@@ -94,8 +93,9 @@ class ProfileViewModel @Inject constructor(
         val fetchedUser = accountRepository.get(user.uid)
         if (fetchedUser != null) {
             val fetchedWishList = async { wishListRepository.getAll(fetchedUser.userId) }
-            val fetchedDeliveryInfoList =
-                async { deliveryInformationRepository.getAll(fetchedUser.userId) }
+            val fetchedDeliveryInfoList = async {
+                deliveryInformationRepository.getAll(fetchedUser.userId)
+            }
 
             // Get Notification Based on the device
             onNotificationTokenInserted(fetchedUser)
@@ -110,6 +110,10 @@ class ProfileViewModel @Inject constructor(
             userInformationDao.insert(fetchedUser)
             wishListDao.insertAll(fetchedWishList.await())
             deliveryInformationDao.insertAll(fetchedDeliveryInfoList.await())
+
+            fetchUserFromLocalDb(user.uid)
+        } else {
+            _profileChannel.send(ProfileEvent.NotRegistered)
         }
     }
 
@@ -118,7 +122,7 @@ class ProfileViewModel @Inject constructor(
         val userWithWishList = userInformationDao.getUserWithWishList()
             .firstOrNull { it.user?.userId == userId }
         mainUser?.wishList = userWithWishList?.wishList ?: emptyList()
-        _user.value = mainUser!!
+        _user.postValue(mainUser!!)
     }
 
     fun navigateUserToRegistrationModule() = viewModelScope.launch {

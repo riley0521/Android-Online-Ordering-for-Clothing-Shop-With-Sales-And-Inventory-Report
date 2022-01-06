@@ -15,7 +15,6 @@ import com.teampym.onlineclothingshopapplication.data.repository.LikeRepository
 import com.teampym.onlineclothingshopapplication.data.repository.PostRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.util.POSTS_COLLECTION
-import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -133,19 +132,34 @@ class NewsViewModel @Inject constructor(
     ): PagingData<Post> {
         return when (event) {
             is NewsFragment.NewsPagerEvent.Update -> {
-                paging.map {
-                    if (event.post.id == it.id) {
-                        val newCount = onLikePostClicked(event.post, event.isLikeByUser)
+                paging.map { post ->
+                    if (event.post.id == post.id) {
+                        viewModelScope.launch {
+                            onLikePostClicked(event.post, event.isLikeByUser)
+                        }.invokeOnCompletion {
+                            if (event.isLikeByUser) {
+                                post.isLikedByCurrentUser = true
+                                post.numberOfLikes += 1
+                            } else {
+                                post.isLikedByCurrentUser = false
+                                post.numberOfLikes -= 1
+                            }
+                        }
 
-                        it.isLikedByCurrentUser = event.isLikeByUser
-                        return@map it.copy(numberOfLikes = newCount)
-                    } else return@map it
+                        return@map post
+                    } else return@map post
                 }
             }
             is NewsFragment.NewsPagerEvent.Remove -> {
-                onDeletePostClicked(event.post)
+                val res = viewModelScope.launch {
+                    onDeletePostClicked(event.post)
+                }
 
-                paging.filter { event.post.id != it.id }
+                if (res.isCompleted) {
+                    paging.filter { event.post.id != it.id }
+                } else {
+                    paging.filter { event.post.id != it.id }
+                }
             }
         }
     }

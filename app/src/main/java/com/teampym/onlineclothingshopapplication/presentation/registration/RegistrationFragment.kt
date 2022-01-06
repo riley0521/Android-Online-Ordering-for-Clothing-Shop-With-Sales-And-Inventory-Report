@@ -23,10 +23,7 @@ import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentRegistrationBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_registration.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.* // ktlint-disable no-wildcard-imports
 
@@ -53,10 +50,15 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
         loadingDialog = LoadingDialog(requireActivity())
 
         FirebaseAuth.getInstance().currentUser?.let {
+            Log.d(TAG, "auth: ${it.uid}")
+
             viewModel.userId = it.uid
-            Log.d(TAG, "auth: ${viewModel.userId}")
-            viewModel.fetchNotificationTokensAndWishList(it.uid)
-            loadingDialog.show()
+
+            if (args.editMode) {
+                loadingDialog.show()
+            }
+
+            viewModel.fetchUser(it.uid)
         }
 
         // Reuse this fragment when the user is editing his firstName, lastName, and birthDate
@@ -67,7 +69,8 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
 
             if (it != null && editMode) {
 
-                (requireActivity() as AppCompatActivity).supportActionBar?.title = getString(R.string.label_update_information)
+                (requireActivity() as AppCompatActivity).supportActionBar?.title =
+                    getString(R.string.label_update_information)
 
                 tvInstruction.isVisible = false
                 btnRegister.text = getString(R.string.label_update_information)
@@ -169,6 +172,8 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
             viewModel.registrationEvent.collectLatest { event ->
                 when (event) {
                     is RegistrationViewModel.RegistrationEvent.ShowAddingSuccessAndNavigateBack -> {
+                        loadingDialog.dismiss()
+
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
                         setFragmentResult(
                             ADD_EDIT_PROFILE_REQUEST,
@@ -177,6 +182,8 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                         findNavController().popBackStack()
                     }
                     is RegistrationViewModel.RegistrationEvent.ShowUpdatingSuccessAndNavigateBack -> {
+                        loadingDialog.dismiss()
+
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
                         setFragmentResult(
                             ADD_EDIT_PROFILE_REQUEST,
@@ -185,22 +192,20 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                         findNavController().popBackStack()
                     }
                     is RegistrationViewModel.RegistrationEvent.ShowFormErrorMessage -> {
+                        loadingDialog.dismiss()
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
                     }
-                    is RegistrationViewModel.RegistrationEvent.ShowErrorMessageAndNavigateBack -> {
+                    is RegistrationViewModel.RegistrationEvent.ShowErrorMessage -> {
+                        loadingDialog.dismiss()
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
-                        setFragmentResult(
-                            ADD_EDIT_PROFILE_REQUEST,
-                            bundleOf(ADD_EDIT_PROFILE_RESULT to event.result)
-                        )
-                        findNavController().popBackStack()
                     }
                 }
             }
         }
     }
 
-    private fun submitForm() = CoroutineScope(Dispatchers.IO).launch {
+    private fun submitForm() {
+        loadingDialog.show()
         viewModel.onSubmitClicked(
             args.editMode,
             FirebaseAuth.getInstance().currentUser?.let { it.photoUrl.toString() } ?: ""
