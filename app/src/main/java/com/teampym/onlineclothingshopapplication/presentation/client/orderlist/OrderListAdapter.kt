@@ -1,5 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.orderlist
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.Menu
@@ -69,7 +70,7 @@ class OrderListAdapter(
                     if (position != RecyclerView.NO_POSITION) {
                         val item = getItem(position)
 
-                        when (btnAction.text) {
+                        when (btnAction.text.toString()) {
                             CANCEL_BUTTON -> {
                                 if (item != null) {
                                     listener.onCancelClicked(item, userType)
@@ -113,6 +114,7 @@ class OrderListAdapter(
             }
         }
 
+        @SuppressLint("SimpleDateFormat", "SetTextI18n")
         fun bind(item: Order) {
             binding.apply {
                 val calendarDate = Calendar.getInstance()

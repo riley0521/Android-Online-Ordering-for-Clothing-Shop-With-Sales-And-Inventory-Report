@@ -14,7 +14,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import androidx.paging.PagingData
 import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Order
@@ -49,8 +48,6 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
     private lateinit var searchView: SearchView
 
     private lateinit var adapter: OrderListAdapter
-
-    private var currentPagingData: PagingData<Order>? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -90,7 +87,6 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
                         // Set the RefreshLayout to true
                         // And refresh the adapter to fetch fresh data.
                         binding.refreshLayout.isRefreshing = true
-                        adapter.refresh()
                     }
                 }
             }
@@ -101,7 +97,6 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
 
     private fun collectOrderPagingData() {
         viewModel.orders.observe(viewLifecycleOwner) {
-            currentPagingData = it
             adapter.submitData(viewLifecycleOwner.lifecycle, it)
 
             binding.refreshLayout.isRefreshing = false
@@ -209,14 +204,10 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
     override fun onAgreeToSfClicked(item: Order) {
         setFragmentResultListener(AGREE_TO_SF_REQUEST) { _, bundle ->
             val result = bundle.getString(AGREE_TO_SF_RESULT)
-            if (currentPagingData != null) {
-                viewModel.onAgreeToSfResult(
-                    result ?: "",
-                    item,
-                    currentPagingData!!,
-                    OrderRemoveEvent.Remove(item)
-                )
-            }
+            viewModel.onAgreeToSfResult(
+                result ?: "",
+                item
+            )
         }
 
         val action =
@@ -229,14 +220,11 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
     private fun showSuggestShipFeeModalForAdmin(item: Order) {
         setFragmentResultListener(SHIPPING_FEE_REQUEST) { _, bundle ->
             val result = bundle.getString(SHIPPING_FEE_RESULT)
-            if (currentPagingData != null) {
-                viewModel.onSuggestedShippingFeeResult(
-                    result ?: "",
-                    item,
-                    currentPagingData!!,
-                    OrderRemoveEvent.Remove(item)
-                )
-            }
+
+            viewModel.onSuggestedShippingFeeResult(
+                result ?: "",
+                item
+            )
         }
 
         val action =
@@ -247,14 +235,11 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
     private fun showCancelModalForAdmin(item: Order) {
         setFragmentResultListener(CANCEL_REASON_REQUEST) { _, bundle ->
             val result = bundle.getString(CANCEL_REASON_RESULT)
-            if (currentPagingData != null) {
-                viewModel.onAdminCancelResult(
-                    result ?: "",
-                    item,
-                    currentPagingData!!,
-                    OrderRemoveEvent.Remove(item)
-                )
-            }
+
+            viewModel.onAdminCancelResult(
+                result ?: "",
+                item
+            )
         }
 
         val action =
@@ -267,19 +252,11 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
             .setTitle("CANCEL ORDER")
             .setMessage("Are you sure you want to cancel order?")
             .setPositiveButton("Yes") { _, _ ->
-                if (currentPagingData != null) {
-                    viewModel.cancelOrder(
-                        item,
-                        currentPagingData!!,
-                        OrderRemoveEvent.Remove(item)
-                    )
-                }
+                viewModel.cancelOrder(
+                    item
+                )
             }.setNegativeButton("No") { dialog, _ ->
                 dialog.dismiss()
             }
-    }
-
-    sealed class OrderRemoveEvent {
-        data class Remove(val order: Order) : OrderRemoveEvent()
     }
 }

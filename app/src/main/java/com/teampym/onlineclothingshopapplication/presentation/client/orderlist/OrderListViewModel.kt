@@ -7,7 +7,6 @@ import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import androidx.paging.filter
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.teampym.onlineclothingshopapplication.data.models.Order
@@ -99,31 +98,17 @@ class OrderListViewModel @Inject constructor(
     }
 
     fun cancelOrder(
-        order: Order,
-        currentPagingData: PagingData<Order>,
-        event: OrderListFragment.OrderRemoveEvent
+        order: Order
     ) = viewModelScope.launch {
-
         val res = orderRepository.cancelOrder(
             order.deliveryInformation.name,
-            order.id,
-            false
+            order.id
         )
 
         if (res) {
-
-            when (event) {
-                is OrderListFragment.OrderRemoveEvent.Remove -> {
-                    currentPagingData.filter {
-                        order.id != it.id
-                    }
-                }
-            }
-
             _orderListChannel.send(
                 OrderListEvent.ShowMessage(
-                    "Cancelled Order Successfully!",
-                    currentPagingData
+                    "Cancelled Order Successfully!"
                 )
             )
         }
@@ -131,60 +116,27 @@ class OrderListViewModel @Inject constructor(
 
     fun onAdminCancelResult(
         result: String,
-        order: Order,
-        currentPagingData: PagingData<Order>,
-        event: OrderListFragment.OrderRemoveEvent
+        order: Order
     ) = viewModelScope.launch {
-
-        when (event) {
-            is OrderListFragment.OrderRemoveEvent.Remove -> {
-                currentPagingData.filter {
-                    order.id != it.id
-                }
-            }
-        }
-
-        _orderListChannel.send(OrderListEvent.ShowMessage(result, currentPagingData))
+        _orderListChannel.send(OrderListEvent.ShowMessage("$result - ${order.id}"))
     }
 
     fun onSuggestedShippingFeeResult(
         result: String,
-        order: Order,
-        currentPagingData: PagingData<Order>,
-        event: OrderListFragment.OrderRemoveEvent
+        order: Order
     ) = viewModelScope.launch {
-
-        when (event) {
-            is OrderListFragment.OrderRemoveEvent.Remove -> {
-                currentPagingData.filter {
-                    order.id != it.id
-                }
-            }
-        }
-
-        _orderListChannel.send(OrderListEvent.ShowMessage(result, currentPagingData))
+        _orderListChannel.send(OrderListEvent.ShowMessage("$result - ${order.id}"))
     }
 
     fun onAgreeToSfResult(
         result: String,
-        order: Order,
-        currentPagingData: PagingData<Order>,
-        event: OrderListFragment.OrderRemoveEvent
+        order: Order
     ) = viewModelScope.launch {
-
-        when (event) {
-            is OrderListFragment.OrderRemoveEvent.Remove -> {
-                currentPagingData.filter {
-                    order.id != it.id
-                }
-            }
-        }
-
-        _orderListChannel.send(OrderListEvent.ShowMessage(result, currentPagingData))
+        _orderListChannel.send(OrderListEvent.ShowMessage("$result - ${order.id}"))
     }
 
     sealed class OrderListEvent {
-        data class ShowMessage(val msg: String, val currentPagingData: PagingData<Order>) :
+        data class ShowMessage(val msg: String) :
             OrderListEvent()
     }
 }

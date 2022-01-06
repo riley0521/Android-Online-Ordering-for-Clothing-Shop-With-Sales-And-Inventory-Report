@@ -21,7 +21,7 @@ import com.teampym.onlineclothingshopapplication.presentation.client.orderlist.O
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.util.*
+import java.util.* // ktlint-disable no-wildcard-imports
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -116,18 +116,17 @@ class OrderRepository @Inject constructor(
     // Notify all admins about cancellation of order.
     suspend fun cancelOrder(
         username: String,
-        orderId: String,
-        isCommitted: Boolean
+        orderId: String
     ): Boolean {
         return withContext(dispatcher) {
 
             // Change Status to Canceled
-            changeStatusToCancelled("", false, orderId, Status.CANCELED.name, isCommitted)
+            changeStatusToCancelled("", false, orderId, Status.CANCELED.name)
 
             val isSuccessful = notificationTokenRepository.notifyAllAdmins(
                 null,
                 "Order (${orderId.take(orderId.length / 2)}...) is cancelled by $username",
-                "I'm sorry but I changed my mind about ordering."
+                "The user cancelled an order."
             )
 
             isSuccessful
@@ -227,7 +226,7 @@ class OrderRepository @Inject constructor(
                     true
                 }
                 Status.CANCELED.name -> {
-                    changeStatusToCancelled(username, true, orderId, status, false)
+                    changeStatusToCancelled(username, true, orderId, status)
                     notificationTokenRepository.notifyCustomer(
                         obj = null,
                         userId = userId,
@@ -244,51 +243,35 @@ class OrderRepository @Inject constructor(
         username: String,
         isAdmin: Boolean,
         orderId: String,
-        status: String,
-        isCommitted: Boolean,
+        status: String
     ): Boolean {
-        val orderDetailList = mutableListOf<OrderDetail>()
-        val updateOrderStatus = mapOf<String, Any>(
-            "status" to status
-        )
+        return withContext(dispatcher) {
+            mutableListOf<OrderDetail>()
+            val updateOrderStatus = mapOf<String, Any>(
+                "status" to status
+            )
 
-        try {
-            orderCollectionRef
-                .document(orderId)
-                .set(updateOrderStatus, SetOptions.merge())
-                .await()
-
-            if (isAdmin) {
-                auditTrailRepository.insert(
-                    AuditTrail(
-                        username = username,
-                        description = "$username UPDATED order - $orderId to $status",
-                        type = AuditType.ORDER.name
-                    )
-                )
-            }
-
-            if (isCommitted) {
-                val anotherRes = orderCollectionRef
+            try {
+                orderCollectionRef
                     .document(orderId)
-                    .collection(ORDER_DETAILS_SUB_COLLECTION)
-                    .get()
+                    .set(updateOrderStatus, SetOptions.merge())
                     .await()
 
-                if (anotherRes.documents.isNotEmpty()) {
-                    for (doc in anotherRes.documents) {
-                        val item =
-                            doc.toObject<OrderDetail>()!!.copy(id = doc.id, orderId = orderId)
-                        orderDetailList.add(item)
-                    }
-
-                    return productRepository.deductCommittedToStockCount(orderDetailList)
+                if (isAdmin) {
+                    auditTrailRepository.insert(
+                        AuditTrail(
+                            username = username,
+                            description = "$username UPDATED order - $orderId to $status",
+                            type = AuditType.ORDER.name
+                        )
+                    )
                 }
+
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
             }
-        } catch (ex: Exception) {
-            return false
         }
-        return false
     }
 
     private suspend fun changeStatusToReturned(

@@ -33,8 +33,7 @@ class AgreeToShippingFeeViewModel @Inject constructor(
     fun cancelOrder(order: Order) = viewModelScope.launch {
         _isCanceled.value = orderRepository.cancelOrder(
             order.deliveryInformation.name,
-            order.id,
-            true
+            order.id
         )
     }
 }
