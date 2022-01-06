@@ -3,6 +3,7 @@ package com.teampym.onlineclothingshopapplication.presentation.admin.add_invento
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.repository.ProductInventoryRepository
 import com.teampym.onlineclothingshopapplication.data.room.Inventory
@@ -88,8 +89,10 @@ class AddInventoryViewModel @Inject constructor(
             inventoryRestockLevel < inventoryStock
     }
 
+    val session = preferencesManager.preferencesFlow
+
     fun onSubmitClicked(isAddingAnother: Boolean) = viewModelScope.launch {
-        val userSession = preferencesManager.preferencesFlow.first()
+        val userSession = session.first()
         val userInformation = userInformationDao.getCurrentUser(userSession.userId)
 
         if (isFormValid()) {

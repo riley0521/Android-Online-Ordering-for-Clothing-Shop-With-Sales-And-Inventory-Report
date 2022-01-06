@@ -5,21 +5,31 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.widget.Toast
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
+import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentAddReviewBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+
+const val ADD_REVIEW_REQUEST = "add_review_request"
+const val ADD_REVIEW_RESULT = "add_review_result"
 
 @AndroidEntryPoint
 class AddReviewFragment : Fragment(R.layout.fragment_add_review) {
 
     private lateinit var binding: FragmentAddReviewBinding
+
+    private lateinit var loadingDialog: LoadingDialog
 
     private val viewModel by viewModels<AddReviewViewModel>()
 
@@ -29,6 +39,7 @@ class AddReviewFragment : Fragment(R.layout.fragment_add_review) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentAddReviewBinding.bind(view)
+        loadingDialog = LoadingDialog(requireActivity())
 
         val orderDetail = args.orderDetail
 
@@ -71,16 +82,41 @@ class AddReviewFragment : Fragment(R.layout.fragment_add_review) {
                     viewModel.onSubmitClicked(orderDetail, args.userInfo)
                     Toast.makeText(
                         requireContext(),
-                        "Thanks for adding review to the product.",
+                        "Submitting review...",
                         Toast.LENGTH_SHORT
                     ).show()
-                    findNavController().popBackStack()
+                    loadingDialog.show()
                 } else {
                     Snackbar.make(
                         requireView(),
                         "Please add at least 1 star rating",
                         Snackbar.LENGTH_SHORT
                     ).show()
+                }
+            }
+        }
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.addReviewEvent.collectLatest { event ->
+                when (event) {
+                    is AddReviewViewModel.AddReviewEvent.NavigateBackWithResult -> {
+                        loadingDialog.dismiss()
+
+                        setFragmentResult(
+                            ADD_REVIEW_REQUEST,
+                            bundleOf(ADD_REVIEW_RESULT to event.isSuccess)
+                        )
+                        findNavController().popBackStack()
+                    }
+                    is AddReviewViewModel.AddReviewEvent.ShowErrorMessage -> {
+                        loadingDialog.dismiss()
+
+                        Snackbar.make(
+                            requireView(),
+                            event.msg,
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
         }

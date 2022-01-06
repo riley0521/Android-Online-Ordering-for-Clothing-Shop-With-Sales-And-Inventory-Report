@@ -17,9 +17,9 @@ import dagger.hilt.android.AndroidEntryPoint
 
 private const val TAG = "MyFCMService"
 const val CHANNEL_ID = "midnightmares_ch_here_we_go"
-const val ORDER_NOTIFICATION_ID = 777
-const val PRODUCT_NOTIFICATION_ID = 778
-const val POST_NOTIFICATION_ID = 779
+private const val ORDER_NOTIFICATION_ID = 777
+private const val PRODUCT_NOTIFICATION_ID = 778
+private const val POST_NOTIFICATION_ID = 779
 
 @AndroidEntryPoint
 class MyFirebaseMessagingService : FirebaseMessagingService() {
@@ -77,7 +77,8 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                 .setArguments(
                     bundleOf(
                         "product" to product,
-                        "name" to product.name
+                        "name" to product.name,
+                        "productId" to product.productId
                     )
                 )
                 .createPendingIntent()

@@ -162,7 +162,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         }
 
         viewModel.user.observe(viewLifecycleOwner) { userInformation ->
-            userInformation?.let { user ->
+            userInformation?.let {
                 if (loadingDialog.isActive()) {
                     loadingDialog.dismiss()
                 }
@@ -191,13 +191,13 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
                     // Instantiate view
                     Glide.with(requireView())
-                        .load(user.avatarUrl)
+                        .load(userInformation.avatarUrl)
                         .circleCrop()
                         .transition(DrawableTransitionOptions.withCrossFade())
                         .error(R.drawable.ic_user)
                         .into(imgAvatar)
 
-                    val fullName = "${user.firstName} ${user.lastName}"
+                    val fullName = "${userInformation.firstName} ${userInformation.lastName}"
                     tvUsername.text = fullName
                 }
             }

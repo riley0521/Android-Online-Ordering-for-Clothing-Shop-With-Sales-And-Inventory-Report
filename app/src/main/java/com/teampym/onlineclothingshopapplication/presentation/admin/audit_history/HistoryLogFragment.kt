@@ -40,17 +40,21 @@ class HistoryLogFragment : Fragment(R.layout.fragment_history_log) {
                 false
             )
             rvHistoryLogs.adapter = adapter
+
+            refreshLayout.setOnRefreshListener {
+                adapter.refresh()
+            }
         }
 
-        lifecycleScope.launchWhenStarted {
-            viewModel.historyLogs.collectLatest {
-                (requireActivity() as AppCompatActivity).supportActionBar?.title = getString(
-                    R.string.placeholder_history_log_title,
-                    viewModel.filterType
-                )
+        viewModel.historyLogs.observe(viewLifecycleOwner) {
+            binding.refreshLayout.isRefreshing = false
 
-                adapter.submitData(it)
-            }
+            (requireActivity() as AppCompatActivity).supportActionBar?.title = getString(
+                R.string.placeholder_history_log_title,
+                viewModel.filterType
+            )
+
+            adapter.submitData(viewLifecycleOwner.lifecycle, it)
         }
 
         setHasOptionsMenu(true)

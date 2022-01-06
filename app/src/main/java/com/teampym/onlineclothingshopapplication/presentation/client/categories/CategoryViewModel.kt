@@ -35,8 +35,10 @@ class CategoryViewModel @Inject constructor(
         _categories.value = categoryRepository.getAll()
     }
 
+    val session = preferencesManager.preferencesFlow
+
     fun getUserSession(): LiveData<SessionPreferences> {
-        return preferencesManager.preferencesFlow.asLiveData()
+        return session.asLiveData()
     }
 
     fun updateCategoryId(categoryId: String) = viewModelScope.launch {

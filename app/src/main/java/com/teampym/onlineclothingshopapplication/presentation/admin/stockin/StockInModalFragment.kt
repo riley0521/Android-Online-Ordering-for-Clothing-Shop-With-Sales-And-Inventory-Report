@@ -5,20 +5,31 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.os.bundleOf
+import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.chip.Chip
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.room.Inventory
+import com.teampym.onlineclothingshopapplication.data.room.Product
+import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentStockInModalBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+
+const val STOCK_IN_REQUEST = "stock_in_request"
+const val STOCK_IN_RESULT = "stock_in_result"
 
 @AndroidEntryPoint
 class StockInModalFragment : BottomSheetDialogFragment() {
 
     private lateinit var binding: FragmentStockInModalBinding
+
+    private lateinit var loadingDialog: LoadingDialog
 
     private val viewModel by viewModels<StockInViewModel>()
 
@@ -39,10 +50,41 @@ class StockInModalFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentStockInModalBinding.bind(view)
+        loadingDialog = LoadingDialog(requireActivity())
 
-        val product = args.product
-        viewModel.productName = product.name
+        viewModel.fetchAllSizes(args.product)
 
+        viewModel.product.observe(viewLifecycleOwner) {
+            it?.let { product ->
+                setupViews(product)
+            }
+        }
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.stockInEvent.collectLatest { event ->
+                when (event) {
+                    is StockInViewModel.StockInEvent.NavigateBackWithResult -> {
+                        loadingDialog.dismiss()
+                        setFragmentResult(
+                            STOCK_IN_REQUEST,
+                            bundleOf(STOCK_IN_RESULT to event.isSuccess)
+                        )
+                        findNavController().popBackStack()
+                    }
+                    is StockInViewModel.StockInEvent.ShowErrorMessage -> {
+                        loadingDialog.dismiss()
+                        Toast.makeText(
+                            requireContext(),
+                            event.msg,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun setupViews(product: Product) {
         binding.apply {
             if (product.inventoryList.isNotEmpty()) {
                 for (inventory in product.inventoryList) {
@@ -50,7 +92,6 @@ class StockInModalFragment : BottomSheetDialogFragment() {
                     chip.id = View.generateViewId()
                     chip.text = inventory.size
                     chip.isCheckable = true
-                    chip.isEnabled = inventory.stock > 0
                     chip.setOnClickListener {
                         binding.tvAvailableStocks.text = getString(
                             R.string.label_add_stock_available,
@@ -66,7 +107,7 @@ class StockInModalFragment : BottomSheetDialogFragment() {
             btnSubmit.setOnClickListener {
                 if (selectedInv != null) {
                     etAddStock.text.toString().let { stockToAdd ->
-                        if(stockToAdd.isNotBlank()) {
+                        if (stockToAdd.isNotBlank()) {
                             viewModel.onSubmitClicked(
                                 product.productId,
                                 selectedInv!!.inventoryId,
@@ -77,7 +118,7 @@ class StockInModalFragment : BottomSheetDialogFragment() {
                                 "Adding stock...",
                                 Toast.LENGTH_SHORT
                             ).show()
-                            findNavController().popBackStack()
+                            loadingDialog.show()
                         } else {
                             Toast.makeText(
                                 requireContext(),
@@ -86,7 +127,6 @@ class StockInModalFragment : BottomSheetDialogFragment() {
                             ).show()
                         }
                     }
-
                 } else {
                     Toast.makeText(
                         requireContext(),

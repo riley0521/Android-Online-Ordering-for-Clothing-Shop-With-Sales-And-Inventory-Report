@@ -67,7 +67,8 @@
             app:destination="@id/inventoryModalFragment" />
         <argument
             android:name="title"
-            app:argType="string" />
+            app:argType="string"
+            android:defaultValue="Products" />
         <argument
             android:name="categoryId"
             app:argType="string" />
@@ -352,6 +353,11 @@
         <argument
             android:name="productName"
             app:argType="string" />
+        <action
+            android:id="@+id/action_addInventoryFragment_to_productFragment"
+            app:destination="@id/productFragment"
+            app:popUpTo="@+id/addInventoryFragment"
+            app:popUpToInclusive="true"/>
     </fragment>
     <dialog
         android:id="@+id/stockInModalFragment"

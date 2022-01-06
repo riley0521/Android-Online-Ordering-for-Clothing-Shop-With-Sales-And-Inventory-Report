@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -25,6 +26,8 @@ import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.data.util.Utils
 import com.teampym.onlineclothingshopapplication.data.util.shareDeepLink
 import com.teampym.onlineclothingshopapplication.databinding.FragmentProductDetailBinding
+import com.teampym.onlineclothingshopapplication.presentation.admin.stockin.STOCK_IN_REQUEST
+import com.teampym.onlineclothingshopapplication.presentation.admin.stockin.STOCK_IN_RESULT
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -157,9 +160,10 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                 // Navigate the user to show all reviews of this product
                 // To let them know if the product is worth buying.
                 tvShowMoreReviews.setOnClickListener {
-                    val action = ProductDetailFragmentDirections.actionProductDetailFragmentToReviewsFragment(
-                        productId = product.productId
-                    )
+                    val action =
+                        ProductDetailFragmentDirections.actionProductDetailFragmentToReviewsFragment(
+                            productId = product.productId
+                        )
                     findNavController().navigate(action)
                 }
             } else {
@@ -277,6 +281,19 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                 true
             }
             R.id.action_stock_in -> {
+                setFragmentResultListener(STOCK_IN_REQUEST) { _, bundle ->
+                    val result = bundle.getBoolean(STOCK_IN_RESULT)
+                    if (result) {
+                        Snackbar.make(
+                            requireView(),
+                            "Stock added successfully.",
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+
+                        viewModel.getProductById(args.productId!!)
+                    }
+                }
+
                 val action = ProductDetailFragmentDirections
                     .actionProductDetailFragmentToStockInModalFragment(
                         viewModel.product.value!!

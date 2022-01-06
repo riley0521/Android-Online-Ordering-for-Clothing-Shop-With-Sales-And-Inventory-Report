@@ -1,11 +1,15 @@
 package com.teampym.onlineclothingshopapplication.presentation.admin.audit_history
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.teampym.onlineclothingshopapplication.data.models.AuditTrail
 import com.teampym.onlineclothingshopapplication.data.repository.AuditTrailRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.util.AUDIT_TRAILS_COLLECTION
@@ -33,7 +37,7 @@ class HistoryLogViewModel @Inject constructor(
             state.set(FILTER_TYPE, value)
         }
 
-    val historyLogs = preferencesManager.preferencesFlow.flatMapLatest { session ->
+    private val _historyLogs = preferencesManager.preferencesFlow.flatMapLatest { session ->
         val query = db.collection(AUDIT_TRAILS_COLLECTION)
             .whereEqualTo("type", session.filterLogType)
             .orderBy("dateOfLog", Query.Direction.DESCENDING)
@@ -43,6 +47,8 @@ class HistoryLogViewModel @Inject constructor(
 
         repository.getSome(query).flow.cachedIn(viewModelScope)
     }
+
+    val historyLogs: LiveData<PagingData<AuditTrail>> get() = _historyLogs.asLiveData()
 
     fun updateFilterLogType(auditType: AuditType) = viewModelScope.launch {
         preferencesManager.updateFilterLogType(auditType)

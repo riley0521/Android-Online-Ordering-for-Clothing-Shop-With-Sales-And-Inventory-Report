@@ -90,7 +90,7 @@ class ProductFragment :
         adapter.submitData(viewLifecycleOwner.lifecycle, pagingData)
     }
 
-    private fun instantiateProductAdapterForCustomer(userId: String?) {
+    private fun instantiateProductAdapterForCustomer() {
         Log.d(TAG, "instantiateProductAdapterForCustomer: here")
 
         adapter = ProductAdapter(this, requireContext())
@@ -128,7 +128,7 @@ class ProductFragment :
         val action = ProductFragmentDirections.actionProductFragmentToProductDetailFragment(
             product,
             product.name,
-            null
+            product.productId
         )
         findNavController().navigate(action)
     }
@@ -188,7 +188,7 @@ class ProductFragment :
                 showAvailableMenus(userSession.userType, menu)
 
                 // Product Adapter For Customer
-                instantiateProductAdapterForCustomer(userSession.userId)
+                instantiateProductAdapterForCustomer()
             }
             UserType.ADMIN.name -> {
                 showAvailableMenus(userSession.userType, menu)
@@ -200,7 +200,7 @@ class ProductFragment :
                 showAvailableMenus(userSession.userType, menu)
 
                 // Product Adapter For Customer
-                instantiateProductAdapterForCustomer(userSession.userId)
+                instantiateProductAdapterForCustomer()
             }
         }
 
@@ -231,7 +231,12 @@ class ProductFragment :
         binding.apply {
             refreshLayout.setOnRefreshListener {
                 Log.d(TAG, "setOnRefreshListener: here")
-                adapter.refresh()
+                if (this@ProductFragment::adapter.isInitialized) {
+                    adapter.refresh()
+                }
+                if (this@ProductFragment::adminAdapter.isInitialized) {
+                    adminAdapter.refresh()
+                }
             }
         }
     }

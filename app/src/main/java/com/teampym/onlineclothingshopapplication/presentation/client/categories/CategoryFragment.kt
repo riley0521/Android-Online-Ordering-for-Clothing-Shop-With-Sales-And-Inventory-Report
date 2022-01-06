@@ -18,7 +18,11 @@ import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCategoryBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 private const val TAG = "CategoryFragment"
 
@@ -39,25 +43,9 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
         binding = FragmentCategoryBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
 
-        fetchCategories()
-
-        binding.apply {
-            refreshLayout.setOnRefreshListener {
-                viewModel.onLoadCategories()
-            }
-        }
-
-        viewModel.categories.observe(viewLifecycleOwner) {
-            loadingDialog.dismiss()
-            binding.refreshLayout.isRefreshing = false
-
-            adapter.submitList(it)
-
-            binding.recyclerCategories.setHasFixedSize(true)
-            binding.recyclerCategories.adapter = adapter
-        }
-
         lifecycleScope.launchWhenStarted {
+            setupViews(viewModel.session.first().userType)
+
             viewModel.categoryEvent.collectLatest { event ->
                 when (event) {
                     is CategoryViewModel.CategoryEvent.ShowErrorMessage -> {
@@ -82,6 +70,28 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
         }
 
         setHasOptionsMenu(true)
+    }
+
+    private fun setupViews(userType: String) = CoroutineScope(Dispatchers.Main).launch {
+        adapter = CategoryAdapter(this@CategoryFragment, userType)
+
+        fetchCategories()
+
+        binding.apply {
+            refreshLayout.setOnRefreshListener {
+                viewModel.onLoadCategories()
+            }
+        }
+
+        viewModel.categories.observe(viewLifecycleOwner) {
+            loadingDialog.dismiss()
+            binding.refreshLayout.isRefreshing = false
+
+            adapter.submitList(it)
+
+            binding.recyclerCategories.setHasFixedSize(true)
+            binding.recyclerCategories.adapter = adapter
+        }
     }
 
     override fun onResume() {
@@ -150,7 +160,6 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
                     menu.findItem(R.id.action_add).isVisible = false
                 }
             }
-            adapter = CategoryAdapter(this@CategoryFragment, session.userType)
         }
     }
 

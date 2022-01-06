@@ -146,9 +146,9 @@ class ProductRepository @Inject constructor(
         rate: Double,
         desc: String,
         item: OrderDetail,
-    ): Product? {
+    ): OrderDetail? {
         return withContext(dispatcher) {
-            var updatedProduct: Product? = getOne(item.product.productId)
+            val updatedProduct: Product? = getOne(item.product.productId)
 
             if (updatedProduct != null) {
                 val addedReview = reviewRepository.insert(
@@ -172,16 +172,15 @@ class ProductRepository @Inject constructor(
 
                         item.canAddReview = false
                         item.hasAddedReview = true
-                        val updated = orderDetailRepository.update(item)
-                        if (!updated) {
-                            updatedProduct = null
-                        }
+                        orderDetailRepository.update(item)
+
+                        return@withContext item
                     } catch (ex: JavaLangException) {
-                        updatedProduct = null
+                        return@withContext null
                     }
                 }
             }
-            updatedProduct
+            return@withContext null
         }
     }
 

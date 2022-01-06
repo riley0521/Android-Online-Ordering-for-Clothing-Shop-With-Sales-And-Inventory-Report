@@ -6,10 +6,12 @@ import android.view.View
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
@@ -17,6 +19,8 @@ import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentOrderDetailListBinding
+import com.teampym.onlineclothingshopapplication.presentation.client.addreview.ADD_REVIEW_REQUEST
+import com.teampym.onlineclothingshopapplication.presentation.client.addreview.ADD_REVIEW_RESULT
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -62,7 +66,6 @@ class OrderDetailListFragment :
                     requireContext(),
                     user
                 )
-                adapter.submitList(viewModel.order?.orderDetailList)
 
                 if (user.userType == UserType.ADMIN.name) {
                     binding.orderBanner.isVisible = true
@@ -75,58 +78,62 @@ class OrderDetailListFragment :
 
     @SuppressLint("SimpleDateFormat", "SetTextI18n")
     private fun setupViews() = CoroutineScope(Dispatchers.Main).launch {
-        binding.apply {
-            val order = viewModel.order
-            order?.let { o ->
-                // Set details of the order object again here
-                tvOrderId.text = o.id
-                tvUsername.text = o.deliveryInformation.name
+        viewModel.order.observe(viewLifecycleOwner) { order ->
+            binding.apply {
+                order?.let { o ->
+                    adapter.submitList(o.orderDetailList)
 
-                val totalCostStr = "$" + o.totalCost
-                tvTotalCost.text = totalCostStr
+                    // Set details of the order object again here
+                    tvOrderId.text = o.id
+                    tvUsername.text = o.deliveryInformation.name
 
-                if (o.suggestedShippingFee > 0.0) {
-                    val shippingFee = "$" + o.suggestedShippingFee
-                    tvSuggestedSf.text = shippingFee
+                    val totalCostStr = "$" + o.totalCost
+                    tvTotalCost.text = totalCostStr
 
-                    val grandTotalStr = "$" + o.totalPaymentWithShippingFee
-                    tvGrandTotal.text = grandTotalStr
-                } else {
-                    labelShippingFee.isVisible = false
-                    tvSuggestedSf.isVisible = false
+                    if (o.suggestedShippingFee > 0.0) {
+                        val shippingFee = "$" + o.suggestedShippingFee
+                        tvSuggestedSf.text = shippingFee
 
-                    labelGrandTotal.isVisible = false
-                    tvGrandTotal.isVisible = false
+                        val grandTotalStr = "$" + o.totalPaymentWithShippingFee
+                        tvGrandTotal.text = grandTotalStr
+                    } else {
+                        labelShippingFee.isVisible = false
+                        tvSuggestedSf.isVisible = false
+
+                        labelGrandTotal.isVisible = false
+                        tvGrandTotal.isVisible = false
+                    }
+
+                    if (o.isUserAgreedToShippingFee) {
+                        tvUserAgreedToSf.text = "Yes"
+                    } else {
+                        labelUserAgreedToSf.isVisible = false
+                        tvUserAgreedToSf.isVisible = false
+                    }
+
+                    val completeAddress = "${o.deliveryInformation.streetNumber} " +
+                        "${o.deliveryInformation.city}, " +
+                        "${o.deliveryInformation.province}, " +
+                        "${o.deliveryInformation.region}, " +
+                        o.deliveryInformation.postalCode
+                    tvDeliveryAddress.text = completeAddress
+
+                    tvStatus.text = o.status
+                    tvNumberOfItems.text = o.orderDetailList.count().toString()
+
+                    val calendarDate = Calendar.getInstance()
+                    calendarDate.timeInMillis = o.dateOrdered
+                    calendarDate.timeZone = TimeZone.getTimeZone("GMT+8:00")
+                    val formattedDate =
+                        SimpleDateFormat("MM/dd/yyyy hh:mm:ss a").format(calendarDate.time)
+
+                    tvDateOrdered.text = formattedDate
+                    tvAdditionalNote.text = o.additionalNote
+
+                    rvOrderDetails.setHasFixedSize(true)
+                    rvOrderDetails.layoutManager = LinearLayoutManager(requireContext())
+                    rvOrderDetails.adapter = adapter
                 }
-
-                if (o.isUserAgreedToShippingFee) {
-                    tvUserAgreedToSf.text = "Yes"
-                } else {
-                    labelUserAgreedToSf.isVisible = false
-                    tvUserAgreedToSf.isVisible = false
-                }
-
-                val completeAddress = "${o.deliveryInformation.streetNumber} " +
-                    "${o.deliveryInformation.city}, " +
-                    "${o.deliveryInformation.province}, " +
-                    "${o.deliveryInformation.region}, " +
-                    o.deliveryInformation.postalCode
-                tvDeliveryAddress.text = completeAddress
-
-                tvStatus.text = o.status
-                tvNumberOfItems.text = o.orderDetailList.count().toString()
-
-                val calendarDate = Calendar.getInstance()
-                calendarDate.timeInMillis = o.dateOrdered
-                calendarDate.timeZone = TimeZone.getTimeZone("GMT+8:00")
-                val formattedDate =
-                    SimpleDateFormat("MM/dd/yyyy hh:mm:ss a").format(calendarDate.time)
-
-                tvDateOrdered.text = formattedDate
-                tvAdditionalNote.text = o.additionalNote
-
-                rvOrderDetails.setHasFixedSize(true)
-                rvOrderDetails.adapter = adapter
             }
         }
     }
@@ -169,11 +176,24 @@ class OrderDetailListFragment :
             loadingDialog.dismiss()
 
             if (canAddReview) {
-                userInfo?.let { u ->
+                userInfo?.let {
+                    setFragmentResultListener(ADD_REVIEW_REQUEST) { _, bundle ->
+                        val result = bundle.getBoolean(ADD_REVIEW_RESULT)
+                        if (result) {
+                            Snackbar.make(
+                                requireView(),
+                                "Review submitted successfully.",
+                                Snackbar.LENGTH_SHORT
+                            ).show()
+
+                            viewModel.fetchOrderDetails()
+                        }
+                    }
+
                     val action = OrderDetailListFragmentDirections
                         .actionOrderDetailListFragmentToAddReviewFragment(
                             item,
-                            u,
+                            userInfo!!,
                             item.product.name
                         )
                     findNavController().navigate(action)

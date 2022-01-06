@@ -17,6 +17,7 @@ import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentAddInventoryBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 
 @AndroidEntryPoint
 class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
@@ -188,7 +189,10 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
                         ).show()
                         try {
                             findNavController().getBackStackEntry(R.id.addEditProductFragment)
-                            findNavController().navigate(R.id.action_global_categoryFragment)
+
+                            val categoryId = viewModel.session.first().categoryId
+                            val action = AddInventoryFragmentDirections.actionAddInventoryFragmentToProductFragment(categoryId = categoryId)
+                            findNavController().navigate(action)
                         } catch (ex: Exception) {
                             findNavController().popBackStack()
                         }

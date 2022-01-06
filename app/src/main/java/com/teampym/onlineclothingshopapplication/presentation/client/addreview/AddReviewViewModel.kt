@@ -2,20 +2,20 @@ package com.teampym.onlineclothingshopapplication.presentation.client.addreview
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
+import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class AddReviewViewModel @Inject constructor(
     private val productRepository: ProductRepository,
-    private val state: SavedStateHandle,
-    @ApplicationScope val appScope: CoroutineScope
+    private val state: SavedStateHandle
 ) : ViewModel() {
 
     companion object {
@@ -35,10 +35,28 @@ class AddReviewViewModel @Inject constructor(
             state.set(FEEDBACK_STR, value)
         }
 
+    private val _addReviewChannel = Channel<AddReviewEvent>()
+    val addReviewEvent = _addReviewChannel.receiveAsFlow()
+
     fun onSubmitClicked(
         orderDetail: OrderDetail,
         userInfo: UserInformation
-    ) = appScope.launch {
-        productRepository.submitReview(userInfo, ratingValue.toDouble(), feedbackValue, orderDetail)
+    ) = viewModelScope.launch {
+        val result = productRepository.submitReview(
+            userInfo,
+            ratingValue.toDouble(),
+            feedbackValue,
+            orderDetail
+        )
+        if (result != null) {
+            _addReviewChannel.send(AddReviewEvent.NavigateBackWithResult(true))
+        } else {
+            _addReviewChannel.send(AddReviewEvent.ShowErrorMessage("Submitting review failed. Please try again."))
+        }
+    }
+
+    sealed class AddReviewEvent {
+        data class NavigateBackWithResult(val isSuccess: Boolean) : AddReviewEvent()
+        data class ShowErrorMessage(val msg: String) : AddReviewEvent()
     }
 }
