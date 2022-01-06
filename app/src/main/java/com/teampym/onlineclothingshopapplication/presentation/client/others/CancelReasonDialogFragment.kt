@@ -6,6 +6,7 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
@@ -18,6 +19,8 @@ import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCancelReasonDialogBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 const val CANCEL_REASON_REQUEST = "cancel_reason_request"
 const val CANCEL_REASON_RESULT = "cancel_reason_result"
@@ -76,23 +79,35 @@ class CancelReasonDialogFragment : BottomSheetDialogFragment() {
         }
 
         lifecycleScope.launchWhenStarted {
-            viewModel.userFlow.collectLatest { user ->
+            launch {
+                val user = viewModel.userFlow.first()
                 if (user != null) {
                     viewModel.updateUserType(user.userType)
                 }
             }
 
-            viewModel.otherDialogEvent.collectLatest { event ->
-                when(event) {
-                    OtherDialogFragmentEvent.NavigateBack -> {
-                        loadingDialog.dismiss()
+            launch {
+                viewModel.otherDialogEvent.collectLatest { event ->
+                    when (event) {
+                        OtherDialogFragmentEvent.NavigateBack -> {
+                            loadingDialog.dismiss()
 
-                        // Go back to the parent fragment with result
-                        setFragmentResult(
-                            CANCEL_REASON_REQUEST,
-                            bundleOf(CANCEL_REASON_RESULT to "Canceled Order Successfully!")
-                        )
-                        findNavController().popBackStack()
+                            // Go back to the parent fragment with result
+                            setFragmentResult(
+                                CANCEL_REASON_REQUEST,
+                                bundleOf(CANCEL_REASON_RESULT to "Canceled Order Successfully!")
+                            )
+                            findNavController().popBackStack()
+                        }
+                        is OtherDialogFragmentEvent.ShowErrorMessage -> {
+                            loadingDialog.dismiss()
+
+                            Toast.makeText(
+                                requireContext(),
+                                event.msg,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
                 }
             }

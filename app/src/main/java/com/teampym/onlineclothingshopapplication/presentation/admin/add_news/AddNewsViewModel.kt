@@ -6,25 +6,26 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
 import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.models.UploadedImage
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
+import com.teampym.onlineclothingshopapplication.data.repository.NotificationTokenRepository
 import com.teampym.onlineclothingshopapplication.data.repository.PostRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class AddNewsViewModel @Inject constructor(
     private val postRepository: PostRepository,
+    private val notificationTokenRepository: NotificationTokenRepository,
     private val userInformationDao: UserInformationDao,
     preferencesManager: PreferencesManager,
-    private val state: SavedStateHandle,
-    @ApplicationScope val appScope: CoroutineScope
+    private val state: SavedStateHandle
 ) : ViewModel() {
 
     companion object {
@@ -50,18 +51,21 @@ class AddNewsViewModel @Inject constructor(
 
     var image = state.getLiveData<Uri>(IMAGE)
 
+    private val _addNewsChannel = Channel<AddNewsEvent>()
+    val addNewsEvent = _addNewsChannel.receiveAsFlow()
+
     fun fetchUserInformation(userId: String) = viewModelScope.launch {
         userInformation.postValue(userInformationDao.getCurrentUser(userId))
     }
 
-    fun onAddPostClicked(userInformation: UserInformation) = appScope.launch {
+    fun onAddPostClicked(userInformation: UserInformation) = viewModelScope.launch {
 
         var uploadedImageWithUrl: UploadedImage? = null
         image.value?.let { imageUri ->
             uploadedImageWithUrl = postRepository.uploadImage(imageUri)
         }
 
-        postRepository.insert(
+        val result = postRepository.insert(
             Post(
                 title = title,
                 description = description,
@@ -71,7 +75,23 @@ class AddNewsViewModel @Inject constructor(
                 fileName = uploadedImageWithUrl?.fileName ?: "",
             )
         )
-        resetUiState()
+        if (result != null) {
+            resetUiState()
+
+            val isNotified = notificationTokenRepository.submitToPostTopic(
+                result,
+                "New Post",
+                "${result.title} - Check me out!"
+            )
+
+            if (isNotified) {
+                _addNewsChannel.send(AddNewsEvent.ShowSuccessMessage("Post added successfully. You also notified the customers."))
+            } else {
+                _addNewsChannel.send(AddNewsEvent.ShowSuccessMessage("Post added successfully!"))
+            }
+        } else {
+            _addNewsChannel.send(AddNewsEvent.ShowErrorMessage("Adding post failed. Please try again."))
+        }
     }
 
     fun isFormValid(): Boolean {
@@ -86,5 +106,10 @@ class AddNewsViewModel @Inject constructor(
         title = ""
         description = ""
         updateImage(null)
+    }
+
+    sealed class AddNewsEvent {
+        data class ShowSuccessMessage(val msg: String) : AddNewsEvent()
+        data class ShowErrorMessage(val msg: String) : AddNewsEvent()
     }
 }

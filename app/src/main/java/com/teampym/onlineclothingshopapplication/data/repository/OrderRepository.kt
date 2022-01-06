@@ -17,12 +17,11 @@ import com.teampym.onlineclothingshopapplication.data.util.AuditType
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.ORDER_DETAILS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.Status
-import com.teampym.onlineclothingshopapplication.data.util.Utils
 import com.teampym.onlineclothingshopapplication.presentation.client.orderlist.OrderListPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.util.* // ktlint-disable no-wildcard-imports
+import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -208,7 +207,8 @@ class OrderRepository @Inject constructor(
                 Status.COMPLETED.name -> {
                     // Change the status to completed first
                     // Then deduct the committed to sold
-                    val salesOrderList = changeStatusToCompleted(username, userType, orderId, status)
+                    val salesOrderList =
+                        changeStatusToCompleted(username, userType, orderId, status)
 
                     salesRepository.insert(salesOrderList)
 
@@ -435,7 +435,7 @@ class OrderRepository @Inject constructor(
 
                 try {
                     order.reference
-                        .set(updateOrderStatus)
+                        .set(updateOrderStatus, SetOptions.merge())
                         .await()
 
                     auditTrailRepository.insert(
@@ -478,11 +478,10 @@ class OrderRepository @Inject constructor(
         return withContext(dispatcher) {
             val orderDetailList = mutableListOf<OrderDetail>()
             for (document in orderDetailDocuments.documents) {
-                val orderDetailItem =
-                    document.toObject(OrderDetail::class.java)!!.copy(
-                        id = document.id,
-                        orderId = order.id
-                    )
+                val orderDetailItem = document.toObject(OrderDetail::class.java)!!.copy(
+                    id = document.id,
+                    orderId = order.id
+                )
                 orderDetailList.add(orderDetailItem)
             }
             if (

@@ -79,7 +79,7 @@ class NotificationTokenRepository @Inject constructor(
         token: String
     ): NotificationToken? {
         return withContext(dispatcher) {
-            var createdToken = NotificationToken(
+            val createdToken = NotificationToken(
                 userId = userId,
                 token = token,
                 dateModified = System.currentTimeMillis(),

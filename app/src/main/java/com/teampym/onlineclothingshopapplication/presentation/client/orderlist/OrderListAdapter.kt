@@ -98,6 +98,8 @@ class OrderListAdapter(
                                             else -> false
                                         }
                                     }
+
+                                    showPopUpMenu.show()
                                 }
                             }
                             AGREE_TO_SHIPPING_FEE -> {

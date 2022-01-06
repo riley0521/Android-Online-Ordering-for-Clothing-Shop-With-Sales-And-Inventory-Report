@@ -10,12 +10,15 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
+import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentAddNewsBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 
 private const val SELECT_POST_IMG_REQUEST = 1234
 
@@ -24,12 +27,15 @@ class AddNewsFragment : Fragment(R.layout.fragment_add_news) {
 
     private lateinit var binding: FragmentAddNewsBinding
 
+    private lateinit var loadingDialog: LoadingDialog
+
     private val viewModel by viewModels<AddNewsViewModel>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentAddNewsBinding.bind(view)
+        loadingDialog = LoadingDialog(requireActivity())
 
         viewModel.userSession.observe(viewLifecycleOwner) {
             viewModel.fetchUserInformation(it.userId)
@@ -138,7 +144,7 @@ class AddNewsFragment : Fragment(R.layout.fragment_add_news) {
                             "Adding post...",
                             Toast.LENGTH_SHORT
                         ).show()
-                        findNavController().popBackStack()
+                        loadingDialog.show()
                     }
                 } else {
                     Snackbar.make(
@@ -146,6 +152,32 @@ class AddNewsFragment : Fragment(R.layout.fragment_add_news) {
                         "Please fill the form.",
                         Snackbar.LENGTH_SHORT
                     ).show()
+                }
+            }
+        }
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.addNewsEvent.collectLatest { event ->
+                when (event) {
+                    is AddNewsViewModel.AddNewsEvent.ShowErrorMessage -> {
+                        loadingDialog.dismiss()
+
+                        Snackbar.make(
+                            requireView(),
+                            event.msg,
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                    }
+                    is AddNewsViewModel.AddNewsEvent.ShowSuccessMessage -> {
+                        loadingDialog.dismiss()
+
+                        Toast.makeText(
+                            requireContext(),
+                            event.msg,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        findNavController().popBackStack()
+                    }
                 }
             }
         }

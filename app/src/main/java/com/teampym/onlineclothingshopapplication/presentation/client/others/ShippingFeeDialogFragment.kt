@@ -19,6 +19,8 @@ import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentShippingFeeDialogBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 const val SHIPPING_FEE_REQUEST = "shipping_fee_request"
 const val SHIPPING_FEE_RESULT = "shipping_fee_result"
@@ -58,11 +60,13 @@ class ShippingFeeDialogFragment : BottomSheetDialogFragment() {
                     count: Int,
                     after: Int
                 ) {
-                    etShippingFee.setText(String.format("%.2f", viewModel.shippingFee))
+                    // Nothing
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    viewModel.shippingFee = (s.toString()).toBigDecimal()
+                    if (s.toString().isNotEmpty()) {
+                        viewModel.shippingFee = s.toString().toDouble()
+                    }
                 }
 
                 override fun afterTextChanged(s: Editable?) {
@@ -71,7 +75,7 @@ class ShippingFeeDialogFragment : BottomSheetDialogFragment() {
             })
 
             btnSubmit.setOnClickListener {
-                if (viewModel.shippingFee > (0).toBigDecimal()) {
+                if (viewModel.shippingFee > 0.0) {
                     viewModel.submitSuggestedShippingFee(order, viewModel.shippingFee)
                     loadingDialog.show()
                 } else {
@@ -84,23 +88,35 @@ class ShippingFeeDialogFragment : BottomSheetDialogFragment() {
             }
 
             lifecycleScope.launchWhenStarted {
-                viewModel.userFlow.collectLatest { user ->
+                launch {
+                    val user = viewModel.userFlow.first()
                     if (user != null) {
                         viewModel.updateUserType(user.userType)
                     }
                 }
 
-                viewModel.otherDialogEvent.collectLatest { event ->
-                    when(event) {
-                        OtherDialogFragmentEvent.NavigateBack -> {
-                            loadingDialog.dismiss()
+                launch {
+                    viewModel.otherDialogEvent.collectLatest { event ->
+                        when (event) {
+                            OtherDialogFragmentEvent.NavigateBack -> {
+                                loadingDialog.dismiss()
 
-                            // Go back to the parent fragment with result
-                            setFragmentResult(
-                                SHIPPING_FEE_REQUEST,
-                                bundleOf(SHIPPING_FEE_RESULT to "Submitted suggested shipping fee successfully!")
-                            )
-                            findNavController().popBackStack()
+                                // Go back to the parent fragment with result
+                                setFragmentResult(
+                                    SHIPPING_FEE_REQUEST,
+                                    bundleOf(SHIPPING_FEE_RESULT to "Submitted suggested shipping fee successfully!")
+                                )
+                                findNavController().popBackStack()
+                            }
+                            is OtherDialogFragmentEvent.ShowErrorMessage -> {
+                                loadingDialog.dismiss()
+
+                                Toast.makeText(
+                                    requireContext(),
+                                    event.msg,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }
                     }
                 }

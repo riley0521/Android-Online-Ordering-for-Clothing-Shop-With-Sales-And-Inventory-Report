@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
 import javax.inject.Inject
 
 @HiltViewModel
@@ -30,15 +29,15 @@ class ShippingFeeInputViewModel @Inject constructor(
         private const val SHIPPING_FEE = "shipping_fee"
     }
 
-    private var userId = ""
+    private var _userId = ""
     private var _userType = MutableLiveData("")
 
     val userFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
-        userId = sessionPref.userId
+        _userId = sessionPref.userId
         userInformationDao.get(sessionPref.userId)
     }
 
-    var shippingFee = state.get<BigDecimal>(SHIPPING_FEE) ?: (0).toBigDecimal()
+    var shippingFee = state.get<Double>(SHIPPING_FEE) ?: 0.0
         set(value) {
             field = value
             state.set(SHIPPING_FEE, value)
@@ -51,21 +50,29 @@ class ShippingFeeInputViewModel @Inject constructor(
         _userType.value = userType
     }
 
-    fun submitSuggestedShippingFee(order: Order, shippingFee: BigDecimal) = viewModelScope.launch {
+    fun submitSuggestedShippingFee(order: Order, shippingFee: Double) = viewModelScope.launch {
         if (_userType.value != null) {
             val userInformation = userFlow.first()
 
-            orderRepository.updateOrderStatus(
+            val result = orderRepository.updateOrderStatus(
                 username = "${userInformation?.firstName} ${userInformation?.lastName}",
-                userId,
+                _userId,
                 _userType.value!!,
                 order.id,
                 Status.SHIPPED.name,
                 null,
-                shippingFee.toDouble()
+                shippingFee
             )
 
-            _othersChannel.send(OtherDialogFragmentEvent.NavigateBack)
+            if (result) {
+                _othersChannel.send(OtherDialogFragmentEvent.NavigateBack)
+            } else {
+                _othersChannel.send(
+                    OtherDialogFragmentEvent.ShowErrorMessage(
+                        "Submitting suggested shipping fee failed. Please try again"
+                    )
+                )
+            }
         }
     }
 }
