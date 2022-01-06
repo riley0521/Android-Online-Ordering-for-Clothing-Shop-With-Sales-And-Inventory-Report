@@ -14,6 +14,7 @@ import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.util.AGREE_TO_SHIPPING_FEE
 import com.teampym.onlineclothingshopapplication.data.util.CANCEL_BUTTON
 import com.teampym.onlineclothingshopapplication.data.util.CANCEL_OR_SUGGEST
+import com.teampym.onlineclothingshopapplication.data.util.DELIVER_ORDER
 import com.teampym.onlineclothingshopapplication.data.util.ORDER_COMPLETED
 import com.teampym.onlineclothingshopapplication.data.util.SUGGEST_BUTTON
 import com.teampym.onlineclothingshopapplication.data.util.Status
@@ -108,6 +109,16 @@ class OrderListAdapter(
                                     listener.onAgreeToSfClicked(item)
                                 }
                             }
+                            DELIVER_ORDER -> {
+                                if (item != null) {
+                                    listener.onDeliverOrderClicked(item)
+                                }
+                            }
+                            ORDER_COMPLETED -> {
+                                if (item != null) {
+                                    listener.onCompleteOrderClicked(item)
+                                }
+                            }
                         }
                     }
                 }
@@ -150,6 +161,10 @@ class OrderListAdapter(
 
                         if (userType == UserType.CUSTOMER.name) {
                             btnAction.text = AGREE_TO_SHIPPING_FEE
+                        } else if (userType == UserType.ADMIN.name) {
+                            if (item.isUserAgreedToShippingFee) {
+                                btnAction.text = DELIVER_ORDER
+                            }
                         }
                     }
                     Status.DELIVERY.name -> {
@@ -236,5 +251,7 @@ class OrderListAdapter(
         fun onCancelClicked(item: Order, userType: String)
         fun onSuggestClicked(item: Order)
         fun onAgreeToSfClicked(item: Order)
+        fun onDeliverOrderClicked(item: Order)
+        fun onCompleteOrderClicked(item: Order)
     }
 }

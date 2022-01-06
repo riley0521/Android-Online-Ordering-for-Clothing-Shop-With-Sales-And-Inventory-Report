@@ -12,11 +12,14 @@ import com.google.firebase.firestore.Query
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.repository.OrderRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
+import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
+import com.teampym.onlineclothingshopapplication.data.util.Status
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -27,6 +30,7 @@ import javax.inject.Inject
 class OrderListViewModel @Inject constructor(
     private val db: FirebaseFirestore,
     private val orderRepository: OrderRepository,
+    private val userInformationDao: UserInformationDao,
     preferencesManager: PreferencesManager
 ) : ViewModel() {
 
@@ -107,10 +111,78 @@ class OrderListViewModel @Inject constructor(
 
         if (res) {
             _orderListChannel.send(
-                OrderListEvent.ShowMessage(
+                OrderListEvent.ShowSuccessMessage(
                     "Cancelled Order Successfully!"
                 )
             )
+        } else {
+            _orderListChannel.send(
+                OrderListEvent.ShowErrorMessage(
+                    "Cancelling order failed. Please try again."
+                )
+            )
+        }
+    }
+
+    fun deliverOrder(order: Order) = viewModelScope.launch {
+        val session = _userSessionFlow.first()
+        val userInformation = userInformationDao.getCurrentUser(session.userId)
+
+        userInformation?.let {
+            val res = orderRepository.updateOrderStatus(
+                username = "${userInformation.firstName} ${userInformation.lastName}",
+                userId = userInformation.userId,
+                userType = userInformation.userType,
+                orderId = order.id,
+                status = Status.DELIVERY.name,
+                null,
+                null
+            )
+
+            if (res) {
+                _orderListChannel.send(
+                    OrderListEvent.ShowSuccessMessage(
+                        "Changed Order status to Delivery successfully!"
+                    )
+                )
+            } else {
+                _orderListChannel.send(
+                    OrderListEvent.ShowErrorMessage(
+                        "Changing Order status to Delivery failed. Please try again."
+                    )
+                )
+            }
+        }
+    }
+
+    fun completeOrder(order: Order) = viewModelScope.launch {
+        val session = _userSessionFlow.first()
+        val userInformation = userInformationDao.getCurrentUser(session.userId)
+
+        userInformation?.let {
+            val res = orderRepository.updateOrderStatus(
+                username = "${userInformation.firstName} ${userInformation.lastName}",
+                userId = userInformation.userId,
+                userType = userInformation.userType,
+                orderId = order.id,
+                status = Status.COMPLETED.name,
+                null,
+                null
+            )
+
+            if (res) {
+                _orderListChannel.send(
+                    OrderListEvent.ShowSuccessMessage(
+                        "Changed Order status to Completed successfully!"
+                    )
+                )
+            } else {
+                _orderListChannel.send(
+                    OrderListEvent.ShowErrorMessage(
+                        "Changing Order status to Completed failed. Please try again."
+                    )
+                )
+            }
         }
     }
 
@@ -118,25 +190,25 @@ class OrderListViewModel @Inject constructor(
         result: String,
         order: Order
     ) = viewModelScope.launch {
-        _orderListChannel.send(OrderListEvent.ShowMessage("$result - ${order.id}"))
+        _orderListChannel.send(OrderListEvent.ShowSuccessMessage("$result - ${order.id}"))
     }
 
     fun onSuggestedShippingFeeResult(
         result: String,
         order: Order
     ) = viewModelScope.launch {
-        _orderListChannel.send(OrderListEvent.ShowMessage("$result - ${order.id}"))
+        _orderListChannel.send(OrderListEvent.ShowSuccessMessage("$result - ${order.id}"))
     }
 
     fun onAgreeToSfResult(
         result: String,
         order: Order
     ) = viewModelScope.launch {
-        _orderListChannel.send(OrderListEvent.ShowMessage("$result - ${order.id}"))
+        _orderListChannel.send(OrderListEvent.ShowSuccessMessage("$result - ${order.id}"))
     }
 
     sealed class OrderListEvent {
-        data class ShowMessage(val msg: String) :
-            OrderListEvent()
+        data class ShowSuccessMessage(val msg: String) : OrderListEvent()
+        data class ShowErrorMessage(val msg: String) : OrderListEvent()
     }
 }

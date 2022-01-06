@@ -81,12 +81,15 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
         lifecycleScope.launchWhenStarted {
             viewModel.orderEvent.collectLatest { event ->
                 when (event) {
-                    is OrderListViewModel.OrderListEvent.ShowMessage -> {
+                    is OrderListViewModel.OrderListEvent.ShowSuccessMessage -> {
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
 
                         // Set the RefreshLayout to true
                         // And refresh the adapter to fetch fresh data.
                         binding.refreshLayout.isRefreshing = true
+                    }
+                    is OrderListViewModel.OrderListEvent.ShowErrorMessage -> {
+                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -217,6 +220,32 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
         findNavController().navigate(action)
     }
 
+    override fun onDeliverOrderClicked(item: Order) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("DELIVER ORDER")
+            .setMessage("Are you ready to delivery this order?")
+            .setPositiveButton("Yes") { _, _ ->
+                viewModel.deliverOrder(
+                    item
+                )
+            }.setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }.show()
+    }
+
+    override fun onCompleteOrderClicked(item: Order) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("COMPLETE ORDER")
+            .setMessage("Are you sure that this order is completed?")
+            .setPositiveButton("Yes") { _, _ ->
+                viewModel.completeOrder(
+                    item
+                )
+            }.setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }.show()
+    }
+
     private fun showSuggestShipFeeModalForAdmin(item: Order) {
         setFragmentResultListener(SHIPPING_FEE_REQUEST) { _, bundle ->
             val result = bundle.getString(SHIPPING_FEE_RESULT)
@@ -257,6 +286,6 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
                 )
             }.setNegativeButton("No") { dialog, _ ->
                 dialog.dismiss()
-            }
+            }.show()
     }
 }
