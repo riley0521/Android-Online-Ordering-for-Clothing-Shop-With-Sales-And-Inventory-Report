@@ -33,18 +33,28 @@ class ReviewsFragment : Fragment(R.layout.fragment_review) {
         adapter = ReviewAdapter(requireContext())
 
         lifecycleScope.launchWhenStarted {
-            viewModel.fetchUserSessionAndReviews(args.productId)
+            viewModel.productId.postValue(args.productId)
 
             setupViews()
         }
     }
 
     private fun setupViews() = CoroutineScope(Dispatchers.Main).launch {
-        viewModel.reviews?.observe(viewLifecycleOwner) {
+        viewModel.reviews.observe(viewLifecycleOwner) {
             binding.refreshLayout.isRefreshing = false
 
-            it?.let { pagingData ->
-                adapter.submitData(viewLifecycleOwner.lifecycle, pagingData)
+            adapter.submitData(viewLifecycleOwner.lifecycle, it)
+
+            if (adapter.itemCount == 0) {
+                binding.apply {
+                    rvReviews.visibility = View.INVISIBLE
+                    labelNoReviews.visibility = View.VISIBLE
+                }
+            } else {
+                binding.apply {
+                    rvReviews.visibility = View.VISIBLE
+                    labelNoReviews.visibility = View.INVISIBLE
+                }
             }
         }
 
