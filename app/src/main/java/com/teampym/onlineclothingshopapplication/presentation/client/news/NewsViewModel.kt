@@ -1,7 +1,5 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.news
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
@@ -16,16 +14,15 @@ import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.repository.LikeRepository
 import com.teampym.onlineclothingshopapplication.data.repository.PostRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
-import com.teampym.onlineclothingshopapplication.data.room.SessionPreferences
+import com.teampym.onlineclothingshopapplication.data.util.POSTS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -39,41 +36,28 @@ class NewsViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
-    private var posts: Flow<PagingData<Post>>? = null
+    private val _userSession = preferencesManager.preferencesFlow
+    val userSession = _userSession.asLiveData()
+
+    var userId = ""
         private set
 
-    val postPagingData: LiveData<PagingData<Post>> get() = posts?.asLiveData()!!
-
-    private val _userSession = MutableLiveData<SessionPreferences>()
-    val userSession: LiveData<SessionPreferences> get() = _userSession
-
-    val userId = MutableLiveData<String?>(null)
-    var userType: String? = null
-
-    private val events = MutableStateFlow<List<NewsFragment.NewsPagerEvent>>(emptyList())
+    var userType = ""
+        private set
 
     private val _newsChannel = Channel<NewsEvent>()
     val newsEvent = _newsChannel.receiveAsFlow()
 
-    fun onViewEvent(
-        event: NewsFragment.NewsPagerEvent
-    ) = viewModelScope.launch {
-        events.value += event
-    }
-
-    suspend fun fetchUserSession() {
-        _userSession.postValue(preferencesManager.preferencesFlow.first())
-        userId.postValue(_userSession.value?.userId)
-        userType = _userSession.value?.userType
-    }
-
-    fun getPostsPagingData() {
-        val query = db.collection(PRODUCTS_COLLECTION)
+    private val _posts = _userSession.flatMapLatest {
+        val query = db.collection(POSTS_COLLECTION)
             .orderBy("dateCreated", Query.Direction.DESCENDING)
             .limit(30)
 
-        posts = postRepository
-            .getSome(userId.value, query)
+        userId = it.userId
+        userType = it.userType
+
+        postRepository
+            .getSome(userId, query)
             .flow
             .cachedIn(viewModelScope)
             .combine(events) { pagingData, events ->
@@ -83,13 +67,23 @@ class NewsViewModel @Inject constructor(
             }
     }
 
+    val postPagingData = _posts.asLiveData()
+
+    private val events = MutableStateFlow<List<NewsFragment.NewsPagerEvent>>(emptyList())
+
+    fun onViewEvent(
+        event: NewsFragment.NewsPagerEvent
+    ) = viewModelScope.launch {
+        events.value += event
+    }
+
     private suspend fun onLikePostClicked(
         post: Post,
         isLikeByUser: Boolean
     ): Long {
         return withContext(Dispatchers.IO) {
             if (isLikeByUser) {
-                userId.value?.let { userId ->
+                if (userId.isNotBlank()) {
                     val res = likeRepository.add(
                         post,
                         Like(postId = post.id, userId = userId)
@@ -105,7 +99,7 @@ class NewsViewModel @Inject constructor(
                     }
                 }
             } else {
-                userId.value?.let { userId ->
+                if (userId.isNotBlank()) {
                     val res = likeRepository.remove(postId = post.id, userId = userId)
                     if (res) {
                         val count = post.numberOfLikes - 1

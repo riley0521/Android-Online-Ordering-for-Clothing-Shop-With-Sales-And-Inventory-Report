@@ -15,8 +15,6 @@ import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,7 +22,7 @@ import javax.inject.Inject
 class AddNewsViewModel @Inject constructor(
     private val postRepository: PostRepository,
     private val userInformationDao: UserInformationDao,
-    private val preferencesManager: PreferencesManager,
+    preferencesManager: PreferencesManager,
     private val state: SavedStateHandle,
     @ApplicationScope val appScope: CoroutineScope
 ) : ViewModel() {
@@ -73,6 +71,7 @@ class AddNewsViewModel @Inject constructor(
                 fileName = uploadedImageWithUrl?.fileName ?: "",
             )
         )
+        resetUiState()
     }
 
     fun isFormValid(): Boolean {
@@ -83,7 +82,7 @@ class AddNewsViewModel @Inject constructor(
         image.postValue(imageUri)
     }
 
-    fun resetUiState() {
+    private fun resetUiState() {
         title = ""
         description = ""
         updateImage(null)

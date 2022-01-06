@@ -8,7 +8,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.paging.PagingData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
@@ -16,10 +15,7 @@ import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentNewsBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 private const val TAG = "NewsFragment"
 
@@ -32,8 +28,6 @@ class NewsFragment : Fragment(R.layout.fragment_news), NewsAdapter.NewsListener 
 
     private val viewModel by viewModels<NewsViewModel>()
 
-    private var currentPagingData: PagingData<Post>? = null
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -45,16 +39,10 @@ class NewsFragment : Fragment(R.layout.fragment_news), NewsAdapter.NewsListener 
             footer = NewsLoadStateAdapter(adapter)
         )
 
-        CoroutineScope(Dispatchers.IO).launch {
-            viewModel.fetchUserSession()
-        }.invokeOnCompletion {
-            setupViews()
-        }
+        setupViews()
     }
 
-    private fun setupViews() = CoroutineScope(Dispatchers.Main).launch {
-        viewModel.getPostsPagingData()
-
+    private fun setupViews() {
         binding.apply {
             refreshLayout.setOnRefreshListener {
                 adapter.refresh()
@@ -72,7 +60,6 @@ class NewsFragment : Fragment(R.layout.fragment_news), NewsAdapter.NewsListener 
         viewModel.postPagingData.observe(viewLifecycleOwner) {
             binding.refreshLayout.isRefreshing = false
 
-            currentPagingData = it
             adapter.submitData(viewLifecycleOwner.lifecycle, it)
         }
 

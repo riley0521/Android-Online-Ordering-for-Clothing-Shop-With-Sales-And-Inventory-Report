@@ -196,12 +196,17 @@ class NewsAdapter constructor(
                     item.numberOfComments
                 )
 
-                if (viewModel.userType != null && viewModel.userType == UserType.ADMIN.name) {
+                if (viewModel.userType == UserType.ADMIN.name) {
                     imgMenu.isVisible = true
+
+                    imgLike.isVisible = false
+                    tvLike.isVisible = false
+
+                    imgComment.isVisible = false
+                    tvComment.isVisible = false
                 }
 
-                if (!item.haveUserId ||
-                    (viewModel.userType != null && viewModel.userType == UserType.ADMIN.name)
+                if (!item.haveUserId || viewModel.userType == UserType.ADMIN.name
                 ) {
                     imgLike.isVisible = false
                     tvLike.isVisible = false
