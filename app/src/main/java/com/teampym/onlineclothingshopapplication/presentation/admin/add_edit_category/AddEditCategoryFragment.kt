@@ -36,9 +36,6 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
 
     private val viewModel by viewModels<AddEditCategoryViewModel>()
 
-    private var hasFileName: Boolean = false
-    private var hasImageUrl: Boolean = false
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -50,8 +47,8 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
 
         if (category != null) {
             if (viewModel.categoryName.isNotBlank() ||
-                viewModel.fileName.value!!.isNotBlank() ||
-                viewModel.imageUrl.value!!.isNotBlank()
+                viewModel.fileName.isNotBlank() ||
+                viewModel.imageUrl.isNotBlank()
             ) {
                 AlertDialog.Builder(requireContext())
                     .setTitle("OVERWRITE FIELDS")
@@ -66,24 +63,6 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
                     }.show()
             } else {
                 overwriteFields(category)
-            }
-        }
-
-        viewModel.fileName.observe(viewLifecycleOwner) {
-            if (it.isNotBlank()) {
-                hasFileName = true
-
-                binding.btnSubmit.isEnabled = hasFileName && hasImageUrl
-            }
-        }
-
-        viewModel.imageUrl.observe(viewLifecycleOwner) {
-            loadingDialog.dismiss()
-
-            if (it.isNotBlank()) {
-                hasImageUrl = true
-
-                binding.btnSubmit.isEnabled = hasFileName && hasImageUrl
             }
         }
 
@@ -137,10 +116,12 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
                         findNavController().popBackStack()
                     }
                     is AddEditCategoryViewModel.CategoryEvent.ShowErrorMessage -> {
-                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
-                    }
-                    AddEditCategoryViewModel.CategoryEvent.ShowLoadingBar -> {
-                        loadingDialog.show()
+                        loadingDialog.dismiss()
+                        Snackbar.make(
+                            requireView(),
+                            event.msg,
+                            Snackbar.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
@@ -159,8 +140,8 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
             .error(R.drawable.ic_food)
             .into(binding.imgCategory)
 
-        viewModel.updateFileName(category.fileName)
-        viewModel.updateImageUrl(category.imageUrl)
+        viewModel.fileName = category.fileName
+        viewModel.imageUrl = category.imageUrl
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -171,7 +152,7 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
 
                 // Show selected image from gallery to the imageView
                 binding.imgCategory.setImageURI(it)
-                viewModel.selectedImage = it
+                viewModel.selectedImage.postValue(it)
             }
         }
     }

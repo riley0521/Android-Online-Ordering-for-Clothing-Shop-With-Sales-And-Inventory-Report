@@ -116,7 +116,7 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
         val action = CategoryFragmentDirections.actionCategoryFragmentToAddEditCategoryFragment(
             category,
             true,
-            "Edit Category (${category.id})"
+            "Edit Category (${category.name})"
         )
         findNavController().navigate(action)
     }

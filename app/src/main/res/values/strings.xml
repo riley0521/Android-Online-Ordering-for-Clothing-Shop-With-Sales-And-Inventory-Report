@@ -193,7 +193,7 @@
     <string name="btn_add_another_size">Add Another Size</string>
     <string name="hint_input_restock_level">Input Restock Level</string>
     <string name="btn_add_review">Add Review</string>
-    <string name="label_add_stock_available">Add Stock (Available: %1$d)</string>
+    <string name="placeholder_add_stock_available">Add Stock (Stock: %1$d)</string>
     <string name="hint_input_stock_to_add">Input Stock to Add</string>
     <string name="placeholder_variant_size">Variant/Size: %1$s</string>
     <string name="hint_input_description_of_your_feedback">Input Description of your feedback</string>

@@ -294,7 +294,7 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                             Snackbar.LENGTH_SHORT
                         ).show()
 
-                        viewModel.getProductById(args.productId!!)
+                        viewModel.getProductById(args.productId)
                     }
                 }
 

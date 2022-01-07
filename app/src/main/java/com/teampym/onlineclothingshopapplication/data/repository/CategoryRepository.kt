@@ -51,6 +51,7 @@ class CategoryRepository @Inject constructor(
 
     suspend fun create(username: String, category: Category): Category? {
         return withContext(dispatcher) {
+            category.dateAdded = Utils.getTimeInMillisUTC()
             val result = categoriesCollectionRef
                 .add(category)
                 .await()

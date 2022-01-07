@@ -94,7 +94,7 @@ class StockInModalFragment : BottomSheetDialogFragment() {
                     chip.isCheckable = true
                     chip.setOnClickListener {
                         binding.tvAvailableStocks.text = getString(
-                            R.string.label_add_stock_available,
+                            R.string.placeholder_add_stock_available,
                             inventory.stock
                         )
                         selectedInv = inventory
@@ -108,17 +108,13 @@ class StockInModalFragment : BottomSheetDialogFragment() {
                 if (selectedInv != null) {
                     etAddStock.text.toString().let { stockToAdd ->
                         if (stockToAdd.isNotBlank()) {
+                            loadingDialog.show()
+
                             viewModel.onSubmitClicked(
                                 product.productId,
                                 selectedInv!!.inventoryId,
                                 stockToAdd.toInt()
                             )
-                            Toast.makeText(
-                                requireContext(),
-                                "Adding stock...",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            loadingDialog.show()
                         } else {
                             Toast.makeText(
                                 requireContext(),

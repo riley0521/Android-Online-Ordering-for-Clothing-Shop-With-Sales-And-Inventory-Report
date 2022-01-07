@@ -104,13 +104,16 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         lifecycleScope.launchWhenStarted {
             launch {
-                val userSession = viewModel.userSession.first()
-                if (userSession.userId.isNotBlank()) {
-                    viewModel.fetchUserFromLocalDb(userSession.userId)
+                viewModel.userSession.collectLatest { pref ->
+                    if (pref.userId.isNotBlank()) {
+                        viewModel.fetchUserFromLocalDb(pref.userId)
 
-                    withContext(Dispatchers.Main) {
-                        binding.refreshLayout.setOnRefreshListener {
-                            viewModel.fetchUserFromLocalDb(userSession.userId)
+                        withContext(Dispatchers.Main) {
+                            binding.refreshLayout.setOnRefreshListener {
+                                if (pref.userId.isNotBlank()) {
+                                    viewModel.fetchUserFromLocalDb(pref.userId)
+                                }
+                            }
                         }
                     }
                 }
@@ -274,6 +277,9 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             tvAddress.isVisible = false
             tvProfile.isVisible = false
             tvWishList.isVisible = false
+
+            tvHistoryLog.isVisible = false
+            tvSales.isVisible = false
         }
     }
 

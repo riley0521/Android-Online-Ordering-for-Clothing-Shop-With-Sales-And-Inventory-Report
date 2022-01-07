@@ -136,15 +136,11 @@ class AddNewsFragment : Fragment(R.layout.fragment_add_news) {
             btnAddPost.setOnClickListener {
                 if (viewModel.isFormValid()) {
                     userInformation?.let { user ->
+                        loadingDialog.show()
+
                         viewModel.onAddPostClicked(
                             user
                         )
-                        Toast.makeText(
-                            requireContext(),
-                            "Adding post...",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        loadingDialog.show()
                     }
                 } else {
                     Snackbar.make(

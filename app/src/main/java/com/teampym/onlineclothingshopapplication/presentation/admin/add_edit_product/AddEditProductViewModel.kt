@@ -74,21 +74,25 @@ class AddEditProductViewModel @Inject constructor(
             state.set(PRODUCT_PRICE, value)
         }
 
-    var productType = state.get(PRODUCT_TYPE) ?: ""
+    var productType = state.get(PRODUCT_TYPE) ?: ProductType.HOODIES.name
         set(value) {
             field = value
             state.set(PRODUCT_TYPE, value)
         }
 
-    var selectedProductImage = state.get<Uri?>(SELECTED_PRODUCT_IMAGE)
+    val selectedProductImage = state.getLiveData<Uri>(SELECTED_PRODUCT_IMAGE, null)
+
+    var fileName = state.get(PRODUCT_FILE_NAME) ?: ""
         set(value) {
             field = value
-            state.set(SELECTED_PRODUCT_IMAGE, value)
+            state.set(PRODUCT_FILE_NAME, value)
         }
 
-    val fileName: MutableLiveData<String> = state.getLiveData(PRODUCT_FILE_NAME, "")
-
-    val imageUrl: MutableLiveData<String> = state.getLiveData(PRODUCT_IMAGE_URL, "")
+    var imageUrl = state.get(PRODUCT_IMAGE_URL) ?: ""
+        set(value) {
+            field = value
+            state.set(PRODUCT_IMAGE_URL, value)
+        }
 
     val imageList: MutableLiveData<MutableList<ProductImage>> =
         state.getLiveData(PRODUCT_IMAGE_LIST, mutableListOf())
@@ -107,22 +111,14 @@ class AddEditProductViewModel @Inject constructor(
         additionalImageList.postValue(list.toMutableList())
     }
 
-    fun updateFileName(name: String) {
-        fileName.postValue(name)
-    }
-
-    fun updateImageUrl(url: String) {
-        imageUrl.postValue(url)
-    }
-
     private fun resetAllUiState() {
         categoryId = ""
         productDesc = ""
         productPrice = 0.0
         productType = ProductType.HOODIES.name
-        selectedProductImage = null
-        updateFileName("")
-        updateImageUrl("")
+        selectedProductImage.postValue(null)
+        fileName = ""
+        imageUrl = ""
         updateImageList(listOf())
         updateAdditionalImages(listOf())
     }
@@ -132,8 +128,8 @@ class AddEditProductViewModel @Inject constructor(
             productName.isNotBlank() &&
             productPrice > 0.0 &&
             productType.isNotBlank() &&
-            fileName.value!!.isNotBlank() &&
-            imageUrl.value!!.isNotBlank() &&
+            fileName.isNotBlank() &&
+            imageUrl.isNotBlank() &&
             imageList.value!!.isNotEmpty()
     }
 
@@ -147,21 +143,31 @@ class AddEditProductViewModel @Inject constructor(
         val userInformation = userInformationDao.getCurrentUser(userSession.userId)
 
         if (isEditMode && product != null && categoryId.isNotBlank()) {
-            if (isFormValid()) {
 
-                async { uploadProductImage() }.await()
-                product.fileName = fileName.value!!
-                product.imageUrl = imageUrl.value!!
-                product.dateModified = Utils.getTimeInMillisUTC()
+            // Upload image to cloud and pass new value
+            // of fileName and imageUrl to product object
+            // we need to do this first to pass the check
+            async { uploadProductImage() }.await()
+            async { uploadAdditionalImages() }.await()
+
+            if (isFormValid()) {
+                val updatedProduct = product.copy(
+                    categoryId = categoryId,
+                    name = productName,
+                    description = productDesc,
+                    price = productPrice,
+                    type = productType,
+                    fileName = fileName,
+                    imageUrl = imageUrl
+                )
+
                 val res = async {
                     productRepository.update(
                         username = "${userInformation?.firstName} ${userInformation?.lastName}",
-                        product
+                        updatedProduct
                     )
                 }.await()
                 if (res) {
-
-                    async { uploadAdditionalImages() }.await()
                     val updatedProductImages = async {
                         productImageRepository.updateAll(imageList.value!!)
                     }.await()
@@ -184,15 +190,20 @@ class AddEditProductViewModel @Inject constructor(
                 )
             }
         } else {
-            if (isFormValid()) {
 
-                async { uploadProductImage() }.await()
+            // Upload image to cloud and pass new value
+            // of fileName and imageUrl to product object
+            // we need to do this first to pass the check
+            async { uploadProductImage() }.await()
+            async { uploadAdditionalImages() }.await()
+
+            if (isFormValid()) {
                 val newProd = Product(
                     categoryId = categoryId,
                     name = productName,
                     description = productDesc,
-                    fileName = fileName.value!!,
-                    imageUrl = imageUrl.value!!,
+                    fileName = fileName,
+                    imageUrl = imageUrl,
                     price = productPrice,
                     type = productType,
                     dateAdded = Utils.getTimeInMillisUTC()
@@ -204,8 +215,6 @@ class AddEditProductViewModel @Inject constructor(
                     )
                 }.await()
                 if (res != null) {
-
-                    async { uploadAdditionalImages() }.await()
                     productId = res.productId
                     imageList.value!!.map {
                         it.productId = res.productId
@@ -238,23 +247,23 @@ class AddEditProductViewModel @Inject constructor(
     }
 
     private fun uploadProductImage() = viewModelScope.launch {
-        if (fileName.value!!.isBlank() && productId.isBlank()) {
-            if (selectedProductImage != null) {
+        if (fileName.isBlank() && productId.isBlank()) {
+            if (selectedProductImage.value != null) {
                 val uploadedImage = async {
-                    productRepository.uploadImage(selectedProductImage!!)
+                    productRepository.uploadImage(selectedProductImage.value!!)
                 }.await()
-                updateFileName(uploadedImage.fileName)
-                updateImageUrl(uploadedImage.url)
+                fileName = uploadedImage.fileName
+                imageUrl = uploadedImage.url
             }
         } else {
-            val res = productRepository.deleteImage(fileName.value!!)
+            val res = productRepository.deleteImage(fileName)
             if (res) {
-                if (selectedProductImage != null) {
+                if (selectedProductImage.value != null) {
                     val uploadedImage = async {
-                        productRepository.uploadImage(selectedProductImage!!)
+                        productRepository.uploadImage(selectedProductImage.value!!)
                     }.await()
-                    updateFileName(uploadedImage.fileName)
-                    updateImageUrl(uploadedImage.url)
+                    fileName = uploadedImage.fileName
+                    imageUrl = uploadedImage.url
                 }
             }
         }
@@ -310,8 +319,8 @@ class AddEditProductViewModel @Inject constructor(
                 )
             } else {
                 _addEditProductChannel.send(
-                    AddEditProductEvent.ShowSuccessMessage(
-                        "Deleting all product images failed. Please wait for a while."
+                    AddEditProductEvent.ShowErrorMessage(
+                        "Deleting all product images failed. Please wait for a while before trying again."
                     )
                 )
             }

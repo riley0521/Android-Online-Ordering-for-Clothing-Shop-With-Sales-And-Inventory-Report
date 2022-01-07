@@ -1,7 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.admin.add_edit_category
 
 import android.net.Uri
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -49,40 +48,42 @@ class AddEditCategoryViewModel @Inject constructor(
             state.set(CATEGORY_NAME, value)
         }
 
-    var selectedImage = state.get<Uri?>(SELECTED_IMAGE)
+    val selectedImage = state.getLiveData<Uri>(SELECTED_IMAGE, null)
+
+    var fileName = state.get(FILE_NAME) ?: ""
         set(value) {
             field = value
-            state.set(SELECTED_IMAGE, value)
+            state.set(FILE_NAME, value)
         }
 
-    val fileName: MutableLiveData<String> = state.getLiveData(FILE_NAME, "")
-
-    val imageUrl: MutableLiveData<String> = state.getLiveData(IMAGE_URL, "")
-
-    fun updateFileName(name: String) {
-        fileName.postValue(name)
-    }
-
-    fun updateImageUrl(url: String) {
-        imageUrl.postValue(url)
-    }
+    var imageUrl = state.get(IMAGE_URL) ?: ""
+        set(value) {
+            field = value
+            state.set(IMAGE_URL, value)
+        }
 
     fun onSubmitClicked(category: Category?, isEditMode: Boolean) = viewModelScope.launch {
         val userSession = preferencesManager.preferencesFlow.first()
         val userInformation = userInformationDao.getCurrentUser(userSession.userId)
 
         if (isEditMode && category != null && categoryId.isNotBlank()) {
+
+            // Upload image to cloud and pass new value
+            // of fileName and imageUrl to category object
+            // we need to do this first to pass the check
+            async { uploadImage() }.await()
+
             if (isFormValid()) {
-                // Upload image to cloud and pass new value
-                // of fileName and imageUrl to category object
-                async { uploadImage() }.await()
-                category.fileName = fileName.value!!
-                category.imageUrl = fileName.value!!
+                val updatedCategory = category.copy(
+                    name = categoryName,
+                    fileName = fileName,
+                    imageUrl = imageUrl
+                )
 
                 val res = async {
                     categoryRepository.update(
                         username = "${userInformation?.firstName} ${userInformation?.lastName}",
-                        category
+                        updatedCategory
                     )
                 }.await()
                 if (res != null) {
@@ -95,15 +96,17 @@ class AddEditCategoryViewModel @Inject constructor(
                 _categoryChannel.send(CategoryEvent.ShowErrorMessage("Please fill the form."))
             }
         } else {
-            if (isFormValid()) {
-                // Upload image to cloud and pass new value
-                // of fileName and imageUrl to category object
-                async { uploadImage() }.await()
 
+            // Upload image to cloud and pass new value
+            // of fileName and imageUrl to category object
+            // we need to do this first to pass the check
+            async { uploadImage() }.await()
+
+            if (isFormValid()) {
                 val newCategory = Category(
                     categoryName,
-                    fileName.value!!,
-                    imageUrl.value!!,
+                    fileName,
+                    imageUrl,
                     dateAdded = Utils.getTimeInMillisUTC()
                 )
                 val res = async {
@@ -125,21 +128,21 @@ class AddEditCategoryViewModel @Inject constructor(
     }
 
     private fun uploadImage() = viewModelScope.launch {
-        if (fileName.value!!.isBlank() && categoryId.isBlank()) {
-            if (selectedImage != null) {
+        if (fileName.isBlank() && categoryId.isBlank()) {
+            if (selectedImage.value != null) {
                 val uploadedImage =
-                    async { categoryRepository.uploadImage(selectedImage!!) }.await()
-                updateFileName(uploadedImage.fileName)
-                updateImageUrl(uploadedImage.url)
+                    async { categoryRepository.uploadImage(selectedImage.value!!) }.await()
+                fileName = uploadedImage.fileName
+                imageUrl = uploadedImage.url
             }
         } else {
-            val res = categoryRepository.deleteImage(fileName.value!!)
+            val res = categoryRepository.deleteImage(fileName)
             if (res) {
-                if (selectedImage != null) {
+                if (selectedImage.value != null) {
                     val uploadedImage =
-                        async { categoryRepository.uploadImage(selectedImage!!) }.await()
-                    updateFileName(uploadedImage.fileName)
-                    updateImageUrl(uploadedImage.url)
+                        async { categoryRepository.uploadImage(selectedImage.value!!) }.await()
+                    fileName = uploadedImage.fileName
+                    imageUrl = uploadedImage.url
                 }
             }
         }
@@ -148,19 +151,18 @@ class AddEditCategoryViewModel @Inject constructor(
     private fun resetAllUiState() = viewModelScope.launch {
         categoryId = ""
         categoryName = ""
-        selectedImage = null
-        updateFileName("")
-        updateImageUrl("")
+        selectedImage.postValue(null)
+        fileName = ""
+        imageUrl = ""
     }
 
     private fun isFormValid(): Boolean {
         return categoryName.isNotBlank() &&
-            fileName.value!!.isNotBlank() &&
-            imageUrl.value!!.isNotBlank()
+            fileName.isNotBlank() &&
+            imageUrl.isNotBlank()
     }
 
     sealed class CategoryEvent {
-        object ShowLoadingBar : CategoryEvent()
         data class NavigateBackWithMessage(val msg: String) : CategoryEvent()
         data class ShowErrorMessage(val msg: String) : CategoryEvent()
     }

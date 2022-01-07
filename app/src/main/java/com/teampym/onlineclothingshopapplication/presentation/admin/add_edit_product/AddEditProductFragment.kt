@@ -53,9 +53,6 @@ class AddEditProductFragment :
 
     private var isEditMode: Boolean = false
 
-    private var hasFileName: Boolean = false
-    private var hasImageUrl: Boolean = false
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -78,24 +75,6 @@ class AddEditProductFragment :
 
         if (product != null) {
             overwriteFields(product)
-        }
-
-        viewModel.fileName.observe(viewLifecycleOwner) {
-            if (it.isNotBlank()) {
-                hasFileName = true
-
-                binding.btnSubmit.isEnabled = hasFileName && hasImageUrl
-            }
-        }
-
-        viewModel.imageUrl.observe(viewLifecycleOwner) {
-            loadingDialog.dismiss()
-
-            if (it.isNotBlank()) {
-                hasImageUrl = true
-
-                binding.btnSubmit.isEnabled = hasFileName && hasImageUrl
-            }
         }
 
         viewModel.imageList.observe(viewLifecycleOwner) {
@@ -344,8 +323,8 @@ class AddEditProductFragment :
             .error(R.drawable.ic_food)
             .into(binding.imgProduct)
 
-        viewModel.updateFileName(product.fileName)
-        viewModel.updateImageUrl(product.imageUrl)
+        viewModel.fileName = product.fileName
+        viewModel.imageUrl = product.imageUrl
 
         viewModel.fetchProductImages(product.productId)
     }
@@ -372,7 +351,7 @@ class AddEditProductFragment :
 
                 // Show selected image from gallery to the imageView
                 binding.imgProduct.setImageURI(it)
-                viewModel.selectedProductImage = it
+                viewModel.selectedProductImage.postValue(it)
             }
         } else if (resultCode == Activity.RESULT_OK && requestCode == SELECT_MULTIPLE_IMAGE_FROM_GALLERY_REQUEST) {
             data?.clipData?.let {

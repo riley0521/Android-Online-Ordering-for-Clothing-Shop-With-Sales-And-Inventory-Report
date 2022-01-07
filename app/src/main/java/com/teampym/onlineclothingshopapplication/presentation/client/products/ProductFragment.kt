@@ -66,10 +66,14 @@ class ProductFragment :
             viewModel.productEvent.collectLatest { event ->
                 when (event) {
                     is ProductViewModel.ProductEvent.ShowSuccessMessage -> {
+                        loadingDialog.dismiss()
+
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
                         adminAdapter.refresh()
                     }
                     is ProductViewModel.ProductEvent.ShowErrorMessage -> {
+                        loadingDialog.dismiss()
+
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
                     }
                 }
@@ -157,7 +161,7 @@ class ProductFragment :
 
     override fun onEditClicked(product: Product) {
         val action = ProductFragmentDirections.actionProductFragmentToAddEditProductFragment(
-            "Edit Product (${product.productId})",
+            "Edit Product (${product.name})",
             product,
             true,
             product.categoryId
