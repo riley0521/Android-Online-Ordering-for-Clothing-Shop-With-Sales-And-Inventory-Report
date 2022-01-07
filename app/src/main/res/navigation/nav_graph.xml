@@ -35,6 +35,11 @@
         <action
             android:id="@+id/action_cartFragment_to_checkOutFragment"
             app:destination="@id/checkOutFragment" />
+        <action
+            android:id="@+id/action_cartFragment_to_profileFragment"
+            app:destination="@id/profileFragment"
+            app:popUpTo="@+id/cartFragment"
+            app:popUpToInclusive="true"/>
     </fragment>
     <fragment
         android:id="@+id/newsFragment"
@@ -53,6 +58,11 @@
         <action
             android:id="@+id/action_orderFragment_to_orderListFragment"
             app:destination="@id/orderListFragment" />
+        <action
+            android:id="@+id/action_orderFragment_to_profileFragment"
+            app:destination="@id/profileFragment"
+            app:popUpTo="@+id/orderFragment"
+            app:popUpToInclusive="true"/>
     </fragment>
     <fragment
         android:id="@+id/productFragment"
@@ -62,9 +72,6 @@
         <action
             android:id="@+id/action_productFragment_to_productDetailFragment"
             app:destination="@id/productDetailFragment" />
-        <action
-            android:id="@+id/action_productFragment_to_inventoryModalFragment"
-            app:destination="@id/inventoryModalFragment" />
         <argument
             android:name="title"
             app:argType="string"
@@ -102,6 +109,19 @@
         <action
             android:id="@+id/action_profileFragment_to_salesFragment"
             app:destination="@id/salesFragment" />
+        <action
+            android:id="@+id/action_profileFragment_self"
+            app:destination="@id/profileFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_orderFragment"
+            app:destination="@id/orderFragment" />
+        <argument
+            android:name="isSigningIn"
+            app:argType="boolean"
+            android:defaultValue="false" />
+        <action
+            android:id="@+id/action_profileFragment_to_frequentlyAskQuestionsFragment"
+            app:destination="@id/frequentlyAskQuestionsFragment" />
     </fragment>
     <action
         android:id="@+id/action_global_profileFragment"
@@ -121,18 +141,13 @@
         <argument
             android:name="name"
             app:argType="string"
-            app:nullable="true"
-            android:defaultValue="Product" />
+            android:defaultValue="Product Detail" />
         <action
             android:id="@+id/action_productDetailFragment_to_inventoryModalFragment"
             app:destination="@id/inventoryModalFragment" />
-        <deepLink
-            android:id="@+id/deepLink"
-            app:uri="https://uncrowned.firebaseapp.com/product/{productId}" />
         <argument
             android:name="productId"
-            app:argType="string"
-            app:nullable="true" />
+            app:argType="string" />
         <action
             android:id="@+id/action_productDetailFragment_to_addEditProductFragment"
             app:destination="@id/addEditProductFragment" />
@@ -145,6 +160,11 @@
         <action
             android:id="@+id/action_productDetailFragment_to_reviewsFragment"
             app:destination="@id/reviewsFragment" />
+        <action
+            android:id="@+id/action_productDetailFragment_to_profileFragment"
+            app:destination="@id/profileFragment"
+            app:popUpTo="@+id/productDetailFragment"
+            app:popUpToInclusive="true"/>
     </fragment>
     <dialog
         android:id="@+id/inventoryModalFragment"
@@ -154,6 +174,9 @@
         <argument
             android:name="product"
             app:argType="com.teampym.onlineclothingshopapplication.data.room.Product" />
+        <action
+            android:id="@+id/action_inventoryModalFragment_to_sizeChartFragment"
+            app:destination="@id/sizeChartFragment" />
     </dialog>
     <fragment
         android:id="@+id/checkOutFragment"
@@ -293,10 +316,14 @@
             app:argType="string" />
         <argument
             android:name="order"
-            app:argType="com.teampym.onlineclothingshopapplication.data.models.Order" />
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.Order"
+            app:nullable="true" />
         <action
             android:id="@+id/action_orderDetailListFragment_to_addReviewFragment"
             app:destination="@id/addReviewFragment" />
+        <argument
+            android:name="orderId"
+            app:argType="string" />
     </fragment><action android:id="@+id/action_global_categoryFragment" app:destination="@id/categoryFragment"/>
     <fragment
         android:id="@+id/addEditCategoryFragment"
@@ -428,4 +455,9 @@
             android:name="month"
             app:argType="string" />
     </fragment>
+    <fragment
+        android:id="@+id/frequentlyAskQuestionsFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.faqs.FrequentlyAskQuestionsFragment"
+        android:label="FAQs"
+        tools:layout="@layout/fragment_frequently_ask_questions" />
 </navigation>

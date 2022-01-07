@@ -1,6 +1,7 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.news
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.core.view.isVisible
@@ -57,12 +58,6 @@ class NewsFragment : Fragment(R.layout.fragment_news), NewsAdapter.NewsListener 
             recyclerNews.adapter = adapter
         }
 
-        viewModel.postPagingData.observe(viewLifecycleOwner) {
-            binding.refreshLayout.isRefreshing = false
-
-            adapter.submitData(viewLifecycleOwner.lifecycle, it)
-        }
-
         viewModel.userSession.observe(viewLifecycleOwner) {
             if (it.userType == UserType.ADMIN.name) {
                 binding.fabNewPost.isVisible = true
@@ -70,6 +65,15 @@ class NewsFragment : Fragment(R.layout.fragment_news), NewsAdapter.NewsListener 
                     findNavController().navigate(R.id.action_newsFragment_to_addNewsFragment)
                 }
             }
+        }
+
+        viewModel.posts.observe(viewLifecycleOwner) {
+            binding.refreshLayout.isRefreshing = false
+
+            Log.d(TAG, viewModel.userId)
+            Log.d(TAG, viewModel.userType)
+
+            adapter.submitData(viewLifecycleOwner.lifecycle, it)
         }
 
         lifecycleScope.launchWhenStarted {

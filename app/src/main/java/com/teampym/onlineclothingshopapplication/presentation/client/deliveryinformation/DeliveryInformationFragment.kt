@@ -16,7 +16,6 @@ import com.teampym.onlineclothingshopapplication.databinding.FragmentDeliveryInf
 import com.teampym.onlineclothingshopapplication.presentation.client.addeditdeliveryinfo.ADD_EDIT_DELETE_REQUEST
 import com.teampym.onlineclothingshopapplication.presentation.client.addeditdeliveryinfo.ADD_EDIT_DELETE_RESULT
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
 
 @AndroidEntryPoint
@@ -30,8 +29,6 @@ class DeliveryInformationFragment :
 
     private lateinit var adapter: DeliveryInformationAdapter
 
-    // I added this to remove the lint
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -131,6 +128,10 @@ class DeliveryInformationFragment :
             }.show()
     }
 
+    override fun onDeleteClicked(deliveryInfo: DeliveryInformation) {
+        showDeleteDeliveryInformationDialog(deliveryInfo)
+    }
+
     override fun onMakeDefaultClicked(deliveryInfo: DeliveryInformation) {
         AlertDialog.Builder(requireContext())
             .setTitle("Set Default Delivery Information")
@@ -155,9 +156,5 @@ class DeliveryInformationFragment :
                 "Edit Address"
             )
         findNavController().navigate(action)
-    }
-
-    override fun onDeleteClicked(deliveryInfo: DeliveryInformation) {
-        showDeleteDeliveryInformationDialog(deliveryInfo)
     }
 }

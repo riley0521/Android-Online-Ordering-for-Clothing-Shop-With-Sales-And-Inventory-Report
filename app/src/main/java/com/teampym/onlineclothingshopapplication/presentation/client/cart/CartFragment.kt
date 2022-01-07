@@ -16,6 +16,7 @@ import com.teampym.onlineclothingshopapplication.data.models.Checkout
 import com.teampym.onlineclothingshopapplication.data.util.CartFlag
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCartBinding
+import com.teampym.onlineclothingshopapplication.presentation.client.orders.OrderFragmentDirections
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 
@@ -53,7 +54,8 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
                 "Please log in first to view your cart.",
                 Toast.LENGTH_LONG
             ).show()
-            findNavController().navigate(R.id.action_global_categoryFragment)
+            val action = CartFragmentDirections.actionCartFragmentToProfileFragment(true)
+            findNavController().navigate(action)
         }
 
         binding.apply {

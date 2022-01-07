@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
@@ -19,7 +18,6 @@ import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.databinding.FragmentInventoryModalBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collectLatest
 
 @AndroidEntryPoint
 class InventoryModalFragment : BottomSheetDialogFragment() {
@@ -65,13 +63,21 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
 
             tvProductName.text = product.name
 
-            binding.btnAddToCart.setOnClickListener {
+            btnViewSizeChart.setOnClickListener {
+                findNavController().navigate(R.id.action_inventoryModalFragment_to_sizeChartFragment)
+            }
+
+            btnAddToCart.setOnClickListener {
                 viewModel.addToCart(
                     userId,
                     product,
                     selectedInv!!
                 )
-                Toast.makeText(requireContext(), "Added ${product.name} to cart.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Added ${product.name} to cart.",
+                    Toast.LENGTH_SHORT
+                ).show()
                 findNavController().popBackStack()
             }
         }
@@ -88,17 +94,21 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
                 chip.text = inventory.size
                 chip.isCheckable = true
                 chip.isEnabled = inventory.stock > 0
-                chip.setOnClickListener {
-                    binding.btnAddToCart.isEnabled = binding.chipSizeGroup
-                        .checkedChipIds
-                        .count() == 1 && userId.isNotEmpty()
+                chip.setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked) {
+                        binding.btnAddToCart.isEnabled = binding.chipSizeGroup
+                            .checkedChipIds
+                            .count() == 1 && userId.isNotEmpty()
 
-                    val numberOfAvailableStocksForSize = "(Available: ${inventory.stock})"
-                    binding.tvAvailableStocks.text = numberOfAvailableStocksForSize
+                        val numberOfAvailableStocksForSize = "(Stock: ${inventory.stock})"
+                        binding.tvAvailableStocks.text = numberOfAvailableStocksForSize
 
-                    // Set the inventory object to global variable
-                    // When chip is selected
-                    selectedInv = inventory
+                        // Set the inventory object to global variable
+                        // When chip is selected
+                        selectedInv = inventory
+                    } else {
+                        binding.tvAvailableStocks.text = ""
+                    }
                 }
                 binding.chipSizeGroup.addView(chip)
             }

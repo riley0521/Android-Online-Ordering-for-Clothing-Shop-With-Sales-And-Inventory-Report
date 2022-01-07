@@ -16,7 +16,11 @@ data class Post(
     var id: String = "",
     var dateCreated: Long = Utils.getTimeInMillisUTC(),
     var numberOfLikes: Long = 0,
-    var numberOfComments: Long = 0
+    var numberOfComments: Long = 0,
+    @get:Exclude
+    var isLikedByCurrentUser: Boolean = false,
+    @get:Exclude
+    var haveUserId: Boolean = false
 ) : Parcelable {
 
     constructor() : this(
@@ -27,10 +31,4 @@ data class Post(
         "",
         ""
     )
-
-    @get:Exclude
-    var isLikedByCurrentUser: Boolean = false
-
-    @get:Exclude
-    var haveUserId: Boolean = false
 }

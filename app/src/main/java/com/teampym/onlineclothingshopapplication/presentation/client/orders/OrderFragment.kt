@@ -17,7 +17,7 @@ import com.teampym.onlineclothingshopapplication.data.util.SHIPPING_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.Status
 import com.teampym.onlineclothingshopapplication.databinding.FragmentOrderBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 
 @AndroidEntryPoint
 class OrderFragment : Fragment(R.layout.fragment_order) {
@@ -82,11 +82,12 @@ class OrderFragment : Fragment(R.layout.fragment_order) {
         }
 
         lifecycleScope.launchWhenStarted {
-            viewModel.userFlow.collectLatest { user ->
-                if (user == null) {
-                    Toast.makeText(requireContext(), "Please login first.", Toast.LENGTH_SHORT).show()
-                    findNavController().navigate(R.id.action_global_categoryFragment)
-                }
+            val user = viewModel.userFlow.first()
+
+            if (user == null) {
+                Toast.makeText(requireContext(), "Please login first.", Toast.LENGTH_SHORT).show()
+                val action = OrderFragmentDirections.actionOrderFragmentToProfileFragment(true)
+                findNavController().navigate(action)
             }
         }
     }

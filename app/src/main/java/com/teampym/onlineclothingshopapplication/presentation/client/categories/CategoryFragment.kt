@@ -41,7 +41,7 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentCategoryBinding.bind(view)
-        loadingDialog = LoadingDialog(requireActivity())
+        binding.refreshLayout.isRefreshing = true
 
         lifecycleScope.launchWhenStarted {
             setupViews(viewModel.session.first().userType)
@@ -75,7 +75,7 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
     private fun setupViews(userType: String) = CoroutineScope(Dispatchers.Main).launch {
         adapter = CategoryAdapter(this@CategoryFragment, userType)
 
-        fetchCategories()
+        viewModel.onLoadCategories()
 
         binding.apply {
             refreshLayout.setOnRefreshListener {
@@ -84,7 +84,6 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
         }
 
         viewModel.categories.observe(viewLifecycleOwner) {
-            loadingDialog.dismiss()
             binding.refreshLayout.isRefreshing = false
 
             adapter.submitList(it)
@@ -98,11 +97,6 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
         super.onResume()
 
         requireActivity().invalidateOptionsMenu()
-    }
-
-    private fun fetchCategories() {
-        viewModel.onLoadCategories()
-        loadingDialog.show()
     }
 
     override fun onItemClick(category: Category) {

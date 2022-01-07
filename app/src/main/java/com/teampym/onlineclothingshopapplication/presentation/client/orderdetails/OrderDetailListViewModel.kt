@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
+import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.OrderDetailRepository
+import com.teampym.onlineclothingshopapplication.data.repository.OrderRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.UserType
@@ -16,7 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class OrderDetailListViewModel @Inject constructor(
-    private val orderDetailRepository: OrderDetailRepository,
+    private val orderRepository: OrderRepository,
     private val userInformationDao: UserInformationDao,
     private val preferencesManager: PreferencesManager,
     private val state: SavedStateHandle
@@ -24,6 +26,7 @@ class OrderDetailListViewModel @Inject constructor(
 
     companion object {
         const val ORDER = "order"
+        const val USER_INFO = "user_info"
     }
 
     val userFlow = preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
@@ -31,28 +34,36 @@ class OrderDetailListViewModel @Inject constructor(
     }
 
     var order = state.getLiveData<Order>(ORDER, null)
+    var userInfo = state.getLiveData<UserInformation>(USER_INFO, null)
 
     fun updateOrder(o: Order) {
         order.postValue(o)
     }
 
-    fun fetchOrderDetails() = viewModelScope.launch {
-        order.value?.let {
-            it.orderDetailList = orderDetailRepository.getByOrderId(
-                it.id,
-                UserType.CUSTOMER.name,
-                it.userId
-            )
+    fun fetchOrderWithDetailsById(
+        orderId: String,
+        userId: String
+    ) = viewModelScope.launch {
 
-            updateOrder(it)
-        }
+        val order = orderRepository.getOne(
+            orderId,
+            userId
+        )
+
+        order.orderDetailList = orderRepository.orderDetailRepository.getByOrderId(
+            orderId,
+            UserType.ADMIN.name,
+            userId
+        )
+
+        updateOrder(order)
     }
 
     suspend fun checkItemIfExchangeable(item: OrderDetail): Boolean {
-        return orderDetailRepository.isExchangeable(item)
+        return orderRepository.orderDetailRepository.isExchangeable(item)
     }
 
     suspend fun checkItemIfCanAddReview(item: OrderDetail): Boolean {
-        return orderDetailRepository.canAddReview(item)
+        return orderRepository.orderDetailRepository.canAddReview(item)
     }
 }

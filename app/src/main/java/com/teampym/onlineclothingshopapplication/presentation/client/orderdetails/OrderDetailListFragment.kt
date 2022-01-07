@@ -45,8 +45,6 @@ class OrderDetailListFragment :
 
     private lateinit var loadingDialog: LoadingDialog
 
-    private var userInfo: UserInformation? = null
-
     @SuppressLint("SetTextI18n", "SimpleDateFormat")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -54,12 +52,18 @@ class OrderDetailListFragment :
         binding = FragmentOrderDetailListBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
 
-        viewModel.updateOrder(args.order)
+        if(args.order != null) {
+            viewModel.updateOrder(args.order!!)
+        }
 
         lifecycleScope.launchWhenStarted {
             val user = viewModel.userFlow.first()
             if (user != null) {
-                userInfo = user
+                viewModel.userInfo.postValue(user)
+
+                if(args.order == null) {
+                    viewModel.fetchOrderWithDetailsById(args.orderId, user.userId)
+                }
 
                 adapter = OrderDetailListAdapter(
                     this@OrderDetailListFragment,
@@ -176,7 +180,7 @@ class OrderDetailListFragment :
             loadingDialog.dismiss()
 
             if (canAddReview) {
-                userInfo?.let {
+                viewModel.userInfo.value?.let { userInfo ->
                     setFragmentResultListener(ADD_REVIEW_REQUEST) { _, bundle ->
                         val result = bundle.getBoolean(ADD_REVIEW_RESULT)
                         if (result) {
@@ -186,14 +190,14 @@ class OrderDetailListFragment :
                                 Snackbar.LENGTH_SHORT
                             ).show()
 
-                            viewModel.fetchOrderDetails()
+                            viewModel.fetchOrderWithDetailsById(args.orderId, userInfo.userId)
                         }
                     }
 
                     val action = OrderDetailListFragmentDirections
                         .actionOrderDetailListFragmentToAddReviewFragment(
                             item,
-                            userInfo!!,
+                            userInfo,
                             item.product.name
                         )
                     findNavController().navigate(action)

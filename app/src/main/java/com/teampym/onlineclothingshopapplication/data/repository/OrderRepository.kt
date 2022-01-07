@@ -28,13 +28,23 @@ import javax.inject.Singleton
 @Singleton
 class OrderRepository @Inject constructor(
     val db: FirebaseFirestore,
-    private val orderDetailRepository: OrderDetailRepository,
-    private val productRepository: ProductRepository,
-    private val notificationTokenRepository: NotificationTokenRepository,
-    private val auditTrailRepository: AuditTrailRepository,
-    private val salesRepository: SalesRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
+
+    @Inject
+    lateinit var orderDetailRepository: OrderDetailRepository
+
+    @Inject
+    lateinit var productRepository: ProductRepository
+
+    @Inject
+    lateinit var notificationTokenRepository: NotificationTokenRepository
+
+    @Inject
+    lateinit var auditTrailRepository: AuditTrailRepository
+
+    @Inject
+    lateinit var salesRepository: SalesRepository
 
     private val orderCollectionRef = db.collection(ORDERS_COLLECTION)
 
@@ -53,6 +63,23 @@ class OrderRepository @Inject constructor(
                 orderDetailRepository
             )
         }
+
+    suspend fun getOne(orderId: String, userId: String): Order {
+        return withContext(dispatcher) {
+            val orderDoc = orderCollectionRef.document(orderId)
+                .get()
+                .await()
+
+            orderDoc?.let {
+                return@withContext orderDoc.toObject<Order>()!!.copy(
+                    id = orderDoc.id,
+                    userId = userId
+                )
+            }
+
+            return@withContext Order()
+        }
+    }
 
     // This will notify all admins about new order (SHIPPING).
     // This will return a new created order
@@ -492,20 +519,21 @@ class OrderRepository @Inject constructor(
         isUserAgreedToShippingFee: Boolean?
     ): Boolean {
         return withContext(dispatcher) {
-
             if (suggestedShippingFee != null && suggestedShippingFee > 0.0) {
-                return@withContext notificationTokenRepository.notifyCustomer(
+                notificationTokenRepository.notifyCustomer(
                     order,
                     userId,
                     "Order (${order.id.take(order.id.length / 2)}...)",
                     "Admin suggests that the order fee should be $suggestedShippingFee"
                 )
+                return@withContext true
             } else if (isUserAgreedToShippingFee != null && isUserAgreedToShippingFee) {
-                return@withContext notificationTokenRepository.notifyAllAdmins(
+                notificationTokenRepository.notifyAllAdmins(
                     order,
                     "Order (${order.id.take(order.id.length / 2)}...)",
                     "User ($userId) has agreed to the suggested shipping fee."
                 )
+                return@withContext true
             }
             return@withContext false
         }

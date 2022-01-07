@@ -1,5 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.products
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -7,11 +8,13 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
@@ -59,8 +62,6 @@ class ProductFragment :
             footer = ProductLoadStateAdapter(adminAdapter)
         )
 
-        viewModel.getProducts()
-
         lifecycleScope.launchWhenStarted {
             viewModel.productEvent.collectLatest { event ->
                 when (event) {
@@ -98,6 +99,27 @@ class ProductFragment :
             header = ProductLoadStateAdapter(adapter),
             footer = ProductLoadStateAdapter(adapter)
         )
+        adapter.addLoadStateListener {
+            if (it.source.refresh is LoadState.NotLoading && it.append.endOfPaginationReached) {
+                if (adapter.itemCount < 1) {
+
+                    if (!searchView.isIconified) {
+                        binding.recyclerProducts.visibility = View.INVISIBLE
+                        binding.tvNoProducts.visibility = View.VISIBLE
+                        binding.tvNoProducts.text =
+                            "We could not find any products for ${viewModel.searchQuery.value}"
+                    } else {
+                        binding.recyclerProducts.visibility = View.INVISIBLE
+                        binding.tvNoProducts.visibility = View.VISIBLE
+                        binding.tvNoProducts.text =
+                            getString(R.string.label_no_products_yet_for_this_category_come_back_later)
+                    }
+                } else {
+                    binding.recyclerProducts.visibility = View.VISIBLE
+                    binding.tvNoProducts.isVisible = false
+                }
+            }
+        }
 
         binding.apply {
             recyclerProducts.setHasFixedSize(true)
@@ -178,6 +200,11 @@ class ProductFragment :
                 return true
             }
         })
+
+        searchView.setOnCloseListener {
+            viewModel.searchQuery.value = ""
+            true
+        }
     }
 
     private fun collectUserSession(userSession: SessionPreferences, menu: Menu) {
@@ -207,6 +234,7 @@ class ProductFragment :
         collectProductPagingData(userSession)
     }
 
+    @SuppressLint("SetTextI18n")
     private fun collectProductPagingData(userSession: SessionPreferences) {
         viewModel.products.observe(viewLifecycleOwner) { pagingData ->
             refreshLayout.isRefreshing = false

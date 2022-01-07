@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -37,77 +36,73 @@ class ProductViewModel @Inject constructor(
     private val _productChannel = Channel<ProductEvent>()
     val productEvent = _productChannel.receiveAsFlow()
 
-    var products = MutableLiveData<PagingData<Product>>()
+    val products = combine(
+        searchQuery.asFlow(),
+        preferencesManager.preferencesFlow
+    ) { search, sessionPref ->
+        Pair(search, sessionPref)
+    }.flatMapLatest { (search, sessionPref) ->
 
-    fun getProducts() {
-        products = combine(
-            searchQuery.asFlow(),
-            preferencesManager.preferencesFlow
-        ) { search, sessionPref ->
-            Pair(search, sessionPref)
-        }.flatMapLatest { (search, sessionPref) ->
-
-            val queryProducts = when (sessionPref.sortOrder) {
-                SortOrder.BY_NAME -> {
-                    if (search.isEmpty()) {
-                        db.collection(PRODUCTS_COLLECTION)
-                            .whereEqualTo("categoryId", sessionPref.categoryId)
-                            .orderBy("name", Query.Direction.ASCENDING)
-                            .limit(30)
-                    } else {
-                        db.collection(PRODUCTS_COLLECTION)
-                            .whereEqualTo("categoryId", sessionPref.categoryId)
-                            .orderBy("name", Query.Direction.ASCENDING)
-                            .startAt(search)
-                            .endAt(search + '\uf8ff')
-                            .limit(30)
-                    }
-                }
-                SortOrder.BY_NEWEST -> {
-                    if (search.isEmpty()) {
-                        db.collection(PRODUCTS_COLLECTION)
-                            .whereEqualTo("categoryId", sessionPref.categoryId)
-                            .orderBy("dateAdded", Query.Direction.DESCENDING)
-                            .limit(30)
-                    } else {
-                        db.collection(PRODUCTS_COLLECTION)
-                            .whereEqualTo("categoryId", sessionPref.categoryId)
-                            .orderBy("dateAdded", Query.Direction.DESCENDING)
-                            .startAt(search)
-                            .endAt(search + '\uf8ff')
-                            .limit(30)
-                    }
-                }
-                // This is not necessary but when you remove this, the compiler
-                // will say it's exhaustive
-                SortOrder.BY_POPULARITY -> {
-                    if (search.isEmpty()) {
-                        db.collection(PRODUCTS_COLLECTION)
-                            .whereEqualTo("categoryId", sessionPref.categoryId)
-                            .orderBy("name", Query.Direction.ASCENDING)
-                            .limit(30)
-                    } else {
-                        db.collection(PRODUCTS_COLLECTION)
-                            .whereEqualTo("categoryId", sessionPref.categoryId)
-                            .orderBy("name", Query.Direction.ASCENDING)
-                            .startAt(search)
-                            .endAt(search + '\uf8ff')
-                            .limit(30)
-                    }
+        val queryProducts = when (sessionPref.sortOrder) {
+            SortOrder.BY_NAME -> {
+                if (search.isEmpty()) {
+                    db.collection(PRODUCTS_COLLECTION)
+                        .whereEqualTo("categoryId", sessionPref.categoryId)
+                        .orderBy("name", Query.Direction.ASCENDING)
+                        .limit(30)
+                } else {
+                    db.collection(PRODUCTS_COLLECTION)
+                        .whereEqualTo("categoryId", sessionPref.categoryId)
+                        .orderBy("name", Query.Direction.ASCENDING)
+                        .startAt(search)
+                        .endAt(search + '\uf8ff')
+                        .limit(30)
                 }
             }
-
-            val userWithWishList = userInformationDao.getUserWithWishList().firstOrNull {
-                it.user?.userId == sessionPref.userId
+            SortOrder.BY_NEWEST -> {
+                if (search.isEmpty()) {
+                    db.collection(PRODUCTS_COLLECTION)
+                        .whereEqualTo("categoryId", sessionPref.categoryId)
+                        .orderBy("dateAdded", Query.Direction.DESCENDING)
+                        .limit(30)
+                } else {
+                    db.collection(PRODUCTS_COLLECTION)
+                        .whereEqualTo("categoryId", sessionPref.categoryId)
+                        .orderBy("dateAdded", Query.Direction.DESCENDING)
+                        .startAt(search)
+                        .endAt(search + '\uf8ff')
+                        .limit(30)
+                }
             }
+            // This is not necessary but when you remove this, the compiler
+            // will say it's exhaustive
+            SortOrder.BY_POPULARITY -> {
+                if (search.isEmpty()) {
+                    db.collection(PRODUCTS_COLLECTION)
+                        .whereEqualTo("categoryId", sessionPref.categoryId)
+                        .orderBy("name", Query.Direction.ASCENDING)
+                        .limit(30)
+                } else {
+                    db.collection(PRODUCTS_COLLECTION)
+                        .whereEqualTo("categoryId", sessionPref.categoryId)
+                        .orderBy("name", Query.Direction.ASCENDING)
+                        .startAt(search)
+                        .endAt(search + '\uf8ff')
+                        .limit(30)
+                }
+            }
+        }
 
-            productRepository.getSome(
-                userWithWishList,
-                queryProducts,
-                sessionPref.sortOrder
-            ).flow.cachedIn(viewModelScope)
-        }.asLiveData() as MutableLiveData<PagingData<Product>>
-    }
+        val userWithWishList = userInformationDao.getUserWithWishList().firstOrNull {
+            it.user?.userId == sessionPref.userId
+        }
+
+        productRepository.getSome(
+            userWithWishList,
+            queryProducts,
+            sessionPref.sortOrder
+        ).flow.cachedIn(viewModelScope)
+    }.asLiveData()
 
     fun getUserSession() = preferencesManager.preferencesFlow.asLiveData()
 

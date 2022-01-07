@@ -6,34 +6,35 @@
         android:enabled="true"
         android:icon="@drawable/ic_home"
         android:orderInCategory="1"
-        android:title="@string/nav_category_title" />
+        android:title="@string/nav_home_title"/>
 
     <item
         android:id="@+id/newsFragment"
         android:enabled="true"
         android:icon="@drawable/ic_news"
         android:orderInCategory="2"
-        android:title="@string/nav_news_title" />
-
-    <item
-        android:id="@+id/orderFragment"
-        android:enabled="true"
-        android:icon="@drawable/ic_orders"
-        android:orderInCategory="3"
-        android:title="@string/nav_orders_title" />
+        android:title="@string/nav_news_title"/>
 
     <item
         android:id="@+id/cartFragment"
         android:enabled="true"
         android:icon="@drawable/ic_cart"
-        android:orderInCategory="4"
-        android:title="@string/nav_cart_title" />
+        android:orderInCategory="3"
+        android:title="@string/nav_cart_title"/>
+
+<!--    <item-->
+<!--        android:id="@+id/orderFragment"-->
+<!--        android:enabled="true"-->
+<!--        android:icon="@drawable/ic_notifications"-->
+<!--        android:orderInCategory="4"-->
+<!--        android:title="@string/nav_orders_title"-->
+<!--        app:labelVisibilityMode="labeled"/>-->
 
     <item
         android:id="@+id/profileFragment"
         android:enabled="true"
         android:icon="@drawable/ic_user"
         android:orderInCategory="4"
-        android:title="@string/nav_profile_title" />
+        android:title="@string/nav_me_title"/>
 
 </menu>

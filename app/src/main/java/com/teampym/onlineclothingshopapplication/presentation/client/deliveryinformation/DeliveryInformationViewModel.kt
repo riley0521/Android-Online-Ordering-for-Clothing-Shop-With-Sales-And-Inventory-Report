@@ -55,22 +55,21 @@ class DeliveryInformationViewModel @Inject constructor(
         }
     }
 
-    fun onDeleteClicked(deliveryInformation: DeliveryInformation?) = viewModelScope.launch {
-        deliveryInformation?.let {
-            if (deliveryInformationRepository.delete(userId, it)) {
-                deliveryInformationDao.delete(it.id)
-                _deliveryInformationChannel.send(
-                    DeliveryInfoEvent.ShowMessage(
-                        "Successfully deleted delivery information."
-                    )
+    fun onDeleteClicked(deliveryInformation: DeliveryInformation) = viewModelScope.launch {
+        val result = deliveryInformationRepository.delete(userId, deliveryInformation)
+        if (result) {
+            deliveryInformationDao.delete(deliveryInformation.id)
+            _deliveryInformationChannel.send(
+                DeliveryInfoEvent.ShowMessage(
+                    "Successfully deleted delivery information."
                 )
-            } else {
-                _deliveryInformationChannel.send(
-                    DeliveryInfoEvent.ShowMessage(
-                        "Failed to delete delivery information."
-                    )
+            )
+        } else {
+            _deliveryInformationChannel.send(
+                DeliveryInfoEvent.ShowMessage(
+                    "Failed to delete delivery information. Please try again."
                 )
-            }
+            )
         }
     }
 

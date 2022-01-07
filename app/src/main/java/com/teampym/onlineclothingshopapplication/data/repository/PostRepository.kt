@@ -116,27 +116,21 @@ class PostRepository @Inject constructor(
 
     suspend fun updateLikeCount(postId: String, count: Long): Boolean {
         return withContext(dispatcher) {
+            try {
+                postCollectionRef
+                    .document(postId)
+                    .set(
+                        mapOf(
+                            "numberOfLikes" to count
+                        ),
+                        SetOptions.merge()
+                    )
+                    .await()
 
-            val postDocument = postCollectionRef
-                .document(postId)
-                .get()
-                .await()
-
-            postDocument?.let { doc ->
-                val post = doc.toObject<Post>()!!.copy(id = doc.id)
-                post.numberOfLikes = count
-
-                try {
-                    doc.reference
-                        .set(post, SetOptions.merge())
-                        .await()
-
-                    return@withContext true
-                } catch (ex: Exception) {
-                    return@withContext false
-                }
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
             }
-            return@withContext false
         }
     }
 

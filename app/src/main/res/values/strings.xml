@@ -8,10 +8,10 @@
     </string-array>
 
     <!--  UI Labels  -->
-    <string name="nav_category_title">Category</string>
+    <string name="nav_home_title">Home</string>
     <string name="nav_news_title">News Feed</string>
     <string name="nav_orders_title">Orders</string>
-    <string name="nav_profile_title">Profile</string>
+    <string name="nav_me_title">Me</string>
     <string name="nav_cart_title">Cart</string>
 
     <string name="label_or">OR</string>
@@ -100,7 +100,7 @@
     <string name="action_search">Search</string>
     <string name="action_sort_best_seller">Sort By Best Seller</string>
     <string name="action_sort_name">Sort By Name</string>
-    <string name="action_sort_new">Sort By New</string>
+    <string name="action_sort_new">Sort By Date (newest-oldest)</string>
 
     <string name="rb_credit_debit_card">Credit/Debit Card</string>
     <string name="rb_cod">Cash On Delivery (COD)</string>
@@ -111,6 +111,7 @@
     <string name="placeholder_product_name">Product Name</string>
     <string name="placeholder_long_sentence">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam luctus, elit sed consequat iaculis, tellus dui dapibus sapien, ut malesuada lectus magna rutrum ex.</string>
     <string name="placeholder_very_long_sentence">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam luctus, elit sed consequat iaculis, tellus dui dapibus sapien, ut malesuada lectus magna rutrum ex. Nulla a vehicula enim, nec ornare purus. Morbi id commodo dolor. Nulla hendrerit posuere dapibus. Nunc condimentum molestie neque et ornare. Duis cursus consequat augue at ultrices. Nullam aliquam lorem nisi, sit amet malesuada nibh commodo sit amet. Sed libero nibh, mattis sit amet condimentum in, lacinia sed risus. Suspendisse ac mauris id nunc tincidunt iaculis eu ut velit. Phasellus accumsan, nibh eu tempor rutrum, nisi elit eleifend ipsum, ut suscipit enim risus quis turpis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam luctus, elit sed consequat iaculis, tellus dui dapibus sapien, ut malesuada lectus magna rutrum ex. Nulla a vehicula enim, nec ornare purus. Morbi id commodo dolor. Nulla hendrerit posuere dapibus. Nunc condimentum molestie neque et ornare. Duis cursus consequat augue at ultrices. Nullam aliquam lorem nisi, sit amet malesuada nibh commodo sit amet. Sed libero nibh, mattis sit amet condimentum in, lacinia sed risus. Suspendisse ac mauris id nunc tincidunt iaculis eu ut velit. Phasellus accumsan, nibh eu tempor rutrum, nisi elit eleifend ipsum, ut suscipit enim risus quis turpis.</string>
+    <string name="placeholder_faqs">Question 1 = Answer 1\nQuestion 1 = Answer 1\nQuestion 1 = Answer 1\nQuestion 1 = Answer 1\nQuestion 1 = Answer 1\nQuestion 1 = Answer 1\nQuestion 1 = Answer 1\nQuestion 1 = Answer 1\nQuestion 1 = Answer 1\nQuestion 1 = Answer 1</string>
 
     <string name="test_address">#300 11th Avenue Justice Lourdes Paredes Cubao Quezon City \nQuezon City, Metro Manila, Metro Manila, 1109</string>
     <string name="default_text">Default</string>
@@ -230,5 +231,9 @@
     <string name="btn_view_sales_for_each_day">View Sales For Each Day</string>
     <string name="placeholder_day">Day %1$d</string>
     <string name="placeholder_total_sales">Total Sales: $ %1$.2f</string>
+    <string name="label_orders">Orders</string>
+    <string name="btn_view_size_chart">View Size Chart</string>
+    <string name="label_no_products_yet_for_this_category_come_back_later">No Products yet for this Category. Come back later!</string>
+    <string name="label_faqs_frequently_ask_questions">FAQs (Frequently Ask Questions)</string>
 
 </resources>

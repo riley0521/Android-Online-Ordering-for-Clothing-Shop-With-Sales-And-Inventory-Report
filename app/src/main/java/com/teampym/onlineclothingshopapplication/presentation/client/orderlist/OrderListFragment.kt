@@ -179,6 +179,7 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
             OrderListFragmentDirections.actionOrderListFragmentToOrderDetailListFragment(
                 title = "Order ${item.id}",
                 order = item,
+                orderId = item.id
             )
         findNavController().navigate(action)
     }

@@ -1,6 +1,7 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.Like
@@ -44,38 +45,41 @@ class LikeRepository @Inject constructor(
 
     suspend fun add(post: Post, like: Like): Boolean {
         return withContext(dispatcher) {
-            val res = postCollectionRef
-                .document(post.id)
-                .collection(LIKES_SUB_COLLECTION)
-                .add(like)
-                .await()
+            try {
+                postCollectionRef
+                    .document(post.id)
+                    .collection(LIKES_SUB_COLLECTION)
+                    .document(like.userId)
+                    .set(like, SetOptions.merge())
+                    .await()
 
-            notificationTokenRepository.notifyAllAdmins(
-                post,
-                "${like.userId} liked your post",
-                "Post with id ${like.postId}"
-            )
-            res != null
+//                notificationTokenRepository.notifyAllAdmins(
+//                    post,
+//                    "${like.userId} liked your post",
+//                    "Post with id ${like.postId}"
+//                )
+
+                return@withContext true
+            } catch (ex: java.lang.Exception) {
+                return@withContext false
+            }
         }
     }
 
     suspend fun remove(postId: String, userId: String): Boolean {
         return withContext(dispatcher) {
-            val result = postCollectionRef
-                .document(postId)
-                .collection(LIKES_SUB_COLLECTION)
-                .whereEqualTo("userId", userId)
-                .limit(1)
-                .get()
-                .await()
+            try {
+                postCollectionRef
+                    .document(postId)
+                    .collection(LIKES_SUB_COLLECTION)
+                    .document(userId)
+                    .delete()
+                    .await()
 
-            val isCompleted = if (result != null) {
-                result.documents[0].reference.delete().await() != null
-            } else {
-                false
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
             }
-
-            isCompleted
         }
     }
 
@@ -89,7 +93,7 @@ class LikeRepository @Inject constructor(
                 .get()
                 .await()
 
-            result != null
+            result.documents.size == 1
         }
     }
 }

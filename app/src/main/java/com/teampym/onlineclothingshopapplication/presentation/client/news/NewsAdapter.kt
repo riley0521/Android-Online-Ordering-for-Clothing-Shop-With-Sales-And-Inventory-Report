@@ -93,7 +93,11 @@ class NewsAdapter constructor(
                                         .setTitle("DELETE POST")
                                         .setMessage("Are you sure you want to delete this post?")
                                         .setPositiveButton("Yes") { _, _ ->
-                                            viewModel.onViewEvent(NewsFragment.NewsPagerEvent.Remove(post))
+                                            viewModel.onViewEvent(
+                                                NewsFragment.NewsPagerEvent.Remove(
+                                                    post
+                                                )
+                                            )
                                         }.setNegativeButton("No") { dialog, _ ->
                                             dialog.dismiss()
                                         }.show()
@@ -163,39 +167,6 @@ class NewsAdapter constructor(
                 txtTitle.text = item.title
                 txtDescription.text = item.description
 
-                if (item.isLikedByCurrentUser) {
-                    imgLike.setColorFilter(ContextCompat.getColor(context, R.color.purple_500))
-                    tvLike.setTextColor(ContextCompat.getColor(context, R.color.purple_500))
-
-                    tvLike.text = context.getString(R.string.btn_liked)
-                } else {
-                    imgLike.setColorFilter(ContextCompat.getColor(context, android.R.color.black))
-                    tvLike.setTextColor(ContextCompat.getColor(context, android.R.color.black))
-
-                    tvLike.text = context.getString(R.string.btn_like)
-                }
-
-                if (item.numberOfLikes == 0L) {
-                    tvLikeDescription.visibility = View.INVISIBLE
-                } else if (item.isLikedByCurrentUser && item.numberOfLikes == 1L) {
-                    tvLikeDescription.text = "You liked this post."
-                } else if (item.numberOfLikes == 1L) {
-                    tvLikeDescription.text = "1 person liked this post."
-                } else if (item.numberOfLikes > 1L) {
-                    tvLikeDescription.text = "${item.numberOfLikes} people liked this post."
-                } else if (item.isLikedByCurrentUser && item.numberOfLikes > 1L) {
-                    tvLikeDescription.text = context.getString(
-                        R.string.placeholder_like_description,
-                        "You, and",
-                        item.numberOfLikes - 1
-                    )
-                }
-
-                tvComment.text = context.getString(
-                    R.string.placeholder_comment,
-                    item.numberOfComments
-                )
-
                 if (viewModel.userType == UserType.ADMIN.name) {
                     imgMenu.isVisible = true
 
@@ -206,11 +177,56 @@ class NewsAdapter constructor(
                     tvComment.isVisible = false
                 }
 
-                if (!item.haveUserId || viewModel.userType == UserType.ADMIN.name
-                ) {
+                if (item.haveUserId) {
+                    if (item.isLikedByCurrentUser) {
+                        imgLike.setColorFilter(ContextCompat.getColor(context, R.color.purple_500))
+                        tvLike.setTextColor(ContextCompat.getColor(context, R.color.purple_500))
+
+                        tvLike.text = context.getString(R.string.btn_liked)
+                    } else {
+                        imgLike.setColorFilter(
+                            ContextCompat.getColor(
+                                context,
+                                android.R.color.black
+                            )
+                        )
+                        tvLike.setTextColor(ContextCompat.getColor(context, android.R.color.black))
+
+                        tvLike.text = context.getString(R.string.btn_like)
+                    }
+                } else {
                     imgLike.isVisible = false
                     tvLike.isVisible = false
                 }
+
+                if (item.numberOfLikes == 0L) {
+                    tvLikeDescription.visibility = View.INVISIBLE
+                } else if (item.numberOfLikes == 1L) {
+                    if (item.isLikedByCurrentUser) {
+                        tvLikeDescription.isVisible = true
+                        tvLikeDescription.text = "You liked this post."
+                    } else {
+                        tvLikeDescription.isVisible = true
+                        tvLikeDescription.text = "1 person liked this post."
+                    }
+                } else if (item.numberOfLikes > 1L) {
+                    if (item.isLikedByCurrentUser) {
+                        tvLikeDescription.isVisible = true
+                        tvLikeDescription.text = context.getString(
+                            R.string.placeholder_like_description,
+                            "You, and",
+                            item.numberOfLikes - 1
+                        )
+                    } else {
+                        tvLikeDescription.isVisible = true
+                        tvLikeDescription.text = "${item.numberOfLikes} people liked this post."
+                    }
+                }
+
+                tvComment.text = context.getString(
+                    R.string.placeholder_comment,
+                    item.numberOfComments
+                )
             }
         }
     }

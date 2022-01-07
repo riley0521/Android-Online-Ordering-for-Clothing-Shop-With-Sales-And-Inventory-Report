@@ -59,8 +59,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/tvInstruction"
-        app:layout_constraintTop_toBottomOf="@+id/imgProductInventory"
-        tools:text="(Available Stock: 14)" />
+        app:layout_constraintTop_toBottomOf="@+id/imgProductInventory" />
 
     <com.google.android.material.chip.ChipGroup
         android:id="@+id/chipSizeGroup"
@@ -90,4 +89,15 @@
         app:layout_constraintHorizontal_bias="0.05"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/chipSizeGroup" />
+
+    <Button
+        android:id="@+id/btnViewSizeChart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_view_size_chart"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintStart_toEndOf="@+id/imgProductInventory"
+        app:layout_constraintTop_toBottomOf="@+id/tvProductName" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

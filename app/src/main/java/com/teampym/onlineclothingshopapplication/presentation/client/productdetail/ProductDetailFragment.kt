@@ -2,6 +2,7 @@ package com.teampym.onlineclothingshopapplication.presentation.client.productdet
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -17,6 +18,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
+import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.util.LinkType
@@ -31,6 +33,8 @@ import com.teampym.onlineclothingshopapplication.presentation.admin.stockin.STOC
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+
+private const val TAG = "ProductDetailFragment"
 
 @AndroidEntryPoint
 class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
@@ -60,7 +64,7 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
 
         if (args.product == null) {
             // Product ID Should not be null if Product Parcelable is null
-            viewModel.getProductById(args.productId!!)
+            viewModel.getProductById(args.productId)
         } else {
             viewModel.updateProduct(args.product!!)
         }
@@ -107,13 +111,6 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
     @SuppressLint("NotifyDataSetChanged")
     private fun setupViews(product: Product) {
         binding.apply {
-            btnAddToCart.setOnClickListener {
-                val action =
-                    ProductDetailFragmentDirections.actionProductDetailFragmentToInventoryModalFragment(
-                        product
-                    )
-                findNavController().navigate(action)
-            }
 
             val priceStr = "$" + product.price
             tvProductName.text = product.name
@@ -126,11 +123,18 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
 
             tvDescription.text = descStr
             btnAddToCart.setOnClickListener {
-                val action =
-                    ProductDetailFragmentDirections.actionProductDetailFragmentToInventoryModalFragment(
-                        product
+                if (userId.isNotBlank()) {
+                    val action =
+                        ProductDetailFragmentDirections.actionProductDetailFragmentToInventoryModalFragment(
+                            product
+                        )
+                    findNavController().navigate(action)
+                } else {
+                    val action = ProductDetailFragmentDirections.actionProductDetailFragmentToProfileFragment(
+                        true
                     )
-                findNavController().navigate(action)
+                    findNavController().navigate(action)
+                }
             }
 
             // submit list to the image adapter

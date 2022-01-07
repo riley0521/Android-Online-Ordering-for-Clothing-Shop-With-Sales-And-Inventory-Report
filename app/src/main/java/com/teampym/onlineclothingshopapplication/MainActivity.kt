@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.bundleOf
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
@@ -33,6 +34,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setTheme(R.style.Theme_OnlineClothingShop)
         setContentView(R.layout.activity_main)
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 
         // Create notification channel when opening your app
         // It's okay since you only have SAA (Single Activity Application)
@@ -45,7 +47,6 @@ class MainActivity : AppCompatActivity() {
             setOf(
                 R.id.categoryFragment,
                 R.id.newsFragment,
-                R.id.orderFragment,
                 R.id.cartFragment,
                 R.id.profileFragment
             )
@@ -59,7 +60,6 @@ class MainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener { controller, _, _ ->
             if (controller.currentDestination?.id == R.id.categoryFragment ||
                 controller.currentDestination?.id == R.id.newsFragment ||
-                controller.currentDestination?.id == R.id.orderFragment ||
                 controller.currentDestination?.id == R.id.cartFragment ||
                 controller.currentDestination?.id == R.id.profileFragment
             ) {
