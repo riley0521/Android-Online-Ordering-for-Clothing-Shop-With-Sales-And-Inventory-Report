@@ -13,6 +13,7 @@ data class Post(
     var avatarUrl: String,
     var imageUrl: String,
     var fileName: String,
+    var userId: String,
     var id: String = "",
     var dateCreated: Long = Utils.getTimeInMillisUTC(),
     var numberOfLikes: Long = 0,
@@ -24,6 +25,7 @@ data class Post(
 ) : Parcelable {
 
     constructor() : this(
+        "",
         "",
         "",
         "",

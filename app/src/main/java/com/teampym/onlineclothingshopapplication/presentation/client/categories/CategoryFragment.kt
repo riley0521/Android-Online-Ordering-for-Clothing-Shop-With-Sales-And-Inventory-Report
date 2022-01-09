@@ -41,6 +41,7 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentCategoryBinding.bind(view)
+        loadingDialog = LoadingDialog(requireActivity())
         binding.refreshLayout.isRefreshing = true
 
         lifecycleScope.launchWhenStarted {

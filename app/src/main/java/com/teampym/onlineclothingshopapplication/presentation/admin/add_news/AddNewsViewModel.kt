@@ -12,9 +12,11 @@ import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.NotificationTokenRepository
 import com.teampym.onlineclothingshopapplication.data.repository.PostRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
+import com.teampym.onlineclothingshopapplication.data.room.SessionPreferences
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -73,6 +75,7 @@ class AddNewsViewModel @Inject constructor(
                 avatarUrl = userInformation.avatarUrl ?: "",
                 imageUrl = uploadedImageWithUrl?.url ?: "",
                 fileName = uploadedImageWithUrl?.fileName ?: "",
+                userId = userInformation.userId
             )
         )
         if (result != null) {

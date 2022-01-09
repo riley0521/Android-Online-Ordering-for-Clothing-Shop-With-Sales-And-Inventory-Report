@@ -27,7 +27,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -175,6 +174,12 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                                 Snackbar.LENGTH_LONG
                             ).show()
                         }
+                        ProfileViewModel.ProfileEvent.SignedIn -> {
+                            loadingDialog.dismiss()
+
+                            requireActivity().finish()
+                            requireActivity().startActivity(requireActivity().intent)
+                        }
                     }
                 }
             }
@@ -280,6 +285,9 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
             tvHistoryLog.isVisible = false
             tvSales.isVisible = false
+
+            requireActivity().finish()
+            requireActivity().startActivity(requireActivity().intent)
         }
     }
 

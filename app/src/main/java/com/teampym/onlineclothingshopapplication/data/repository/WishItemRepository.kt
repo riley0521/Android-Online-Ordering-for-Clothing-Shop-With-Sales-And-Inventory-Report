@@ -7,6 +7,7 @@ import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.WishItem
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import com.teampym.onlineclothingshopapplication.data.util.WISH_LIST_SUB_COLLECTION
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
@@ -60,8 +61,7 @@ class WishItemRepository @Inject constructor(
                 userId = userId,
                 cartId = "",
                 type = product.type,
-                dateAdded = product.dateAdded,
-                dateModified = product.dateModified,
+                dateAdded = Utils.getTimeInMillisUTC(),
                 totalRate = product.totalRate,
                 numberOfReviews = product.numberOfReviews
             )

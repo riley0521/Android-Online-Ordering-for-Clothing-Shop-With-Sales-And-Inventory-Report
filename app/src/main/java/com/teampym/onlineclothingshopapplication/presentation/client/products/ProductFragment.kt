@@ -164,7 +164,8 @@ class ProductFragment :
             "Edit Product (${product.name})",
             product,
             true,
-            product.categoryId
+            product.categoryId,
+            args.title
         )
         findNavController().navigate(action)
     }
@@ -319,7 +320,9 @@ class ProductFragment :
                     .actionProductFragmentToAddEditProductFragment(
                         categoryId = args.categoryId,
                         title = "Add New Product",
-                        editMode = false
+                        editMode = false,
+                        categoryName = args.title,
+                        product = null
                     )
                 findNavController().navigate(action)
                 true

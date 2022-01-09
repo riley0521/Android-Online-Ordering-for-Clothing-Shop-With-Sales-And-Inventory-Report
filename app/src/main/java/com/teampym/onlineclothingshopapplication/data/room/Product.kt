@@ -20,13 +20,13 @@ data class Product(
     var fileName: String,
     var imageUrl: String,
     var price: Double,
+    var type: String,
     var productId: String = "",
     @PrimaryKey
     @get:Exclude
     var roomId: String = "",
     @get:Exclude
     var cartId: String = "",
-    var type: String = ProductType.HOODIES.name,
     var dateAdded: Long = 0,
     var dateModified: Long = 0,
     var totalRate: Double = 0.0,
@@ -41,7 +41,8 @@ data class Product(
         "",
         "",
         "",
-        0.0
+        0.0,
+        ""
     )
 
     @get:Exclude

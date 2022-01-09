@@ -18,8 +18,7 @@ data class Inventory(
     var pCartId: String = "",
     var committed: Long = 0,
     var sold: Long = 0,
-    var returned: Long = 0,
-    var restockLevel: Long = 0
+    var returned: Long = 0
 ) : Parcelable {
 
     constructor() : this(

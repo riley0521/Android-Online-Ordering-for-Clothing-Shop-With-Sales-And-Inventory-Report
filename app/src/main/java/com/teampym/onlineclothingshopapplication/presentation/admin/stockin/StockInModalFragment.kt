@@ -86,6 +86,11 @@ class StockInModalFragment : BottomSheetDialogFragment() {
 
     private fun setupViews(product: Product) {
         binding.apply {
+            tvAvailableStocks.text = getString(
+                R.string.placeholder_add_stock_available,
+                0
+            )
+
             if (product.inventoryList.isNotEmpty()) {
                 for (inventory in product.inventoryList) {
                     val chip = layoutInflater.inflate(R.layout.inventory_item, null, false) as Chip

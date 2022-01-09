@@ -168,7 +168,7 @@ class NewsAdapter constructor(
                 txtDescription.text = item.description
 
                 if (viewModel.userType == UserType.ADMIN.name) {
-                    imgMenu.isVisible = true
+                    imgMenu.isVisible = item.userId == viewModel.userId
 
                     imgLike.isVisible = false
                     tvLike.isVisible = false

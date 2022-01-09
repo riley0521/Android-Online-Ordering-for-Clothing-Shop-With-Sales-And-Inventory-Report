@@ -1,7 +1,6 @@
 package com.teampym.onlineclothingshopapplication.data.models
 
 import android.os.Parcelable
-import com.teampym.onlineclothingshopapplication.data.util.Utils
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
@@ -19,5 +18,4 @@ data class Category(
         "",
         ""
     )
-
 }

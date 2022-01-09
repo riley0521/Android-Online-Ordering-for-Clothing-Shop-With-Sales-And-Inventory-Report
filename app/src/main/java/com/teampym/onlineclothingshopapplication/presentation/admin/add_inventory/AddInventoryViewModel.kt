@@ -3,14 +3,12 @@ package com.teampym.onlineclothingshopapplication.presentation.admin.add_invento
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.repository.ProductInventoryRepository
 import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -21,7 +19,7 @@ import javax.inject.Inject
 class AddInventoryViewModel @Inject constructor(
     private val inventoryRepository: ProductInventoryRepository,
     private val userInformationDao: UserInformationDao,
-    private val preferencesManager: PreferencesManager,
+    preferencesManager: PreferencesManager,
     private val state: SavedStateHandle
 ) : ViewModel() {
 
@@ -30,7 +28,6 @@ class AddInventoryViewModel @Inject constructor(
         private const val PRODUCT_NAME = "product_name"
         private const val INVENTORY_SIZE = "inventory_size"
         private const val INVENTORY_STOCK = "inventory_stock"
-        private const val INVENTORY_RESTOCK_LEVEL = "inventory_restock_level"
         private const val INVENTORY_AVAIL_SIZE_LIST = "inventory_avail_size_list"
     }
 
@@ -58,12 +55,6 @@ class AddInventoryViewModel @Inject constructor(
             state.set(INVENTORY_STOCK, value)
         }
 
-    var inventoryRestockLevel = state.get<Int>(INVENTORY_RESTOCK_LEVEL) ?: 0
-        set(value) {
-            field = value
-            state.set(INVENTORY_RESTOCK_LEVEL, value)
-        }
-
     val availableInvList: MutableLiveData<List<String>> = state.getLiveData(
         INVENTORY_AVAIL_SIZE_LIST,
         listOf()
@@ -79,14 +70,12 @@ class AddInventoryViewModel @Inject constructor(
     private fun resetAllUiState() {
         inventorySize = ""
         inventoryStock = 0
-        inventoryRestockLevel = 0
     }
 
     private fun isFormValid(): Boolean {
         return productId.isNotBlank() &&
             inventorySize.isNotBlank() &&
-            inventoryStock > 0 &&
-            inventoryRestockLevel < inventoryStock
+            inventoryStock > 0
     }
 
     val session = preferencesManager.preferencesFlow
@@ -99,16 +88,13 @@ class AddInventoryViewModel @Inject constructor(
             val newInv = Inventory(
                 pid = productId,
                 size = inventorySize,
-                stock = inventoryStock.toLong(),
-                restockLevel = inventoryRestockLevel.toLong()
+                stock = inventoryStock.toLong()
             )
-            val res = async {
-                inventoryRepository.create(
-                    username = "${userInformation?.firstName} ${userInformation?.lastName}",
-                    productName = productName,
-                    newInv
-                )
-            }.await()
+            val res = inventoryRepository.create(
+                username = "${userInformation?.firstName} ${userInformation?.lastName}",
+                productName = productName,
+                newInv
+            )
             if (res != null) {
                 resetAllUiState()
                 if (isAddingAnother) {
@@ -135,7 +121,7 @@ class AddInventoryViewModel @Inject constructor(
     }
 
     fun onLoadSizesInitiated() = viewModelScope.launch {
-        val invList = async { inventoryRepository.getAll(productId) }.await()
+        val invList = inventoryRepository.getAll(productId)
         val availableSizes = mutableListOf<String>()
         invList.forEach {
             availableSizes.add(it.size)

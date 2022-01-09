@@ -45,12 +45,15 @@ class ProductImageAdapter(
         fun bind(item: Any) {
             when (item) {
                 is Uri -> {
-                    binding.imgProductShots.setImageURI(item)
+                    Glide.with(itemView)
+                        .load(item)
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .error(R.drawable.ic_food)
+                        .into(binding.imgProductShots)
                 }
                 is ProductImage -> {
                     Glide.with(itemView)
                         .load(item.imageUrl)
-                        .centerCrop()
                         .transition(DrawableTransitionOptions.withCrossFade())
                         .error(R.drawable.ic_food)
                         .into(binding.imgProductShots)

@@ -186,11 +186,6 @@ enum class UserType {
     ADMIN
 }
 
-enum class ProductType {
-    SHIRTS,
-    HOODIES
-}
-
 enum class AuditType {
     CATEGORY,
     PRODUCT,

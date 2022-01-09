@@ -85,31 +85,28 @@ class CategoryRepository @Inject constructor(
         }
     }
 
-    suspend fun update(username: String, category: Category?): Boolean {
+    suspend fun update(username: String, category: Category): Boolean {
         return withContext(dispatcher) {
-            if (category != null) {
-                category.dateModified = Utils.getTimeInMillisUTC()
+            category.dateModified = Utils.getTimeInMillisUTC()
 
-                try {
-                    categoriesCollectionRef
-                        .document(category.id)
-                        .set(category, SetOptions.merge())
-                        .await()
+            try {
+                categoriesCollectionRef
+                    .document(category.id)
+                    .set(category, SetOptions.merge())
+                    .await()
 
-                    auditTrailRepository.insert(
-                        AuditTrail(
-                            username = username,
-                            description = "$username UPDATED category - ${category.name}",
-                            type = AuditType.CATEGORY.name
-                        )
+                auditTrailRepository.insert(
+                    AuditTrail(
+                        username = username,
+                        description = "$username UPDATED category - ${category.name}",
+                        type = AuditType.CATEGORY.name
                     )
+                )
 
-                    return@withContext true
-                } catch (ex: Exception) {
-                    return@withContext false
-                }
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
             }
-            false
         }
     }
 

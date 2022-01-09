@@ -7,7 +7,6 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -46,23 +45,20 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
         val isEditMode = args.editMode
 
         if (category != null) {
-            if (viewModel.categoryName.isNotBlank() ||
-                viewModel.fileName.isNotBlank() ||
-                viewModel.imageUrl.isNotBlank()
-            ) {
-                AlertDialog.Builder(requireContext())
-                    .setTitle("OVERWRITE FIELDS")
-                    .setMessage(
-                        "You are trying to add a new category. " +
-                            "If you press 'Yes' this will override those fields?" +
-                            "Do you wish to continue?"
-                    ).setPositiveButton("Yes") { _, _ ->
-                        overwriteFields(category)
-                    }.setNegativeButton("No") { _, _ ->
-                        findNavController().popBackStack()
-                    }.show()
-            } else {
-                overwriteFields(category)
+            overwriteFields(category)
+        }
+
+        viewModel.selectedImage.observe(viewLifecycleOwner) {
+            if (it != null) {
+                // Show selected image from gallery to the imageView
+                Glide.with(requireContext())
+                    .load(it)
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .error(R.drawable.ic_food)
+                    .into(binding.imgCategory)
+                if (category != null) {
+                    overwriteFields(category)
+                }
             }
         }
 
@@ -133,12 +129,14 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
         viewModel.categoryId = category.id
         viewModel.categoryName = category.name
 
-        Glide.with(requireContext())
-            .load(category.imageUrl)
-            .centerCrop()
-            .transition(DrawableTransitionOptions.withCrossFade())
-            .error(R.drawable.ic_food)
-            .into(binding.imgCategory)
+        if (viewModel.selectedImage.value == null) {
+            Glide.with(requireContext())
+                .load(category.imageUrl)
+                .centerCrop()
+                .transition(DrawableTransitionOptions.withCrossFade())
+                .error(R.drawable.ic_food)
+                .into(binding.imgCategory)
+        }
 
         viewModel.fileName = category.fileName
         viewModel.imageUrl = category.imageUrl
@@ -150,8 +148,6 @@ class AddEditCategoryFragment : Fragment(R.layout.fragment_add_edit_category) {
         if (resultCode == Activity.RESULT_OK && requestCode == SELECT_CATEGORY_IMG_REQUEST) {
             data?.data?.let {
 
-                // Show selected image from gallery to the imageView
-                binding.imgCategory.setImageURI(it)
                 viewModel.selectedImage.postValue(it)
             }
         }

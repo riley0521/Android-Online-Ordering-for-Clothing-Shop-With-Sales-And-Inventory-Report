@@ -80,8 +80,9 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
 
         binding.apply {
             etSize.setText(viewModel.inventorySize)
-            etAvailableStocks.setText(viewModel.inventoryStock.toString())
-            etRestockLevel.setText(viewModel.inventoryRestockLevel.toString())
+            if (viewModel.inventoryStock > 0) {
+                etAvailableStocks.setText(viewModel.inventoryStock.toString())
+            }
 
             etSize.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(
@@ -123,27 +124,6 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
                 }
             })
 
-            etRestockLevel.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(
-                    s: CharSequence?,
-                    start: Int,
-                    count: Int,
-                    after: Int
-                ) {
-                    // Nothing
-                }
-
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    if (s.toString().isNotEmpty()) {
-                        viewModel.inventoryRestockLevel = s.toString().toInt()
-                    }
-                }
-
-                override fun afterTextChanged(s: Editable?) {
-                    // Nothing
-                }
-            })
-
             btnAddAnotherSize.setOnClickListener {
                 if (isSizeExisting()) {
                     Snackbar.make(
@@ -164,12 +144,6 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
                         "Size is already existing in database. Avoid duplicates",
                         Snackbar.LENGTH_SHORT
                     ).show()
-                } else if (viewModel.inventoryRestockLevel > viewModel.inventoryStock) {
-                    Snackbar.make(
-                        requireView(),
-                        "Stock should be greater than restock level.",
-                        Snackbar.LENGTH_SHORT
-                    ).show()
                 } else {
                     loadingDialog.show()
                     viewModel.onSubmitClicked(false)
@@ -182,6 +156,7 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
                 when (event) {
                     is AddInventoryViewModel.AddInventoryEvent.NavigateBackWithMessage -> {
                         loadingDialog.dismiss()
+
                         Toast.makeText(
                             requireContext(),
                             event.msg,
@@ -191,13 +166,18 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
                             findNavController().getBackStackEntry(R.id.addEditProductFragment)
 
                             val categoryId = viewModel.session.first().categoryId
-                            val action = AddInventoryFragmentDirections.actionAddInventoryFragmentToProductFragment(categoryId = categoryId)
+                            val action =
+                                AddInventoryFragmentDirections.actionAddInventoryFragmentToProductFragment(
+                                    categoryId = categoryId
+                                )
                             findNavController().navigate(action)
                         } catch (ex: Exception) {
                             findNavController().popBackStack()
                         }
                     }
                     is AddInventoryViewModel.AddInventoryEvent.ShowSuccessMessageAndResetState -> {
+                        loadingDialog.dismiss()
+
                         Snackbar.make(
                             requireView(),
                             event.msg,
@@ -209,6 +189,7 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
                     }
                     is AddInventoryViewModel.AddInventoryEvent.ShowErrorMessage -> {
                         loadingDialog.dismiss()
+
                         Snackbar.make(
                             requireView(),
                             event.msg,
@@ -225,8 +206,7 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
     private fun resetFields() {
         binding.apply {
             etSize.setText(viewModel.inventorySize)
-            etAvailableStocks.setText(viewModel.inventoryStock)
-            etRestockLevel.setText(viewModel.inventoryRestockLevel)
+            etAvailableStocks.setText("")
         }
     }
 

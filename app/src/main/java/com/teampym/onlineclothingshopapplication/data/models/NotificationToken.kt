@@ -13,7 +13,7 @@ data class NotificationToken(
     var token: String,
     @PrimaryKey
     var id: String = "",
-    var dateModified: Long = 0,
+    var dateAdded: Long = 0,
     var userType: String = UserType.CUSTOMER.name
 ) : Parcelable {
 

@@ -112,6 +112,8 @@ class ProfileViewModel @Inject constructor(
             deliveryInformationDao.insertAll(fetchedDeliveryInfoList.await())
 
             fetchUserFromLocalDb(user.uid)
+
+            _profileChannel.send(ProfileEvent.SignedIn)
         } else {
             _profileChannel.send(ProfileEvent.NotRegistered)
         }
@@ -148,6 +150,7 @@ class ProfileViewModel @Inject constructor(
     // Events used to notify the UI about what's happening.
     sealed class ProfileEvent {
         object VerificationSent : ProfileEvent()
+        object SignedIn : ProfileEvent()
         object SignedOut : ProfileEvent()
         object NotRegistered : ProfileEvent()
         data class ShowSuccessMessage(val msg: String) : ProfileEvent()

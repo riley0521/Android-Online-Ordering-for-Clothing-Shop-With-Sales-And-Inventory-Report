@@ -9,9 +9,11 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.teampym.onlineclothingshopapplication.data.util.AuditType
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 import javax.inject.Inject
+import javax.inject.Provider
 import javax.inject.Singleton
 
 private const val TAG = "PreferencesManager"
@@ -38,7 +40,7 @@ data class SessionPreferences(
     val categoryId: String = ""
 )
 
-private val Context.dataStore by preferencesDataStore(
+val Context.dataStore by preferencesDataStore(
     name = SESSION_PREFERENCES
 )
 
@@ -98,6 +100,10 @@ class PreferencesManager @Inject constructor(
         }
     }
 
+    suspend fun getUserType(): String {
+        return context.dataStore.data.map { it[PreferencesKeys.USER_TYPE] ?: "" }.first()
+    }
+
     suspend fun updateUserType(userType: String) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.USER_TYPE] = userType
@@ -121,7 +127,7 @@ class PreferencesManager @Inject constructor(
         }
     }
 
-    private object PreferencesKeys {
+    object PreferencesKeys {
         val SORT_ORDER = stringPreferencesKey("sort_order")
         val PAYMENT_METHOD = stringPreferencesKey("payment_method")
         val LOG_TYPE = stringPreferencesKey("log_type")

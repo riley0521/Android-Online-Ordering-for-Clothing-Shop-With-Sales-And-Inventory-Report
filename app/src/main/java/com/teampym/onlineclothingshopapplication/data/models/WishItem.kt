@@ -18,14 +18,13 @@ data class WishItem(
     var price: Double,
     var productId: String,
     var userId: String,
+    var type: String,
     @get:Exclude
     var cartId: String,
     @PrimaryKey
     @get:Exclude
     var roomId: String = "",
-    var type: String = ProductType.HOODIES.name,
     var dateAdded: Long = 0,
-    var dateModified: Long = 0,
     var totalRate: Double = 0.0,
     var numberOfReviews: Long = 0
 ) : Parcelable {
@@ -37,6 +36,7 @@ data class WishItem(
         "",
         "",
         0.0,
+        "",
         "",
         "",
         ""

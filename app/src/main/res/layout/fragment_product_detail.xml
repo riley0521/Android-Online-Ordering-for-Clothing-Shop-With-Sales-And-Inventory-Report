@@ -16,6 +16,19 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
+            <TextView
+                android:id="@+id/tvNoAvailableImages"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_no_available_images"
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                android:visibility="invisible"
+                app:layout_constraintBottom_toBottomOf="@+id/carouselViewPager"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="@+id/carouselViewPager"
+                app:layout_constraintTop_toTopOf="@+id/carouselViewPager"
+                tools:visibility="visible" />
+
             <androidx.viewpager2.widget.ViewPager2
                 android:id="@+id/carouselViewPager"
                 android:layout_width="0dp"

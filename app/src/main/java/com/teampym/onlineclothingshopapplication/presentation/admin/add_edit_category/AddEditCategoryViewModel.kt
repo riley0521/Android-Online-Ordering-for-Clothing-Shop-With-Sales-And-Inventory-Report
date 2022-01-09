@@ -10,7 +10,6 @@ import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -66,12 +65,12 @@ class AddEditCategoryViewModel @Inject constructor(
         val userSession = preferencesManager.preferencesFlow.first()
         val userInformation = userInformationDao.getCurrentUser(userSession.userId)
 
-        if (isEditMode && category != null && categoryId.isNotBlank()) {
+        if (isEditMode && category != null) {
 
             // Upload image to cloud and pass new value
             // of fileName and imageUrl to category object
             // we need to do this first to pass the check
-            async { uploadImage() }.await()
+            uploadImage()
 
             if (isFormValid()) {
                 val updatedCategory = category.copy(
@@ -80,13 +79,11 @@ class AddEditCategoryViewModel @Inject constructor(
                     imageUrl = imageUrl
                 )
 
-                val res = async {
-                    categoryRepository.update(
-                        username = "${userInformation?.firstName} ${userInformation?.lastName}",
-                        updatedCategory
-                    )
-                }.await()
-                if (res != null) {
+                val res = categoryRepository.update(
+                    username = "${userInformation?.firstName} ${userInformation?.lastName}",
+                    updatedCategory
+                )
+                if (res) {
                     resetAllUiState()
                     _categoryChannel.send(CategoryEvent.NavigateBackWithMessage("Updated Category Successfully!"))
                 } else {
@@ -100,7 +97,7 @@ class AddEditCategoryViewModel @Inject constructor(
             // Upload image to cloud and pass new value
             // of fileName and imageUrl to category object
             // we need to do this first to pass the check
-            async { uploadImage() }.await()
+            uploadImage()
 
             if (isFormValid()) {
                 val newCategory = Category(
@@ -109,12 +106,10 @@ class AddEditCategoryViewModel @Inject constructor(
                     imageUrl,
                     dateAdded = Utils.getTimeInMillisUTC()
                 )
-                val res = async {
-                    categoryRepository.create(
-                        username = "${userInformation?.firstName} ${userInformation?.lastName}",
-                        newCategory
-                    )
-                }.await()
+                val res = categoryRepository.create(
+                    username = "${userInformation?.firstName} ${userInformation?.lastName}",
+                    newCategory
+                )
                 if (res != null) {
                     resetAllUiState()
                     _categoryChannel.send(CategoryEvent.NavigateBackWithMessage("Added Category Successfully!"))
@@ -127,11 +122,10 @@ class AddEditCategoryViewModel @Inject constructor(
         }
     }
 
-    private fun uploadImage() = viewModelScope.launch {
-        if (fileName.isBlank() && categoryId.isBlank()) {
+    private suspend fun uploadImage() {
+        if (fileName.isBlank()) {
             if (selectedImage.value != null) {
-                val uploadedImage =
-                    async { categoryRepository.uploadImage(selectedImage.value!!) }.await()
+                val uploadedImage = categoryRepository.uploadImage(selectedImage.value!!)
                 fileName = uploadedImage.fileName
                 imageUrl = uploadedImage.url
             }
@@ -139,8 +133,7 @@ class AddEditCategoryViewModel @Inject constructor(
             val res = categoryRepository.deleteImage(fileName)
             if (res) {
                 if (selectedImage.value != null) {
-                    val uploadedImage =
-                        async { categoryRepository.uploadImage(selectedImage.value!!) }.await()
+                    val uploadedImage = categoryRepository.uploadImage(selectedImage.value!!)
                     fileName = uploadedImage.fileName
                     imageUrl = uploadedImage.url
                 }

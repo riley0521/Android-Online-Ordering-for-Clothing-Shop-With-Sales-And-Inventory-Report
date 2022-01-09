@@ -20,6 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.* // ktlint-disable no-wildcard-imports
 
 private const val TAG = "SalesFragment"
@@ -60,6 +61,32 @@ class SalesFragment : Fragment(R.layout.fragment_sales), AdapterView.OnItemSelec
                     setupViews(yearSale)
                 } else {
                     setupSpinners()
+
+                    withContext(Dispatchers.Main) {
+                        val monthSaleTotal = 0.0
+
+                        binding.btnViewSalesDaily.setOnClickListener {
+                            if (monthSaleTotal > 0 && yearSale?.listOfMonth != null) {
+                                val action = SalesFragmentDirections.actionSalesFragmentToDailySalesFragment(
+                                    viewModel.year.value!!,
+                                    viewModel.month.value!!
+                                )
+                                findNavController().navigate(action)
+                            } else {
+                                Snackbar.make(
+                                    requireView(),
+                                    "There is no sales for this month yet.",
+                                    Snackbar.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+
+                        Snackbar.make(
+                            requireView(),
+                            "No sales yet.",
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
         }

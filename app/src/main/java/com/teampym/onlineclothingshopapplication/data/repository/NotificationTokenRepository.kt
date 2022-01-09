@@ -18,6 +18,7 @@ import com.teampym.onlineclothingshopapplication.data.network.NotificationTopic
 import com.teampym.onlineclothingshopapplication.data.util.NOTIFICATION_TOKENS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -87,7 +88,7 @@ class NotificationTokenRepository @Inject constructor(
             val createdToken = NotificationToken(
                 userId = userId,
                 token = token,
-                dateModified = System.currentTimeMillis(),
+                dateAdded = Utils.getTimeInMillisUTC(),
                 userType = userType
             )
 

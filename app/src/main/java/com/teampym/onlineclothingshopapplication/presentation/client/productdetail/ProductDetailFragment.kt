@@ -2,7 +2,6 @@ package com.teampym.onlineclothingshopapplication.presentation.client.productdet
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -18,7 +17,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
-import com.google.firebase.auth.FirebaseAuth
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.util.LinkType
@@ -148,6 +146,10 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             // Attach viewPager and the tabLayout together so that they can work altogether
             TabLayoutMediator(indicatorTabLayout, viewPager) { _, _ -> }.attach()
 
+            if (product.productImageList.isEmpty()) {
+                tvNoAvailableImages.isVisible = true
+            }
+
             var rate = 0.0
             if (product.totalRate > 0.0 && product.numberOfReviews > 0L) {
                 rate = product.avgRate.toDouble()
@@ -269,7 +271,8 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                         "Edit Product (${viewModel.product.value!!.productId})",
                         viewModel.product.value,
                         true,
-                        viewModel.product.value!!.categoryId
+                        viewModel.product.value!!.categoryId,
+                        categoryName = viewModel.product.value!!.type
                     )
                 findNavController().navigate(action)
                 true

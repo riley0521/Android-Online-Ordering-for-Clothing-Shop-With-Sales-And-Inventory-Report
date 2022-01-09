@@ -8,10 +8,12 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.bundleOf
+import androidx.core.view.get
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
@@ -20,59 +22,86 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
+import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
+import com.teampym.onlineclothingshopapplication.data.room.dataStore
 import com.teampym.onlineclothingshopapplication.data.util.CHANNEL_ID
+import com.teampym.onlineclothingshopapplication.data.util.UserType
+import com.teampym.onlineclothingshopapplication.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import javax.inject.Provider
 
 private const val TAG = "MainActivity"
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
     private lateinit var navController: NavController
     private lateinit var appBarConfiguration: AppBarConfiguration
+
+//    @Inject
+//    lateinit var preferencesManager: Provider<PreferencesManager>
+//
+//    val userSession = preferencesManager.get().preferencesFlow
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setTheme(R.style.Theme_OnlineClothingShop)
         setContentView(R.layout.activity_main)
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
 
-        // Create notification channel when opening your app
-        // It's okay since you only have SAA (Single Activity Application)
-        createNotificationChannel()
+        CoroutineScope(Dispatchers.IO).launch {
+            val userType = PreferencesManager(this@MainActivity).getUserType()
 
-        val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
-        bottomNav.visibility = View.GONE
+            withContext(Dispatchers.Main) {
+                // Create notification channel when opening your app
+                // It's okay since you only have SAA (Single Activity Application)
+                createNotificationChannel()
 
-        appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.categoryFragment,
-                R.id.newsFragment,
-                R.id.cartFragment,
-                R.id.profileFragment
-            )
-        )
-
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.nav_host_main_fragment) as NavHostFragment
-
-        navController = navHostFragment.findNavController()
-
-        navController.addOnDestinationChangedListener { controller, _, _ ->
-            if (controller.currentDestination?.id == R.id.categoryFragment ||
-                controller.currentDestination?.id == R.id.newsFragment ||
-                controller.currentDestination?.id == R.id.cartFragment ||
-                controller.currentDestination?.id == R.id.profileFragment
-            ) {
-                bottomNav.visibility = View.VISIBLE
-            } else
+                val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
                 bottomNav.visibility = View.GONE
+
+                if (userType == UserType.ADMIN.name) {
+                    bottomNav.menu.removeItem(R.id.cartFragment)
+                }
+
+                appBarConfiguration = AppBarConfiguration(
+                    setOf(
+                        R.id.categoryFragment,
+                        R.id.newsFragment,
+                        R.id.cartFragment,
+                        R.id.profileFragment
+                    )
+                )
+
+                val navHostFragment =
+                    supportFragmentManager.findFragmentById(R.id.nav_host_main_fragment) as NavHostFragment
+
+                navController = navHostFragment.findNavController()
+
+                navController.addOnDestinationChangedListener { controller, _, _ ->
+                    if (controller.currentDestination?.id == R.id.categoryFragment ||
+                        controller.currentDestination?.id == R.id.newsFragment ||
+                        controller.currentDestination?.id == R.id.cartFragment ||
+                        controller.currentDestination?.id == R.id.profileFragment
+                    ) {
+                        bottomNav.visibility = View.VISIBLE
+                    } else
+                        bottomNav.visibility = View.GONE
+                }
+
+                // set up app bar with current destination's label.
+                setupActionBarWithNavController(navController, appBarConfiguration)
+                bottomNav.setupWithNavController(navController)
+
+                listenToDynamicLinks()
+            }
         }
-
-        // set up app bar with current destination's label.
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        bottomNav.setupWithNavController(navController)
-
-        listenToDynamicLinks()
     }
 
     private fun listenToDynamicLinks() {

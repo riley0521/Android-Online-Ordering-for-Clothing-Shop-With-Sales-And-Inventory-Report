@@ -1,5 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.admin.add_edit_product
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
@@ -8,8 +9,6 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
@@ -38,7 +37,6 @@ private const val TAG = "AddEditProductFragment"
 @AndroidEntryPoint
 class AddEditProductFragment :
     Fragment(R.layout.fragment_add_edit_product),
-    AdapterView.OnItemSelectedListener,
     ProductImageAdapter.ProductImageListener {
 
     private lateinit var binding: FragmentAddEditProductBinding
@@ -53,6 +51,7 @@ class AddEditProductFragment :
 
     private var isEditMode: Boolean = false
 
+    @SuppressLint("NotifyDataSetChanged")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -75,6 +74,20 @@ class AddEditProductFragment :
 
         if (product != null) {
             overwriteFields(product)
+        }
+
+        viewModel.selectedProductImage.observe(viewLifecycleOwner) {
+            if (it != null) {
+                Glide.with(requireContext())
+                    .load(it)
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .error(R.drawable.ic_food)
+                    .into(binding.imgProduct)
+
+                if (product != null) {
+                    overwriteFields(product)
+                }
+            }
         }
 
         viewModel.imageList.observe(viewLifecycleOwner) {
@@ -120,24 +133,14 @@ class AddEditProductFragment :
 
         binding.apply {
 
-            ArrayAdapter.createFromResource(
-                requireContext(),
-                R.array.product_types_array,
-                android.R.layout.simple_spinner_item
-            ).also { adapter ->
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                spProductType.adapter = adapter
-                // Set selected item when editing a product
-                spProductType.setSelection(adapter.getPosition(viewModel.productType))
-            }
-
-            spProductType.onItemSelectedListener = this@AddEditProductFragment
-
             // Set edit text values when editing a product (product != null)
             viewModel.categoryId = categoryId
+            viewModel.productType = args.categoryName
             etProductName.setText(viewModel.productName)
             etProductDescription.setText(viewModel.productDesc)
-            etProductPrice.setText(String.format("%.2f", viewModel.productPrice))
+            if (viewModel.productPrice > 0) {
+                etProductPrice.setText(String.format("%.2f", viewModel.productPrice))
+            }
 
             etProductName.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(
@@ -247,9 +250,6 @@ class AddEditProductFragment :
         lifecycleScope.launchWhenStarted {
             viewModel.addEditProductEvent.collectLatest { event ->
                 when (event) {
-                    AddEditProductViewModel.AddEditProductEvent.ShowLoadingBar -> {
-                        loadingDialog.show()
-                    }
                     is AddEditProductViewModel.AddEditProductEvent.NavigateBackWithMessage -> {
                         loadingDialog.dismiss()
                         Toast.makeText(
@@ -303,6 +303,7 @@ class AddEditProductFragment :
                             event.msg,
                             Snackbar.LENGTH_SHORT
                         ).show()
+                        adapter.notifyDataSetChanged()
                     }
                 }
             }
@@ -316,26 +317,19 @@ class AddEditProductFragment :
         viewModel.productPrice = product.price
         viewModel.productType = product.type
 
-        Glide.with(requireContext())
-            .load(product.imageUrl)
-            .centerCrop()
-            .transition(DrawableTransitionOptions.withCrossFade())
-            .error(R.drawable.ic_food)
-            .into(binding.imgProduct)
+        if (viewModel.selectedProductImage.value == null) {
+            Glide.with(requireContext())
+                .load(product.imageUrl)
+                .centerCrop()
+                .transition(DrawableTransitionOptions.withCrossFade())
+                .error(R.drawable.ic_food)
+                .into(binding.imgProduct)
+        }
 
         viewModel.fileName = product.fileName
         viewModel.imageUrl = product.imageUrl
 
         viewModel.fetchProductImages(product.productId)
-    }
-
-    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-        viewModel.productType = parent?.getItemAtPosition(position).toString()
-        Log.d("AddEditProductFragment", viewModel.productType)
-    }
-
-    override fun onNothingSelected(parent: AdapterView<*>?) {
-        // Nothing
     }
 
     override fun onRemoveClicked(position: Int) {
@@ -349,8 +343,6 @@ class AddEditProductFragment :
         if (resultCode == Activity.RESULT_OK && requestCode == SELECT_PRODUCT_IMAGE_FROM_GALLERY_REQUEST) {
             data?.data?.let {
 
-                // Show selected image from gallery to the imageView
-                binding.imgProduct.setImageURI(it)
                 viewModel.selectedProductImage.postValue(it)
             }
         } else if (resultCode == Activity.RESULT_OK && requestCode == SELECT_MULTIPLE_IMAGE_FROM_GALLERY_REQUEST) {
