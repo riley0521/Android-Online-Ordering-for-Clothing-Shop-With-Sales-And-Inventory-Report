@@ -113,9 +113,19 @@ object RepositoryModule {
     @Provides
     fun provideOrderRepository(
         db: FirebaseFirestore,
+        orderDetailRepository: OrderDetailRepository,
+        productRepository: ProductRepository,
+        notificationTokenRepository: NotificationTokenRepository,
+        auditTrailRepository: AuditTrailRepository,
+        salesRepository: SalesRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = OrderRepository(
         db,
+        orderDetailRepository,
+        productRepository,
+        notificationTokenRepository,
+        auditTrailRepository,
+        salesRepository,
         dispatcher
     )
 

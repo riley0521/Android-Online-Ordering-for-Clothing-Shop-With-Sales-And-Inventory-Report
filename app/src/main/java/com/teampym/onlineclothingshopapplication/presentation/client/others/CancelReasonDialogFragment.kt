@@ -73,8 +73,8 @@ class CancelReasonDialogFragment : BottomSheetDialogFragment() {
             })
 
             btnSubmit.setOnClickListener {
-                viewModel.cancelOrderAdmin(order, viewModel.cancelReason)
                 loadingDialog.show()
+                viewModel.cancelOrderAdmin(order, viewModel.cancelReason)
             }
         }
 

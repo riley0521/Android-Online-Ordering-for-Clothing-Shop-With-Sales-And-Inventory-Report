@@ -17,6 +17,7 @@ import com.teampym.onlineclothingshopapplication.data.util.AuditType
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.ORDER_DETAILS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.Status
+import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.presentation.client.orderlist.OrderListPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
@@ -28,23 +29,13 @@ import javax.inject.Singleton
 @Singleton
 class OrderRepository @Inject constructor(
     val db: FirebaseFirestore,
+    private val orderDetailRepository: OrderDetailRepository,
+    private val productRepository: ProductRepository,
+    private val notificationTokenRepository: NotificationTokenRepository,
+    private val auditTrailRepository: AuditTrailRepository,
+    private val salesRepository: SalesRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
-
-    @Inject
-    lateinit var orderDetailRepository: OrderDetailRepository
-
-    @Inject
-    lateinit var productRepository: ProductRepository
-
-    @Inject
-    lateinit var notificationTokenRepository: NotificationTokenRepository
-
-    @Inject
-    lateinit var auditTrailRepository: AuditTrailRepository
-
-    @Inject
-    lateinit var salesRepository: SalesRepository
 
     private val orderCollectionRef = db.collection(ORDERS_COLLECTION)
 
@@ -143,20 +134,21 @@ class OrderRepository @Inject constructor(
     // Notify all admins about cancellation of order.
     suspend fun cancelOrder(
         username: String,
-        orderId: String
+        orderId: String,
+        isCommitted: Boolean,
     ): Boolean {
         return withContext(dispatcher) {
 
             // Change Status to Canceled
-            changeStatusToCancelled("", false, orderId, Status.CANCELED.name)
+            changeStatusToCancelled("", false, orderId, Status.CANCELED.name, isCommitted)
 
-            val isSuccessful = notificationTokenRepository.notifyAllAdmins(
+            notificationTokenRepository.notifyAllAdmins(
                 null,
                 "Order (${orderId.take(orderId.length / 2)}...) is cancelled by $username",
                 "The user cancelled an order."
             )
 
-            isSuccessful
+            return@withContext true
         }
     }
 
@@ -253,7 +245,7 @@ class OrderRepository @Inject constructor(
                     true
                 }
                 Status.CANCELED.name -> {
-                    changeStatusToCancelled(username, true, orderId, status)
+                    changeStatusToCancelled(username, true, orderId, status, false)
                     notificationTokenRepository.notifyCustomer(
                         obj = null,
                         userId = userId,
@@ -270,7 +262,8 @@ class OrderRepository @Inject constructor(
         username: String,
         isAdmin: Boolean,
         orderId: String,
-        status: String
+        status: String,
+        isCommitted: Boolean
     ): Boolean {
         return withContext(dispatcher) {
             mutableListOf<OrderDetail>()
@@ -292,6 +285,19 @@ class OrderRepository @Inject constructor(
                             type = AuditType.ORDER.name
                         )
                     )
+                }
+
+                if (isCommitted) {
+                    val orderDetailList = orderDetailRepository.getByOrderId(
+                        orderId,
+                        UserType.ADMIN.name,
+                        ""
+                    )
+                    if (orderDetailList.isNotEmpty()) {
+                        return@withContext productRepository.deductCommittedToStockCount(
+                            orderDetailList
+                        )
+                    }
                 }
 
                 return@withContext true

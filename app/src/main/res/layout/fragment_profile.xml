@@ -126,6 +126,26 @@
                 tools:visibility="visible" />
 
             <TextView
+                android:id="@+id/tvAccounts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/tv_border"
+                android:gravity="center_vertical"
+                android:paddingStart="32dp"
+                android:paddingTop="16dp"
+                android:paddingEnd="32dp"
+                android:paddingBottom="16dp"
+                android:text="@string/label_accounts"
+                android:textAppearance="?attr/textAppearanceBody2"
+                android:textStyle="bold"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvWishList"
+                tools:visibility="visible" />
+
+            <TextView
                 android:id="@+id/tvHistoryLog"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -142,7 +162,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/tvWishList"
+                app:layout_constraintTop_toBottomOf="@+id/tvAccounts"
                 tools:visibility="visible" />
 
             <TextView

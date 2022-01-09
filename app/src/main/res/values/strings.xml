@@ -236,5 +236,6 @@
     <string name="label_no_products_yet_for_this_category_come_back_later">No Products yet for this Category. Come back later!</string>
     <string name="label_faqs_frequently_ask_questions">FAQs (Frequently Ask Questions)</string>
     <string name="label_no_available_images">No available images.</string>
+    <string name="label_accounts">Accounts</string>
 
 </resources>

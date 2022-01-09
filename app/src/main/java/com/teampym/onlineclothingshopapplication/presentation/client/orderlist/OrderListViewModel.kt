@@ -106,7 +106,8 @@ class OrderListViewModel @Inject constructor(
     ) = viewModelScope.launch {
         val res = orderRepository.cancelOrder(
             order.deliveryInformation.name,
-            order.id
+            order.id,
+            false
         )
 
         if (res) {

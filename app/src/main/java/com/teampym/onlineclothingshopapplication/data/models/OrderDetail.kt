@@ -17,6 +17,7 @@ data class OrderDetail(
     var product: Product,
     var id: String = "",
     var dateSold: Long = 0,
+    var isReturned: Boolean = false,
     var isExchangeable: Boolean = false,
     var canAddReview: Boolean = false,
     var hasAddedReview: Boolean = false

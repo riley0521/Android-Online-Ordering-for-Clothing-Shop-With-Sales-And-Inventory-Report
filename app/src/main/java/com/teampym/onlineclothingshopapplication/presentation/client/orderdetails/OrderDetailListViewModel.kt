@@ -19,6 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class OrderDetailListViewModel @Inject constructor(
     private val orderRepository: OrderRepository,
+    private val orderDetailRepository: OrderDetailRepository,
     private val userInformationDao: UserInformationDao,
     private val preferencesManager: PreferencesManager,
     private val state: SavedStateHandle
@@ -50,7 +51,7 @@ class OrderDetailListViewModel @Inject constructor(
             userId
         )
 
-        order.orderDetailList = orderRepository.orderDetailRepository.getByOrderId(
+        order.orderDetailList = orderDetailRepository.getByOrderId(
             orderId,
             UserType.ADMIN.name,
             userId
@@ -60,10 +61,10 @@ class OrderDetailListViewModel @Inject constructor(
     }
 
     suspend fun checkItemIfExchangeable(item: OrderDetail): Boolean {
-        return orderRepository.orderDetailRepository.isExchangeable(item)
+        return orderDetailRepository.isExchangeable(item)
     }
 
     suspend fun checkItemIfCanAddReview(item: OrderDetail): Boolean {
-        return orderRepository.orderDetailRepository.canAddReview(item)
+        return orderDetailRepository.canAddReview(item)
     }
 }

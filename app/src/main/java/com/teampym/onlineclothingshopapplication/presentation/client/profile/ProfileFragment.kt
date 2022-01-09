@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
@@ -79,6 +80,8 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                             cardViewBanner.isVisible = !currentUser.isEmailVerified
                         }
                     } else if (userInformation.userType == UserType.ADMIN.name) {
+                        tvAccounts.isVisible = true
+                        tvOrders.isVisible = true
                         tvHistoryLog.isVisible = true
                         tvSales.isVisible = true
                     }
@@ -207,6 +210,14 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 findNavController().navigate(R.id.action_profileFragment_to_wishListFragment)
             }
 
+            tvAccounts.setOnClickListener {
+                Toast.makeText(
+                    requireContext(),
+                    "Gagawin pa lang",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
             tvHistoryLog.setOnClickListener {
                 findNavController().navigate(R.id.action_profileFragment_to_historyLogFragment)
             }
@@ -283,6 +294,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             tvProfile.isVisible = false
             tvWishList.isVisible = false
 
+            tvAccounts.isVisible = false
             tvHistoryLog.isVisible = false
             tvSales.isVisible = false
 

@@ -32,7 +32,7 @@ data class Order(
     )
 
     @get:Exclude
-    val totalPaymentWithShippingFee: Double get() = totalCost * suggestedShippingFee
+    val totalPaymentWithShippingFee: Double get() = totalCost + suggestedShippingFee
 
     @get:Exclude
     var orderDetailList: List<OrderDetail> = emptyList()

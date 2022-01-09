@@ -156,14 +156,18 @@ class OrderListAdapter(
                         }
                     }
                     Status.SHIPPED.name -> {
-                        val shippingFeeStr = "$" + item.suggestedShippingFee
+                        val shippingFeeStr = String.format("%.2f", item.suggestedShippingFee)
                         tvSuggestedSf.text = shippingFeeStr
+
+                        tvUserAgreedToSf.text = if (item.isUserAgreedToShippingFee) "Yes" else "No"
 
                         if (userType == UserType.CUSTOMER.name) {
                             btnAction.text = AGREE_TO_SHIPPING_FEE
                         } else if (userType == UserType.ADMIN.name) {
                             if (item.isUserAgreedToShippingFee) {
                                 btnAction.text = DELIVER_ORDER
+                            } else {
+                                btnAction.isVisible = false
                             }
                         }
                     }
@@ -217,14 +221,14 @@ class OrderListAdapter(
                     tvAdditionalNote.isVisible = false
                 }
 
-                val totalCostStr = "$" + item.totalCost
+                val totalCostStr = String.format("%.2f", item.totalCost)
 
                 tvOrderId.text = item.id
                 tvUsername.text = item.deliveryInformation.name
                 tvTotalCost.text = totalCostStr
 
                 if (item.suggestedShippingFee > 0.0) {
-                    val grandTotalStr = "$" + item.totalPaymentWithShippingFee
+                    val grandTotalStr = String.format("%.2f", item.totalPaymentWithShippingFee)
                     tvGrandTotal.text = grandTotalStr
                 } else {
                     labelGrandTotal.isVisible = false

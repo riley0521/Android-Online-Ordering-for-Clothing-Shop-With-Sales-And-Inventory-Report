@@ -52,8 +52,8 @@ class AgreeToShippingFeeDialogFragment : BottomSheetDialogFragment() {
                     .setTitle("AGREE TO SUGGESTED SHIPPING FEE")
                     .setMessage("Are you sure you want to agree? You cannot reverse this action.")
                     .setPositiveButton("Yes") { _, _ ->
-                        viewModel.agreeToSf(order)
                         loadingDialog.show()
+                        viewModel.agreeToSf(order)
                     }.setNegativeButton("No") { dialog, _ ->
                         dialog.dismiss()
                     }.show()
@@ -64,8 +64,8 @@ class AgreeToShippingFeeDialogFragment : BottomSheetDialogFragment() {
                     .setTitle("DISAGREE TO SUGGESTED SHIPPING FEE")
                     .setMessage("Are you sure you want to disagree? This will cancel your order right away.")
                     .setPositiveButton("Yes") { _, _ ->
-                        viewModel.cancelOrder(order)
                         loadingDialog.show()
+                        viewModel.cancelOrder(order)
                     }.setNegativeButton("No") { dialog, _ ->
                         dialog.dismiss()
                     }.show()

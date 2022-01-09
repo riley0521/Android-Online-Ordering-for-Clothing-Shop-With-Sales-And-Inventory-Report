@@ -20,6 +20,7 @@ import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.util.CANCELLED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.COMPLETED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.DELIVERY_ORDERS
+import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.data.util.RETURNED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.SHIPPED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.SHIPPING_ORDERS
@@ -41,6 +42,8 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
 
     private lateinit var binding: FragmentOrderListBinding
 
+    private lateinit var loadingDialog: LoadingDialog
+
     private val args by navArgs<OrderListFragmentArgs>()
 
     private val viewModel by viewModels<OrderListViewModel>()
@@ -53,6 +56,7 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentOrderListBinding.bind(view)
+        loadingDialog = LoadingDialog(requireActivity())
 
         val status = args.status
         viewModel.statusQuery.value = status
@@ -82,13 +86,14 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
             viewModel.orderEvent.collectLatest { event ->
                 when (event) {
                     is OrderListViewModel.OrderListEvent.ShowSuccessMessage -> {
-                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
+                        loadingDialog.dismiss()
 
-                        // Set the RefreshLayout to true
-                        // And refresh the adapter to fetch fresh data.
-                        binding.refreshLayout.isRefreshing = true
+                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
+                        adapter.refresh()
                     }
                     is OrderListViewModel.OrderListEvent.ShowErrorMessage -> {
+                        loadingDialog.dismiss()
+
                         Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_SHORT).show()
                     }
                 }
@@ -100,9 +105,8 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
 
     private fun collectOrderPagingData() {
         viewModel.orders.observe(viewLifecycleOwner) {
-            adapter.submitData(viewLifecycleOwner.lifecycle, it)
-
             binding.refreshLayout.isRefreshing = false
+            adapter.submitData(viewLifecycleOwner.lifecycle, it)
         }
 
         binding.apply {
@@ -226,6 +230,7 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
             .setTitle("DELIVER ORDER")
             .setMessage("Are you ready to delivery this order?")
             .setPositiveButton("Yes") { _, _ ->
+                loadingDialog.show()
                 viewModel.deliverOrder(
                     item
                 )
@@ -239,6 +244,7 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
             .setTitle("COMPLETE ORDER")
             .setMessage("Are you sure that this order is completed?")
             .setPositiveButton("Yes") { _, _ ->
+                loadingDialog.show()
                 viewModel.completeOrder(
                     item
                 )

@@ -76,8 +76,8 @@ class ShippingFeeDialogFragment : BottomSheetDialogFragment() {
 
             btnSubmit.setOnClickListener {
                 if (viewModel.shippingFee > 0.0) {
-                    viewModel.submitSuggestedShippingFee(order, viewModel.shippingFee)
                     loadingDialog.show()
+                    viewModel.submitSuggestedShippingFee(order, viewModel.shippingFee)
                 } else {
                     Toast.makeText(
                         requireContext(),
