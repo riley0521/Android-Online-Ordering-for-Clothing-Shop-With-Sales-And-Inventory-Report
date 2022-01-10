@@ -6,11 +6,11 @@
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/tvError"
-        android:text="@string/label_no_internet_connection"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:gravity="center"
+        android:text="@string/label_no_internet_connection"
         app:layout_constraintBottom_toTopOf="@+id/progressBar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -28,11 +28,12 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnRetry"
-        style="@style/Widget.AppCompat.Button.Colored"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:backgroundTint="@color/teal_200"
         android:text="@string/btn_retry"
+        android:textColor="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -65,25 +65,29 @@
                 app:layout_constraintTop_toBottomOf="@+id/etProductName"
                 tools:ignore="Autofill" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSelectImageFromGallery"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="8dp"
+                android:backgroundTint="@color/teal_200"
+                android:textColor="@android:color/white"
                 android:text="@string/btn_select_image_from_gallery"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/etProductPrice" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSelectMultipleProductImage"
                 android:layout_width="377dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:layout_marginEnd="8dp"
+                android:backgroundTint="@color/teal_200"
+                android:textColor="@android:color/white"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/imgProduct" />
@@ -136,12 +140,14 @@
 
     </androidx.core.widget.NestedScrollView>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSubmit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_marginStart="8dp"
+        android:backgroundTint="@color/teal_200"
+        android:textColor="@android:color/white"
         android:layout_marginEnd="8dp"
         android:text="@string/btn_submit" />
 

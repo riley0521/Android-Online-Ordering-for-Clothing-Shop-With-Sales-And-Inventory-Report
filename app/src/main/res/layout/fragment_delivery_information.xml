@@ -6,106 +6,17 @@
     android:layout_height="match_parent"
     tools:context=".presentation.client.deliveryinformation.DeliveryInformationFragment">
 
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/viewSelectedDeliveryInfo"
-        android:layout_width="0dp"
-        android:layout_height="215dp"
-        android:layout_margin="8dp"
-        android:padding="8dp"
-        android:visibility="gone"
-        app:cardCornerRadius="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="visible">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <TextView
-                android:id="@+id/textView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:text="@string/default_text"
-                android:textStyle="bold"
-                android:textAppearance="?attr/textAppearanceBody1"
-                app:layout_constraintEnd_toStartOf="@+id/btnEdit"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <ImageView
-                android:id="@+id/btnEdit"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_weight="1"
-                android:src="@drawable/ic_edit"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/tvNameAndContact"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="16dp"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="@string/label_name_with_contact"
-                android:textAppearance="?attr/textAppearanceBody1"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView" />
-
-            <TextView
-                android:id="@+id/tvAddress"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="16dp"
-                android:ellipsize="end"
-                android:maxLines="4"
-                android:text="@string/test_address"
-                android:textAppearance="?attr/textAppearanceBody1"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.032"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/tvNameAndContact" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnDelete"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="8dp"
-                android:text="@string/btn_delete"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/tvAddress" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </com.google.android.material.card.MaterialCardView>
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerDeliveryInformation"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
         android:padding="8dp"
         android:visibility="invisible"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvDeliveryAddressTitle"
+        app:layout_constraintTop_toTopOf="parent"
         tools:listitem="@layout/delivery_information_item" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -138,21 +49,5 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/tvDeliveryAddressTitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:text="@string/label_delivery_addresses"
-        android:textAppearance="?attr/textAppearanceBody1"
-        android:textStyle="bold"
-        android:visibility="invisible"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/viewSelectedDeliveryInfo" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

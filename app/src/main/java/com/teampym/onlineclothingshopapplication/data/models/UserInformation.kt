@@ -6,6 +6,7 @@ import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.google.firebase.firestore.Exclude
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
+import com.teampym.onlineclothingshopapplication.data.util.UserStatus
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import kotlinx.android.parcel.Parcelize
 import java.text.SimpleDateFormat
@@ -20,7 +21,8 @@ data class UserInformation(
     var avatarUrl: String? = null,
     @PrimaryKey
     var userId: String = "",
-    var userType: String = UserType.CUSTOMER.toString(),
+    var userType: String = UserType.CUSTOMER.name,
+    var userStatus: String = UserStatus.ACTIVE.name,
     var dateModified: Long = 0
 ) : Parcelable {
     constructor() : this(

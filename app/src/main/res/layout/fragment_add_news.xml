@@ -42,12 +42,14 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="Autofill" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnAddOrRemoveImage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:text="@string/btn_add_image"
+        android:backgroundTint="@color/teal_200"
+        android:textColor="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -66,7 +68,7 @@
         tools:src="@tools:sample/avatars"
         android:contentDescription="@string/img_description" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnAddPost"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -74,6 +76,8 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:text="@string/btn_add_post"
+        android:backgroundTint="@color/teal_200"
+        android:textColor="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

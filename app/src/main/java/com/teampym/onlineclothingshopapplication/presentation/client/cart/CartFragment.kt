@@ -75,9 +75,6 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
                         }
                         .show()
                 } else {
-                    Log.d(TAG, "onViewCreated: jetits")
-                    viewModel.onCartUpdated(userId)
-
                     navigateToCheckOut()
                 }
             }
@@ -158,10 +155,5 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
     override fun onFailure(msg: String) {
         Snackbar.make(requireView(), msg, Snackbar.LENGTH_SHORT).show()
-    }
-
-    override fun onStop() {
-        viewModel.onCartUpdated(userId)
-        super.onStop()
     }
 }

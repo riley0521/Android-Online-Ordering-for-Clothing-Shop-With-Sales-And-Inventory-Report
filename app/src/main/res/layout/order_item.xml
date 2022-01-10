@@ -24,12 +24,12 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        tools:text="123456789"
         android:textAppearance="?attr/textAppearanceBody1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/labelOrderId"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="123456789" />
 
     <TextView
         android:id="@+id/tvUsername"
@@ -37,12 +37,12 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        tools:text="John Doe"
         android:textAppearance="?attr/textAppearanceBody1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/labelUsername"
-        app:layout_constraintTop_toBottomOf="@+id/tvOrderId" />
+        app:layout_constraintTop_toBottomOf="@+id/tvOrderId"
+        tools:text="John Doe" />
 
     <TextView
         android:id="@+id/tvTotalCost"
@@ -51,11 +51,11 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:textAppearance="?attr/textAppearanceBody1"
-        tools:text="$14.50"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/labelTotalCost"
-        app:layout_constraintTop_toBottomOf="@+id/tvUsername" />
+        app:layout_constraintTop_toBottomOf="@+id/tvUsername"
+        tools:text="$14.50" />
 
     <TextView
         android:id="@+id/tvSuggestedSf"
@@ -64,11 +64,11 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:textAppearance="?attr/textAppearanceBody1"
-        tools:text="$1.50"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/labelShippingFee"
-        app:layout_constraintTop_toBottomOf="@+id/tvTotalCost" />
+        app:layout_constraintTop_toBottomOf="@+id/tvTotalCost"
+        tools:text="$1.50" />
 
     <TextView
         android:id="@+id/tvGrandTotal"
@@ -285,26 +285,30 @@
         app:layout_constraintTop_toBottomOf="@+id/tvDeliveryAddress"
         tools:text="No" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnAction"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/teal_200"
+        android:textColor="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnViewItems"
         tools:text="(BOTH) CANCEL | (ADMIN) SUGGEST SF | \n(USER) AGREE TO SF" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnViewItems"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/teal_200"
         android:text="@string/label_view_items"
+        android:textColor="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"

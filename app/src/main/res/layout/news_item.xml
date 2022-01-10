@@ -32,61 +32,6 @@
             app:layout_constraintTop_toBottomOf="@+id/txtDescription"
             tools:srcCompat="@tools:sample/avatars" />
 
-        <ImageView
-            android:id="@+id/imgLike"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:contentDescription="@string/img_description"
-            android:src="@drawable/ic_like"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvLikeDescription" />
-
-        <ImageView
-            android:id="@+id/imgComment"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="32dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:contentDescription="@string/img_description"
-            android:src="@drawable/ic_comment"
-            android:visibility="invisible"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toEndOf="@+id/tvLike"
-            app:layout_constraintTop_toBottomOf="@+id/tvLikeDescription" />
-
-        <TextView
-            android:id="@+id/tvComment"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:text="@string/placeholder_comment"
-            android:textAppearance="?attr/textAppearanceBody1"
-            android:visibility="invisible"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toEndOf="@+id/imgComment"
-            app:layout_constraintTop_toBottomOf="@+id/tvLikeDescription" />
-
-        <TextView
-            android:id="@+id/tvLike"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:text="@string/label_like"
-            android:textAppearance="?attr/textAppearanceBody1"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toEndOf="@+id/imgLike"
-            app:layout_constraintTop_toBottomOf="@+id/tvLikeDescription" />
-
         <TextView
             android:id="@+id/tvLikeDescription"
             android:layout_width="0dp"
@@ -167,6 +112,74 @@
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_fishball"
             tools:visibility="visible" />
+
+        <LinearLayout
+            app:layout_constraintTop_toBottomOf="@+id/tvLikeDescription"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_width="match_parent"
+            android:orientation="horizontal"
+            android:layout_height="wrap_content"
+            tools:ignore="DisableBaselineAlignment">
+
+            <LinearLayout
+                android:id="@+id/btnLike"
+                android:orientation="horizontal"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                tools:ignore="UseCompoundDrawables">
+
+                <ImageView
+                    android:id="@+id/imgLike"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="@string/img_description"
+                    android:src="@drawable/ic_like" />
+
+                <TextView
+                    android:id="@+id/tvLike"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/label_like"
+                    android:textAppearance="?attr/textAppearanceBody1" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:visibility="gone"
+                tools:visibility="visible"
+                android:id="@+id/btnComment"
+                android:orientation="horizontal"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/imgComment"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="@string/img_description"
+                    android:src="@drawable/ic_comment" />
+
+                <TextView
+                    android:id="@+id/tvComment"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/placeholder_comment"
+                    android:textAppearance="?attr/textAppearanceBody1" />
+
+            </LinearLayout>
+
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -5,15 +5,15 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.Menu
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
-import androidx.core.view.get
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
@@ -23,18 +23,13 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.dynamiclinks.FirebaseDynamicLinks
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
-import com.teampym.onlineclothingshopapplication.data.room.dataStore
 import com.teampym.onlineclothingshopapplication.data.util.CHANNEL_ID
 import com.teampym.onlineclothingshopapplication.data.util.UserType
-import com.teampym.onlineclothingshopapplication.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-import javax.inject.Provider
 
 private const val TAG = "MainActivity"
 
@@ -44,16 +39,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var navController: NavController
     private lateinit var appBarConfiguration: AppBarConfiguration
 
-//    @Inject
-//    lateinit var preferencesManager: Provider<PreferencesManager>
-//
-//    val userSession = preferencesManager.get().preferencesFlow
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setTheme(R.style.Theme_OnlineClothingShop)
         setContentView(R.layout.activity_main)
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
 
         CoroutineScope(Dispatchers.IO).launch {
             val userType = PreferencesManager(this@MainActivity).getUserType()
@@ -98,6 +88,8 @@ class MainActivity : AppCompatActivity() {
                 // set up app bar with current destination's label.
                 setupActionBarWithNavController(navController, appBarConfiguration)
                 bottomNav.setupWithNavController(navController)
+
+                supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this@MainActivity, R.color.teal_200)))
 
                 listenToDynamicLinks()
             }

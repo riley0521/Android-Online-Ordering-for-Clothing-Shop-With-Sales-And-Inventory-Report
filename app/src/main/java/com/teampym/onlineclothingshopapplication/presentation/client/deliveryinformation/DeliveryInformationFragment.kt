@@ -43,46 +43,7 @@ class DeliveryInformationFragment :
                 binding.recyclerDeliveryInformation.setHasFixedSize(true)
                 binding.recyclerDeliveryInformation.visibility = View.VISIBLE
                 binding.recyclerDeliveryInformation.adapter = adapter
-
-                binding.tvDeliveryAddressTitle.isVisible = deliveryInfoList.size > 1
                 binding.tvNoAddressYet.visibility = View.GONE
-
-                deliveryInfoList.firstOrNull { it.isPrimary }?.let { info ->
-                    binding.apply {
-                        viewSelectedDeliveryInfo.visibility = View.VISIBLE
-
-                        val contact = if (info.contactNo[0].toString() == "0")
-                            info.contactNo.length.let {
-                                info.contactNo.substring(
-                                    1,
-                                    it
-                                )
-                            } else info.contactNo
-
-                        val nameAndContact = "${info.name} | (+63) $contact"
-                        tvNameAndContact.text = nameAndContact
-
-                        val completeAddress = "${info.streetNumber} " +
-                            "${info.city}, " +
-                            "${info.province}, " +
-                            "${info.province}, " +
-                            info.postalCode
-                        tvAddress.text = completeAddress
-
-                        btnDelete.setOnClickListener {
-                            showDeleteDeliveryInformationDialog(info)
-                        }
-
-                        btnEdit.setOnClickListener {
-                            val action =
-                                DeliveryInformationFragmentDirections.actionDeliveryInformationFragmentToAddEditDeliveryInformationFragment(
-                                    info,
-                                    "Edit Address"
-                                )
-                            findNavController().navigate(action)
-                        }
-                    }
-                }
             }
         }
 

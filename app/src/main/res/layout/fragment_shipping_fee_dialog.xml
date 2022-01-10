@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".presentation.client.others.ShippingFeeDialogFragment" >
+    tools:context=".presentation.client.others.ShippingFeeDialogFragment">
 
     <TextView
         android:id="@+id/textView6"
@@ -34,13 +34,15 @@
         app:layout_constraintTop_toBottomOf="@+id/textView6"
         tools:ignore="Autofill" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSubmit"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/teal_200"
         android:text="@string/btn_submit"
+        android:textColor="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/etShippingFee" />

@@ -54,35 +54,6 @@ class DeliveryInformationAdapter(
     inner class DeliveryInformationViewHolder(private val binding: DeliveryInformationItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        init {
-            binding.apply {
-
-                btnDelete.setOnClickListener {
-                    val position = absoluteAdapterPosition
-                    if (position != RecyclerView.NO_POSITION) {
-                        val item = getItem(position)
-                        listener.onDeleteClicked(item)
-                    }
-                }
-
-                btnMakeDefault.setOnClickListener {
-                    val position = absoluteAdapterPosition
-                    if (position != RecyclerView.NO_POSITION) {
-                        val item = getItem(position)
-                        listener.onMakeDefaultClicked(item)
-                    }
-                }
-
-                btnEdit.setOnClickListener {
-                    val position = absoluteAdapterPosition
-                    if (position != RecyclerView.NO_POSITION) {
-                        val item = getItem(position)
-                        listener.onEditClicked(item)
-                    }
-                }
-            }
-        }
-
         fun bind(deliveryInfo: DeliveryInformation) {
             binding.apply {
                 val contact = if (deliveryInfo.contactNo[0].toString() == "0")
@@ -91,8 +62,9 @@ class DeliveryInformationAdapter(
                         deliveryInfo.contactNo.length - 1
                     ) else deliveryInfo.contactNo
 
-                val nameAndContact = "${deliveryInfo.name} | (+63) $contact"
-                tvNameAndContact.text = nameAndContact
+                val contactStr = "(+63) $contact"
+                tvName.text = deliveryInfo.name
+                tvContact.text = contactStr
 
                 val completeAddress = "${deliveryInfo.streetNumber} " +
                     "${deliveryInfo.city}, " +

@@ -16,19 +16,21 @@
         android:ems="10"
         android:hint="@string/hint_input_category_name"
         android:maxLength="50"
-        android:maxLines="1"
+        android:inputType="textLongMessage|textMultiLine"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="Autofill,TextFields" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSelectImageFromGallery"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
+        android:backgroundTint="@color/teal_200"
+        android:textColor="@android:color/white"
         android:text="@string/btn_select_image_from_gallery"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -48,13 +50,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnSelectImageFromGallery" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSubmit"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:text="@string/btn_submit"
+        android:backgroundTint="@color/teal_200"
+        android:textColor="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

@@ -1,118 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.zerobranch.layout.SwipeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/viewSelectedDeliveryInfo"
     android:layout_width="match_parent"
-    android:layout_height="130dp"
-    app:draggedItem="@id/drag_item"
-    app:leftItem="@id/btnMakeDefault"
-    app:rightItem="@id/btnDelete"
-    app:swipeDirection="left|right">
+    android:layout_height="wrap_content"
+    android:paddingBottom="16dp">
 
-    <LinearLayout
-        android:id="@+id/btnMakeDefault"
-        android:layout_width="150dp"
-        android:layout_height="match_parent"
-        android:background="@color/colorPrimary"
-        android:orientation="horizontal">
+    <TextView
+        android:id="@+id/tvName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/label_name_example"
+        android:textAppearance="?attr/textAppearanceBody1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginStart="8dp"
-            android:text="@string/label_make_default"
-            android:textAppearance="?attr/textAppearanceBody1"
-            android:textColor="@android:color/white" />
+    <TextView
+        android:id="@+id/tvIsDefault"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:text="@string/label_default"
+        android:textColor="@color/teal_200"
+        android:textAppearance="?attr/textAppearanceBody1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/tvName"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center_vertical"
-            android:src="@drawable/ic_delivery_info"
-            android:contentDescription="@string/label_make_default" />
+    <TextView
+        android:id="@+id/tvContact"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/label_contact_example"
+        android:textAppearance="?attr/textAppearanceBody1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvName" />
 
-    </LinearLayout>
+    <TextView
+        android:id="@+id/tvAddress"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:ellipsize="end"
+        android:maxLines="4"
+        android:text="@string/test_address"
+        android:textAppearance="?attr/textAppearanceBody1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvContact" />
 
-    <LinearLayout
-        android:id="@+id/btnDelete"
-        android:layout_width="100dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="end"
-        android:background="@color/colorPrimary"
-        android:orientation="horizontal">
-
-        <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center_vertical"
-            android:src="@drawable/ic_delete"
-            android:contentDescription="@string/btn_delete" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:text="@string/btn_delete"
-            android:textAppearance="?attr/textAppearanceBody1"
-            android:textColor="@android:color/white"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-
-    </LinearLayout>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/drag_item"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@android:color/white">
-
-        <TextView
-            android:id="@+id/tvNameAndContact"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="4dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="@string/label_name_with_contact"
-            android:textAppearance="?attr/textAppearanceBody1"
-            app:layout_constraintEnd_toStartOf="@+id/btnEdit"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageView
-            android:id="@+id/btnEdit"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_weight="1"
-            android:src="@drawable/ic_edit"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:contentDescription="@string/btn_edit" />
-
-        <TextView
-            android:id="@+id/tvAddress"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
-            android:ellipsize="end"
-            android:maxLines="4"
-            android:text="@string/test_address"
-            android:textAppearance="?attr/textAppearanceBody1"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.032"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvNameAndContact" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-</com.zerobranch.layout.SwipeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

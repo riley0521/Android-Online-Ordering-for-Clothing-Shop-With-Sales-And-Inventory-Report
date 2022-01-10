@@ -1,23 +1,30 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
+import com.teampym.onlineclothingshopapplication.data.models.AuditTrail
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
+import com.teampym.onlineclothingshopapplication.data.util.AuditType
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
+import com.teampym.onlineclothingshopapplication.data.util.UserStatus
 import com.teampym.onlineclothingshopapplication.data.util.Utils
+import com.teampym.onlineclothingshopapplication.presentation.admin.accounts.AccountPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.lang.Exception
 import java.text.SimpleDateFormat
-import java.util.* // ktlint-disable no-wildcard-imports
+import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AccountRepository @Inject constructor(
     db: FirebaseFirestore,
+    private val auditTrailRepository: AuditTrailRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
@@ -39,6 +46,73 @@ class AccountRepository @Inject constructor(
                 fetchedUser = userInfo
             }
             fetchedUser
+        }
+    }
+
+    fun getAll(queryAccounts: Query) =
+        Pager(
+            PagingConfig(
+                pageSize = 30,
+                prefetchDistance = 30,
+                enablePlaceholders = false
+            )
+        ) {
+            AccountPagingSource(queryAccounts)
+        }
+
+    suspend fun banUser(username: String, user: UserInformation): Boolean {
+        return withContext(dispatcher) {
+            try {
+                userCollectionRef
+                    .document(user.userId)
+                    .set(
+                        mapOf(
+                            "userStatus" to UserStatus.BANNED.name
+                        ),
+                        SetOptions.merge()
+                    )
+                    .await()
+
+                auditTrailRepository.insert(
+                    AuditTrail(
+                        username = username,
+                        description = "$username BANNED ${user.firstName} ${user.lastName} (${user.userId})",
+                        type = AuditType.ACCOUNT.name
+                    )
+                )
+
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
+            }
+        }
+    }
+
+    suspend fun unBanUser(username: String, user: UserInformation): Boolean {
+        return withContext(dispatcher) {
+            try {
+                userCollectionRef
+                    .document(user.userId)
+                    .set(
+                        mapOf(
+                            "userStatus" to UserStatus.ACTIVE.name
+                        ),
+                        SetOptions.merge()
+                    )
+                    .await()
+
+                auditTrailRepository.insert(
+                    AuditTrail(
+                        username = username,
+                        description = "$username UNBANNED ${user.firstName} ${user.lastName} (${user.userId})",
+                        type = AuditType.ACCOUNT.name
+                    )
+                )
+
+                return@withContext true
+            } catch (ex: Exception) {
+                return@withContext false
+            }
         }
     }
 

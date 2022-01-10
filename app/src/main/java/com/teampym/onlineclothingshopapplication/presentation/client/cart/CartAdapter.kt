@@ -78,7 +78,7 @@ class CartAdapter(
                     }
                 }
 
-                btnDelete.setOnClickListener {
+                imgDelete.setOnClickListener {
                     val position = absoluteAdapterPosition
                     if (position != RecyclerView.NO_POSITION) {
                         val item = getItem(position)

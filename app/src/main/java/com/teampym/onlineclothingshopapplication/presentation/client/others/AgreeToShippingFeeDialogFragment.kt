@@ -79,7 +79,7 @@ class AgreeToShippingFeeDialogFragment : BottomSheetDialogFragment() {
                 // Go back to the parent fragment
                 setFragmentResult(
                     AGREE_TO_SF_REQUEST,
-                    bundleOf(AGREE_TO_SF_REQUEST to "Agreed to suggested shipping fee successfully!")
+                    bundleOf(AGREE_TO_SF_RESULT to "Agreed to suggested shipping fee successfully!")
                 )
                 findNavController().popBackStack()
             }
@@ -92,7 +92,7 @@ class AgreeToShippingFeeDialogFragment : BottomSheetDialogFragment() {
                 // Go back to the parent fragment
                 setFragmentResult(
                     AGREE_TO_SF_REQUEST,
-                    bundleOf(AGREE_TO_SF_REQUEST to "Disagreed to suggested shipping fee and canceled the order.")
+                    bundleOf(AGREE_TO_SF_RESULT to "Disagreed to suggested shipping fee and canceled the order.")
                 )
                 findNavController().popBackStack()
             }

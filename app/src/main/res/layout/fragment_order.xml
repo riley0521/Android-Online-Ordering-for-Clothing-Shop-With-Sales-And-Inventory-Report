@@ -4,74 +4,86 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".presentation.client.orders.OrderFragment" >
+    tools:context=".presentation.client.orders.OrderFragment">
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnViewShippingOrders"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/teal_200"
         android:text="@string/label_view_shipping_orders"
+        android:textColor="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnViewShippedOrders"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/teal_200"
         android:text="@string/label_view_shipped_orders"
+        android:textColor="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnViewShippingOrders" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnViewDeliveryOrders"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/teal_200"
         android:text="@string/label_view_ready_to_deliver_orders"
+        android:textColor="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnViewShippedOrders" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnViewCancelledOrders"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/teal_200"
         android:text="@string/label_view_cancelled_orders"
+        android:textColor="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnViewCompletedOrders" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnViewCompletedOrders"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/teal_200"
         android:text="@string/label_view_completed_orders"
+        android:textColor="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnViewDeliveryOrders" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnViewReturnedOrders"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/teal_200"
         android:text="@string/label_view_returned_orders_items"
+        android:textColor="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"

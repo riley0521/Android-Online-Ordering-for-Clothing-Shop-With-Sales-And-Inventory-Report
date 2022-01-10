@@ -36,9 +36,11 @@ object RepositoryModule {
     @Provides
     fun provideAccountRepository(
         db: FirebaseFirestore,
+        auditTrailRepository: AuditTrailRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = AccountRepository(
         db,
+        auditTrailRepository,
         dispatcher
     )
 
@@ -185,6 +187,24 @@ object RepositoryModule {
         db: FirebaseFirestore,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = SalesRepository(
+        db,
+        dispatcher
+    )
+
+    @Provides
+    fun provideTermsAndConditionRepository(
+        db: FirebaseFirestore,
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = TermsAndConditionRepository(
+        db,
+        dispatcher
+    )
+
+    @Provides
+    fun provideSizeChartRepository(
+        db: FirebaseFirestore,
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = SizeChartRepository(
         db,
         dispatcher
     )

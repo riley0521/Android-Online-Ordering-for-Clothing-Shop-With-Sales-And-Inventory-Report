@@ -144,7 +144,7 @@
                 android:layout_marginEnd="8dp"
                 android:text="@string/label_show_more_reviews"
                 android:textAppearance="?attr/textAppearanceBody1"
-                android:textColor="@android:color/holo_blue_light"
+                android:textColor="@color/teal_200"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/ratingBar" />
@@ -213,13 +213,15 @@
 
     </androidx.core.widget.NestedScrollView>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnAddToCart"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:backgroundTint="@color/teal_200"
         android:gravity="center_horizontal"
-        android:text="@string/btn_add_to_cart" />
+        android:text="@string/btn_add_to_cart"
+        android:textColor="@android:color/white" />
 
 </RelativeLayout>
 

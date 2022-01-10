@@ -3,15 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".presentation.client.checkout.SelectPaymentMethodFragment">
+    android:layout_height="wrap_content">
 
     <RadioGroup
         android:id="@+id/rbGroupPaymentMethods"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:padding="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/btnChoosePaymentMethod"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -25,22 +25,22 @@
             android:textAllCaps="true"
             android:textAppearance="?attr/textAppearanceBody1" />
 
-        <RadioButton
-            android:id="@+id/rbGCash"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/rb_gcash"
-            android:textAllCaps="true"
-            android:textAppearance="?attr/textAppearanceBody1" />
+<!--        <RadioButton-->
+<!--            android:id="@+id/rbGCash"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="@string/rb_gcash"-->
+<!--            android:textAllCaps="true"-->
+<!--            android:textAppearance="?attr/textAppearanceBody1" />-->
 
-        <RadioButton
-            android:id="@+id/rbPaymaya"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:enabled="false"
-            android:text="@string/rb_paymaya"
-            android:textAllCaps="true"
-            android:textAppearance="?attr/textAppearanceBody1" />
+<!--        <RadioButton-->
+<!--            android:id="@+id/rbPaymaya"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:enabled="false"-->
+<!--            android:text="@string/rb_paymaya"-->
+<!--            android:textAllCaps="true"-->
+<!--            android:textAppearance="?attr/textAppearanceBody1" />-->
 
         <RadioButton
             android:id="@+id/rbCreditDebit"
@@ -56,11 +56,12 @@
         android:id="@+id/btnChoosePaymentMethod"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:enabled="false"
         android:text="@string/label_choose_payment_method"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/rbGroupPaymentMethods" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

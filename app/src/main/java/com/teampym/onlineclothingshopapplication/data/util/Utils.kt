@@ -35,6 +35,9 @@ const val SALES_COLLECTION = "Sales"
 const val MONTHS_SUB_COLLECTION = "months"
 const val DAYS_SUB_COLLECTION_OF_MONTHS = "days"
 
+const val TERMS_DATA = "Terms"
+const val SIZE_CHART_DATA = "SizeChart"
+
 const val PREFIX = "https://midnightmares.page.link"
 
 const val CANCEL_BUTTON = "Cancel"
@@ -186,7 +189,13 @@ enum class UserType {
     ADMIN
 }
 
+enum class UserStatus {
+    ACTIVE,
+    BANNED
+}
+
 enum class AuditType {
+    ACCOUNT,
     CATEGORY,
     PRODUCT,
     INVENTORY,

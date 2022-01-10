@@ -186,30 +186,34 @@
             app:layout_constraintTop_toBottomOf="@+id/tvProductName"
             tools:text="Size 1" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnExchangeItem"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
+            android:backgroundTint="@color/teal_200"
             android:text="@string/btn_exchange_item"
+            android:textColor="@android:color/white"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/labelIsExchangeable" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAddReview"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
+            android:backgroundTint="@color/teal_200"
             android:text="@string/btn_add_review"
+            android:textColor="@android:color/white"
             android:visibility="gone"
-            tools:visibility="visible"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btnExchangeItem" />
+            app:layout_constraintTop_toBottomOf="@+id/btnExchangeItem"
+            tools:visibility="visible" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

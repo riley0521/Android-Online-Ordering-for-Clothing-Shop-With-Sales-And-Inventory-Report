@@ -10,8 +10,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="8dp">
 
         <!-- Media -->
 
@@ -53,7 +53,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:textAppearance="?attr/textAppearanceBody1"
-            android:textColor="@color/black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvProductName"
@@ -81,18 +80,19 @@
             android:layout_marginEnd="8dp"
             android:text="0.0"
             android:textAppearance="?attr/textAppearanceBody1"
-            android:textColor="@color/black"
             android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@+id/productRating"
             app:layout_constraintTop_toBottomOf="@+id/tvPrice"
             tools:ignore="HardcodedText" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRemoveFromWishList"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:backgroundTint="@color/teal_200"
             android:text="@string/btn_remove_from_wish_list"
+            android:textColor="@android:color/white"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/productRating" />

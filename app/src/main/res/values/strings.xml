@@ -33,7 +33,7 @@
     <string name="label_email_verification">Verification link has been sent to your email. Please click the link to verify your account and remove this message.</string>
     <string name="label_unverified_warning">Warning: You cannot place order if you are an unverified user.</string>
     <string name="label_selected_birth_date">No Selected Date</string>
-    <string name="label_name_with_contact">John Doe | (+63) 912 345 6789</string>
+    <string name="label_contact_example">(+63) 912 345 6789</string>
     <string name="label_name_example">John Doe</string>
     <string name="label_date_example">11/26/2021 07:11 PM</string>
     <string name="label_title_example">This is a title</string>
@@ -135,7 +135,7 @@
     <string name="btn_set_as_default_address">Set As Default Address</string>
     <string name="btn_delete_address">Delete Address</string>
     <string name="btn_submit">Submit</string>
-    <string name="btn_date_picker">Date Picker</string>
+    <string name="btn_date_picker">Pick Birth Day</string>
     <string name="btn_send_verification">Send verification</string>
     <string name="btn_continue_to_app">Continue To App</string>
     <string name="btn_place_order">Place Order</string>
@@ -216,6 +216,8 @@
     <string name="label_history_logs">History Logs</string>
     <string name="label_sales">Sales</string>
     <string name="placeholder_username">Username: %1$s</string>
+    <string name="placeholder_user_id">User ID: %1$s</string>
+    <string name="placeholder_user_status">User Status: %1$s</string>
     <string name="placeholder_description">Description: %1$s</string>
     <string name="placeholder_type">Type: %1$s</string>
     <string name="placeholder_date_of_log">Date: %1$s</string>
@@ -237,5 +239,9 @@
     <string name="label_faqs_frequently_ask_questions">FAQs (Frequently Ask Questions)</string>
     <string name="label_no_available_images">No available images.</string>
     <string name="label_accounts">Accounts</string>
+    <string name="label_default">[Default]</string>
+    <string name="hint_input_your_terms_and_conditions">Input Your Terms and Conditions</string>
+    <string name="btn_ban_user">Ban User</string>
+    <string name="btn_un_ban_user">Unban User</string>
 
 </resources>

@@ -273,7 +273,11 @@
         android:id="@+id/termsAndConditionFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.toc.TermsAndConditionFragment"
         android:label="Terms And Conditions"
-        tools:layout="@layout/fragment_terms_and_condition" />
+        tools:layout="@layout/fragment_terms_and_condition" >
+        <action
+            android:id="@+id/action_termsAndConditionFragment_to_editTermsAndConditionFragment"
+            app:destination="@id/editTermsAndConditionFragment" />
+    </fragment>
     <fragment
         android:id="@+id/sizeChartFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.size.SizeChartFragment"
@@ -463,4 +467,13 @@
         android:name="com.teampym.onlineclothingshopapplication.presentation.faqs.FrequentlyAskQuestionsFragment"
         android:label="FAQs"
         tools:layout="@layout/fragment_frequently_ask_questions" />
+    <fragment
+        android:id="@+id/editTermsAndConditionFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.toc.EditTermsAndConditionFragment"
+        android:label="fragment_edit_terms_and_condition"
+        tools:layout="@layout/fragment_edit_terms_and_condition" >
+        <argument
+            android:name="tc"
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.TermsAndCondition" />
+    </fragment>
 </navigation>
