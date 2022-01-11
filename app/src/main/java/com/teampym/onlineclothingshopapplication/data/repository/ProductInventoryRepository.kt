@@ -115,6 +115,16 @@ class ProductInventoryRepository @Inject constructor(
         }
     }
 
+    suspend fun deleteAll(listOfInventories: List<Inventory>): Boolean {
+        return withContext(dispatcher) {
+            var isSuccessful = true
+            for (item in listOfInventories) {
+                isSuccessful = delete(item.pid, item.inventoryId)
+            }
+            isSuccessful
+        }
+    }
+
     suspend fun delete(productId: String, inventoryId: String): Boolean {
         return withContext(dispatcher) {
             try {

@@ -114,8 +114,7 @@ class ProductViewModel @Inject constructor(
 
         val res = productRepository.delete(
             username = "${userInformation?.firstName} ${userInformation?.lastName}",
-            productName = product.name,
-            product.productId
+            product
         )
         if (res) {
             _productChannel.send(ProductEvent.ShowSuccessMessage("Deleted product successfully!"))

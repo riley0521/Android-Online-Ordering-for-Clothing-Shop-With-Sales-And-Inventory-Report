@@ -61,8 +61,7 @@ class CategoryViewModel @Inject constructor(
         val res = async {
             categoryRepository.delete(
                 username = "${userInformation?.firstName} ${userInformation?.lastName}",
-                categoryName = category.name,
-                category.id
+                category
             )
         }.await()
         if (res) {

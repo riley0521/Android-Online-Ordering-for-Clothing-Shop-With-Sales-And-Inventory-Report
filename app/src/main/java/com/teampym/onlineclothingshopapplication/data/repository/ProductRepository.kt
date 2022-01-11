@@ -40,6 +40,22 @@ class ProductRepository @Inject constructor(
     private val productCollectionRef = db.collection(PRODUCTS_COLLECTION)
     private val imageRef = Firebase.storage.reference
 
+    suspend fun deleteAllProductAndSubCollection(username: String, categoryId: String) {
+        withContext(dispatcher) {
+            val productDocs = productCollectionRef
+                .whereEqualTo("categoryId", categoryId)
+                .get()
+                .await()
+
+            productDocs?.let {
+                for (item in productDocs.documents) {
+                    val productObj = item.toObject<Product>()!!.copy(productId = item.id)
+                    delete(username, productObj)
+                }
+            }
+        }
+    }
+
     fun getSome(user: UserWithWishList?, queryProducts: Query, sortOrder: SortOrder) =
         Pager(
             PagingConfig(
@@ -184,21 +200,30 @@ class ProductRepository @Inject constructor(
         }
     }
 
-    suspend fun delete(username: String, productName: String, productId: String): Boolean {
+    suspend fun delete(username: String, product: Product): Boolean {
         return withContext(dispatcher) {
             try {
+
+                val productImages = productImageRepository.getAll(product.productId)
+                productImageRepository.deleteAll(productImages)
+
+                val productInventories = productInventoryRepository.getAll(product.productId)
+                productInventoryRepository.deleteAll(productInventories)
+
                 productCollectionRef
-                    .document(productId)
+                    .document(product.productId)
                     .delete()
                     .await()
 
                 auditTrailRepository.insert(
                     AuditTrail(
                         username = username,
-                        description = "$username DELETED product - $productName",
+                        description = "$username DELETED product - ${product.name}",
                         type = AuditType.PRODUCT.name
                     )
                 )
+
+                deleteImage(product.fileName)
 
                 return@withContext true
             } catch (ex: Exception) {
@@ -218,27 +243,6 @@ class ProductRepository @Inject constructor(
             } catch (ex: JavaLangException) {
                 return@withContext false
             }
-        }
-    }
-
-    // This will be called from category repository to delete all items in the specified
-    // Category Id.
-    suspend fun deleteAll(categoryId: String): Boolean {
-        return withContext(dispatcher) {
-            var isSuccessful = true
-
-            val productDocuments = productCollectionRef
-                .whereEqualTo("categoryId", categoryId)
-                .get()
-                .await()
-
-            if (productDocuments.documents.isNotEmpty()) {
-                for (doc in productDocuments.documents) {
-                    val res = doc.reference.delete().await()
-                    isSuccessful = res != null
-                }
-            }
-            isSuccessful
         }
     }
 

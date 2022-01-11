@@ -24,6 +24,7 @@ import javax.inject.Singleton
 @Singleton
 class CategoryRepository @Inject constructor(
     db: FirebaseFirestore,
+    private val productRepository: ProductRepository,
     private val auditTrailRepository: AuditTrailRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
@@ -111,22 +112,26 @@ class CategoryRepository @Inject constructor(
     }
 
     // Delete All Products in selected category
-    suspend fun delete(username: String, categoryName: String, categoryId: String): Boolean {
+    suspend fun delete(username: String, category: Category): Boolean {
         return withContext(dispatcher) {
 
             try {
                 categoriesCollectionRef
-                    .document(categoryId)
+                    .document(category.id)
                     .delete()
                     .await()
 
                 auditTrailRepository.insert(
                     AuditTrail(
                         username = username,
-                        description = "$username DELETED category - $categoryName",
+                        description = "$username DELETED category - ${category.name}",
                         type = AuditType.CATEGORY.name
                     )
                 )
+
+                deleteImage(category.fileName)
+
+                productRepository.deleteAllProductAndSubCollection(username, category.id)
 
                 return@withContext true
             } catch (ex: Exception) {
