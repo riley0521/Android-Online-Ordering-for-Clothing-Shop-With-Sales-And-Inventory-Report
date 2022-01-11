@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.core.view.isVisible
@@ -28,6 +29,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -45,6 +47,8 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     private val viewModel: ProfileViewModel by viewModels()
 
     private lateinit var loadingDialog: LoadingDialog
+
+    private var userId = ""
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -68,70 +72,11 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             }
         }
 
-        viewModel.user.observe(viewLifecycleOwner) { userInformation ->
-            loadingDialog.dismiss()
-            binding.refreshLayout.isRefreshing = false
-
-            if (userInformation != null) {
-                // Check if the user is already registered in the remote db
-                if (userInformation.firstName.isBlank()) {
-                    viewModel.navigateUserToRegistrationModule()
-                }
-
-                binding.apply {
-
-                    if (userInformation.userType == UserType.CUSTOMER.name) {
-                        tvOrders.isVisible = true
-                        tvAddress.isVisible = true
-                        tvProfile.isVisible = true
-                        tvWishList.isVisible = true
-
-                        // check if the user is already verified in email
-                        val currentUser = getFirebaseUser()
-                        if (currentUser != null) {
-                            cardViewBanner.isVisible = !currentUser.isEmailVerified
-                        }
-                    } else if (userInformation.userType == UserType.ADMIN.name) {
-                        tvAccounts.isVisible = true
-                        tvOrders.isVisible = true
-                        tvHistoryLog.isVisible = true
-                        tvSales.isVisible = true
-                        tvSizeChart.isVisible = true
-                    }
-
-                    // Instantiate view
-                    Glide.with(requireView())
-                        .load(userInformation.avatarUrl)
-                        .circleCrop()
-                        .transition(DrawableTransitionOptions.withCrossFade())
-                        .error(R.drawable.ic_user)
-                        .into(imgAvatar)
-
-                    val fullName = "${userInformation.firstName} ${userInformation.lastName}"
-                    tvUsername.text = fullName
-                }
-            } else {
-                viewModel.navigateUserToRegistrationModule()
-            }
-        }
-
         setupViews()
 
         lifecycleScope.launchWhenStarted {
             launch {
-                viewModel.userSession.collectLatest { pref ->
-                    if (pref.userId.isNotBlank()) {
-                        viewModel.fetchUserFromLocalDb(pref.userId)
-
-                        withContext(Dispatchers.Main) {
-                            binding.refreshLayout.setOnRefreshListener {
-                                if (pref.userId.isNotBlank()) {
-                                    viewModel.fetchUserFromLocalDb(pref.userId)
-                                }
-                            }
-                        }
-                    }
-                }
+                getUserSession()
             }
 
             launch {
@@ -178,7 +123,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                                 // Re-fetch the userInformation from local db
                                 // Then update the View Automatically because of observers
                                 loadingDialog.show()
-                                viewModel.fetchUserFromLocalDb(it.uid)
+                                viewModel.fetchUserFromLocalDb(it.uid, false)
                             }
                         }
                         is ProfileViewModel.ProfileEvent.ShowErrorMessage -> {
@@ -190,11 +135,55 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                                 Snackbar.LENGTH_LONG
                             ).show()
                         }
-                        ProfileViewModel.ProfileEvent.SignedIn -> {
+                        is ProfileViewModel.ProfileEvent.SignedIn -> {
                             loadingDialog.dismiss()
+                            binding.refreshLayout.isRefreshing = false
 
-                            requireActivity().finish()
-                            requireActivity().startActivity(requireActivity().intent)
+                            if (event.userInfo != null) {
+                                // Check if the user is already registered in the remote db
+                                if (event.userInfo.firstName.isBlank()) {
+                                    viewModel.navigateUserToRegistrationModule()
+                                }
+
+                                binding.apply {
+
+                                    if (event.userInfo.userType == UserType.CUSTOMER.name) {
+                                        tvOrders.isVisible = true
+                                        tvAddress.isVisible = true
+                                        tvProfile.isVisible = true
+                                        tvWishList.isVisible = true
+
+                                        // check if the user is already verified in email
+                                        val currentUser = getFirebaseUser()
+                                        if (currentUser != null) {
+                                            cardViewBanner.isVisible = !currentUser.isEmailVerified
+                                        }
+                                    } else if (event.userInfo.userType == UserType.ADMIN.name) {
+                                        tvAccounts.isVisible = true
+                                        tvOrders.isVisible = true
+                                        tvHistoryLog.isVisible = true
+                                        tvSales.isVisible = true
+                                        tvSizeChart.isVisible = true
+                                    }
+
+                                    // Instantiate view
+                                    Glide.with(requireView())
+                                        .load(event.userInfo.avatarUrl)
+                                        .circleCrop()
+                                        .transition(DrawableTransitionOptions.withCrossFade())
+                                        .error(R.drawable.ic_user)
+                                        .into(imgAvatar)
+
+                                    val fullName =
+                                        "${event.userInfo.firstName} ${event.userInfo.lastName}"
+                                    tvUsername.text = fullName
+                                }
+                            }
+
+                            if (event.isFirstTime) {
+                                requireActivity().finish()
+                                requireActivity().startActivity(requireActivity().intent)
+                            }
                         }
                         ProfileViewModel.ProfileEvent.BannedUser -> {
                             loadingDialog.dismiss()
@@ -211,6 +200,18 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     }
                 }
             }
+        }
+    }
+
+    private suspend fun getUserSession() {
+        val pref = viewModel.userSession.first()
+        withContext(Dispatchers.Main) {
+            Log.d(TAG, "getUserSession: I'm called ${pref.userId}")
+        }
+
+        if (pref.userId.isNotBlank()) {
+            userId = pref.userId
+            viewModel.fetchUserFromLocalDb(pref.userId, false)
         }
     }
 
@@ -262,6 +263,12 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             btnSendVerification.setOnClickListener {
                 getFirebaseUser()?.sendEmailVerification()
                 viewModel.sendVerificationAgain()
+            }
+
+            refreshLayout.setOnRefreshListener {
+                CoroutineScope(Dispatchers.IO).launch {
+                    getUserSession()
+                }
             }
 
             FirebaseAuth.getInstance().addAuthStateListener { auth ->

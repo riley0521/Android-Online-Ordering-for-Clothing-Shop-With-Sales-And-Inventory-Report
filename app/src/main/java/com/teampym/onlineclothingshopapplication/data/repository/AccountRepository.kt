@@ -5,6 +5,7 @@ import androidx.paging.PagingConfig
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.AuditTrail
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
@@ -34,18 +35,15 @@ class AccountRepository @Inject constructor(
         userId: String
     ): UserInformation? {
         return withContext(dispatcher) {
-            var fetchedUser: UserInformation? = null
             val userQuery = userCollectionRef.document(userId)
                 .get()
                 .await()
 
             if (userQuery.data != null) {
-                val userInfo = userQuery
-                    .toObject(UserInformation::class.java)!!.copy(userId = userQuery.id)
-
-                fetchedUser = userInfo
+                userQuery.toObject<UserInformation>()!!.copy(userId = userQuery.id)
+            } else {
+                null
             }
-            fetchedUser
         }
     }
 
@@ -135,7 +133,7 @@ class AccountRepository @Inject constructor(
             try {
                 userCollectionRef
                     .document(userId)
-                    .set(newUser)
+                    .set(newUser, SetOptions.merge())
                     .await()
 
                 return@withContext newUser

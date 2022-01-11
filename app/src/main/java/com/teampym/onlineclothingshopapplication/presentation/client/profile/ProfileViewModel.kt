@@ -1,7 +1,5 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.profile
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -48,15 +46,11 @@ class ProfileViewModel @Inject constructor(
 
     val userSession = preferencesManager.preferencesFlow
 
-    private val _user = MutableLiveData<UserInformation>()
-    val user: LiveData<UserInformation> get() = _user
-
-    private fun onNotificationTokenInserted(userInformation: UserInformation) =
-        viewModelScope.launch {
-            notificationTokenRepository.getNewAndSubscribeToTopics(userInformation)?.let {
-                notificationTokenDao.insert(it)
-            }
+    private suspend fun onNotificationTokenInserted(userInformation: UserInformation) {
+        notificationTokenRepository.getNewAndSubscribeToTopics(userInformation)?.let {
+            notificationTokenDao.insert(it)
         }
+    }
 
     // Remove the FirebaseAuth cache and in the room db.
     fun signOut(user: FirebaseAuth) = viewModelScope.launch {
@@ -78,15 +72,15 @@ class ProfileViewModel @Inject constructor(
         _profileChannel.send(ProfileEvent.SignedOut)
     }
 
-    private fun resetSession() = viewModelScope.launch {
+    private suspend fun resetSession() {
         preferencesManager.resetAllFields()
     }
 
-    private fun updateUserId(userId: String) = viewModelScope.launch {
+    private suspend fun updateUserId(userId: String) {
         preferencesManager.updateUserId(userId)
     }
 
-    private fun updateUserType(userType: String) = viewModelScope.launch {
+    private suspend fun updateUserType(userType: String) {
         preferencesManager.updateUserType(userType)
     }
 
@@ -117,20 +111,15 @@ class ProfileViewModel @Inject constructor(
             wishListDao.insertAll(fetchedWishList.await())
             deliveryInformationDao.insertAll(fetchedDeliveryInfoList.await())
 
-            fetchUserFromLocalDb(user.uid)
-
-            _profileChannel.send(ProfileEvent.SignedIn)
+            _profileChannel.send(ProfileEvent.SignedIn(fetchedUser, true))
         } else {
             _profileChannel.send(ProfileEvent.NotRegistered)
         }
     }
 
-    fun fetchUserFromLocalDb(userId: String) = viewModelScope.launch {
+    fun fetchUserFromLocalDb(userId: String, isFirstTime: Boolean) = viewModelScope.launch {
         val mainUser = userInformationDao.getCurrentUser(userId)
-        val userWithWishList = userInformationDao.getUserWithWishList()
-            .firstOrNull { it.user?.userId == userId }
-        mainUser?.wishList = userWithWishList?.wishList ?: emptyList()
-        _user.postValue(mainUser!!)
+        _profileChannel.send(ProfileEvent.SignedIn(mainUser, isFirstTime))
     }
 
     fun navigateUserToRegistrationModule() = viewModelScope.launch {
@@ -144,11 +133,14 @@ class ProfileViewModel @Inject constructor(
 
     fun onAddEditProfileResult(result: Int) = viewModelScope.launch {
         when (result) {
-            ADD_PROFILE_OK, EDIT_PROFILE_OK -> {
+            ADD_PROFILE_OK -> {
+                _profileChannel.send(ProfileEvent.ShowSuccessMessage("Registered successfully!"))
+            }
+            EDIT_PROFILE_OK -> {
                 _profileChannel.send(ProfileEvent.ShowSuccessMessage("Profile updated successfully!"))
             }
             ADD_PROFILE_ERR, EDIT_PROFILE_ERR -> {
-                _profileChannel.send(ProfileEvent.ShowErrorMessage("Updating profile failed. Please try again."))
+                _profileChannel.send(ProfileEvent.ShowErrorMessage("Something went wrong. Please try again."))
             }
         }
     }
@@ -156,7 +148,9 @@ class ProfileViewModel @Inject constructor(
     // Events used to notify the UI about what's happening.
     sealed class ProfileEvent {
         object VerificationSent : ProfileEvent()
-        object SignedIn : ProfileEvent()
+        data class SignedIn(val userInfo: UserInformation?, val isFirstTime: Boolean) :
+            ProfileEvent()
+
         object SignedOut : ProfileEvent()
         object BannedUser : ProfileEvent()
         object NotRegistered : ProfileEvent()

@@ -60,22 +60,30 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
         binding.apply {
             btnCheckOut.setOnClickListener {
-                val outOfStockList = adapter.currentList.filter { it.inventory.stock == 0L }
+                if(adapter.currentList.isNotEmpty()) {
+                    val outOfStockList = adapter.currentList.filter { it.inventory.stock == 0L }
 
-                if (outOfStockList.isNotEmpty()) {
-                    AlertDialog.Builder(requireContext())
-                        .setTitle("DELETE OUT OF STOCK ITEMS")
-                        .setMessage("Are you sure you want to proceed? You cannot reverse this action.")
-                        .setPositiveButton("YES") { _, _ ->
-                            viewModel.onDeleteOutOfStockItems(userId, outOfStockList)
+                    if (outOfStockList.isNotEmpty()) {
+                        AlertDialog.Builder(requireContext())
+                            .setTitle("DELETE OUT OF STOCK ITEMS")
+                            .setMessage("Are you sure you want to proceed? You cannot reverse this action.")
+                            .setPositiveButton("YES") { _, _ ->
+                                viewModel.onDeleteOutOfStockItems(userId, outOfStockList)
 
-                            navigateToCheckOut()
-                        }.setNegativeButton("NO") { dialog, _ ->
-                            dialog.dismiss()
-                        }
-                        .show()
+                                navigateToCheckOut()
+                            }.setNegativeButton("NO") { dialog, _ ->
+                                dialog.dismiss()
+                            }
+                            .show()
+                    } else {
+                        navigateToCheckOut()
+                    }
                 } else {
-                    navigateToCheckOut()
+                    Snackbar.make(
+                        requireView(),
+                        "Cart is empty.",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
                 }
             }
 
@@ -117,9 +125,13 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
     }
 
     private fun setTotalPrice(totalPrice: Double) {
-        total = totalPrice
-        val totalText = "$" + String.format("%.2f", total)
-        binding.tvMerchandiseTotal.text = totalText
+        if(totalPrice > 0.0) {
+            total = totalPrice
+            val totalText = "$" + String.format("%.2f", total)
+            binding.tvMerchandiseTotal.text = totalText
+        } else {
+            binding.btnCheckOut.isEnabled = false
+        }
     }
 
     private fun navigateToCheckOut() {

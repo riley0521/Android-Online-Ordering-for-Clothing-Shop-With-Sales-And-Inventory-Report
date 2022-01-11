@@ -295,6 +295,12 @@ class AddEditProductFragment :
                             Snackbar.LENGTH_SHORT
                         ).show()
                         adapter.notifyItemRemoved(event.position)
+
+                        if(adapter.itemCount == 0) {
+                            binding.btnSelectMultipleProductImage.text = SELECT_MULTIPLE_ADDITIONAL_IMAGES
+                        } else {
+                            binding.btnSelectMultipleProductImage.text = DELETE_ALL_ADDITIONAL_IMAGES
+                        }
                     }
                     is AddEditProductViewModel.AddEditProductEvent.ShowSuccessMessage -> {
                         loadingDialog.dismiss()

@@ -174,7 +174,6 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                     is RegistrationViewModel.RegistrationEvent.ShowAddingSuccessAndNavigateBack -> {
                         loadingDialog.dismiss()
 
-                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
                         setFragmentResult(
                             ADD_EDIT_PROFILE_REQUEST,
                             bundleOf(ADD_EDIT_PROFILE_RESULT to event.result)
@@ -184,7 +183,6 @@ class RegistrationFragment : Fragment(R.layout.fragment_registration) {
                     is RegistrationViewModel.RegistrationEvent.ShowUpdatingSuccessAndNavigateBack -> {
                         loadingDialog.dismiss()
 
-                        Snackbar.make(requireView(), event.msg, Snackbar.LENGTH_LONG).show()
                         setFragmentResult(
                             ADD_EDIT_PROFILE_REQUEST,
                             bundleOf(ADD_EDIT_PROFILE_RESULT to event.result)

@@ -13,6 +13,7 @@ import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.AccountRepository
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -135,7 +136,7 @@ class RegistrationViewModel @Inject constructor(
                 if (accountCreated != null) {
 
                     // Save to local database
-                    userInformationDao.insert(accountCreated)
+                    async { userInformationDao.insert(accountCreated) }.await()
 
                     // We can finally reset the Ui State after saving it to local database
                     resetAllUiState()

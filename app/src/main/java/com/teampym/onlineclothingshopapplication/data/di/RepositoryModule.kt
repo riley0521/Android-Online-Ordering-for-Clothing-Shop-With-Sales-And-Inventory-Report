@@ -1,5 +1,6 @@
 package com.teampym.onlineclothingshopapplication.data.di
 
+import androidx.datastore.preferences.preferencesDataStore
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -29,9 +30,10 @@ object RepositoryModule {
     @Provides
     fun provideCategoryRepository(
         db: FirebaseFirestore,
+        productRepository: ProductRepository,
         auditTrailRepository: AuditTrailRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
-    ) = CategoryRepository(db, auditTrailRepository, dispatcher)
+    ) = CategoryRepository(db, productRepository, auditTrailRepository, dispatcher)
 
     @Provides
     fun provideAccountRepository(

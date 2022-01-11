@@ -40,7 +40,7 @@ class WishListFragment : Fragment(R.layout.fragment_wish_list), WishListAdapter.
 
         lifecycleScope.launchWhenStarted {
             viewModel.wishListEvent.collectLatest { event ->
-                when(event) {
+                when (event) {
                     is WishListViewModel.WishListEvent.ShowErrorMessage -> {
                         loadingDialog.dismiss()
                         Snackbar.make(
@@ -50,7 +50,7 @@ class WishListFragment : Fragment(R.layout.fragment_wish_list), WishListAdapter.
                         ).show()
                     }
                     is WishListViewModel.WishListEvent.ShowMessageAndNotifyAdapter -> {
-                        loadingDialog.show()
+                        loadingDialog.dismiss()
                         Snackbar.make(
                             requireView(),
                             event.msg,

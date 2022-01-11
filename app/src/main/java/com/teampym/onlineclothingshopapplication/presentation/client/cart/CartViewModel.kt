@@ -50,7 +50,7 @@ class CartViewModel @Inject constructor(
             CartEvent.ItemModifiedOrRemoved(
                 position,
                 false,
-                cart.value!!.sumOf { it.calculatedTotalPrice.toDouble() }
+                cart.value?.sumOf { it.calculatedTotalPrice.toDouble() } ?: 0.0
             )
         )
     }
@@ -71,7 +71,7 @@ class CartViewModel @Inject constructor(
                 CartEvent.ItemModifiedOrRemoved(
                     position,
                     true,
-                    cart.value!!.sumOf { it.calculatedTotalPrice.toDouble() }
+                    cart.value?.sumOf { it.calculatedTotalPrice.toDouble() } ?: 0.0
                 )
             )
         }
