@@ -80,13 +80,13 @@ class WishItemRepository @Inject constructor(
         }
     }
 
-    suspend fun remove(userId: String, product: Product): Boolean {
+    suspend fun remove(userId: String, productId: String): Boolean {
         return withContext(dispatcher) {
             try {
                 userWishListRef
                     .document(userId)
                     .collection(WISH_LIST_SUB_COLLECTION)
-                    .document(product.productId)
+                    .document(productId)
                     .delete()
                     .await()
 

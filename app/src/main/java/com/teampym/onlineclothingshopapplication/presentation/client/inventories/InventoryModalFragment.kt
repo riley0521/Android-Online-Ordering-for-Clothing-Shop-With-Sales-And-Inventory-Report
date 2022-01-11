@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
@@ -31,6 +32,8 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
     private lateinit var product: Product
 
     private var selectedInv: Inventory? = null
+
+    private var count = 1L
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -71,7 +74,8 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
                 viewModel.addToCart(
                     userId,
                     product,
-                    selectedInv!!
+                    selectedInv!!,
+                    count
                 )
                 Toast.makeText(
                     requireContext(),
@@ -82,11 +86,6 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
             }
         }
 
-        if (product.inventoryList.size == 1) {
-            viewModel.addToCart(userId, product, product.inventoryList[0])
-            findNavController().popBackStack()
-        }
-
         if (product.inventoryList.isNotEmpty()) {
             for (inventory in product.inventoryList) {
                 val chip = layoutInflater.inflate(R.layout.inventory_item, null, false) as Chip
@@ -95,16 +94,46 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
                 chip.isCheckable = true
                 chip.isEnabled = inventory.stock > 0
                 chip.setOnClickListener {
-                    binding.btnAddToCart.isEnabled = binding.chipSizeGroup
-                        .checkedChipIds
-                        .count() == 1 && userId.isNotEmpty()
+                    binding.apply {
+                        btnAddToCart.isEnabled = chipSizeGroup
+                            .checkedChipIds
+                            .count() == 1 && userId.isNotEmpty()
 
-                    val numberOfAvailableStocksForSize = "(Stock: ${inventory.stock})"
-                    binding.tvAvailableStocks.text = numberOfAvailableStocksForSize
+                        val numberOfAvailableStocksForSize = "(Stock: ${inventory.stock})"
+                        tvAvailableStocks.text = numberOfAvailableStocksForSize
+                        tvAvailableStocks.isVisible = chipSizeGroup.checkedChipIds.count() == 1
 
-                    // Set the inventory object to global variable
-                    // When chip is selected
-                    selectedInv = inventory
+                        // Set the inventory object to global variable
+                        // When chip is selected
+                        selectedInv = inventory
+
+                        count = 1L
+                        tvCount.text = count.toString()
+
+                        btnAdd.setOnClickListener {
+                            if (count++ > inventory.stock) {
+                                Toast.makeText(
+                                    requireContext(),
+                                    "You reached the maximum number of stocks available.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                tvCount.text = count.toString()
+                            }
+                        }
+
+                        btnRemove.setOnClickListener {
+                            if (count-- < 1) {
+                                Toast.makeText(
+                                    requireContext(),
+                                    "1 is the minimum quantity.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                tvCount.text = count.toString()
+                            }
+                        }
+                    }
                 }
                 binding.chipSizeGroup.addView(chip)
             }

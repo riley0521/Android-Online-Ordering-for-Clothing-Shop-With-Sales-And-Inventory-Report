@@ -208,6 +208,15 @@ object RepositoryModule {
         db,
         dispatcher
     )
+
+    @Provides
+    fun provideFAQRepository(
+        db: FirebaseFirestore,
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = FAQRepository(
+        db,
+        dispatcher
+    )
 }
 
 @Retention(AnnotationRetention.RUNTIME)

@@ -6,16 +6,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.models.Category
+import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.CategoryRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.SessionPreferences
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -39,6 +42,12 @@ class CategoryViewModel @Inject constructor(
 
     fun getUserSession(): LiveData<SessionPreferences> {
         return session.asLiveData()
+    }
+
+    suspend fun getUserInformation(userId: String) : UserInformation? {
+        return withContext(Dispatchers.IO) {
+            userInformationDao.getCurrentUser(userId)
+        }
     }
 
     fun updateCategoryId(categoryId: String) = viewModelScope.launch {

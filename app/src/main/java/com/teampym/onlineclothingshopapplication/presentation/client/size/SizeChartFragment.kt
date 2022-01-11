@@ -117,7 +117,7 @@ class SizeChartFragment :
             }
             R.id.action_delete_images -> {
                 instantiateAdapter(true)
-                adapter.submitList(viewModel.sizeChartImages.value)
+                viewModel.fetchSizeChartImages()
                 true
             }
             else -> false
@@ -125,6 +125,7 @@ class SizeChartFragment :
     }
 
     override fun onRemoveClicked(sizeChart: SizeChart, position: Int) {
+        loadingDialog.show()
         viewModel.removeSizeChart(sizeChart, position)
     }
 

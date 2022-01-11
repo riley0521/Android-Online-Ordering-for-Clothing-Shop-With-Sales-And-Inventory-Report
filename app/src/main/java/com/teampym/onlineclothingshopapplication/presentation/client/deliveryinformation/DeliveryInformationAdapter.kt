@@ -2,6 +2,7 @@ package com.teampym.onlineclothingshopapplication.presentation.client.deliveryin
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -54,6 +55,18 @@ class DeliveryInformationAdapter(
     inner class DeliveryInformationViewHolder(private val binding: DeliveryInformationItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
+        init {
+            binding.root.setOnClickListener {
+                val position = absoluteAdapterPosition
+                if(position != RecyclerView.NO_POSITION) {
+                    val item = getItem(position)
+                    if(item != null) {
+                        listener.onItemClicked(item)
+                    }
+                }
+            }
+        }
+
         fun bind(deliveryInfo: DeliveryInformation) {
             binding.apply {
                 val contact = if (deliveryInfo.contactNo[0].toString() == "0")
@@ -72,13 +85,13 @@ class DeliveryInformationAdapter(
                     "${deliveryInfo.province}, " +
                     deliveryInfo.postalCode
                 tvAddress.text = completeAddress
+
+                tvIsDefault.isVisible = deliveryInfo.isPrimary
             }
         }
     }
 
     interface OnDeliveryInformationListener {
-        fun onMakeDefaultClicked(deliveryInfo: DeliveryInformation)
-        fun onEditClicked(deliveryInfo: DeliveryInformation)
-        fun onDeleteClicked(deliveryInfo: DeliveryInformation)
+        fun onItemClicked(deliveryInfo: DeliveryInformation)
     }
 }

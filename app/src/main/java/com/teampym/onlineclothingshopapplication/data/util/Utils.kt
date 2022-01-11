@@ -37,6 +37,7 @@ const val DAYS_SUB_COLLECTION_OF_MONTHS = "days"
 
 const val TERMS_DATA = "Terms"
 const val SIZE_CHART_DATA = "SizeChart"
+const val FAQ_DATA = "Faqs"
 
 const val PREFIX = "https://midnightmares.page.link"
 

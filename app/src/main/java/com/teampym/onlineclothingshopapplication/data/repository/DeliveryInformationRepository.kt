@@ -12,7 +12,6 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -94,7 +93,7 @@ class DeliveryInformationRepository @Inject constructor(
                 .add(deliveryInformation)
                 .await()
 
-            if(result != null) {
+            if (result != null) {
                 return@withContext deliveryInformation.copy(id = result.id)
             }
             null
@@ -150,11 +149,14 @@ class DeliveryInformationRepository @Inject constructor(
                 .limit(1)
                 .get()
                 .addOnSuccessListener { querySnapshot ->
-                    isSuccessful =
-                        switchDefaultAddressInFirestore(querySnapshot.documents[0], userId, new)
+                    if (querySnapshot.documents.size == 1) {
+                        isSuccessful =
+                            switchDefaultAddressInFirestore(querySnapshot.documents[0], userId, new)
+                    } else {
+                        isSuccessful = false
+                    }
                 }.addOnFailureListener {
                     isSuccessful = false
-                    return@addOnFailureListener
                 }
             isSuccessful
         }

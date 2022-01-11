@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentTermsAndConditionBinding
@@ -53,6 +54,11 @@ class TermsAndConditionFragment : Fragment(R.layout.fragment_terms_and_condition
                 setFragmentResultListener(EDIT_TERMS_REQUEST) { _, bundle ->
                     val isSuccess = bundle.getBoolean(EDIT_TERMS_RESULT)
                     if (isSuccess) {
+                        Snackbar.make(
+                            requireView(),
+                            "Terms and Conditions updated successfully!",
+                            Snackbar.LENGTH_SHORT
+                        ).show()
                         viewModel.fetchTermsAndCondition()
                     }
                 }

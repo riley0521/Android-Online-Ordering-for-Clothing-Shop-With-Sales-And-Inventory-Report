@@ -164,11 +164,6 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
                 (requireActivity() as AppCompatActivity).supportActionBar?.title = COMPLETED_ORDERS
                 true
             }
-            R.id.action_returned -> {
-                viewModel.statusQuery.value = Status.RETURNED.name
-                (requireActivity() as AppCompatActivity).supportActionBar?.title = RETURNED_ORDERS
-                true
-            }
             R.id.action_cancelled -> {
                 viewModel.statusQuery.value = Status.CANCELED.name
                 (requireActivity() as AppCompatActivity).supportActionBar?.title = CANCELLED_ORDERS

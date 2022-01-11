@@ -15,9 +15,10 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
-class AccountsViewModel(
+class AccountsViewModel @Inject constructor(
     db: FirebaseFirestore,
     private val accountRepository: AccountRepository,
     private val userInformationDao: UserInformationDao,

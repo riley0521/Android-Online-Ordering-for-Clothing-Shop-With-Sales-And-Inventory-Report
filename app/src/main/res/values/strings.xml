@@ -63,7 +63,7 @@
     <string name="label_view_shipped_orders">View Shipped Orders</string>
     <string name="label_view_ready_to_deliver_orders">View Ready To Deliver Orders</string>
     <string name="label_view_cancelled_orders">View Cancelled Orders</string>
-    <string name="label_view_returned_orders_items">View Returned Orders/Items</string>
+    <string name="label_view_returned_items">View Returned Items</string>
     <string name="label_order_id">Order ID:</string>
     <string name="label_username">Username:</string>
     <string name="label_total_cost">Merchandise Total:</string>
@@ -155,12 +155,12 @@
     <string name="menu_stock_in">Stock In</string>
     <string name="menu_actions">Actions</string>
 
-    <string name="action_get_by_shipping">Action Get By Shipping</string>
-    <string name="action_get_by_shipped">Action Get By Shipped</string>
-    <string name="action_get_by_delivery">Action Get By Delivery</string>
-    <string name="action_get_by_completed">Action Get By Completed</string>
-    <string name="action_get_by_returned">Action Get By Returned</string>
-    <string name="action_get_by_cancelled">Action Get By Cancelled</string>
+    <string name="action_get_by_shipping">By Shipping</string>
+    <string name="action_get_by_shipped">By Shipped</string>
+    <string name="action_get_by_delivery">By Delivery</string>
+    <string name="action_get_by_completed">By Completed</string>
+    <string name="action_get_by_returned">By Returned</string>
+    <string name="action_get_by_cancelled">By Cancelled</string>
 
     <string name="count_indicator_text">"%1$d/%2$d"</string>
 
@@ -236,6 +236,7 @@
     <string name="label_orders">Orders</string>
     <string name="btn_view_size_chart">View Size Chart</string>
     <string name="label_no_products_yet_for_this_category_come_back_later">No Products yet for this Category. Come back later!</string>
+    <string name="label_no_category">No Categories yet. Come back later!</string>
     <string name="label_faqs_frequently_ask_questions">FAQs (Frequently Ask Questions)</string>
     <string name="label_no_available_images">No available images.</string>
     <string name="label_accounts">Accounts</string>
@@ -243,5 +244,9 @@
     <string name="hint_input_your_terms_and_conditions">Input Your Terms and Conditions</string>
     <string name="btn_ban_user">Ban User</string>
     <string name="btn_un_ban_user">Unban User</string>
+    <string name="hint_input_question">Input Question</string>
+    <string name="hint_input_answer">Input Answer</string>
+    <string name="menu_account">Account</string>
+    <string name="hint_input_additional_note_for_admins">Input Additional Note for Admins</string>
 
 </resources>

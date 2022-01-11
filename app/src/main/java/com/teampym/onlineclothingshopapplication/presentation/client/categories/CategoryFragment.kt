@@ -15,6 +15,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Category
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
+import com.teampym.onlineclothingshopapplication.data.util.UserStatus
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCategoryBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -45,7 +46,17 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
         binding.refreshLayout.isRefreshing = true
 
         lifecycleScope.launchWhenStarted {
-            setupViews(viewModel.session.first().userType)
+            val session = viewModel.session.first()
+            val userInfo = viewModel.getUserInformation(session.userId)
+            if (userInfo?.userStatus == UserStatus.BANNED.name) {
+                val action = CategoryFragmentDirections.actionCategoryFragmentToProfileFragment(
+                    false,
+                    true
+                )
+                findNavController().navigate(action)
+            }
+
+            setupViews(session.userType)
 
             viewModel.categoryEvent.collectLatest { event ->
                 when (event) {
@@ -85,12 +96,22 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
         }
 
         viewModel.categories.observe(viewLifecycleOwner) {
-            binding.refreshLayout.isRefreshing = false
+            binding.apply {
+                refreshLayout.isRefreshing = false
 
-            adapter.submitList(it)
+                adapter.submitList(it)
 
-            binding.recyclerCategories.setHasFixedSize(true)
-            binding.recyclerCategories.adapter = adapter
+                recyclerCategories.setHasFixedSize(true)
+                recyclerCategories.adapter = adapter
+
+                if (it.isEmpty()) {
+                    recyclerCategories.visibility = View.INVISIBLE
+                    textView.visibility = View.VISIBLE
+                } else {
+                    recyclerCategories.visibility = View.VISIBLE
+                    textView.visibility = View.INVISIBLE
+                }
+            }
         }
     }
 

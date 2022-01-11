@@ -2,8 +2,6 @@ package com.teampym.onlineclothingshopapplication.presentation.client.deliveryin
 
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AlertDialog
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
@@ -38,8 +36,8 @@ class DeliveryInformationFragment :
 
         viewModel.deliveryInformation.observe(viewLifecycleOwner) { deliveryInfoList ->
             if (deliveryInfoList.isNotEmpty()) {
-                val filteredList = deliveryInfoList.filter { !it.isPrimary }
-                adapter.submitList(filteredList)
+                val sortedList = deliveryInfoList.sortedByDescending { it.isPrimary }
+                adapter.submitList(sortedList)
                 binding.recyclerDeliveryInformation.setHasFixedSize(true)
                 binding.recyclerDeliveryInformation.visibility = View.VISIBLE
                 binding.recyclerDeliveryInformation.adapter = adapter
@@ -74,45 +72,9 @@ class DeliveryInformationFragment :
         }
     }
 
-    private fun showDeleteDeliveryInformationDialog(info: DeliveryInformation) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("DELETE DELIVERY INFORMATION")
-            .setMessage(
-                "Are you sure you want to delete this delivery information?\n" +
-                    "Reminder: You cannot reverse this action"
-            )
-            .setPositiveButton("Yes") { dialog, _ ->
-                viewModel.onDeleteClicked(info)
-                dialog.dismiss()
-            }.setNegativeButton("No") { dialog, _ ->
-                dialog.dismiss()
-            }.show()
-    }
-
-    override fun onDeleteClicked(deliveryInfo: DeliveryInformation) {
-        showDeleteDeliveryInformationDialog(deliveryInfo)
-    }
-
-    override fun onMakeDefaultClicked(deliveryInfo: DeliveryInformation) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Set Default Delivery Information")
-            .setMessage(
-                "Are you sure you want to make this address your default delivery address?\n" +
-                    "Reminder: You cannot reverse this action"
-            )
-            .setPositiveButton("Yes") { dialog, _ ->
-                viewModel.onDeliveryInformationDefaultChanged(
-                    deliveryInfo.copy(isPrimary = true)
-                )
-                dialog.dismiss()
-            }.setNegativeButton("No") { dialog, _ ->
-                dialog.dismiss()
-            }.show()
-    }
-
-    override fun onEditClicked(deliveryInfo: DeliveryInformation) {
-        val action =
-            DeliveryInformationFragmentDirections.actionDeliveryInformationFragmentToAddEditDeliveryInformationFragment(
+    override fun onItemClicked(deliveryInfo: DeliveryInformation) {
+        val action = DeliveryInformationFragmentDirections
+            .actionDeliveryInformationFragmentToAddEditDeliveryInformationFragment(
                 deliveryInfo,
                 "Edit Address"
             )

@@ -66,6 +66,10 @@ class HistoryLogFragment : Fragment(R.layout.fragment_history_log) {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.by_account -> {
+                viewModel.updateFilterLogType(AuditType.ACCOUNT)
+                true
+            }
             R.id.by_category -> {
                 viewModel.updateFilterLogType(AuditType.CATEGORY)
                 true

@@ -56,6 +56,18 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             showSignInMethods()
         }
 
+        if (args.isBanned) {
+            FirebaseAuth.getInstance().currentUser?.let {
+                Toast.makeText(
+                    requireContext(),
+                    "This account is banned for suspicious activities.",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                signOut(FirebaseAuth.getInstance())
+            }
+        }
+
         viewModel.user.observe(viewLifecycleOwner) { userInformation ->
             loadingDialog.dismiss()
             binding.refreshLayout.isRefreshing = false
@@ -84,6 +96,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         tvOrders.isVisible = true
                         tvHistoryLog.isVisible = true
                         tvSales.isVisible = true
+                        tvSizeChart.isVisible = true
                     }
 
                     // Instantiate view
@@ -183,6 +196,18 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                             requireActivity().finish()
                             requireActivity().startActivity(requireActivity().intent)
                         }
+                        ProfileViewModel.ProfileEvent.BannedUser -> {
+                            loadingDialog.dismiss()
+
+                            Toast.makeText(
+                                requireContext(),
+                                "This account is banned for suspicious activities.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            FirebaseAuth.getInstance().currentUser?.let {
+                                signOut(FirebaseAuth.getInstance())
+                            }
+                        }
                     }
                 }
             }
@@ -211,11 +236,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             }
 
             tvAccounts.setOnClickListener {
-                Toast.makeText(
-                    requireContext(),
-                    "Gagawin pa lang",
-                    Toast.LENGTH_SHORT
-                ).show()
+                findNavController().navigate(R.id.action_profileFragment_to_accountsFragment)
             }
 
             tvHistoryLog.setOnClickListener {
@@ -297,6 +318,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             tvAccounts.isVisible = false
             tvHistoryLog.isVisible = false
             tvSales.isVisible = false
+            tvSizeChart.isVisible = false
 
             requireActivity().finish()
             requireActivity().startActivity(requireActivity().intent)

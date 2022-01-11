@@ -34,10 +34,6 @@
                 android:title="@string/action_get_by_completed" />
 
             <item
-                android:id="@+id/action_returned"
-                android:title="@string/action_get_by_returned" />
-
-            <item
                 android:id="@+id/action_cancelled"
                 android:title="@string/action_get_by_cancelled" />
         </menu>

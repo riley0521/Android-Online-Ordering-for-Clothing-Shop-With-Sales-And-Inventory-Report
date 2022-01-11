@@ -7,14 +7,17 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResult
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
+import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentAddEditDeliveryInformationBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -28,6 +31,8 @@ class AddEditDeliveryInformationFragment :
     Fragment(R.layout.fragment_add_edit_delivery_information) {
 
     private lateinit var binding: FragmentAddEditDeliveryInformationBinding
+
+    private lateinit var loadingDialog: LoadingDialog
 
     private val args by navArgs<AddEditDeliveryInformationFragmentArgs>()
 
@@ -49,6 +54,7 @@ class AddEditDeliveryInformationFragment :
         super.onViewCreated(view, savedInstanceState)
 
         binding = FragmentAddEditDeliveryInformationBinding.bind(view)
+        loadingDialog = LoadingDialog(requireActivity())
 
         editDeliveryInformation = args.deliveryInfo
 
@@ -68,7 +74,23 @@ class AddEditDeliveryInformationFragment :
 
                 edtPostalCode.setText(it.postalCode)
                 edtDetailedAddress.setText(it.streetNumber)
-                switchDefaultAddress.isChecked = it.isPrimary
+                if (it.isPrimary) {
+                    switchDefaultAddress.isChecked = true
+                    switchDefaultAddress.isEnabled = false
+                }
+
+                rlDeleteAddress.isVisible = true
+                rlDeleteAddress.setOnClickListener {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("DELETE DELIVERY INFORMATION")
+                        .setMessage("Are you sure you want to delete this delivery information?")
+                        .setPositiveButton("Yes") { _, _ ->
+                            loadingDialog.show()
+                            viewModel.onDeleteAddressClicked(editDeliveryInformation)
+                        }.setNegativeButton("No") { dialog, _ ->
+                            dialog.dismiss()
+                        }.show()
+                }
 
                 saveStateOfDeliveryInfo(it)
             }
@@ -181,62 +203,58 @@ class AddEditDeliveryInformationFragment :
             })
 
             btnSubmit.setOnClickListener {
-                when {
-                    isNewFormValid() -> {
-                        newDeliveryInformation = DeliveryInformation(
-                            name = edtFullName.text.toString().trim(),
-                            contactNo = edtPhoneNo.text.toString().trim(),
-                            region = selectedRegion,
-                            province = selectedProvince,
-                            city = selectedCity,
-                            streetNumber = edtDetailedAddress.text.toString().trim(),
-                            postalCode = edtPostalCode.text.toString().trim(),
-                            userId = userId,
-                            isPrimary = switchDefaultAddress.isChecked
-                        )
+                if (editDeliveryInformation == null) {
+                    newDeliveryInformation = DeliveryInformation(
+                        name = edtFullName.text.toString().trim(),
+                        contactNo = edtPhoneNo.text.toString().trim(),
+                        region = selectedRegion,
+                        province = selectedProvince,
+                        city = selectedCity,
+                        streetNumber = edtDetailedAddress.text.toString().trim(),
+                        postalCode = edtPostalCode.text.toString().trim(),
+                        userId = userId,
+                        isPrimary = switchDefaultAddress.isChecked
+                    )
 
-                        viewModel.onSubmitClicked(newDeliveryInformation, false)
+                    viewModel.onSubmitClicked(newDeliveryInformation, false)
+                } else if (editDeliveryInformation != null) {
+                    editDeliveryInformation?.name = edtFullName.text.toString()
+                    editDeliveryInformation?.contactNo = edtPhoneNo.text.toString()
+                    editDeliveryInformation?.region = selectedRegion
+                    editDeliveryInformation?.province = selectedProvince
+                    editDeliveryInformation?.city = selectedCity
+                    editDeliveryInformation?.streetNumber = edtDetailedAddress.text.toString()
+                    editDeliveryInformation?.postalCode = edtPostalCode.text.toString()
+                    editDeliveryInformation?.userId = userId
+                    editDeliveryInformation?.isPrimary = switchDefaultAddress.isChecked
+                    editDeliveryInformation?.let { edited ->
+                        viewModel.onSubmitClicked(
+                            edited,
+                            true
+                        )
                     }
-                    isEditFormValid() -> {
-                        editDeliveryInformation?.name = edtFullName.text.toString()
-                        editDeliveryInformation?.contactNo = edtPhoneNo.text.toString()
-                        editDeliveryInformation?.region = selectedRegion
-                        editDeliveryInformation?.province = selectedProvince
-                        editDeliveryInformation?.city = selectedCity
-                        editDeliveryInformation?.streetNumber = edtDetailedAddress.text.toString()
-                        editDeliveryInformation?.postalCode = edtPostalCode.text.toString()
-                        editDeliveryInformation?.userId = userId
-                        editDeliveryInformation?.isPrimary = switchDefaultAddress.isChecked
-                        editDeliveryInformation?.let { edited ->
-                            viewModel.onSubmitClicked(
-                                edited,
-                                true
-                            )
+                } else {
+                    when {
+                        edtFullName.text.isBlank() -> {
+                            showAlertDialog("Set Full Name")
                         }
-                    }
-                    else -> {
-                        when {
-                            edtFullName.text.isBlank() -> {
-                                showAlertDialog("Set Full Name")
-                            }
-                            edtPhoneNo.text.isBlank() -> {
-                                showAlertDialog("Set Phone Number")
-                            }
-                            selectedRegion.isBlank() -> {
-                                showAlertDialog("Set Region")
-                            }
-                            selectedProvince.isBlank() -> {
-                                showAlertDialog("Set Province")
-                            }
-                            selectedCity.isBlank() -> {
-                                showAlertDialog("Set City")
-                            }
-                            edtPostalCode.text.isBlank() -> {
-                                showAlertDialog("Set Postal Code")
-                            }
-                            edtDetailedAddress.text.isBlank() -> {
-                                showAlertDialog("Set Detailed Address")
-                            }
+                        edtPhoneNo.text.isBlank() -> {
+                            showAlertDialog("Set Phone Number")
+                        }
+                        selectedRegion.isBlank() -> {
+                            showAlertDialog("Set Region")
+                        }
+                        selectedProvince.isBlank() -> {
+                            showAlertDialog("Set Province")
+                        }
+                        selectedCity.isBlank() -> {
+                            showAlertDialog("Set City")
+                        }
+                        edtPostalCode.text.isBlank() -> {
+                            showAlertDialog("Set Postal Code")
+                        }
+                        edtDetailedAddress.text.isBlank() -> {
+                            showAlertDialog("Set Detailed Address")
                         }
                     }
                 }
@@ -318,14 +336,23 @@ class AddEditDeliveryInformationFragment :
         }
 
         lifecycleScope.launch {
-            viewModel.event.collectLatest {
-                when (it) {
+            viewModel.event.collectLatest { event ->
+                when (event) {
                     is DeliveryInfoSharedViewModel.AddEditDeliveryInformationEvent.NavigateBackWithResult -> {
+                        loadingDialog.dismiss()
                         setFragmentResult(
                             ADD_EDIT_DELETE_REQUEST,
-                            bundleOf(ADD_EDIT_DELETE_RESULT to it.result)
+                            bundleOf(ADD_EDIT_DELETE_RESULT to event.result)
                         )
                         findNavController().popBackStack()
+                    }
+                    is DeliveryInfoSharedViewModel.AddEditDeliveryInformationEvent.ShowErrorMessage -> {
+                        loadingDialog.dismiss()
+                        Snackbar.make(
+                            requireView(),
+                            event.msg,
+                            Snackbar.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
@@ -347,34 +374,5 @@ class AddEditDeliveryInformationFragment :
                 dialog.dismiss()
             }
             .show()
-    }
-
-    private fun isNewFormValid(): Boolean {
-        binding.apply {
-            return edtFullName.text.isNotBlank() &&
-                edtPhoneNo.text.isNotBlank() &&
-                edtPostalCode.text.isNotBlank() &&
-                edtDetailedAddress.text.isNotBlank() &&
-                selectedRegion.isNotBlank() &&
-                selectedProvince.isNotBlank() &&
-                selectedCity.isNotBlank() &&
-                userId.isNotBlank()
-        }
-    }
-
-    private fun isEditFormValid(): Boolean {
-        editDeliveryInformation?.let {
-            binding.apply {
-                return edtFullName.text.isNotBlank() &&
-                    edtPhoneNo.text.isNotBlank() &&
-                    edtPostalCode.text.isNotBlank() &&
-                    edtDetailedAddress.text.isNotBlank() &&
-                    it.region.isNotBlank() &&
-                    it.province.isNotBlank() &&
-                    it.city.isNotBlank() &&
-                    userId.isNotBlank()
-            }
-        }
-        return false
     }
 }

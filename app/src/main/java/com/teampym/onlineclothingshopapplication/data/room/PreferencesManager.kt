@@ -25,10 +25,8 @@ const val MOST_POPULAR = "MOST POPULAR"
 const val NEWEST = "NEWEST"
 
 enum class PaymentMethod {
-    GCASH,
-    PAYMAYA,
-    BPI,
-    COD
+    COD,
+    CREDIT_DEBIT
 }
 
 data class SessionPreferences(

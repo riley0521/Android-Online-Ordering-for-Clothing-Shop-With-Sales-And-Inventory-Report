@@ -216,6 +216,8 @@
                 android:text="@string/label_size_chart"
                 android:textAppearance="?attr/textAppearanceBody2"
                 android:textStyle="bold"
+                android:visibility="gone"
+                tools:visibility="visible"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"

@@ -68,7 +68,7 @@ class ProductDetailViewModel @Inject constructor(
         val existingWishListItem = wishItemDao.checkIfExisting(product.productId)
 
         if (existingWishListItem != null) {
-            val result = wishItemRepository.remove(userId, product)
+            val result = wishItemRepository.remove(userId, product.productId)
             if (result) {
                 // Remove from local db as well
                 wishItemDao.delete(existingWishListItem.productId)

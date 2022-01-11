@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -43,6 +44,8 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
     private lateinit var loadingDialog: LoadingDialog
 
+    private var totalCost: Double = 0.0
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -52,6 +55,8 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
         adapter = CheckOutAdapter()
         adapter.submitList(args.cart.cart)
 
+        viewModel.fetchSelectPaymentMethod()
+
         binding.apply {
             recyclerFinalItems.setHasFixedSize(true)
             recyclerFinalItems.adapter = adapter
@@ -60,22 +65,21 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                 findNavController().navigate(R.id.action_global_deliveryInformationFragment)
             }
 
-            // TODO ("Will update soon if I find a way to integrate gcash and paymaya to app.")
-//            labelPaymentMethod.setOnClickListener {
-//                val action =
-//                    CheckOutFragmentDirections.actionCheckOutFragmentToSelectPaymentMethodFragment(
-//                        tvPaymentMethod.text.toString()
-//                    )
-//                findNavController().navigate(action)
-//            }
-//
-//            labelPaymentMethod2.setOnClickListener {
-//                val action =
-//                    CheckOutFragmentDirections.actionCheckOutFragmentToSelectPaymentMethodFragment(
-//                        tvPaymentMethod.text.toString()
-//                    )
-//                findNavController().navigate(action)
-//            }
+            cardView.setOnClickListener {
+                setFragmentResultListener(SELECT_PAYMENT_REQUEST) { _, bundle ->
+                    val result = bundle.getBoolean(SELECT_PAYMENT_RESULT)
+                    Log.d(TAG, result.toString())
+                    if (result) {
+                        viewModel.fetchSelectPaymentMethod()
+                    }
+                }
+
+                val action =
+                    CheckOutFragmentDirections.actionCheckOutFragmentToSelectPaymentMethodFragment(
+                        paymentMethodEnum
+                    )
+                findNavController().navigate(action)
+            }
 
             btnPlaceOrder.setOnClickListener {
                 loadingDialog.show()
@@ -97,14 +101,15 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                     }
 
                     if (currentUser.isEmailVerified) {
-                        Log.d(TAG, "placing order: ${args.cart.cart.size.toLong()}")
-                        Log.d(TAG, "placing order: ${args.cart.cart[0].subTotal}")
-                        Log.d(TAG, "final user: $finalUser")
+                        args.cart.cart.forEach {
+                            totalCost += it.calculatedTotalPrice.toDouble()
+                        }
 
                         viewModel.placeOrder(
                             finalUser,
                             args.cart.cart,
-                            ""
+                            etAdditionalNote.text.toString(),
+                            paymentMethodEnum
                         )
                     } else {
                         loadingDialog.dismiss()
@@ -136,10 +141,8 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
             paymentMethod?.let { pm ->
                 paymentMethodEnum = pm
                 val paymentMethodStr = when (pm) {
-                    PaymentMethod.GCASH -> R.string.rb_gcash
-                    PaymentMethod.PAYMAYA -> R.string.rb_paymaya
-                    PaymentMethod.BPI -> R.string.rb_credit_debit_card
                     PaymentMethod.COD -> R.string.rb_cod
+                    PaymentMethod.CREDIT_DEBIT -> R.string.rb_credit_debit_card
                 }
 
                 binding.tvPaymentMethod.text = getString(paymentMethodStr)
@@ -194,6 +197,12 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                     when (event) {
                         is CheckOutViewModel.CheckOutEvent.ShowSuccessfulMessage -> {
                             loadingDialog.dismiss()
+
+                            if (paymentMethodEnum == PaymentMethod.CREDIT_DEBIT) {
+                                // TODO(Create Stripe SDK payment here)
+                                Log.d(TAG, "Total Cost to pay: $totalCost")
+                            }
+
                             Toast.makeText(requireContext(), event.msg, Toast.LENGTH_SHORT)
                                 .show()
                             findNavController().navigate(R.id.action_global_categoryFragment)

@@ -34,7 +34,8 @@
             android:importantForAutofill="no"
             android:inputType="textPersonName"
             android:maxLength="35"
-            android:textAppearance="?attr/textAppearanceBody1" />
+            android:textAppearance="?attr/textAppearanceBody1"
+            tools:ignore="RelativeOverlap" />
 
     </RelativeLayout>
 
@@ -59,7 +60,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            tools:ignore="RelativeOverlap">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -76,7 +78,9 @@
                 android:background="@android:color/transparent"
                 android:gravity="end"
                 android:hint="@string/hint_set_phone_number"
-                android:maxLength="10" />
+                android:inputType="number"
+                android:maxLength="10"
+                tools:ignore="Autofill,TextFields" />
 
         </LinearLayout>
 
@@ -106,7 +110,8 @@
             android:layout_alignParentEnd="true"
             android:background="@android:color/transparent"
             android:hint="@string/hint_region_select"
-            android:textAppearance="?attr/textAppearanceBody1" />
+            android:textAppearance="?attr/textAppearanceBody1"
+            tools:ignore="RelativeOverlap" />
 
     </RelativeLayout>
 
@@ -134,7 +139,8 @@
             android:layout_alignParentEnd="true"
             android:background="@android:color/transparent"
             android:hint="@string/hint_province_select"
-            android:textAppearance="?attr/textAppearanceBody1" />
+            android:textAppearance="?attr/textAppearanceBody1"
+            tools:ignore="RelativeOverlap" />
 
     </RelativeLayout>
 
@@ -162,7 +168,8 @@
             android:layout_alignParentEnd="true"
             android:background="@android:color/transparent"
             android:hint="@string/hint_city_select"
-            android:textAppearance="?attr/textAppearanceBody1" />
+            android:textAppearance="?attr/textAppearanceBody1"
+            tools:ignore="RelativeOverlap" />
 
     </RelativeLayout>
 
@@ -193,7 +200,8 @@
             android:hint="@string/hint_set_postal_code"
             android:inputType="number"
             android:maxLength="7"
-            android:textAppearance="?attr/textAppearanceBody1" />
+            android:textAppearance="?attr/textAppearanceBody1"
+            tools:ignore="Autofill,RelativeOverlap" />
 
     </RelativeLayout>
 
@@ -223,14 +231,15 @@
 
         <EditText
             android:id="@+id/edtDetailedAddress"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:background="@android:color/transparent"
             android:hint="@string/hint_set_detailed_address"
             android:inputType="textLongMessage"
             android:maxLines="3"
-            android:textAppearance="?attr/textAppearanceBody1" />
+            android:textAppearance="?attr/textAppearanceBody1"
+            tools:ignore="Autofill" />
 
     </LinearLayout>
 
@@ -250,7 +259,8 @@
             android:layout_height="match_parent"
             android:text="@string/btn_set_as_default_address"
             android:textAppearance="?attr/textAppearanceBody1"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            tools:ignore="RelativeOverlap" />
 
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/switchDefaultAddress"
@@ -276,6 +286,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:gravity="center_vertical|center_horizontal"
             android:text="@string/btn_delete_address"
             android:textAppearance="?attr/textAppearanceBody1"
             android:textColor="@android:color/holo_red_light"

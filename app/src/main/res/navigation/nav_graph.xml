@@ -16,6 +16,9 @@
         <action
             android:id="@+id/action_categoryFragment_to_addEditCategoryFragment"
             app:destination="@id/addEditCategoryFragment" />
+        <action
+            android:id="@+id/action_categoryFragment_to_profileFragment"
+            app:destination="@id/profileFragment" />
     </fragment>
     <fragment
         android:id="@+id/registrationFragment"
@@ -122,6 +125,13 @@
         <action
             android:id="@+id/action_profileFragment_to_frequentlyAskQuestionsFragment"
             app:destination="@id/frequentlyAskQuestionsFragment" />
+        <action
+            android:id="@+id/action_profileFragment_to_accountsFragment"
+            app:destination="@id/accountsFragment" />
+        <argument
+            android:name="isBanned"
+            app:argType="boolean"
+            android:defaultValue="false" />
     </fragment>
     <action
         android:id="@+id/action_global_profileFragment"
@@ -169,7 +179,7 @@
     <dialog
         android:id="@+id/inventoryModalFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.inventories.InventoryModalFragment"
-        android:label="fragment_inventory_modal"
+        android:label="Inventory"
         tools:layout="@layout/fragment_inventory_modal">
         <argument
             android:name="product"
@@ -235,15 +245,15 @@
             app:argType="string"
             android:defaultValue="Select Region" />
     </fragment>
-    <fragment
+    <dialog
         android:id="@+id/selectPaymentMethodFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.checkout.SelectPaymentMethodFragment"
         android:label="Change Payment Method"
         tools:layout="@layout/fragment_select_payment_method">
         <argument
             android:name="paymentMethod"
-            app:argType="string" />
-    </fragment>
+            app:argType="com.teampym.onlineclothingshopapplication.data.room.PaymentMethod" />
+    </dialog>
     <fragment
         android:id="@+id/orderListFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.orderlist.OrderListFragment"
@@ -396,7 +406,7 @@
     <dialog
         android:id="@+id/stockInModalFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.admin.stockin.StockInModalFragment"
-        android:label="fragment_stock_in_modal"
+        android:label="Stock In"
         tools:layout="@layout/fragment_stock_in_modal" >
         <argument
             android:name="product"
@@ -421,7 +431,11 @@
         android:id="@+id/wishListFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.wishlist.WishListFragment"
         android:label="Wish List"
-        tools:layout="@layout/fragment_wish_list" />
+        tools:layout="@layout/fragment_wish_list" >
+        <action
+            android:id="@+id/action_wishListFragment_to_productDetailFragment"
+            app:destination="@id/productDetailFragment" />
+    </fragment>
     <fragment
         android:id="@+id/addNewsFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.admin.add_news.AddNewsFragment"
@@ -466,14 +480,34 @@
         android:id="@+id/frequentlyAskQuestionsFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.faqs.FrequentlyAskQuestionsFragment"
         android:label="FAQs"
-        tools:layout="@layout/fragment_frequently_ask_questions" />
+        tools:layout="@layout/fragment_frequently_ask_questions" >
+        <action
+            android:id="@+id/action_frequentlyAskQuestionsFragment_to_addEditFaqFragment"
+            app:destination="@id/addEditFaqFragment" />
+    </fragment>
     <fragment
         android:id="@+id/editTermsAndConditionFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.toc.EditTermsAndConditionFragment"
-        android:label="fragment_edit_terms_and_condition"
+        android:label="Edit Terms and Conditions"
         tools:layout="@layout/fragment_edit_terms_and_condition" >
         <argument
             android:name="tc"
             app:argType="com.teampym.onlineclothingshopapplication.data.models.TermsAndCondition" />
+    </fragment>
+    <fragment
+        android:id="@+id/accountsFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.accounts.AccountsFragment"
+        android:label="Accounts"
+        tools:layout="@layout/fragment_accounts" />
+    <fragment
+        android:id="@+id/addEditFaqFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.faqs.AddEditFaqFragment"
+        android:label="Add/Edit FAQ"
+        tools:layout="@layout/fragment_add_edit_faq" >
+        <argument
+            android:name="faq"
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.FAQModel"
+            app:nullable="true"
+            android:defaultValue="@null" />
     </fragment>
 </navigation>

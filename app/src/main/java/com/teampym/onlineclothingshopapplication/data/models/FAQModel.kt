@@ -4,11 +4,14 @@ import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
-data class TermsAndCondition(
-    val tc: String,
+data class FAQModel(
+    val question: String,
+    val answer: String,
     val id: String = ""
 ) : Parcelable {
+
     constructor() : this(
+        "",
         ""
     )
 }

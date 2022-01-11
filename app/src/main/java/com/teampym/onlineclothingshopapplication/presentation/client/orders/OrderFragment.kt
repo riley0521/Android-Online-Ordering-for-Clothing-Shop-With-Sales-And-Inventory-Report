@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.util.CANCELLED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.COMPLETED_ORDERS
@@ -65,11 +66,11 @@ class OrderFragment : Fragment(R.layout.fragment_order) {
             }
 
             btnViewReturnedOrders.setOnClickListener {
-                val action = OrderFragmentDirections.actionOrderFragmentToOrderListFragment(
-                    RETURNED_ORDERS,
-                    Status.RETURNED.name
-                )
-                findNavController().navigate(action)
+                Snackbar.make(
+                    requireView(),
+                    "Gagawin pa lang",
+                    Snackbar.LENGTH_SHORT
+                ).show()
             }
 
             btnViewCancelledOrders.setOnClickListener {

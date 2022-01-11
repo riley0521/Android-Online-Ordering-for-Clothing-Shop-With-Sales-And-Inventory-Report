@@ -61,6 +61,19 @@ class ProductFragment :
             header = ProductLoadStateAdapter(adminAdapter),
             footer = ProductLoadStateAdapter(adminAdapter)
         )
+        adminAdapter.addLoadStateListener {
+            if (it.source.refresh is LoadState.NotLoading && it.append.endOfPaginationReached) {
+                if (adminAdapter.itemCount < 1) {
+                    binding.recyclerProducts.visibility = View.INVISIBLE
+                    binding.tvNoProducts.visibility = View.VISIBLE
+                    binding.tvNoProducts.text =
+                        getString(R.string.label_no_products_yet_for_this_category_come_back_later)
+                } else {
+                    binding.recyclerProducts.visibility = View.VISIBLE
+                    binding.tvNoProducts.isVisible = false
+                }
+            }
+        }
 
         lifecycleScope.launchWhenStarted {
             viewModel.productEvent.collectLatest { event ->

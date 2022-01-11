@@ -10,6 +10,10 @@
 
         <menu>
             <item
+                android:id="@+id/by_account"
+                android:title="@string/menu_account" />
+
+            <item
                 android:id="@+id/by_category"
                 android:title="@string/menu_category" />
 

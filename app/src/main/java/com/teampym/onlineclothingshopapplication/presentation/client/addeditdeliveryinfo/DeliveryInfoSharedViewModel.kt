@@ -1,21 +1,39 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.addeditdeliveryinfo
 
-import androidx.lifecycle.* // ktlint-disable no-wildcard-imports
-import com.teampym.onlineclothingshopapplication.* // ktlint-disable no-wildcard-imports
+import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
+import com.teampym.onlineclothingshopapplication.ADD_DELIVERY_INFO_RESULT_OK
+import com.teampym.onlineclothingshopapplication.DELETE_DELIVERY_INFO_RESULT_OK
+import com.teampym.onlineclothingshopapplication.EDIT_DELIVERY_INFO_RESULT_OK
 import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
 import com.teampym.onlineclothingshopapplication.data.models.Selector
 import com.teampym.onlineclothingshopapplication.data.repository.DeliveryInformationRepository
-import com.teampym.onlineclothingshopapplication.data.room.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.room.City
+import com.teampym.onlineclothingshopapplication.data.room.CityDao
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
+import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformationDao
+import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
+import com.teampym.onlineclothingshopapplication.data.room.Province
+import com.teampym.onlineclothingshopapplication.data.room.ProvinceDao
+import com.teampym.onlineclothingshopapplication.data.room.Region
+import com.teampym.onlineclothingshopapplication.data.room.RegionDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
+
+private const val TAG = "DeliveryViewModel"
 
 @HiltViewModel
 class DeliveryInfoSharedViewModel @Inject constructor(
@@ -136,15 +154,15 @@ class DeliveryInfoSharedViewModel @Inject constructor(
         updateCity(City(id = selector.id, provinceId = selector.parentId, name = selector.name))
     }
 
-    fun onDeleteAddressClicked(deliveryInfo: DeliveryInformation?) = appScope.launch {
+    fun onDeleteAddressClicked(deliveryInfo: DeliveryInformation?) = viewModelScope.launch {
         _userId.value?.let { userId ->
             if (userId.isNotBlank()) {
                 if (deliveryInfo != null) {
-                    val res = async {
-                        deliveryInformationRepository.delete(userId, deliveryInfo)
-                    }.await()
+                    val res = deliveryInformationRepository.delete(userId, deliveryInfo)
                     if (res) {
-                        async { deliveryInformationDao.delete(deliveryInfo.id) }.await()
+                        deliveryInformationDao.delete(deliveryInfo.id)
+
+                        resetAllUiState()
                         _deliveryInformationChannel.send(
                             AddEditDeliveryInformationEvent.NavigateBackWithResult(
                                 DELETE_DELIVERY_INFO_RESULT_OK
@@ -152,68 +170,92 @@ class DeliveryInfoSharedViewModel @Inject constructor(
                         )
                     } else {
                         _deliveryInformationChannel.send(
-                            AddEditDeliveryInformationEvent.NavigateBackWithResult(
-                                DELETE_DELIVERY_INFO_RESULT_ERR
+                            AddEditDeliveryInformationEvent.ShowErrorMessage(
+                                "Deleting delivery information failed. Please try again."
                             )
                         )
                     }
                 }
             } else {
                 _deliveryInformationChannel.send(
-                    AddEditDeliveryInformationEvent.NavigateBackWithResult(
-                        DELETE_DELIVERY_INFO_RESULT_ERR
+                    AddEditDeliveryInformationEvent.ShowErrorMessage(
+                        "User ID not found."
                     )
                 )
             }
         }
     }
 
-    fun onSubmitClicked(deliveryInfo: DeliveryInformation, isEditing: Boolean) = appScope.launch {
-        _userId.value?.let {
-            if (it.isNotBlank()) {
+    private fun isFormValid(del: DeliveryInformation): Boolean {
+        return fullName.isNotBlank() &&
+            phoneNumber.isNotBlank() &&
+            postalCode.isNotBlank() &&
+            streetNumber.isNotBlank() &&
+            del.region.isNotBlank() &&
+            del.province.isNotBlank() &&
+            del.city.isNotBlank()
+    }
 
-                if (isEditing) {
-                    val res =
-                        async { deliveryInformationRepository.update(it, deliveryInfo) }.await()
-                    if (res) {
-                        async { insertToLocalDbAndChangeDefault(deliveryInfo) }.await()
+    fun onSubmitClicked(deliveryInfo: DeliveryInformation, isEditing: Boolean) =
+        viewModelScope.launch {
+            _userId.value?.let {
+                if (it.isNotBlank()) {
+                    if (isEditing) {
+                        if (isFormValid(deliveryInfo)) {
+                            val res = deliveryInformationRepository.update(it, deliveryInfo)
+                            if (res) {
+                                insertToLocalDbAndChangeDefault(deliveryInfo)
 
-                        // Send signal to other fragment
-                        _deliveryInformationChannel.send(
-                            AddEditDeliveryInformationEvent.NavigateBackWithResult(
-                                EDIT_DELIVERY_INFO_RESULT_OK
+                                // Send signal to other fragment
+                                _deliveryInformationChannel.send(
+                                    AddEditDeliveryInformationEvent.NavigateBackWithResult(
+                                        EDIT_DELIVERY_INFO_RESULT_OK
+                                    )
+                                )
+                            } else {
+                                _deliveryInformationChannel.send(
+                                    AddEditDeliveryInformationEvent.ShowErrorMessage(
+                                        "Updating delivery information failed. Please try again."
+                                    )
+                                )
+                            }
+                        } else {
+                            _deliveryInformationChannel.send(
+                                AddEditDeliveryInformationEvent.ShowErrorMessage(
+                                    "Please fill the form."
+                                )
                             )
-                        )
+                        }
                     } else {
-                        _deliveryInformationChannel.send(
-                            AddEditDeliveryInformationEvent.NavigateBackWithResult(
-                                EDIT_DELIVERY_INFO_RESULT_ERR
-                            )
-                        )
-                    }
-                } else {
-                    val res =
-                        async { deliveryInformationRepository.create(it, deliveryInfo) }.await()
-                    if (res != null) {
-                        async { insertToLocalDbAndChangeDefault(deliveryInfo) }.await()
+                        if (isFormValid(deliveryInfo)) {
+                            val res = deliveryInformationRepository.create(it, deliveryInfo)
+                            if (res != null) {
+                                insertToLocalDbAndChangeDefault(res)
 
-                        // Send signal to other fragment
-                        _deliveryInformationChannel.send(
-                            AddEditDeliveryInformationEvent.NavigateBackWithResult(
-                                ADD_DELIVERY_INFO_RESULT_OK
+                                // Send signal to other fragment
+                                _deliveryInformationChannel.send(
+                                    AddEditDeliveryInformationEvent.NavigateBackWithResult(
+                                        ADD_DELIVERY_INFO_RESULT_OK
+                                    )
+                                )
+                            } else {
+                                _deliveryInformationChannel.send(
+                                    AddEditDeliveryInformationEvent.ShowErrorMessage(
+                                        "Creating delivery information failed. Please try again."
+                                    )
+                                )
+                            }
+                        } else {
+                            _deliveryInformationChannel.send(
+                                AddEditDeliveryInformationEvent.ShowErrorMessage(
+                                    "Please fill the form."
+                                )
                             )
-                        )
-                    } else {
-                        _deliveryInformationChannel.send(
-                            AddEditDeliveryInformationEvent.NavigateBackWithResult(
-                                ADD_DELIVERY_INFO_RESULT_ERR
-                            )
-                        )
+                        }
                     }
                 }
             }
         }
-    }
 
     private fun resetAllUiState() {
         fullName = ""
@@ -230,20 +272,25 @@ class DeliveryInfoSharedViewModel @Inject constructor(
         super.onCleared()
     }
 
-    private fun insertToLocalDbAndChangeDefault(deliveryInfo: DeliveryInformation) =
-        viewModelScope.launch {
-            async { deliveryInformationDao.insert(deliveryInfo) }.await()
-            if (deliveryInfo.isPrimary) {
-                async {
+    private suspend fun insertToLocalDbAndChangeDefault(deliveryInfo: DeliveryInformation) {
+        withContext(Dispatchers.IO) {
+            deliveryInformationDao.insert(deliveryInfo)
+            try {
+                if (deliveryInfo.isPrimary) {
                     deliveryInformationRepository.changeDefault(
                         deliveryInfo.userId,
                         deliveryInfo
                     )
-                }.await()
+                } else {
+                }
+            } catch (ex: Exception) {
+                ex.message?.let { Log.d(TAG, it) }
             }
         }
+    }
 
     sealed class AddEditDeliveryInformationEvent {
         data class NavigateBackWithResult(val result: Int) : AddEditDeliveryInformationEvent()
+        data class ShowErrorMessage(val msg: String) : AddEditDeliveryInformationEvent()
     }
 }

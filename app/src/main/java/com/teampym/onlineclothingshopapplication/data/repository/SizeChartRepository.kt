@@ -60,7 +60,7 @@ class SizeChartRepository @Inject constructor(
     suspend fun uploadImage(imgUri: Uri): UploadedImage {
         return withContext(dispatcher) {
             val fileName = UUID.randomUUID().toString()
-            val uploadImage = imageRef.child(PRODUCT_PATH + fileName)
+            val uploadImage = imageRef.child(ROOT_PATH + fileName)
                 .putFile(imgUri)
                 .await()
 

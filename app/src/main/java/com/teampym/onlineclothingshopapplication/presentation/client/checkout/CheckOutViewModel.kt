@@ -4,7 +4,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.CartRepository
 import com.teampym.onlineclothingshopapplication.data.repository.NotificationTokenRepository
@@ -16,8 +15,8 @@ import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -32,8 +31,7 @@ class CheckOutViewModel @Inject constructor(
     private val orderDetailRepository: OrderDetailRepository,
     private val notificationTokenRepository: NotificationTokenRepository,
     private val cartRepository: CartRepository,
-    private val preferencesManager: PreferencesManager,
-    @ApplicationScope val appScope: CoroutineScope
+    private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     private val _checkOutChannel = Channel<CheckOutEvent>()
@@ -41,8 +39,6 @@ class CheckOutViewModel @Inject constructor(
 
     val userWithDeliveryInfo =
         preferencesManager.preferencesFlow.flatMapLatest { sessionPref ->
-            _selectedPaymentMethod.value = sessionPref.paymentMethod
-
             flowOf(
                 userInformationDao.getUserWithDeliveryInfo()
                     .firstOrNull { it.user.userId == sessionPref.userId }
@@ -52,16 +48,22 @@ class CheckOutViewModel @Inject constructor(
     private val _selectedPaymentMethod = MutableLiveData<PaymentMethod>()
     val selectedPaymentMethod: LiveData<PaymentMethod> get() = _selectedPaymentMethod
 
+    fun fetchSelectPaymentMethod() = viewModelScope.launch {
+        _selectedPaymentMethod.postValue(preferencesManager.preferencesFlow.first().paymentMethod)
+    }
+
     fun placeOrder(
         userInformation: UserInformation,
         cartList: List<Cart>,
         additionalNote: String,
+        paymentMethod: PaymentMethod
     ) = viewModelScope.launch {
         val createdOrder = orderRepository.create(
             userInformation.userId,
             cartList,
             userInformation.defaultDeliveryAddress,
-            additionalNote
+            additionalNote,
+            paymentMethod
         )
         if (createdOrder != null && cartList.isNotEmpty()) {
 

@@ -13,6 +13,7 @@ import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
 import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
+import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
 import com.teampym.onlineclothingshopapplication.data.util.AuditType
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.ORDER_DETAILS_SUB_COLLECTION
@@ -80,7 +81,8 @@ class OrderRepository @Inject constructor(
         userId: String,
         cartList: List<Cart>,
         deliveryInformation: DeliveryInformation,
-        additionalNote: String
+        additionalNote: String,
+        paymentMethod: PaymentMethod
     ): Order? {
         return withContext(dispatcher) {
 
@@ -89,7 +91,8 @@ class OrderRepository @Inject constructor(
                 additionalNote = additionalNote,
                 deliveryInformation = deliveryInformation,
                 totalCost = cartList.sumOf { it.subTotal },
-                numberOfItems = cartList.size.toLong()
+                numberOfItems = cartList.size.toLong(),
+                paymentMethod = paymentMethod.name
             )
 
             val result = orderCollectionRef

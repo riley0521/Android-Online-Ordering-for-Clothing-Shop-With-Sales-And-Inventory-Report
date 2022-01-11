@@ -21,6 +21,7 @@ import com.teampym.onlineclothingshopapplication.data.room.NotificationTokenDao
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.room.WishItemDao
+import com.teampym.onlineclothingshopapplication.data.util.UserStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -92,6 +93,11 @@ class ProfileViewModel @Inject constructor(
     fun fetchUserFromRemoteDb(user: FirebaseUser) = viewModelScope.launch {
         val fetchedUser = accountRepository.get(user.uid)
         if (fetchedUser != null) {
+            if (fetchedUser.userStatus == UserStatus.BANNED.name) {
+                _profileChannel.send(ProfileEvent.BannedUser)
+                return@launch
+            }
+
             val fetchedWishList = async { wishListRepository.getAll(fetchedUser.userId) }
             val fetchedDeliveryInfoList = async {
                 deliveryInformationRepository.getAll(fetchedUser.userId)
@@ -152,6 +158,7 @@ class ProfileViewModel @Inject constructor(
         object VerificationSent : ProfileEvent()
         object SignedIn : ProfileEvent()
         object SignedOut : ProfileEvent()
+        object BannedUser : ProfileEvent()
         object NotRegistered : ProfileEvent()
         data class ShowSuccessMessage(val msg: String) : ProfileEvent()
         data class ShowErrorMessage(val msg: String) : ProfileEvent()

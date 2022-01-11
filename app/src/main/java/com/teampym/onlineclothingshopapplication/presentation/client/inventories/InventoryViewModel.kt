@@ -24,7 +24,7 @@ class InventoryViewModel @Inject constructor(
     private val _inventoriesLiveData = MutableLiveData<List<Inventory>>()
     val inventories: LiveData<List<Inventory>> get() = _inventoriesLiveData
 
-    fun addToCart(userId: String, product: Product, inventory: Inventory) = appScope.launch {
+    fun addToCart(userId: String, product: Product, inventory: Inventory, count: Long) = appScope.launch {
         // Use online database instead of Room
         val newCartItem = Cart(
             userId = userId,
@@ -32,7 +32,8 @@ class InventoryViewModel @Inject constructor(
             // Cart ID Should be == inventory ID
             id = inventory.inventoryId,
             product = product,
-            inventory = inventory
+            inventory = inventory,
+            quantity = count
         )
 
         // Set subTotal
