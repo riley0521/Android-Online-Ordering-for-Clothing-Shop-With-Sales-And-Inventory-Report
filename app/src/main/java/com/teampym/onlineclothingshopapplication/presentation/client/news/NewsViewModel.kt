@@ -11,6 +11,7 @@ import androidx.paging.filter
 import androidx.paging.map
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
 import com.teampym.onlineclothingshopapplication.data.models.Like
 import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.repository.LikeRepository
@@ -19,7 +20,9 @@ import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.util.POSTS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -29,11 +32,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NewsViewModel @Inject constructor(
-    private val db: FirebaseFirestore,
+    db: FirebaseFirestore,
+    preferencesManager: PreferencesManager,
     private val postRepository: PostRepository,
     private val likeRepository: LikeRepository,
-    private val preferencesManager: PreferencesManager,
-    private val state: SavedStateHandle
+    private val state: SavedStateHandle,
+    @ApplicationScope val appScope: CoroutineScope
 ) : ViewModel() {
 
     private val _userSession = preferencesManager.preferencesFlow
@@ -91,20 +95,18 @@ class NewsViewModel @Inject constructor(
         events.value += event
     }
 
-    private fun onLikePostClicked(
+    fun onLikePostClicked(
         post: Post,
         isLikeByUser: Boolean
-    ) = viewModelScope.launch {
+    ) = appScope.launch {
+        delay(3000)
+
         if (isLikeByUser) {
             if (userId.isNotBlank()) {
                 val res = likeRepository.add(post, Like(postId = post.id, userId = userId))
                 if (res) {
                     val count = post.numberOfLikes + 1
-                    val postToUpdate =
-                        postRepository.updateLikeCount(postId = post.id, count = count)
-                    if (postToUpdate) {
-                        _newsChannel.send(NewsEvent.ShowMessage("You Liked this post."))
-                    }
+                    postRepository.updateLikeCount(postId = post.id, count = count)
                 }
             }
         } else {
@@ -112,23 +114,16 @@ class NewsViewModel @Inject constructor(
                 val res = likeRepository.remove(postId = post.id, userId = userId)
                 if (res) {
                     val count = post.numberOfLikes - 1
-                    val postToUpdate =
-                        postRepository.updateLikeCount(postId = post.id, count = count)
-                    if (postToUpdate) {
-                        _newsChannel.send(NewsEvent.ShowMessage("You unlike this post."))
-                    }
+                    postRepository.updateLikeCount(postId = post.id, count = count)
                 }
             }
         }
     }
 
-    private fun onDeletePostClicked(post: Post) = viewModelScope.launch {
-
+    fun onDeletePostClicked(post: Post) = appScope.launch {
         if (userType == UserType.ADMIN.name) {
-            val res = postRepository.delete(post.id)
-            if (res) {
-                _newsChannel.send(NewsEvent.ShowMessage("Post deleted successfully!"))
-            }
+            delay(3000)
+            postRepository.delete(post.id)
         }
     }
 
@@ -140,28 +135,24 @@ class NewsViewModel @Inject constructor(
             is NewsFragment.NewsPagerEvent.Update -> {
                 paging.map { post ->
                     if (event.post.id == post.id) {
-                        val res = onLikePostClicked(event.post, event.isLikeByUser)
+                        var count = post.numberOfLikes
 
-                        if (res.isCompleted) {
-                            return@map post.copy(
-                                numberOfLikes = if (event.isLikeByUser) post.numberOfLikes++ else post.numberOfLikes--,
-                                isLikedByCurrentUser = event.isLikeByUser,
-                                haveUserId = true
-                            )
-                        } else return@map post
+                        if (event.isLikeByUser) {
+                            count += 1
+                        } else {
+                            count -= 1
+                        }
+
+                        return@map post.copy(
+                            numberOfLikes = count,
+                            isLikedByCurrentUser = event.isLikeByUser,
+                            haveUserId = true
+                        )
                     } else return@map post
                 }
             }
             is NewsFragment.NewsPagerEvent.Remove -> {
-                val res = viewModelScope.launch {
-                    onDeletePostClicked(event.post)
-                }
-
-                if (res.isCompleted) {
-                    paging.filter { event.post.id != it.id }
-                } else {
-                    paging.filter { event.post.id != it.id }
-                }
+                paging.filter { event.post.id != it.id }
             }
         }
     }

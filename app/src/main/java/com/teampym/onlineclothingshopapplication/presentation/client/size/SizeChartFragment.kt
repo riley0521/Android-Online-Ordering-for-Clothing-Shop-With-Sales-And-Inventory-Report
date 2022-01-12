@@ -57,7 +57,7 @@ class SizeChartFragment :
 
         lifecycleScope.launchWhenStarted {
             viewModel.sizeChartEvent.collectLatest { event ->
-                when(event) {
+                when (event) {
                     is SizeChartViewModel.SizeChartEvent.ShowErrorMessage -> {
                         loadingDialog.dismiss()
                         Snackbar.make(

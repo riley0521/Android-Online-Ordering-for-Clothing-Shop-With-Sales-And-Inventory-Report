@@ -9,8 +9,6 @@ import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.repository.ProductImageRepository
 import com.teampym.onlineclothingshopapplication.data.repository.ProductInventoryRepository
 import com.teampym.onlineclothingshopapplication.data.repository.ReviewRepository
-import com.teampym.onlineclothingshopapplication.data.room.MOST_POPULAR
-import com.teampym.onlineclothingshopapplication.data.room.NEWEST
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.SortOrder
 import com.teampym.onlineclothingshopapplication.data.room.UserWithWishList
@@ -105,28 +103,16 @@ class ProductPagingSource(
                     nextKey = nextPage
                 )
             } else {
-                if (sortOrder == SortOrder.BY_POPULARITY) {
-                    productList.sortByDescending { product ->
-                        product.inventoryList.maxOf { it.sold }
-                    }
-
-                    if (productList.size > 5) {
-                        productList[0].flag = MOST_POPULAR
-                        productList[1].flag = MOST_POPULAR
-                        productList[2].flag = MOST_POPULAR
-                        productList[3].flag = MOST_POPULAR
-                        productList[4].flag = MOST_POPULAR
-                    }
-                } else if (sortOrder == SortOrder.BY_NEWEST) {
+                if (sortOrder == SortOrder.BY_NEWEST) {
                     // This is to sort by descending by the most recent date
                     productList.sortByDescending { product -> product.dateAdded }
 
                     if (productList.size > 5) {
-                        productList[0].flag = NEWEST
-                        productList[1].flag = NEWEST
-                        productList[2].flag = NEWEST
-                        productList[3].flag = NEWEST
-                        productList[4].flag = NEWEST
+                        productList[0].flag = "NEWEST"
+                        productList[1].flag = "NEWEST"
+                        productList[2].flag = "NEWEST"
+                        productList[3].flag = "NEWEST"
+                        productList[4].flag = "NEWEST"
                     }
                 }
 

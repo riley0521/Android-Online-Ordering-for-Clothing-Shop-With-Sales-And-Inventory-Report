@@ -12,7 +12,7 @@ import com.teampym.onlineclothingshopapplication.databinding.FaqItemBinding
 
 class FrequentlyAskQuestionsAdapter(
     private val listener: FrequentlyAskQuestionsListener,
-    private val userType: String
+    private val viewModel: FrequentlyAskQuestionsViewModel
 ) : ListAdapter<FAQModel, FrequentlyAskQuestionsAdapter.FrequentlyAskQuestionsViewHolder>(
     FAQ_COMPARATOR
 ) {
@@ -77,7 +77,7 @@ class FrequentlyAskQuestionsAdapter(
                 tvQuestion.text = faq.question
                 tvAnswer.text = faq.answer
 
-                imgDelete.isVisible = userType == UserType.ADMIN.name
+                imgDelete.isVisible = viewModel.userType == UserType.ADMIN.name
             }
         }
     }

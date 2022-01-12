@@ -13,16 +13,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 import javax.inject.Inject
-import javax.inject.Provider
 import javax.inject.Singleton
 
 private const val TAG = "PreferencesManager"
 private const val SESSION_PREFERENCES = "session_preferences"
 
-enum class SortOrder { BY_NAME, BY_POPULARITY, BY_NEWEST }
-
-const val MOST_POPULAR = "MOST POPULAR"
-const val NEWEST = "NEWEST"
+enum class SortOrder { BY_NAME, BY_NEWEST }
 
 enum class PaymentMethod {
     COD,

@@ -61,7 +61,7 @@
     <string name="placeholder_comment">Comment (%1$d)</string>
     <string name="label_view_shipping_orders">View Shipping Orders</string>
     <string name="label_view_shipped_orders">View Shipped Orders</string>
-    <string name="label_view_ready_to_deliver_orders">View Ready To Deliver Orders</string>
+    <string name="label_view_for_deliver_orders">View For Delivery Orders</string>
     <string name="label_view_cancelled_orders">View Cancelled Orders</string>
     <string name="label_view_returned_items">View Returned Items</string>
     <string name="label_order_id">Order ID:</string>
@@ -144,6 +144,8 @@
     <string name="btn_check_out">Check Out</string>
     <string name="btn_add_to_cart">Add To Cart</string>
     <string name="btn_share">Share</string>
+    <string name="btn_wish">Wish</string>
+    <string name="btn_copy">Copy</string>
     <string name="btn_sign_in">Sign In</string>
     <string name="btn_sign_out">Sign Out</string>
     <string name="btn_label_register">Register</string>
@@ -248,5 +250,7 @@
     <string name="hint_input_answer">Input Answer</string>
     <string name="menu_account">Account</string>
     <string name="hint_input_additional_note_for_admins">Input Additional Note for Admins</string>
+    <string name="sort_newest">NEWEST</string>
+    <string name="sort_most_popular">MOST POPULAR</string>
 
 </resources>

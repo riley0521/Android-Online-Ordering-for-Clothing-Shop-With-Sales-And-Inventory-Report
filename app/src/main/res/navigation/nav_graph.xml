@@ -147,7 +147,8 @@
         <argument
             android:name="product"
             app:argType="com.teampym.onlineclothingshopapplication.data.room.Product"
-            app:nullable="true" />
+            app:nullable="true"
+            android:defaultValue="@null" />
         <argument
             android:name="name"
             app:argType="string"
@@ -331,7 +332,8 @@
         <argument
             android:name="order"
             app:argType="com.teampym.onlineclothingshopapplication.data.models.Order"
-            app:nullable="true" />
+            app:nullable="true"
+            android:defaultValue="@null" />
         <action
             android:id="@+id/action_orderDetailListFragment_to_addReviewFragment"
             app:destination="@id/addReviewFragment" />

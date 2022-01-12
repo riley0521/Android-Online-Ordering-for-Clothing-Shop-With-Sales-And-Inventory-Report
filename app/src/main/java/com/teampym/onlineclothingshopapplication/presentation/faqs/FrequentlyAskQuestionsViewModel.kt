@@ -10,6 +10,7 @@ import com.teampym.onlineclothingshopapplication.data.repository.FAQRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -22,7 +23,15 @@ class FrequentlyAskQuestionsViewModel @Inject constructor(
 
     val userSession = preferencesManager.preferencesFlow
 
-    private val _faqs = MutableLiveData<List<FAQModel>>(listOf())
+    var userType = ""
+
+    init {
+        viewModelScope.launch {
+            userType = userSession.first().userType
+        }
+    }
+
+    private val _faqs = MutableLiveData<List<FAQModel>>()
     val faqs: LiveData<List<FAQModel>> get() = _faqs
 
     private val _faqChannel = Channel<FAQEvent>()

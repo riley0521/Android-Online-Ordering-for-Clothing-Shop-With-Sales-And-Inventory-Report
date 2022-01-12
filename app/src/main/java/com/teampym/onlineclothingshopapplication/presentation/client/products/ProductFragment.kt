@@ -315,10 +315,6 @@ class ProductFragment :
                 viewModel.updateSortOrder(SortOrder.BY_NAME)
                 true
             }
-            R.id.action_sort_best_seller -> {
-                viewModel.updateSortOrder(SortOrder.BY_POPULARITY)
-                true
-            }
             R.id.action_sort_by_new -> {
                 viewModel.updateSortOrder(SortOrder.BY_NEWEST)
                 true

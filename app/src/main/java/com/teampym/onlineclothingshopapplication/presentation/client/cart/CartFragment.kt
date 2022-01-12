@@ -1,7 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.cart
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -16,7 +15,6 @@ import com.teampym.onlineclothingshopapplication.data.models.Checkout
 import com.teampym.onlineclothingshopapplication.data.util.CartFlag
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCartBinding
-import com.teampym.onlineclothingshopapplication.presentation.client.orders.OrderFragmentDirections
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 
@@ -60,7 +58,7 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
 
         binding.apply {
             btnCheckOut.setOnClickListener {
-                if(adapter.currentList.isNotEmpty()) {
+                if (adapter.currentList.isNotEmpty()) {
                     val outOfStockList = adapter.currentList.filter { it.inventory.stock == 0L }
 
                     if (outOfStockList.isNotEmpty()) {
@@ -125,7 +123,7 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
     }
 
     private fun setTotalPrice(totalPrice: Double) {
-        if(totalPrice > 0.0) {
+        if (totalPrice > 0.0) {
             total = totalPrice
             val totalText = "$" + String.format("%.2f", total)
             binding.tvMerchandiseTotal.text = totalText

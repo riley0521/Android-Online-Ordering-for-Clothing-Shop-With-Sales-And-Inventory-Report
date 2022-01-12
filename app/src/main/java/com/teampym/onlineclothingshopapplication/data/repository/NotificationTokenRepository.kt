@@ -9,12 +9,14 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.ktx.messaging
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.NotificationToken
+import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.network.FCMService
 import com.teampym.onlineclothingshopapplication.data.network.NotificationData
 import com.teampym.onlineclothingshopapplication.data.network.NotificationSingle
 import com.teampym.onlineclothingshopapplication.data.network.NotificationTopic
+import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.util.NOTIFICATION_TOKENS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.USERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
@@ -130,15 +132,30 @@ class NotificationTokenRepository @Inject constructor(
         return withContext(dispatcher) {
             var isCompleted = true
 
-            var objNotNull = Any()
+            var orderId = ""
+            var postId = ""
+            var productId = ""
+
             obj?.let {
-                objNotNull = it
+                when(it) {
+                    is Order -> {
+                        orderId = it.id
+                    }
+                    is Post -> {
+                        postId = it.id
+                    }
+                    is Product -> {
+                        productId = it.productId
+                    }
+                }
             }
 
             val data = NotificationData(
                 title = title,
                 body = body,
-                obj = objNotNull
+                orderId = orderId,
+                postId = postId,
+                productId = productId
             )
 
             val notificationTokenList = getAll(userId)
@@ -169,9 +186,22 @@ class NotificationTokenRepository @Inject constructor(
         return withContext(dispatcher) {
             var isCompleted = true
 
-            var objNotNull = Any()
+            var orderId = ""
+            var postId = ""
+            var productId = ""
+
             obj?.let {
-                objNotNull = it
+                when(it) {
+                    is Order -> {
+                        orderId = it.id
+                    }
+                    is Post -> {
+                        postId = it.id
+                    }
+                    is Product -> {
+                        productId = it.productId
+                    }
+                }
             }
 
             try {
@@ -191,7 +221,9 @@ class NotificationTokenRepository @Inject constructor(
                     val data = NotificationData(
                         title = title,
                         body = body,
-                        obj = objNotNull
+                        orderId = orderId,
+                        postId = postId,
+                        productId = productId
                     )
 
                     val notificationSingle = NotificationSingle(
@@ -211,16 +243,30 @@ class NotificationTokenRepository @Inject constructor(
     }
 
     suspend fun submitToPostTopic(
-        post: Post,
+        obj: Any,
         title: String,
         body: String
     ): Boolean {
         return withContext(dispatcher) {
             try {
+
+                var postId = ""
+                var productId = ""
+
+                when (obj) {
+                    is Post -> {
+                        postId = obj.id
+                    }
+                    is Product -> {
+                        productId = obj.productId
+                    }
+                }
+
                 val data = NotificationData(
                     title = title,
                     body = body,
-                    obj = post
+                    postId = postId,
+                    productId = productId
                 )
 
                 val notifyTopic = NotificationTopic(

@@ -1,7 +1,13 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.orderdetails
 
 import android.annotation.SuppressLint
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.core.view.isVisible
@@ -15,7 +21,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
-import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentOrderDetailListBinding
@@ -28,7 +33,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
-import java.util.* // ktlint-disable no-wildcard-imports
+import java.util.*
 
 @AndroidEntryPoint
 class OrderDetailListFragment :
@@ -52,7 +57,7 @@ class OrderDetailListFragment :
         binding = FragmentOrderDetailListBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
 
-        if(args.order != null) {
+        if (args.order != null) {
             viewModel.updateOrder(args.order!!)
         }
 
@@ -61,7 +66,7 @@ class OrderDetailListFragment :
             if (user != null) {
                 viewModel.userInfo.postValue(user)
 
-                if(args.order == null) {
+                if (args.order == null) {
                     viewModel.fetchOrderWithDetailsById(args.orderId, user.userId)
                 }
 
@@ -78,6 +83,8 @@ class OrderDetailListFragment :
                 setupViews()
             }
         }
+
+        setHasOptionsMenu(true)
     }
 
     @SuppressLint("SimpleDateFormat", "SetTextI18n")
@@ -140,6 +147,37 @@ class OrderDetailListFragment :
                 }
             }
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.order_detail_action_menu, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_copy_to_clipboard -> {
+                viewModel.order.observe(viewLifecycleOwner) {
+                    copyToClipboard(it.id)
+                }
+                true
+            }
+            else -> false
+        }
+    }
+
+    private fun copyToClipboard(text: String) {
+        val clipBoard =
+            requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+
+        val clip = ClipData.newPlainText(text, text)
+
+        clipBoard.setPrimaryClip(clip)
+
+        Toast.makeText(
+            requireContext(),
+            "Copied to clipboard",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
     override fun onExchangeItemClicked(item: OrderDetail) = CoroutineScope(Dispatchers.IO).launch {

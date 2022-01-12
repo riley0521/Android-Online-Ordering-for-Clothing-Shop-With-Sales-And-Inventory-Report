@@ -58,19 +58,11 @@ class NewsAdapter constructor(
         RecyclerView.ViewHolder(binding.root) {
 
         init {
-            binding.imgLike.setOnClickListener {
+            binding.btnLike.setOnClickListener {
                 likeClick()
             }
 
-            binding.tvLike.setOnClickListener {
-                likeClick()
-            }
-
-            binding.imgComment.setOnClickListener {
-                commentClick()
-            }
-
-            binding.tvComment.setOnClickListener {
+            binding.btnComment.setOnClickListener {
                 commentClick()
             }
 
@@ -98,6 +90,7 @@ class NewsAdapter constructor(
                                                     post
                                                 )
                                             )
+                                            viewModel.onDeletePostClicked(post)
                                         }.setNegativeButton("No") { dialog, _ ->
                                             dialog.dismiss()
                                         }.show()
@@ -128,12 +121,15 @@ class NewsAdapter constructor(
             if (position != RecyclerView.NO_POSITION) {
                 val item = getItem(position)
                 if (item != null) {
+                    val isLiked = !item.isLikedByCurrentUser
+
                     viewModel.onViewEvent(
                         NewsFragment.NewsPagerEvent.Update(
                             item,
-                            !item.isLikedByCurrentUser
+                            isLiked
                         )
                     )
+                    viewModel.onLikePostClicked(item, isLiked)
                 }
             }
         }

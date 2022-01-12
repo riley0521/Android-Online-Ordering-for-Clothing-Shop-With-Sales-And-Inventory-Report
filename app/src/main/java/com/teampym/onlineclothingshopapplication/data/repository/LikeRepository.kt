@@ -53,11 +53,11 @@ class LikeRepository @Inject constructor(
                     .set(like, SetOptions.merge())
                     .await()
 
-//                notificationTokenRepository.notifyAllAdmins(
-//                    post,
-//                    "${like.userId} liked your post",
-//                    "Post with id ${like.postId}"
-//                )
+                notificationTokenRepository.notifyAllAdmins(
+                    post,
+                    "${like.userId.take(like.userId.length / 2)} liked your post",
+                    "Post with id ${like.postId}"
+                )
 
                 return@withContext true
             } catch (ex: java.lang.Exception) {

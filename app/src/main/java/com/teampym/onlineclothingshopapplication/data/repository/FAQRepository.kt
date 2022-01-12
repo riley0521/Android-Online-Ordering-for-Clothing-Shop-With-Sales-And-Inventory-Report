@@ -1,6 +1,7 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
@@ -24,7 +25,10 @@ class FAQRepository(
         return withContext(dispatcher) {
             val faqs = mutableListOf<FAQModel>()
 
-            val faqDocs = faqCollectionRef.get().await()
+            val faqDocs = faqCollectionRef
+                .orderBy("question", Query.Direction.ASCENDING)
+                .get()
+                .await()
 
             faqDocs?.let {
                 for (item in faqDocs.documents) {

@@ -74,23 +74,6 @@ class ProductViewModel @Inject constructor(
                         .limit(30)
                 }
             }
-            // This is not necessary but when you remove this, the compiler
-            // will say it's exhaustive
-            SortOrder.BY_POPULARITY -> {
-                if (search.isEmpty()) {
-                    db.collection(PRODUCTS_COLLECTION)
-                        .whereEqualTo("categoryId", sessionPref.categoryId)
-                        .orderBy("name", Query.Direction.ASCENDING)
-                        .limit(30)
-                } else {
-                    db.collection(PRODUCTS_COLLECTION)
-                        .whereEqualTo("categoryId", sessionPref.categoryId)
-                        .orderBy("name", Query.Direction.ASCENDING)
-                        .startAt(search)
-                        .endAt(search + '\uf8ff')
-                        .limit(30)
-                }
-            }
         }
 
         val userWithWishList = userInformationDao.getUserWithWishList().firstOrNull {

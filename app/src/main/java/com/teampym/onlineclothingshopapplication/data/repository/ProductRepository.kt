@@ -34,6 +34,7 @@ class ProductRepository @Inject constructor(
     private val reviewRepository: ReviewRepository,
     private val orderDetailRepository: OrderDetailRepository,
     private val auditTrailRepository: AuditTrailRepository,
+    private val notificationTokenRepository: NotificationTokenRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
@@ -112,6 +113,12 @@ class ProductRepository @Inject constructor(
                         description = "$username CREATED product - ${product.name}",
                         type = AuditType.PRODUCT.name
                     )
+                )
+
+                notificationTokenRepository.submitToPostTopic(
+                    product.copy(productId = result.id),
+                    "New Product Available!",
+                    "Come and see!"
                 )
 
                 return@withContext product.copy(productId = result.id)

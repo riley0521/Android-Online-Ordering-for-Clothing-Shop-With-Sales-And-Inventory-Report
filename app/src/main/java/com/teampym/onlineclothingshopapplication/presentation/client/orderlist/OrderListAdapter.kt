@@ -1,10 +1,13 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.orderlist
 
 import android.annotation.SuppressLint
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.isVisible
 import androidx.paging.PagingDataAdapter
@@ -56,6 +59,46 @@ class OrderListAdapter(
 
         init {
             binding.apply {
+                labelUsername.setOnClickListener {
+                    val position = absoluteAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+                        if (item != null) {
+                            copyToClipboard(item.userId)
+                        }
+                    }
+                }
+
+                tvUsername.setOnClickListener {
+                    val position = absoluteAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+                        if (item != null) {
+                            copyToClipboard(item.userId)
+                        }
+                    }
+                }
+
+                labelOrderId.setOnClickListener {
+                    val position = absoluteAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+                        if (item != null) {
+                            copyToClipboard(item.id)
+                        }
+                    }
+                }
+
+                tvOrderId.setOnClickListener {
+                    val position = absoluteAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+                        if (item != null) {
+                            copyToClipboard(item.id)
+                        }
+                    }
+                }
+
                 btnViewItems.setOnClickListener {
                     val position = absoluteAdapterPosition
                     if (position != RecyclerView.NO_POSITION) {
@@ -123,6 +166,20 @@ class OrderListAdapter(
                     }
                 }
             }
+        }
+
+        private fun copyToClipboard(text: String) {
+            val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+
+            val clip = ClipData.newPlainText(text, text)
+
+            clipBoard.setPrimaryClip(clip)
+
+            Toast.makeText(
+                context,
+                "Copied to clipboard",
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
         @SuppressLint("SimpleDateFormat", "SetTextI18n")

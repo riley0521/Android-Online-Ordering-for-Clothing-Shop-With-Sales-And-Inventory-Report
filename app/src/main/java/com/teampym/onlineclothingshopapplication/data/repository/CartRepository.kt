@@ -8,13 +8,12 @@ import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.data.room.Product
-import com.teampym.onlineclothingshopapplication.data.util.* // ktlint-disable no-wildcard-imports
-import kotlinx.coroutines.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.util.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -46,24 +45,29 @@ class CartRepository @Inject constructor(
                         // loop all items in cart
                         for (document in value.documents) {
 
-                            var cartItem = document
-                                .toObject(Cart::class.java)!!.copy(id = document.id)
+                            var cartItem: Cart? = document.toObject<Cart>()!!.copy(id = document.id)
 
-                            val foundProduct = cartItem.product
-                            foundProduct.roomId = cartItem.id
-                            foundProduct.cartId = cartItem.id
+                            cartItem?.let { item ->
 
-                            val foundInventory = cartItem.inventory
-                            foundInventory.pCartId = cartItem.id
+                                val foundProduct = item.product
+                                foundProduct.roomId = item.id
+                                foundProduct.cartId = item.id
 
-                            cartItem.product = foundProduct
-                            cartItem.inventory = foundInventory
+                                val foundInventory = item.inventory
+                                foundInventory.pCartId = item.id
 
-                            // get corresponding product (cartItem.id == product.id)
-                            CoroutineScope(dispatcher).launch {
-                                cartItem = getUpdatedPriceAndStock(cartItem, userId)
+                                cartItem?.product = foundProduct
+                                cartItem?.inventory = foundInventory
+
+                                // get corresponding product (cartItem.id == product.id)
+                                // Delete cart item immediately if the product does not exist anymore.
+                                CoroutineScope(dispatcher).launch {
+                                    cartItem = getUpdatedPriceAndStock(item, userId)
+                                }
+                                if (cartItem != null) {
+                                    cartList.add(cartItem!!)
+                                }
                             }
-                            cartList.add(cartItem)
                         }
                     }
                     offer(cartList)
@@ -77,49 +81,62 @@ class CartRepository @Inject constructor(
     private suspend fun getUpdatedPriceAndStock(
         cart: Cart,
         userId: String
-    ): Cart {
+    ): Cart? {
         return withContext(dispatcher) {
-            val mProduct = productsCollectionRef
-                .document(cart.product.productId)
-                .get()
-                .await()
-
-            if (mProduct != null) {
-                val fetchedUpdatedProduct = mProduct.toObject<Product>()!!
-                    .copy(
-                        productId = mProduct.id,
-                        roomId = cart.id,
-                        cartId = cart.id
-                    )
-
-                // get corresponding inventory of a single product (product.id == inventory.productId)
-                val mInventory = productsCollectionRef
-                    .document(fetchedUpdatedProduct.productId)
-                    .collection(INVENTORIES_SUB_COLLECTION)
-                    .document(cart.inventory.inventoryId)
+            try {
+                val mProduct = productsCollectionRef
+                    .document(cart.product.productId)
                     .get()
                     .await()
 
-                if (mInventory != null) {
-                    val fetchedUpdatedInventory = mInventory.toObject<Inventory>()!!
+                if (mProduct.data != null) {
+                    val fetchedUpdatedProduct = mProduct.toObject<Product>()!!
                         .copy(
-                            inventoryId = mInventory.id,
-                            pid = cart.product.productId,
-                            pCartId = cart.id
+                            productId = mProduct.id,
+                            roomId = cart.id,
+                            cartId = cart.id
                         )
 
-                    cart.product = fetchedUpdatedProduct
-                    cart.inventory = fetchedUpdatedInventory
+                    // get corresponding inventory of a single product (product.id == inventory.productId)
+                    val mInventory = productsCollectionRef
+                        .document(fetchedUpdatedProduct.productId)
+                        .collection(INVENTORIES_SUB_COLLECTION)
+                        .document(cart.inventory.inventoryId)
+                        .get()
+                        .await()
 
+                    if (mInventory.data != null) {
+                        val fetchedUpdatedInventory = mInventory.toObject<Inventory>()!!
+                            .copy(
+                                inventoryId = mInventory.id,
+                                pid = cart.product.productId,
+                                pCartId = cart.id
+                            )
+
+                        cart.product = fetchedUpdatedProduct
+                        cart.inventory = fetchedUpdatedInventory
+
+                        userCartCollectionRef
+                            .document(userId)
+                            .collection(CART_SUB_COLLECTION)
+                            .document(cart.id)
+                            .set(cart, SetOptions.merge())
+                            .await()
+                    }
+                    cart
+                } else {
                     userCartCollectionRef
-                        .document(userId)
+                        .document(cart.userId)
                         .collection(CART_SUB_COLLECTION)
                         .document(cart.id)
-                        .set(cart, SetOptions.merge())
+                        .delete()
                         .await()
+
+                    null
                 }
+            } catch (ex: Exception) {
+                null
             }
-            cart
         }
     }
 

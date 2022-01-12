@@ -1,7 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.faqs
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
@@ -18,12 +17,7 @@ import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentFrequentlyAskQuestionsBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 private const val TAG = "FrequentlyFragment"
 
@@ -46,46 +40,39 @@ class FrequentlyAskQuestionsFragment :
         binding = FragmentFrequentlyAskQuestionsBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
 
-        lifecycleScope.launchWhenStarted {
-            val session = viewModel.userSession.first()
-            withContext(Dispatchers.Main) {
-                setupViews(session.userType)
-            }
+        setupViews()
 
-            launch {
-                viewModel.faqEvent.collectLatest { event ->
-                    when (event) {
-                        is FrequentlyAskQuestionsViewModel.FAQEvent.ShowErrorMessage -> {
-                            loadingDialog.dismiss()
-                            Snackbar.make(
-                                requireView(),
-                                event.msg,
-                                Snackbar.LENGTH_SHORT
-                            ).show()
-                        }
-                        is FrequentlyAskQuestionsViewModel.FAQEvent.ShowSuccessMessageAndNotifyAdapter -> {
-                            loadingDialog.dismiss()
-                            Snackbar.make(
-                                requireView(),
-                                event.msg,
-                                Snackbar.LENGTH_SHORT
-                            ).show()
-                            adapter.notifyItemRemoved(event.position)
-                        }
+        lifecycleScope.launchWhenStarted {
+            viewModel.faqEvent.collectLatest { event ->
+                when (event) {
+                    is FrequentlyAskQuestionsViewModel.FAQEvent.ShowErrorMessage -> {
+                        loadingDialog.dismiss()
+                        Snackbar.make(
+                            requireView(),
+                            event.msg,
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                    }
+                    is FrequentlyAskQuestionsViewModel.FAQEvent.ShowSuccessMessageAndNotifyAdapter -> {
+                        loadingDialog.dismiss()
+                        Snackbar.make(
+                            requireView(),
+                            event.msg,
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                        adapter.notifyItemRemoved(event.position)
                     }
                 }
             }
         }
     }
 
-    private fun setupViews(userType: String) {
-        adapter = FrequentlyAskQuestionsAdapter(this@FrequentlyAskQuestionsFragment, userType)
+    private fun setupViews() {
+        adapter = FrequentlyAskQuestionsAdapter(this@FrequentlyAskQuestionsFragment, viewModel)
 
         viewModel.fetchFaqs()
 
         viewModel.faqs.observe(viewLifecycleOwner) {
-            Log.d(TAG, "adapter initialized with $userType")
-
             adapter.submitList(it)
 
             binding.apply {
@@ -96,7 +83,7 @@ class FrequentlyAskQuestionsFragment :
         }
 
         binding.apply {
-            fabAdd.isVisible = userType == UserType.ADMIN.name
+            fabAdd.isVisible = viewModel.userType == UserType.ADMIN.name
             fabAdd.setOnClickListener {
                 val action = FrequentlyAskQuestionsFragmentDirections
                     .actionFrequentlyAskQuestionsFragmentToAddEditFaqFragment()
@@ -118,9 +105,10 @@ class FrequentlyAskQuestionsFragment :
     }
 
     override fun onItemClicked(faq: FAQModel) {
-        val action = FrequentlyAskQuestionsFragmentDirections.actionFrequentlyAskQuestionsFragmentToAddEditFaqFragment(
-            faq
-        )
+        val action =
+            FrequentlyAskQuestionsFragmentDirections.actionFrequentlyAskQuestionsFragmentToAddEditFaqFragment(
+                faq
+            )
         findNavController().navigate(action)
     }
 
