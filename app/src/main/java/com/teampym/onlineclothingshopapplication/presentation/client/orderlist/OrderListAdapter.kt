@@ -284,7 +284,11 @@ class OrderListAdapter(
                         btnDeliverOrder.isVisible = false
 
                         if (userType == UserType.ADMIN.name) {
-                            btnActionCompleted.text = ORDER_COMPLETED_OR_SHOULDERED_BY_ADMIN
+                            if (!item.isRealCompleted) {
+                                btnActionCompleted.text = ORDER_COMPLETED_OR_SHOULDERED_BY_ADMIN
+                            } else {
+                                btnActionCompleted.isVisible = false
+                            }
                         } else {
                             btnActionCompleted.isVisible = false
                         }
@@ -296,6 +300,11 @@ class OrderListAdapter(
                     Status.CANCELED.name -> {
                         labelShippingFee.isVisible = false
                         tvSuggestedSf.isVisible = false
+
+                        btnCancel.isVisible = false
+                        btnShipOrder.isVisible = false
+                        btnDeliverOrder.isVisible = false
+                        btnActionCompleted.isVisible = false
                     }
                 }
 

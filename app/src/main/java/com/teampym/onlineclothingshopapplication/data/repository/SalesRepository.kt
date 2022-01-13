@@ -38,9 +38,9 @@ class SalesRepository @Inject constructor(
             val day = calendarDate.get(Calendar.DAY_OF_MONTH).toString()
 
             try {
-                val totalSaleOfDay = 0.0
+                var totalSaleOfDay = 0.0
                 soldItems.forEach {
-                    totalSaleOfDay.plus(it.calculatedPrice.toDouble())
+                    totalSaleOfDay += it.subTotal
                 }
 
                 val dayRef = salesCollectionRef.document(year)
@@ -55,32 +55,30 @@ class SalesRepository @Inject constructor(
                 // That is why you need to reference it first instead of inserting it directly in db
                 dayRef?.let { doc ->
                     val dayObj = doc.toObject<DaySale>()!!.copy(id = doc.id)
-                    dayObj.totalSale.plus(totalSaleOfDay + shippingFee)
-                    doc.reference
-                        .set(dayObj, SetOptions.merge())
-                        .await()
+                    dayObj.totalSale += (totalSaleOfDay + shippingFee)
+                    doc.reference.set(dayObj, SetOptions.merge()).await()
                 }
 
-                val totalSaleOfMonth = 0.0
-                getDailySalesForWholeMonth(year, month).forEach {
-                    totalSaleOfMonth.plus(it.totalSale)
+                var totalSaleOfMonth = 0.0
+                getDailySalesForWholeMonth(year, month).let {
+                    totalSaleOfMonth += it.sumOf { it.totalSale }
                 }
 
                 salesCollectionRef.document(year)
                     .collection(MONTHS_SUB_COLLECTION)
                     .document(month)
-                    .set(MonthSale(totalSaleOfMonth), SetOptions.merge())
+                    .set(mapOf("totalSale" to totalSaleOfMonth), SetOptions.merge())
                     .await()
 
                 val yearObj = getSalesForWholeYear(year)
-                val totalSaleOfYear = 0.0
+                var totalSaleOfYear = 0.0
                 yearObj?.let {
                     yearObj.listOfMonth.forEach {
-                        totalSaleOfYear.plus(it.totalSale)
+                        totalSaleOfYear += it.totalSale
                     }
 
                     salesCollectionRef.document(year)
-                        .set(yearObj, SetOptions.merge())
+                        .set(mapOf("totalSale" to totalSaleOfYear), SetOptions.merge())
                         .await()
                 }
 
@@ -88,6 +86,30 @@ class SalesRepository @Inject constructor(
             } catch (ex: Exception) {
                 return@withContext false
             }
+        }
+    }
+
+    suspend fun getDay(day: String): DaySale? {
+        return withContext(dispatcher) {
+
+            val dayDoc = salesCollectionRef
+                .document("2022")
+                .collection(MONTHS_SUB_COLLECTION)
+                .document("JANUARY")
+                .collection(DAYS_SUB_COLLECTION_OF_MONTHS)
+                .document(day)
+                .get()
+                .await()
+
+            dayDoc?.let {
+
+                val obj = dayDoc.toObject<DaySale>()!!.copy(id = dayDoc.id)
+//                obj.totalSale = 344342.0
+//                dayDoc.reference.set(obj, SetOptions.merge()).await()
+                return@withContext obj
+            }
+
+            return@withContext null
         }
     }
 
@@ -110,11 +132,10 @@ class SalesRepository @Inject constructor(
                         .await()
 
                     val listOfMonth = mutableListOf<MonthSale>()
-                    monthDocs?.let { months ->
-                        for (doc in months.documents) {
-                            val monthObj = doc.toObject<MonthSale>()!!.copy(id = doc.id)
-                            listOfMonth.add(monthObj)
-                        }
+
+                    for (doc in monthDocs?.documents!!) {
+                        val monthObj = doc.toObject<MonthSale>()!!.copy(id = doc.id)
+                        listOfMonth.add(monthObj)
                     }
 
                     yearObj.listOfMonth = listOfMonth

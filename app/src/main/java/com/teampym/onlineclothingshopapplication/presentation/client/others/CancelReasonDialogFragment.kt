@@ -60,11 +60,12 @@ class CancelReasonDialogFragment : BottomSheetDialogFragment() {
                     count: Int,
                     after: Int
                 ) {
-                    etCancelReason.setText(viewModel.cancelReason)
+                    // Nothing
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                     viewModel.cancelReason = s.toString()
+                    btnSubmit.isEnabled = s.toString().isNotBlank()
                 }
 
                 override fun afterTextChanged(s: Editable?) {

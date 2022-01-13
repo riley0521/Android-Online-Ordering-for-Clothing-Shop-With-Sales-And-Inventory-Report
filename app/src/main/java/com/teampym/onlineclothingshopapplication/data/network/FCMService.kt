@@ -1,5 +1,6 @@
 package com.teampym.onlineclothingshopapplication.data.network
 
+import retrofit2.http.Body
 import retrofit2.http.Headers
 import retrofit2.http.POST
 
@@ -10,10 +11,10 @@ interface FCMService {
     }
 
     @Headers("Content-Type: application/json", "Authorization: $BEARER_KEY")
-    @POST()
-    suspend fun notifySingleUser(notificationSingle: NotificationSingle)
+    @POST("fcm/send")
+    suspend fun notifySingleUser(@Body notificationSingle: NotificationSingle)
 
     @Headers("Content-Type: application/json", "Authorization: $BEARER_KEY")
-    @POST()
-    suspend fun notifyToTopics(notificationTopic: NotificationTopic)
+    @POST("fcm/send")
+    suspend fun notifyToTopics(@Body notificationTopic: NotificationTopic)
 }

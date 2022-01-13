@@ -41,10 +41,13 @@ class SalesFragment : Fragment(R.layout.fragment_sales), AdapterView.OnItemSelec
         loadingDialog.show()
 
         val calendarDate = Calendar.getInstance()
+        calendarDate.timeInMillis = Utils.getTimeInMillisUTC()
+
         val year = calendarDate.get(Calendar.YEAR).toString()
         val monthIndex = calendarDate.get(Calendar.MONTH)
         val month = Utils.getCurrentMonth(monthIndex)
-        Log.d(TAG, month)
+        val day = calendarDate.get(Calendar.DAY_OF_MONTH)
+        Log.d(TAG, "$year, $month - $day")
 
         if (viewModel.isFirstTime) {
             viewModel.updateYear(year)
@@ -79,28 +82,26 @@ class SalesFragment : Fragment(R.layout.fragment_sales), AdapterView.OnItemSelec
         binding.apply {
             setupSpinners()
 
+            val selectedMonth = yearSale.listOfMonth.firstOrNull { it.id == viewModel.month.value }
+
             tvSelectedYear.text = getString(
                 R.string.placeholder_total_sale_for_year,
-                yearSale.totalSale.toString()
+                yearSale.id
             )
 
             tvSelectedMonth.text = getString(
                 R.string.placeholder_total_sale_for_month_of,
-                yearSale.listOfMonth.firstOrNull { it.id == viewModel.month.value }
+                selectedMonth?.id
             )
 
-            val yearSaleStr = "$" + yearSale.totalSale
+            val yearSaleStr = "₱" + yearSale.totalSale
             tvYearlySale.text = yearSaleStr
 
-            val monthSaleTotal = 0.0
-            yearSale.listOfMonth.forEach {
-                monthSaleTotal.plus(it.totalSale)
-            }
-            val monthSaleStr = "$$monthSaleTotal"
+            val monthSaleStr = "₱${selectedMonth?.totalSale}"
             tvMonthlySale.text = monthSaleStr
 
             btnViewSalesDaily.setOnClickListener {
-                if (monthSaleTotal > 0 && yearSale.listOfMonth.isNotEmpty()) {
+                if (selectedMonth?.totalSale ?: 0.0 > 0.0 && yearSale.listOfMonth.isNotEmpty()) {
                     val action = SalesFragmentDirections.actionSalesFragmentToDailySalesFragment(
                         viewModel.year.value!!,
                         viewModel.month.value!!

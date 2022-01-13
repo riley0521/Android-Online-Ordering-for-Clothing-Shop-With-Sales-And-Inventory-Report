@@ -235,7 +235,7 @@
     <string name="placeholder_total_sale_for_month_of">Total Sale For Month of %1$s:</string>
     <string name="btn_view_sales_for_each_day">View Sales For Each Day</string>
     <string name="placeholder_day">Day %1$d</string>
-    <string name="placeholder_total_sales">Total Sales: $ %1$.2f</string>
+    <string name="placeholder_total_sales">Total Sales: ₱ %1$.2f</string>
     <string name="label_orders">Orders</string>
     <string name="btn_view_size_chart">View Size Chart</string>
     <string name="label_no_products_yet_for_this_category_come_back_later">No Products yet for this Category. Come back later!</string>

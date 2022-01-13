@@ -147,7 +147,7 @@ class OrderRepository @Inject constructor(
                 .document(orderItem.id)
                 .set(
                     mutableMapOf(
-                        "isReturned" to true
+                        "returned" to true
                     ),
                     SetOptions.merge()
                 )
@@ -229,7 +229,6 @@ class OrderRepository @Inject constructor(
                     // Then deduct the committed to sold
                     val salesOrderList = changeStatusToCompleted(
                         username,
-                        userType,
                         orderId,
                         status,
                         isSfShoulderedByAdmin
@@ -242,12 +241,6 @@ class OrderRepository @Inject constructor(
                 }
                 Status.CANCELED.name -> {
                     changeStatusToCancelled(username, true, orderId, status, false)
-//                    notificationTokenRepository.notifyCustomer(
-//                        obj = null,
-//                        userId = userId,
-//                        title = "Order (${orderId.take(orderId.length / 2)}...) is cancelled by admin.",
-//                        body = cancelReason ?: ""
-//                    )
                 }
                 else -> false
             }
@@ -304,7 +297,6 @@ class OrderRepository @Inject constructor(
 
     private suspend fun changeStatusToCompleted(
         username: String,
-        userType: String,
         orderId: String,
         status: String,
         isSfShoulderedByAdmin: Boolean
@@ -314,7 +306,9 @@ class OrderRepository @Inject constructor(
 
             val updateOrderStatus = mutableMapOf<String, Any>(
                 "status" to status,
-                "shippingFee" to orderDoc.shippingFee
+                "shippingFee" to orderDoc.shippingFee,
+                "realCompleted" to true,
+                "deliveredSuccessfully" to true
             )
 
             if (isSfShoulderedByAdmin) {
@@ -335,7 +329,7 @@ class OrderRepository @Inject constructor(
                     )
                 )
 
-                return@withContext updateOrderDetailsToSold(orderId, userType)
+                return@withContext updateOrderDetailsToSold(orderId)
             } catch (ex: java.lang.Exception) {
                 return@withContext emptyList()
             }
@@ -465,47 +459,44 @@ class OrderRepository @Inject constructor(
     }
 
     private suspend fun updateOrderDetailsToSold(
-        orderId: String,
-        userId: String
+        orderId: String
     ): List<OrderDetail> {
         return withContext(dispatcher) {
-            val orderDetailDocs = db.collectionGroup(ORDER_DETAILS_SUB_COLLECTION)
-                .whereEqualTo("orderId", orderId)
+            val orderDetailList = mutableListOf<OrderDetail>()
+
+            val orderDetailDocs = orderCollectionRef
+                .document(orderId)
+                .collection(ORDER_DETAILS_SUB_COLLECTION)
                 .get()
                 .await()
 
-            if (orderDetailDocs.documents.isNotEmpty()) {
-
-                val orderDetailList = mutableListOf<OrderDetail>()
-                for (document in orderDetailDocs.documents) {
-                    val orderDetailItem = document
-                        .toObject(OrderDetail::class.java)!!.copy(
-                        id = document.id,
-                        orderId = orderId
-                    )
-
-                    orderDetailItem.dateSold = System.currentTimeMillis()
-                    orderDetailItem.isExchangeable = true
-                    orderDetailItem.canAddReview = true
-
-                    try {
-                        orderCollectionRef.document(orderId)
-                            .collection(ORDER_DETAILS_SUB_COLLECTION)
-                            .document(orderDetailItem.id)
-                            .set(orderDetailItem, SetOptions.merge())
-                            .await()
-
-                        orderDetailList.add(orderDetailItem)
-                    } catch (ex: Exception) {
-                        return@withContext emptyList()
-                    }
-                }
-                return@withContext productRepository.deductCommittedToSoldCount(
-                    userId,
-                    orderDetailList
+            for (document in orderDetailDocs.documents) {
+                val orderDetailItem = document.toObject<OrderDetail>()!!.copy(
+                    id = document.id,
+                    orderId = orderId
                 )
+
+                orderDetailItem.dateSold = System.currentTimeMillis()
+                orderDetailItem.isExchangeable = true
+                orderDetailItem.canAddReview = true
+
+                try {
+                    orderCollectionRef.document(orderId)
+                        .collection(ORDER_DETAILS_SUB_COLLECTION)
+                        .document(orderDetailItem.id)
+                        .set(orderDetailItem, SetOptions.merge())
+                        .await()
+
+                    orderDetailList.add(orderDetailItem)
+                } catch (ex: Exception) {
+                    return@withContext emptyList()
+                }
             }
-            return@withContext emptyList()
+            productRepository.deductCommittedToSoldCount(
+                orderDetailList
+            )
+
+            return@withContext orderDetailList
         }
     }
 }

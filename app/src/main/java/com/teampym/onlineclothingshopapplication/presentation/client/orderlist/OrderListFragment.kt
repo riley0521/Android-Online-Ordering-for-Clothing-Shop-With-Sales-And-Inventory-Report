@@ -199,10 +199,12 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
     }
 
     override fun onShipOrderClicked(item: Order) {
+        loadingDialog.show()
         viewModel.shipOrder(item)
     }
 
     override fun onReceivedOrderClicked(item: Order) {
+        loadingDialog.show()
         viewModel.receivedOrder(item)
     }
 

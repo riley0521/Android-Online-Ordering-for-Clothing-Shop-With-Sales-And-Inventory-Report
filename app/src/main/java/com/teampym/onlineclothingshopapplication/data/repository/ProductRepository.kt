@@ -90,7 +90,8 @@ class ProductRepository @Inject constructor(
                     productId = productDocument.id
                 )
 
-                foundProduct.productImageList = productImageList.await() as MutableList<ProductImage>
+                foundProduct.productImageList =
+                    productImageList.await() as MutableList<ProductImage>
                 foundProduct.inventoryList = inventoryList.await()
                 foundProduct.reviewList = reviewList.await()
             }
@@ -332,42 +333,41 @@ class ProductRepository @Inject constructor(
 
     // COMPLETED
     suspend fun deductCommittedToSoldCount(
-        userType: String,
         orderDetailList: List<OrderDetail>
-    ): List<OrderDetail> {
+    ): Boolean {
         return withContext(dispatcher) {
 
-            if (userType == UserType.ADMIN.toString()) {
-                for (orderDetail in orderDetailList) {
-                    val inventoryDocument =
+            for (orderDetail in orderDetailList) {
+                val inventoryDocument =
+                    productCollectionRef
+                        .document(orderDetail.product.productId)
+                        .collection(INVENTORIES_SUB_COLLECTION)
+                        .document(orderDetail.inventoryId)
+                        .get()
+                        .await()
+
+                if (inventoryDocument != null) {
+                    val inventory = inventoryDocument.toObject<Inventory>()!!.copy(
+                        inventoryId = inventoryDocument.id
+                    )
+                    inventory.committed -= orderDetail.quantity
+                    inventory.sold += orderDetail.quantity
+
+                    try {
                         productCollectionRef
                             .document(orderDetail.product.productId)
                             .collection(INVENTORIES_SUB_COLLECTION)
                             .document(orderDetail.inventoryId)
-                            .get()
+                            .set(inventory, SetOptions.merge())
                             .await()
 
-                    if (inventoryDocument != null) {
-                        val inventory = inventoryDocument
-                            .toObject<Inventory>()!!.copy(inventoryId = inventoryDocument.id)
-                        inventory.committed -= orderDetail.quantity
-                        inventory.sold += orderDetail.quantity
-
-                        try {
-                            productCollectionRef
-                                .document(orderDetail.product.productId)
-                                .collection(INVENTORIES_SUB_COLLECTION)
-                                .document(orderDetail.inventoryId)
-                                .set(inventory, SetOptions.merge())
-                                .await()
-                        } catch (ex: JavaLangException) {
-                            return@withContext emptyList()
-                        }
+                        return@withContext true
+                    } catch (ex: JavaLangException) {
+                        return@withContext false
                     }
                 }
-                return@withContext orderDetailList
             }
-            return@withContext emptyList()
+            return@withContext false
         }
     }
 

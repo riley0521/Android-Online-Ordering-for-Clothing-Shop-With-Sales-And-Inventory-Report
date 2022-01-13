@@ -9,7 +9,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
-private const val BASE_URL = "https://fcm.googleapis.com/fcm/send/"
+private const val BASE_URL = "https://fcm.googleapis.com/"
 
 @Module
 @InstallIn(SingletonComponent::class)
