@@ -7,12 +7,12 @@
         <deviceKey>
           <Key>
             <type value="VIRTUAL_DEVICE_PATH" />
-            <value value="C:\Users\Riley\.android\avd\Huawei_nova_7i.avd" />
+            <value value="C:\Users\Riley\.android\avd\Huawei_7i_ADMIN.avd" />
           </Key>
         </deviceKey>
       </Target>
     </runningDeviceTargetSelectedWithDropDown>
-    <timeTargetWasSelectedWithDropDown value="2022-01-13T15:28:01.486576400Z" />
+    <timeTargetWasSelectedWithDropDown value="2022-01-13T17:50:42.966211100Z" />
     <runningDeviceTargetsSelectedWithDialog>
       <Target>
         <type value="RUNNING_DEVICE_TARGET" />

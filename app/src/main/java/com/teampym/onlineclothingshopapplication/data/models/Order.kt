@@ -21,6 +21,7 @@ data class Order(
     var id: String = "",
     var status: String = Status.SHIPPING.toString(),
     var isDeliveredSuccessfully: Boolean = false,
+    var isPaid: Boolean = false,
     var dateOrdered: Long = Utils.getTimeInMillisUTC(),
 ) : Parcelable {
 

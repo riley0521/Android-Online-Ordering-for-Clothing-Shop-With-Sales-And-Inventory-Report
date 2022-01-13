@@ -108,7 +108,6 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                     }
 
                     if (currentUser.isEmailVerified) {
-                        // TODO(Calculate shipping fee)
                         viewModel.placeOrder(
                             finalUser,
                             args.cart.cart,
@@ -224,7 +223,6 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                             loadingDialog.dismiss()
 
                             if (paymentMethodEnum == PaymentMethod.CREDIT_DEBIT) {
-                                // TODO(Create Stripe SDK payment here)
                                 Log.d(TAG, "Total Cost to pay: $totalCost")
                             }
 
