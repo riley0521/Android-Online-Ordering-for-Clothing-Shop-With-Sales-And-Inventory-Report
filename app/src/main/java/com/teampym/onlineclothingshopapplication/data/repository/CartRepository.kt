@@ -41,35 +41,35 @@ class CartRepository @Inject constructor(
                     }
 
                     val cartList = mutableListOf<Cart>()
-                    if (value != null && value.documents.isNotEmpty()) {
-                        // loop all items in cart
-                        for (document in value.documents) {
 
-                            var cartItem: Cart? = document.toObject<Cart>()!!.copy(id = document.id)
+                    // loop all items in cart
+                    for (document in value?.documents!!) {
 
-                            cartItem?.let { item ->
+                        var cartItem: Cart? = document.toObject<Cart>()!!.copy(id = document.id)
 
-                                val foundProduct = item.product
-                                foundProduct.roomId = item.id
-                                foundProduct.cartId = item.id
+                        cartItem?.let { item ->
 
-                                val foundInventory = item.inventory
-                                foundInventory.pCartId = item.id
+                            val foundProduct = item.product
+                            foundProduct.roomId = item.id
+                            foundProduct.cartId = item.id
 
-                                cartItem?.product = foundProduct
-                                cartItem?.inventory = foundInventory
+                            val foundInventory = item.inventory
+                            foundInventory.pCartId = item.id
 
-                                // get corresponding product (cartItem.id == product.id)
-                                // Delete cart item immediately if the product does not exist anymore.
-                                CoroutineScope(dispatcher).launch {
-                                    cartItem = getUpdatedPriceAndStock(item, userId)
-                                }
-                                if (cartItem != null) {
-                                    cartList.add(cartItem!!)
-                                }
+                            cartItem?.product = foundProduct
+                            cartItem?.inventory = foundInventory
+
+                            // get corresponding product (cartItem.id == product.id)
+                            // Delete cart item immediately if the product does not exist anymore.
+                            CoroutineScope(dispatcher).launch {
+                                cartItem = getUpdatedPriceAndStock(item, userId)
+                            }
+                            if (cartItem != null) {
+                                cartList.add(cartItem!!)
                             }
                         }
                     }
+
                     offer(cartList)
                 }
         }

@@ -3,6 +3,7 @@ package com.teampym.onlineclothingshopapplication.presentation.client.addeditdel
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -25,6 +26,8 @@ import kotlinx.coroutines.launch
 
 const val ADD_EDIT_DELETE_REQUEST = "add_edit_delete_request"
 const val ADD_EDIT_DELETE_RESULT = "add_edit_delete_result"
+
+private const val TAG = "DelInfo"
 
 @AndroidEntryPoint
 class AddEditDeliveryInformationFragment :
@@ -74,7 +77,7 @@ class AddEditDeliveryInformationFragment :
 
                 edtPostalCode.setText(it.postalCode)
                 edtDetailedAddress.setText(it.streetNumber)
-                if (it.isPrimary) {
+                if (it.isDefaultAddress) {
                     switchDefaultAddress.isChecked = true
                     switchDefaultAddress.isEnabled = false
                 }
@@ -213,10 +216,13 @@ class AddEditDeliveryInformationFragment :
                         streetNumber = edtDetailedAddress.text.toString().trim(),
                         postalCode = edtPostalCode.text.toString().trim(),
                         userId = userId,
-                        isPrimary = switchDefaultAddress.isChecked
+                        isDefaultAddress = switchDefaultAddress.isChecked
                     )
 
-                    viewModel.onSubmitClicked(newDeliveryInformation, false)
+                    viewModel.onSubmitClicked(
+                        newDeliveryInformation,
+                        false
+                    )
                 } else if (editDeliveryInformation != null) {
                     editDeliveryInformation?.name = edtFullName.text.toString()
                     editDeliveryInformation?.contactNo = edtPhoneNo.text.toString()
@@ -226,7 +232,7 @@ class AddEditDeliveryInformationFragment :
                     editDeliveryInformation?.streetNumber = edtDetailedAddress.text.toString()
                     editDeliveryInformation?.postalCode = edtPostalCode.text.toString()
                     editDeliveryInformation?.userId = userId
-                    editDeliveryInformation?.isPrimary = switchDefaultAddress.isChecked
+                    editDeliveryInformation?.isDefaultAddress = switchDefaultAddress.isChecked
                     editDeliveryInformation?.let { edited ->
                         viewModel.onSubmitClicked(
                             edited,
@@ -266,37 +272,51 @@ class AddEditDeliveryInformationFragment :
         }
 
         viewModel.selectedRegion.observe(viewLifecycleOwner) {
-            if (it.name.isNotBlank()) {
+            if (it != null) {
+                Log.d(TAG, "region ${it.name}")
+
                 selectedRegion = it.name
                 binding.edtRegion.text = it.name
                 editDeliveryInformation?.region = it.name
+
+                selectedProvince = ""
+                binding.edtProvince.text = ""
+                editDeliveryInformation?.province = ""
+
+                selectedCity = ""
+                binding.edtCity.text = ""
+                editDeliveryInformation?.city = ""
             }
         }
 
         viewModel.selectedProvince.observe(viewLifecycleOwner) {
-            if (it.name.isNotBlank()) {
+            if (it != null) {
                 selectedProvince = it.name
                 binding.edtProvince.text = it.name
                 editDeliveryInformation?.province = it.name
+
+                selectedCity = ""
+                binding.edtCity.text = ""
+                editDeliveryInformation?.city = ""
             }
         }
 
         viewModel.selectedCity.observe(viewLifecycleOwner) {
-            if (it.name.isNotBlank()) {
+            if (it != null) {
                 selectedCity = it.name
                 binding.edtCity.text = it.name
                 editDeliveryInformation?.city = it.name
             }
         }
 
-        viewModel.regionId.observe(viewLifecycleOwner) { parentId ->
-            if (parentId > 0L) {
-                regionId = parentId
+        viewModel.regionId.observe(viewLifecycleOwner) { regionId ->
+            if (regionId > 0L) {
+                this.regionId = regionId
 
                 binding.edtProvince.setOnClickListener {
                     val action =
                         AddEditDeliveryInformationFragmentDirections.actionAddEditDeliveryInformationFragmentToSelectRegionProvinceCityFragment(
-                            parentId,
+                            regionId,
                             0,
                             "Select Province"
                         )

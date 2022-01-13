@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:paddingBottom="8dp">
 
     <TextView
@@ -55,7 +55,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/labelTotalCost"
         app:layout_constraintTop_toBottomOf="@+id/tvUsername"
-        tools:text="$14.50" />
+        android:text="@string/placeholder_price" />
 
     <TextView
         android:id="@+id/tvSuggestedSf"
@@ -68,7 +68,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/labelShippingFee"
         app:layout_constraintTop_toBottomOf="@+id/tvTotalCost"
-        tools:text="$1.50" />
+        android:text="@string/placeholder_price" />
 
     <TextView
         android:id="@+id/tvGrandTotal"
@@ -81,7 +81,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/labelGrandTotal"
         app:layout_constraintTop_toBottomOf="@+id/tvSuggestedSf"
-        tools:text="$16" />
+        android:text="@string/placeholder_price" />
 
     <TextView
         android:id="@+id/tvDeliveryAddress"
@@ -158,18 +158,6 @@
         app:layout_constraintTop_toBottomOf="@+id/labelGrandTotal" />
 
     <TextView
-        android:id="@+id/labelUserAgreedToSf"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:text="@string/label_user_agreed_to_shipping_fee"
-        android:textAppearance="?attr/textAppearanceBody1"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvDeliveryAddress" />
-
-    <TextView
         android:id="@+id/labelNumberOfItems"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -179,20 +167,32 @@
         android:textAppearance="?attr/textAppearanceBody1"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/labelStatus" />
+        app:layout_constraintTop_toBottomOf="@+id/tvTrackingNumber" />
 
     <TextView
-        android:id="@+id/tvDateOrdered"
+        android:id="@+id/tvNumberOfItems"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:textAppearance="?attr/textAppearanceBody1"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/labelDateOrdered"
-        app:layout_constraintTop_toBottomOf="@+id/tvNumberOfItems"
-        tools:text="11/27/2021 11:11:11 AM" />
+        app:layout_constraintHorizontal_bias="0.008"
+        app:layout_constraintStart_toEndOf="@+id/labelNumberOfItems"
+        app:layout_constraintTop_toBottomOf="@+id/tvTrackingNumber"
+        tools:text="5" />
+
+    <TextView
+        android:id="@+id/labelDateOrdered"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/label_date_ordered"
+        android:textAppearance="?attr/textAppearanceBody1"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/labelNumberOfItems" />
 
     <TextView
         android:id="@+id/labelAdditionalNote"
@@ -209,16 +209,61 @@
         app:layout_constraintTop_toBottomOf="@+id/labelDateOrdered" />
 
     <TextView
+        android:id="@+id/tvDateOrdered"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:textAppearance="?attr/textAppearanceBody1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/labelDateOrdered"
+        app:layout_constraintTop_toBottomOf="@+id/tvNumberOfItems"
+        tools:text="11/27/2021 11:11:11 AM" />
+
+    <TextView
         android:id="@+id/labelStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
         android:text="@string/label_status"
         android:textAppearance="?attr/textAppearanceBody1"
         android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/labelUserAgreedToSf" />
+        app:layout_constraintTop_toBottomOf="@+id/tvDeliveryAddress" />
+
+    <TextView
+        android:id="@+id/tvTrackingNumber"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/placeholder_tracking_number"
+        android:textAppearance="?attr/textAppearanceBody1"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvCourierType" />
+
+    <TextView
+        android:id="@+id/tvCourierType"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/placeholder_courier_type"
+        android:textAppearance="?attr/textAppearanceBody1"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/labelStatus" />
 
     <TextView
         android:id="@+id/tvStatus"
@@ -230,21 +275,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/labelStatus"
-        app:layout_constraintTop_toBottomOf="@+id/tvUserAgreedToSf"
+        app:layout_constraintTop_toBottomOf="@+id/tvDeliveryAddress"
         tools:text="SHIPPED" />
-
-    <TextView
-        android:id="@+id/tvNumberOfItems"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:textAppearance="?attr/textAppearanceBody1"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/labelNumberOfItems"
-        app:layout_constraintTop_toBottomOf="@+id/tvStatus"
-        tools:text="5" />
 
     <TextView
         android:id="@+id/tvAdditionalNote"
@@ -260,33 +292,8 @@
         app:layout_constraintTop_toBottomOf="@+id/labelAdditionalNote"
         tools:text="@string/placeholder_long_sentence" />
 
-    <TextView
-        android:id="@+id/labelDateOrdered"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:text="@string/label_date_ordered"
-        android:textAppearance="?attr/textAppearanceBody1"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/labelNumberOfItems" />
-
-    <TextView
-        android:id="@+id/tvUserAgreedToSf"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:textAppearance="?attr/textAppearanceBody1"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toEndOf="@+id/labelUserAgreedToSf"
-        app:layout_constraintTop_toBottomOf="@+id/tvDeliveryAddress"
-        tools:text="No" />
-
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnAction"
+        android:id="@+id/btnShipOrder"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -297,7 +304,49 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnViewItems"
-        tools:text="(BOTH) CANCEL | (ADMIN) SUGGEST SF | \n(USER) AGREE TO SF" />
+        android:text="@string/btn_ship_item" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDeliverOrder"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/teal_200"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnShipOrder"
+        android:text="@string/btn_deliver_order" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnCancel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/teal_200"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnDeliverOrder"
+        android:text="@string/android_cancel" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnActionCompleted"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/teal_200"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnCancel"
+        tools:text="RECEIVED (CUSTOMER) | SF SHOULDERED BY ADMIN (ADMIN)" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnViewItems"

@@ -23,10 +23,6 @@
                 android:title="@string/action_sort_name" />
 
             <item
-                android:id="@+id/action_sort_best_seller"
-                android:title="@string/action_sort_best_seller" />
-
-            <item
                 android:id="@+id/action_sort_by_new"
                 android:title="@string/action_sort_new" />
         </menu>

@@ -67,7 +67,10 @@ class ProductAdapter(
 
                 tvProductName.text = product.name
 
-                val price = "$${product.price.toBigDecimal()}"
+                val price = context.getString(
+                    R.string.placeholder_price,
+                    product.price
+                )
                 tvPrice.text = price
 
                 if (product.flag.isBlank())
@@ -95,7 +98,5 @@ class ProductAdapter(
 
     interface OnProductListener {
         fun onItemClicked(product: Product)
-        fun onEditClicked(product: Product)
-        fun onDeleteClicked(product: Product)
     }
 }

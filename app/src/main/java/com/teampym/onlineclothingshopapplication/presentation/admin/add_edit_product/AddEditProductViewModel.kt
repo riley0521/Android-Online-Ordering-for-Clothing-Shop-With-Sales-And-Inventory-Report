@@ -6,6 +6,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.models.ProductImage
+import com.teampym.onlineclothingshopapplication.data.network.FCMService
+import com.teampym.onlineclothingshopapplication.data.network.NotificationData
+import com.teampym.onlineclothingshopapplication.data.network.NotificationTopic
 import com.teampym.onlineclothingshopapplication.data.repository.ProductImageRepository
 import com.teampym.onlineclothingshopapplication.data.repository.ProductRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
@@ -25,6 +28,7 @@ class AddEditProductViewModel @Inject constructor(
     private val productImageRepository: ProductImageRepository,
     private val userInformationDao: UserInformationDao,
     private val preferencesManager: PreferencesManager,
+    private val service: FCMService,
     private val state: SavedStateHandle
 ) : ViewModel() {
 
@@ -217,6 +221,18 @@ class AddEditProductViewModel @Inject constructor(
 
                     if (resultList) {
                         resetAllUiState()
+
+                        val data = NotificationData(
+                            title = "New Product",
+                            body = "Check me out!",
+                            productId = res.productId
+                        )
+
+                        val notifyTopic = NotificationTopic(
+                            data
+                        )
+
+                        service.notifyToTopics(notifyTopic)
 
                         _addEditProductChannel.send(
                             AddEditProductEvent.NavigateToAddInvWithMessage(

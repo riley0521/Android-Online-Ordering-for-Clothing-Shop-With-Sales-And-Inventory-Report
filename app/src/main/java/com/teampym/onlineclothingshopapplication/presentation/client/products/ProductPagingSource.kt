@@ -6,6 +6,7 @@ import com.bumptech.glide.load.HttpException
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.toObject
+import com.teampym.onlineclothingshopapplication.data.models.ProductImage
 import com.teampym.onlineclothingshopapplication.data.repository.ProductImageRepository
 import com.teampym.onlineclothingshopapplication.data.repository.ProductInventoryRepository
 import com.teampym.onlineclothingshopapplication.data.repository.ReviewRepository
@@ -65,7 +66,7 @@ class ProductPagingSource(
                     val reviewList = async { reviewRepository.getFive(document.id) }
 
                     product.inventoryList = inventoryList.await()
-                    product.productImageList = productImageList.await()
+                    product.productImageList = productImageList.await() as MutableList<ProductImage>
                     product.reviewList = reviewList.await()
                 }.join()
                 productList.add(product)

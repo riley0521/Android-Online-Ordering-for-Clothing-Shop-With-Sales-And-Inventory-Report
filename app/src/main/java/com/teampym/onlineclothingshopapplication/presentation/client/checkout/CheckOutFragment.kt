@@ -45,6 +45,9 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
     private lateinit var loadingDialog: LoadingDialog
 
     private var totalCost: Double = 0.0
+    private var shippingFee: Double = 0.0
+
+    private var totalWeightInKg: Double = 0.0
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -52,8 +55,12 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
         binding = FragmentCheckOutBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
 
-        adapter = CheckOutAdapter()
+        adapter = CheckOutAdapter(requireContext())
         adapter.submitList(args.cart.cart)
+
+        args.cart.cart.forEach {
+            totalWeightInKg += it.totalWeight
+        }
 
         viewModel.fetchSelectPaymentMethod()
 
@@ -101,15 +108,13 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                     }
 
                     if (currentUser.isEmailVerified) {
-                        args.cart.cart.forEach {
-                            totalCost += it.calculatedTotalPrice.toDouble()
-                        }
-
+                        // TODO(Calculate shipping fee)
                         viewModel.placeOrder(
                             finalUser,
                             args.cart.cart,
                             etAdditionalNote.text.toString(),
-                            paymentMethodEnum
+                            paymentMethodEnum,
+                            shippingFee
                         )
                     } else {
                         loadingDialog.dismiss()
@@ -131,10 +136,10 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                 }
             }
 
-            val totalCostStr = "$" + String.format("%.2f", args.cart.totalCost)
-            tvMerchandiseTotal.text = totalCostStr
-            tvTotalPayment.text = totalCostStr
-            tvTotalPaymentAgain.text = totalCostStr
+            tvMerchandiseTotal.text = getString(
+                R.string.placeholder_price,
+                args.cart.totalCost
+            )
         }
 
         viewModel.selectedPaymentMethod.observe(viewLifecycleOwner) { paymentMethod ->
@@ -158,10 +163,10 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                     finalUser = userWithDeliveryInfo.user
 
                     finalUser.defaultDeliveryAddress = userWithDeliveryInfo.deliveryInformation
-                        .firstOrNull { it.isPrimary } ?: DeliveryInformation()
+                        .firstOrNull { it.isDefaultAddress } ?: DeliveryInformation()
 
                     selectedDeliveryInformation = userWithDeliveryInfo.deliveryInformation
-                        .firstOrNull { it.isPrimary } ?: DeliveryInformation()
+                        .firstOrNull { it.isDefaultAddress } ?: DeliveryInformation()
 
                     binding.apply {
 
@@ -187,6 +192,26 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                             tvCompleteAddress.text = completeAddress
 
                             tvNoAddressYet.visibility = View.INVISIBLE
+
+                            shippingFee = when (del.region.lowercase()) {
+                                "metro manila" -> 80.0
+                                "mindanao" -> 175.0
+                                "north luzon" -> 120.0
+                                "south luzon" -> 120.0
+                                "visayas" -> 150.0
+                                else -> 0.0
+                            }
+
+                            tvShippingFee.text = getString(
+                                R.string.placeholder_price,
+                                shippingFee
+                            )
+
+                            totalCost = args.cart.totalCost + shippingFee
+                            tvTotalPaymentAgain.text = getString(
+                                R.string.placeholder_price,
+                                totalCost
+                            )
                         }
                     }
                 }

@@ -55,7 +55,7 @@ class AccountPagingAdapter(
                 if (position != RecyclerView.NO_POSITION) {
                     val item = getItem(position)
                     if (item != null) {
-                        when(binding.btnBanUser.text) {
+                        when (binding.btnBanUser.text) {
                             context.getString(R.string.btn_ban_user) -> {
                                 listener.onBanClicked(item)
                             }

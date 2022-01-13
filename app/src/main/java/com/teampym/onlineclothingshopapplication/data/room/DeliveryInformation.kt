@@ -18,7 +18,7 @@ data class DeliveryInformation(
     @PrimaryKey
     var id: String = "",
     var userId: String = "",
-    var isPrimary: Boolean = false
+    var isDefaultAddress: Boolean = true
 ) : Parcelable {
 
     constructor() : this(

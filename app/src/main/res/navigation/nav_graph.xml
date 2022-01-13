@@ -271,14 +271,11 @@
             android:id="@+id/action_orderListFragment_to_cancelReasonDialogFragment"
             app:destination="@id/cancelReasonDialogFragment" />
         <action
-            android:id="@+id/action_orderListFragment_to_agreeToShippingFeeDialogFragment"
-            app:destination="@id/agreeToShippingFeeDialogFragment" />
-        <action
-            android:id="@+id/action_orderListFragment_to_shippingFeeDialogFragment"
-            app:destination="@id/shippingFeeDialogFragment" />
-        <action
             android:id="@+id/action_orderListFragment_to_orderDetailListFragment"
             app:destination="@id/orderDetailListFragment" />
+        <action
+            android:id="@+id/action_orderListFragment_to_trackingNumberDialogFragment"
+            app:destination="@id/trackingNumberDialogFragment" />
     </fragment>
     <fragment
         android:id="@+id/termsAndConditionFragment"
@@ -299,24 +296,6 @@
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.others.CancelReasonDialogFragment"
         android:label="Cancel Reason"
         tools:layout="@layout/fragment_cancel_reason_dialog" >
-        <argument
-            android:name="order"
-            app:argType="com.teampym.onlineclothingshopapplication.data.models.Order" />
-    </dialog>
-    <dialog
-        android:id="@+id/agreeToShippingFeeDialogFragment"
-        android:name="com.teampym.onlineclothingshopapplication.presentation.client.others.AgreeToShippingFeeDialogFragment"
-        android:label="Agree/Disagree To Shipping Fee"
-        tools:layout="@layout/fragment_agree_to_shipping_fee_dialog">
-        <argument
-            android:name="order"
-            app:argType="com.teampym.onlineclothingshopapplication.data.models.Order" />
-    </dialog>
-    <dialog
-        android:id="@+id/shippingFeeDialogFragment"
-        android:name="com.teampym.onlineclothingshopapplication.presentation.client.others.ShippingFeeDialogFragment"
-        android:label="Shipping Fee"
-        tools:layout="@layout/fragment_shipping_fee_dialog">
         <argument
             android:name="order"
             app:argType="com.teampym.onlineclothingshopapplication.data.models.Order" />
@@ -512,4 +491,9 @@
             app:nullable="true"
             android:defaultValue="@null" />
     </fragment>
+    <dialog
+        android:id="@+id/trackingNumberDialogFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.others.TrackingNumberDialogFragment"
+        android:label="fragment_tracking_number_dialog"
+        tools:layout="@layout/fragment_tracking_number_dialog" />
 </navigation>

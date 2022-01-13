@@ -11,12 +11,18 @@ import androidx.paging.filter
 import androidx.paging.map
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.ApplicationScope
 import com.teampym.onlineclothingshopapplication.data.models.Like
+import com.teampym.onlineclothingshopapplication.data.models.NotificationToken
 import com.teampym.onlineclothingshopapplication.data.models.Post
+import com.teampym.onlineclothingshopapplication.data.network.FCMService
+import com.teampym.onlineclothingshopapplication.data.network.NotificationData
+import com.teampym.onlineclothingshopapplication.data.network.NotificationSingle
 import com.teampym.onlineclothingshopapplication.data.repository.LikeRepository
 import com.teampym.onlineclothingshopapplication.data.repository.PostRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
+import com.teampym.onlineclothingshopapplication.data.util.NOTIFICATION_TOKENS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.POSTS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,15 +34,17 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
 class NewsViewModel @Inject constructor(
-    db: FirebaseFirestore,
+    private val db: FirebaseFirestore,
     preferencesManager: PreferencesManager,
     private val postRepository: PostRepository,
     private val likeRepository: LikeRepository,
     private val state: SavedStateHandle,
+    private val service: FCMService,
     @ApplicationScope val appScope: CoroutineScope
 ) : ViewModel() {
 
@@ -103,10 +111,37 @@ class NewsViewModel @Inject constructor(
 
         if (isLikeByUser) {
             if (userId.isNotBlank()) {
-                val res = likeRepository.add(post, Like(postId = post.id, userId = userId))
-                if (res) {
+                val likedByUserSuccess = likeRepository.add(post, Like(postId = post.id, userId = userId))
+                if (likedByUserSuccess) {
                     val count = post.numberOfLikes + 1
                     postRepository.updateLikeCount(postId = post.id, count = count)
+
+                    val res = db.collectionGroup(NOTIFICATION_TOKENS_SUB_COLLECTION)
+                        .whereEqualTo("userType", UserType.ADMIN.name)
+                        .get()
+                        .await()
+
+                    if (res != null && res.documents.isNotEmpty()) {
+                        val tokenList = mutableListOf<String>()
+
+                        for (doc in res.documents) {
+                            val token = doc.toObject<NotificationToken>()!!.copy(id = doc.id)
+                            tokenList.add(token.token)
+                        }
+
+                        val data = NotificationData(
+                            title = "Someone liked your post",
+                            body = "Post with id ${post.id}",
+                            postId = post.id,
+                        )
+
+                        val notificationSingle = NotificationSingle(
+                            data = data,
+                            tokenList = tokenList
+                        )
+
+                        service.notifySingleUser(notificationSingle)
+                    }
                 }
             }
         } else {

@@ -31,4 +31,8 @@ data class Cart(
     @IgnoredOnParcel
     @get:Exclude
     val calculatedTotalPrice: BigDecimal get() = quantity.toBigDecimal() * product.price.toBigDecimal()
+
+    @IgnoredOnParcel
+    @get:Exclude
+    val totalWeight: Double get() = quantity * inventory.weightInKg
 }

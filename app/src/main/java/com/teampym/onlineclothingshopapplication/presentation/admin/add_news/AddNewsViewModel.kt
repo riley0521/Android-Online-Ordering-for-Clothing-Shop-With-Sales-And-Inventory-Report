@@ -9,14 +9,14 @@ import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.models.UploadedImage
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
-import com.teampym.onlineclothingshopapplication.data.repository.NotificationTokenRepository
+import com.teampym.onlineclothingshopapplication.data.network.FCMService
+import com.teampym.onlineclothingshopapplication.data.network.NotificationData
+import com.teampym.onlineclothingshopapplication.data.network.NotificationTopic
 import com.teampym.onlineclothingshopapplication.data.repository.PostRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
-import com.teampym.onlineclothingshopapplication.data.room.SessionPreferences
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -24,8 +24,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AddNewsViewModel @Inject constructor(
     private val postRepository: PostRepository,
-    private val notificationTokenRepository: NotificationTokenRepository,
     private val userInformationDao: UserInformationDao,
+    private val service: FCMService,
     preferencesManager: PreferencesManager,
     private val state: SavedStateHandle
 ) : ViewModel() {
@@ -81,17 +81,19 @@ class AddNewsViewModel @Inject constructor(
         if (result != null) {
             resetUiState()
 
-            val isNotified = notificationTokenRepository.submitToPostTopic(
-                result,
-                "New Post",
-                "${result.title} - Check me out!"
+            val data = NotificationData(
+                title = "New Post",
+                body = "Check me out!",
+                postId = result.id,
             )
 
-            if (isNotified) {
-                _addNewsChannel.send(AddNewsEvent.ShowSuccessMessage("Post added successfully. You also notified the customers."))
-            } else {
-                _addNewsChannel.send(AddNewsEvent.ShowSuccessMessage("Post added successfully!"))
-            }
+            val notifyTopic = NotificationTopic(
+                data
+            )
+
+            service.notifyToTopics(notifyTopic)
+
+            _addNewsChannel.send(AddNewsEvent.ShowSuccessMessage("Post added successfully!"))
         } else {
             _addNewsChannel.send(AddNewsEvent.ShowErrorMessage("Adding post failed. Please try again."))
         }

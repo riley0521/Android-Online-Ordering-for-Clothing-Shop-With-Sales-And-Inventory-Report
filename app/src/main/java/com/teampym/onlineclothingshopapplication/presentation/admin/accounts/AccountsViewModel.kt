@@ -1,8 +1,11 @@
 package com.teampym.onlineclothingshopapplication.presentation.admin.accounts
 
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.repository.AccountRepository
@@ -13,6 +16,7 @@ import com.teampym.onlineclothingshopapplication.data.util.UserType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,11 +32,22 @@ class AccountsViewModel @Inject constructor(
     private val _accountsChannel = Channel<AccountsEvent>()
     val accountsEvent = _accountsChannel.receiveAsFlow()
 
-    val accounts = accountRepository.getAll(
-        db.collection(USERS_COLLECTION)
-            .whereEqualTo("userType", UserType.CUSTOMER.name)
-            .limit(30)
-    ).flow.cachedIn(viewModelScope)
+    val searchQuery = MutableLiveData("")
+
+    val accounts = searchQuery.asFlow().flatMapLatest { search ->
+
+        val query = if (search.isEmpty()) {
+            db.collection(USERS_COLLECTION)
+                .whereEqualTo("userType", UserType.CUSTOMER.name)
+                .limit(30)
+        } else {
+            db.collection(USERS_COLLECTION)
+                .whereEqualTo(FieldPath.documentId(), search)
+                .limit(30)
+        }
+
+        accountRepository.getAll(query).flow.cachedIn(viewModelScope)
+    }
 
     var userId = ""
     var username = ""

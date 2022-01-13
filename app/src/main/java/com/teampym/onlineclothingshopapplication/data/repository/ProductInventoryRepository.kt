@@ -115,17 +115,23 @@ class ProductInventoryRepository @Inject constructor(
         }
     }
 
-    suspend fun deleteAll(listOfInventories: List<Inventory>): Boolean {
+    suspend fun deleteAll(username: String, listOfInventories: List<Inventory>, productName: String): Boolean {
         return withContext(dispatcher) {
             var isSuccessful = true
             for (item in listOfInventories) {
-                isSuccessful = delete(item.pid, item.inventoryId)
+                isSuccessful = delete(username, item.pid, item.inventoryId, item.size, productName)
             }
             isSuccessful
         }
     }
 
-    suspend fun delete(productId: String, inventoryId: String): Boolean {
+    suspend fun delete(
+        username: String,
+        productId: String,
+        inventoryId: String,
+        size: String,
+        productName: String
+    ): Boolean {
         return withContext(dispatcher) {
             try {
                 productCollectionRef
@@ -134,6 +140,14 @@ class ProductInventoryRepository @Inject constructor(
                     .document(inventoryId)
                     .delete()
                     .await()
+
+                auditTrailRepository.insert(
+                    AuditTrail(
+                        username = username,
+                        description = "$username DELETED $size SIZE for $productName",
+                        type = AuditType.INVENTORY.name
+                    )
+                )
 
                 return@withContext true
             } catch (ex: Exception) {

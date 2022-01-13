@@ -61,7 +61,7 @@ data class Product(
     var inventoryList: List<Inventory> = emptyList()
     @get:Exclude
     @Ignore
-    var productImageList: List<ProductImage> = emptyList()
+    var productImageList: MutableList<ProductImage> = mutableListOf()
     @get:Exclude
     @Ignore
     var reviewList: List<Review> = emptyList()

@@ -38,7 +38,7 @@
                 android:layout_gravity="end"
                 android:layout_marginTop="4dp"
                 android:layout_marginEnd="4dp"
-                android:text="$14.99"
+                android:text="@string/placeholder_price"
                 android:textAppearance="?attr/textAppearanceBody1" />
 
         </LinearLayout>
@@ -48,7 +48,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@color/purple_500"
+            android:background="@color/teal_200"
             android:orientation="horizontal">
 
             <TextView
@@ -179,18 +179,17 @@
                 app:layout_constraintTop_toBottomOf="@+id/etAdditionalNote" />
 
             <TextView
-                android:id="@+id/tvTotalPayment"
+                android:id="@+id/tvShippingFee"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="8dp"
                 android:layout_marginEnd="16dp"
+                android:text="@string/placeholder_price"
                 android:textAppearance="?attr/textAppearanceBody1"
-                android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toEndOf="@+id/tv5"
-                app:layout_constraintTop_toBottomOf="@+id/tvMerchandiseTotal"
-                tools:text="$29.98" />
+                app:layout_constraintTop_toBottomOf="@+id/tvMerchandiseTotal" />
 
             <TextView
                 android:id="@+id/tv5"
@@ -198,9 +197,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
-                android:text="@string/label_total_payment"
+                android:text="@string/label_shipping_fee"
                 android:textAppearance="?attr/textAppearanceBody1"
-                android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
@@ -212,12 +210,12 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="16dp"
+                android:text="@string/placeholder_price"
                 android:textAppearance="?attr/textAppearanceBody1"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toEndOf="@+id/tv6"
-                app:layout_constraintTop_toBottomOf="@id/etAdditionalNote"
-                tools:text="$14.99" />
+                app:layout_constraintTop_toBottomOf="@id/etAdditionalNote" />
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/materialCardView"
@@ -310,6 +308,8 @@
                         android:layout_marginEnd="8dp"
                         android:layout_marginBottom="8dp"
                         android:text="@string/btn_change_address"
+                        android:backgroundTint="@color/teal_200"
+                        android:textColor="@android:color/white"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintHorizontal_bias="1.0"

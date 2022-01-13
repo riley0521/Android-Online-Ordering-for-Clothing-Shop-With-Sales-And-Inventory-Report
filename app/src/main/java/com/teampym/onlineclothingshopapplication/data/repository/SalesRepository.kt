@@ -27,7 +27,7 @@ class SalesRepository @Inject constructor(
 
     private val salesCollectionRef = db.collection(SALES_COLLECTION)
 
-    suspend fun insert(soldItems: List<OrderDetail>): Boolean {
+    suspend fun insert(soldItems: List<OrderDetail>, shippingFee: Double): Boolean {
         return withContext(dispatcher) {
 
             val calendarDate = Calendar.getInstance()
@@ -55,7 +55,7 @@ class SalesRepository @Inject constructor(
                 // That is why you need to reference it first instead of inserting it directly in db
                 dayRef?.let { doc ->
                     val dayObj = doc.toObject<DaySale>()!!.copy(id = doc.id)
-                    dayObj.totalSale.plus(totalSaleOfDay)
+                    dayObj.totalSale.plus(totalSaleOfDay + shippingFee)
                     doc.reference
                         .set(dayObj, SetOptions.merge())
                         .await()

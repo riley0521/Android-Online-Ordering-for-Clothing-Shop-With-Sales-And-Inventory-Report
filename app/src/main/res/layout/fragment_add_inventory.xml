@@ -29,10 +29,8 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:ems="10"
-        android:maxLines="1"
-        android:maxLength="5"
         android:hint="@string/hint_input_size"
-        android:inputType="text"
+        android:inputType="textLongMessage|textMultiLine"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -47,12 +45,30 @@
         android:layout_marginEnd="8dp"
         android:ems="10"
         android:maxLines="1"
-        android:maxLength="5"
+        android:maxLength="10"
         android:hint="@string/hint_input_available_stocks"
         android:inputType="number"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvAvailableSizes"
+        tools:ignore="Autofill" />
+
+    <EditText
+        android:id="@+id/etWeightInKg"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:ems="10"
+        android:hint="@string/hint_input_weight"
+        android:inputType="numberDecimal"
+        android:maxLength="10"
+        android:maxLines="1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etAvailableStocks"
         tools:ignore="Autofill" />
 
     <com.google.android.material.button.MaterialButton

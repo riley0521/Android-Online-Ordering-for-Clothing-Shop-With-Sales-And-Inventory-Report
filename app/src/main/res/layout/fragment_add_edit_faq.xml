@@ -8,8 +8,12 @@
     tools:context=".presentation.faqs.AddEditFaqFragment">
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/mainLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_above="@id/btnSubmit"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="0dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"

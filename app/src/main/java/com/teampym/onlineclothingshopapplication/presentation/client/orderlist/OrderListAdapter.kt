@@ -13,18 +13,16 @@ import androidx.core.view.isVisible
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Order
-import com.teampym.onlineclothingshopapplication.data.util.AGREE_TO_SHIPPING_FEE
-import com.teampym.onlineclothingshopapplication.data.util.CANCEL_BUTTON
-import com.teampym.onlineclothingshopapplication.data.util.CANCEL_OR_SUGGEST
-import com.teampym.onlineclothingshopapplication.data.util.DELIVER_ORDER
-import com.teampym.onlineclothingshopapplication.data.util.ORDER_COMPLETED
-import com.teampym.onlineclothingshopapplication.data.util.SUGGEST_BUTTON
+import com.teampym.onlineclothingshopapplication.data.util.CourierType
+import com.teampym.onlineclothingshopapplication.data.util.ORDER_COMPLETED_OR_SHOULDERED_BY_ADMIN
+import com.teampym.onlineclothingshopapplication.data.util.RECEIVED_ORDER
 import com.teampym.onlineclothingshopapplication.data.util.Status
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.OrderItemBinding
 import java.text.SimpleDateFormat
-import java.util.* // ktlint-disable no-wildcard-imports
+import java.util.*
 
 class OrderListAdapter(
     private val userType: String,
@@ -109,58 +107,102 @@ class OrderListAdapter(
                     }
                 }
 
-                btnAction.setOnClickListener {
+                btnCancel.setOnClickListener {
                     val position = absoluteAdapterPosition
                     if (position != RecyclerView.NO_POSITION) {
                         val item = getItem(position)
 
-                        when (btnAction.text.toString()) {
-                            CANCEL_BUTTON -> {
-                                if (item != null) {
-                                    listener.onCancelClicked(item, userType)
-                                }
-                            }
-                            CANCEL_OR_SUGGEST -> {
-                                if (item != null) {
-                                    val showPopUpMenu = PopupMenu(
-                                        context,
-                                        btnAction
-                                    )
+                        if (item != null) {
+                            listener.onCancelClicked(item, userType)
+                        }
+                    }
+                }
 
-                                    showPopUpMenu.menu.add(Menu.NONE, 0, 0, CANCEL_BUTTON)
-                                    showPopUpMenu.menu.add(Menu.NONE, 1, 1, SUGGEST_BUTTON)
+                btnShipOrder.setOnClickListener {
+                    val position = absoluteAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
 
-                                    showPopUpMenu.setOnMenuItemClickListener { menuItem ->
-                                        when (menuItem.itemId) {
-                                            0 -> {
-                                                listener.onCancelClicked(item, userType)
-                                                true
-                                            }
-                                            1 -> {
-                                                listener.onSuggestClicked(item)
-                                                true
-                                            }
-                                            else -> false
-                                        }
+                        if (item != null) {
+                            listener.onShipOrderClicked(item)
+                        }
+                    }
+                }
+
+                btnDeliverOrder.setOnClickListener {
+                    val position = absoluteAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+
+                        val showPopUpMenu = PopupMenu(
+                            context,
+                            btnDeliverOrder
+                        )
+
+                        showPopUpMenu.menu.add(Menu.NONE, 0, 0, "WE DELIVER")
+                        showPopUpMenu.menu.add(Menu.NONE, 1, 1, "USE JNT")
+
+                        showPopUpMenu.setOnMenuItemClickListener { menuItem ->
+                            when (menuItem.itemId) {
+                                0 -> {
+                                    if (item != null) {
+                                        listener.onDeliverOrderClicked(item, CourierType.ADMINS)
                                     }
+                                    true
+                                }
+                                1 -> {
+                                    if (item != null) {
+                                        listener.onDeliverOrderClicked(item, CourierType.JNT)
+                                    }
+                                    true
+                                }
+                                else -> false
+                            }
+                        }
 
-                                    showPopUpMenu.show()
+                        showPopUpMenu.show()
+                    }
+                }
+
+                btnActionCompleted.setOnClickListener {
+                    val position = absoluteAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+
+                        when (btnActionCompleted.text) {
+                            RECEIVED_ORDER -> {
+                                if (item != null) {
+                                    listener.onReceivedOrderClicked(item)
                                 }
                             }
-                            AGREE_TO_SHIPPING_FEE -> {
-                                if (item != null) {
-                                    listener.onAgreeToSfClicked(item)
+                            ORDER_COMPLETED_OR_SHOULDERED_BY_ADMIN -> {
+                                val showPopUpMenu = PopupMenu(
+                                    context,
+                                    btnActionCompleted
+                                )
+
+                                showPopUpMenu.menu.add(Menu.NONE, 0, 0, "ORDER COMPLETED")
+                                showPopUpMenu.menu.add(Menu.NONE, 1, 1, "SF SHOULDERED BY ADMIN")
+
+                                showPopUpMenu.setOnMenuItemClickListener { menuItem ->
+                                    when (menuItem.itemId) {
+                                        0 -> {
+                                            if (item != null) {
+                                                listener.onCompleteOrderClicked(item, false)
+                                            }
+                                            true
+                                        }
+                                        1 -> {
+                                            if (item != null) {
+                                                listener.onCompleteOrderClicked(item, true)
+                                            }
+                                            true
+                                        }
+                                        else -> false
+                                    }
                                 }
-                            }
-                            DELIVER_ORDER -> {
-                                if (item != null) {
-                                    listener.onDeliverOrderClicked(item)
-                                }
-                            }
-                            ORDER_COMPLETED -> {
-                                if (item != null) {
-                                    listener.onCompleteOrderClicked(item)
-                                }
+
+                                showPopUpMenu.show()
                             }
                         }
                     }
@@ -197,79 +239,69 @@ class OrderListAdapter(
                     Status.SHIPPING.name -> {
                         labelShippingFee.isVisible = false
                         tvSuggestedSf.isVisible = false
-                        labelUserAgreedToSf.isVisible = false
-                        tvUserAgreedToSf.isVisible = false
 
                         if (userType == UserType.CUSTOMER.name) {
                             if (Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
-                                .minus(calendarDate.get(Calendar.DAY_OF_YEAR)) == 0
+                                .minus(calendarDate.get(Calendar.DAY_OF_YEAR)) != 0
                             ) {
-                                btnAction.text = CANCEL_BUTTON
-                            } else {
-                                btnAction.isVisible = false
+                                btnCancel.isVisible = false
                             }
-                        } else {
-                            btnAction.text = CANCEL_OR_SUGGEST
+
+                            btnShipOrder.isVisible = false
                         }
+
+                        btnActionCompleted.isVisible = false
+                        btnDeliverOrder.isVisible = false
                     }
                     Status.SHIPPED.name -> {
-                        val shippingFeeStr = String.format("%.2f", item.suggestedShippingFee)
-                        tvSuggestedSf.text = shippingFeeStr
-
-                        tvUserAgreedToSf.text = if (item.isUserAgreedToShippingFee) "Yes" else "No"
+                        tvSuggestedSf.text = context.getString(
+                            R.string.placeholder_price,
+                            item.shippingFee
+                        )
 
                         if (userType == UserType.CUSTOMER.name) {
-                            btnAction.text = AGREE_TO_SHIPPING_FEE
-                        } else if (userType == UserType.ADMIN.name) {
-                            if (item.isUserAgreedToShippingFee) {
-                                btnAction.text = DELIVER_ORDER
-                            } else {
-                                btnAction.isVisible = false
-                            }
+                            btnDeliverOrder.isVisible = false
                         }
+
+                        btnCancel.isVisible = false
+                        btnShipOrder.isVisible = false
+                        btnActionCompleted.isVisible = false
                     }
                     Status.DELIVERY.name -> {
-                        if (item.isUserAgreedToShippingFee) {
-                            tvUserAgreedToSf.text = "Yes"
+                        btnCancel.isVisible = false
+                        btnShipOrder.isVisible = false
+                        btnDeliverOrder.isVisible = false
 
-                            if (userType == UserType.ADMIN.name) {
-                                btnAction.text = ORDER_COMPLETED
-                            } else {
-                                btnAction.isVisible = false
-                            }
+                        if (userType == UserType.CUSTOMER.name && !item.isDeliveredSuccessfully) {
+                            btnActionCompleted.text = RECEIVED_ORDER
                         } else {
-                            tvUserAgreedToSf.text = "No"
-                            btnAction.isVisible = false
+                            btnActionCompleted.isVisible = false
                         }
                     }
                     Status.COMPLETED.name -> {
-                        // Nothing to do here.
-                        btnAction.isVisible = false
+                        btnCancel.isVisible = false
+                        btnShipOrder.isVisible = false
+                        btnDeliverOrder.isVisible = false
+
+                        if (userType == UserType.ADMIN.name) {
+                            btnActionCompleted.text = ORDER_COMPLETED_OR_SHOULDERED_BY_ADMIN
+                        } else {
+                            btnActionCompleted.isVisible = false
+                        }
                     }
                     Status.RETURNED.name -> {
                         labelShippingFee.isVisible = false
                         tvSuggestedSf.isVisible = false
-                        labelUserAgreedToSf.isVisible = false
-                        tvUserAgreedToSf.isVisible = false
-
-                        btnAction.isVisible = false
                     }
                     Status.CANCELED.name -> {
                         labelShippingFee.isVisible = false
                         tvSuggestedSf.isVisible = false
-                        labelUserAgreedToSf.isVisible = false
-                        tvUserAgreedToSf.isVisible = false
-
-                        btnAction.isVisible = false
                     }
                 }
 
                 if (userType == UserType.CUSTOMER.name) {
                     labelUsername.isVisible = false
                     tvUsername.isVisible = false
-
-                    labelUserAgreedToSf.isVisible = false
-                    tvUserAgreedToSf.isVisible = false
 
                     labelNumberOfItems.isVisible = false
                     tvNumberOfItems.isVisible = false
@@ -278,19 +310,17 @@ class OrderListAdapter(
                     tvAdditionalNote.isVisible = false
                 }
 
-                val totalCostStr = String.format("%.2f", item.totalCost)
-
                 tvOrderId.text = item.id
                 tvUsername.text = item.deliveryInformation.name
-                tvTotalCost.text = totalCostStr
+                tvTotalCost.text = context.getString(
+                    R.string.placeholder_price,
+                    item.totalCost
+                )
 
-                if (item.suggestedShippingFee > 0.0) {
-                    val grandTotalStr = String.format("%.2f", item.totalPaymentWithShippingFee)
-                    tvGrandTotal.text = grandTotalStr
-                } else {
-                    labelGrandTotal.isVisible = false
-                    tvGrandTotal.isVisible = false
-                }
+                tvGrandTotal.text = context.getString(
+                    R.string.placeholder_price,
+                    item.totalPaymentWithShippingFee
+                )
 
                 val completeAddress = "${item.deliveryInformation.streetNumber} " +
                     "${item.deliveryInformation.city}, " +
@@ -300,6 +330,14 @@ class OrderListAdapter(
                 tvDeliveryAddress.text = completeAddress
 
                 tvStatus.text = item.status
+                tvCourierType.text = context.getString(
+                    R.string.placeholder_courier_type,
+                    item.courierType
+                )
+                tvTrackingNumber.text = context.getString(
+                    R.string.placeholder_tracking_number,
+                    item.trackingNumber
+                )
                 tvNumberOfItems.text = item.numberOfItems.toString()
 
                 tvAdditionalNote.text = item.additionalNote
@@ -310,9 +348,9 @@ class OrderListAdapter(
     interface OnOrderListener {
         fun onItemClicked(item: Order)
         fun onCancelClicked(item: Order, userType: String)
-        fun onSuggestClicked(item: Order)
-        fun onAgreeToSfClicked(item: Order)
-        fun onDeliverOrderClicked(item: Order)
-        fun onCompleteOrderClicked(item: Order)
+        fun onShipOrderClicked(item: Order)
+        fun onDeliverOrderClicked(item: Order, type: CourierType)
+        fun onReceivedOrderClicked(item: Order)
+        fun onCompleteOrderClicked(item: Order, isSfShoulderedByAdmin: Boolean)
     }
 }

@@ -37,8 +37,7 @@ class DeliveryInformationRepository @Inject constructor(
                     val deliveryInformation = document
                         .toObject(DeliveryInformation::class.java)!!.copy(
                         id = document.id,
-                        userId = userId,
-                        isPrimary = document["isPrimary"].toString().toBoolean()
+                        userId = userId
                     )
 
                     deliveryInformationList.add(deliveryInformation)
@@ -60,22 +59,18 @@ class DeliveryInformationRepository @Inject constructor(
                 }
 
                 val deliveryInformationList = mutableListOf<DeliveryInformation>()
-                value?.let { snapshot ->
-                    if (snapshot.documents.isNotEmpty()) {
-                        for (document in snapshot.documents) {
-                            val deliveryInformation = document
-                                .toObject(DeliveryInformation::class.java)!!
-                                .copy(
-                                    id = document.id,
-                                    userId = userId,
-                                    isPrimary = document["isPrimary"].toString().toBoolean()
-                                )
 
-                            deliveryInformationList.add(deliveryInformation)
-                        }
-                        offer(deliveryInformationList)
-                    }
+                for (document in value?.documents!!) {
+                    val deliveryInformation = document
+                        .toObject(DeliveryInformation::class.java)!!
+                        .copy(
+                            id = document.id,
+                            userId = userId
+                        )
+
+                    deliveryInformationList.add(deliveryInformation)
                 }
+                offer(deliveryInformationList)
             }
         awaitClose {
             deliveryInformationListener.remove()
@@ -117,8 +112,7 @@ class DeliveryInformationRepository @Inject constructor(
                     val deliveryInformationFromDb = doc
                         .toObject(DeliveryInformation::class.java)!!.copy(
                         id = doc.id,
-                        userId = userId,
-                        isPrimary = doc["isPrimary"].toString().toBoolean()
+                        userId = userId
                     )
 
                     if (deliveryInformation.id.isNotBlank() && deliveryInformation.id == deliveryInformationFromDb.id) {
@@ -145,7 +139,7 @@ class DeliveryInformationRepository @Inject constructor(
             userCollectionRef
                 .document(userId)
                 .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
-                .whereEqualTo("isPrimary", true)
+                .whereEqualTo("isDefaultAddress", true)
                 .limit(1)
                 .get()
                 .addOnSuccessListener { querySnapshot ->
@@ -171,12 +165,12 @@ class DeliveryInformationRepository @Inject constructor(
         doc.let {
             it.reference.set(
                 mutableMapOf<String, Any>(
-                    "isPrimary" to false
+                    "isDefaultAddress" to false
                 ),
                 SetOptions.merge()
             ).addOnSuccessListener {
                 val updateNewInfoMap = mapOf<String, Any>(
-                    "isPrimary" to true
+                    "isDefaultAddress" to true
                 )
 
                 userCollectionRef

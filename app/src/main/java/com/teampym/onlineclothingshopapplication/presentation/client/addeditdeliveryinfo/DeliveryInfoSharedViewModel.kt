@@ -103,25 +103,25 @@ class DeliveryInfoSharedViewModel @Inject constructor(
     private val _provinceId = MutableLiveData(0L)
     val provinceId: LiveData<Long> get() = _provinceId
 
-    val selectedRegion: MutableLiveData<Region> = state.getLiveData(REGION, Region())
+    val selectedRegion = state.getLiveData<Region>(REGION, null)
 
-    val selectedProvince: MutableLiveData<Province> = state.getLiveData(PROVINCE, Province())
+    val selectedProvince = state.getLiveData<Province>(PROVINCE, null)
 
-    val selectedCity: MutableLiveData<City> = state.getLiveData(CITY, City())
+    val selectedCity = state.getLiveData<City>(CITY, null)
 
     private fun updateRegion(region: Region) {
-        selectedRegion.value = region
-        state.set(REGION, region)
+        selectedRegion.postValue(region)
+        selectedProvince.postValue(null)
+        selectedCity.postValue(null)
     }
 
     private fun updateProvince(province: Province) {
-        selectedProvince.value = province
-        state.set(PROVINCE, province)
+        selectedProvince.postValue(province)
+        selectedCity.postValue(null)
     }
 
     private fun updateCity(city: City) {
-        selectedCity.value = city
-        state.set(CITY, city)
+        selectedCity.postValue(city)
     }
 
     val regions = regionDao.getAll().asLiveData()
@@ -196,7 +196,10 @@ class DeliveryInfoSharedViewModel @Inject constructor(
             del.city.isNotBlank()
     }
 
-    fun onSubmitClicked(deliveryInfo: DeliveryInformation, isEditing: Boolean) =
+    fun onSubmitClicked(
+        deliveryInfo: DeliveryInformation,
+        isEditing: Boolean
+    ) =
         viewModelScope.launch {
             _userId.value?.let {
                 if (it.isNotBlank()) {
@@ -262,9 +265,9 @@ class DeliveryInfoSharedViewModel @Inject constructor(
         phoneNumber = ""
         postalCode = ""
         streetNumber = ""
-        updateRegion(Region())
-        updateProvince(Province())
-        updateCity(City())
+        selectedRegion.postValue(null)
+        selectedProvince.postValue(null)
+        selectedCity.postValue(null)
     }
 
     override fun onCleared() {
@@ -276,7 +279,7 @@ class DeliveryInfoSharedViewModel @Inject constructor(
         withContext(Dispatchers.IO) {
             deliveryInformationDao.insert(deliveryInfo)
             try {
-                if (deliveryInfo.isPrimary) {
+                if (deliveryInfo.isDefaultAddress) {
                     deliveryInformationRepository.changeDefault(
                         deliveryInfo.userId,
                         deliveryInfo

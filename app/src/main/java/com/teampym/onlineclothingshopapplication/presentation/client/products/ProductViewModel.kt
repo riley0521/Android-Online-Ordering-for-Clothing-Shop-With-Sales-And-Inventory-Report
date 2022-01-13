@@ -8,7 +8,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.cachedIn
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.teampym.onlineclothingshopapplication.data.repository.ProductInventoryRepository
 import com.teampym.onlineclothingshopapplication.data.repository.ProductRepository
+import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.SortOrder
@@ -27,6 +29,7 @@ import javax.inject.Inject
 class ProductViewModel @Inject constructor(
     private val db: FirebaseFirestore,
     private val productRepository: ProductRepository,
+    private val productInventoryRepository: ProductInventoryRepository,
     private val userInformationDao: UserInformationDao,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
@@ -103,6 +106,24 @@ class ProductViewModel @Inject constructor(
             _productChannel.send(ProductEvent.ShowSuccessMessage("Deleted product successfully!"))
         } else {
             _productChannel.send(ProductEvent.ShowErrorMessage("Deleting product failed. Please wait for a while."))
+        }
+    }
+
+    fun deleteSize(inventory: Inventory, productName: String) = viewModelScope.launch {
+        val userSession = preferencesManager.preferencesFlow.first()
+        val userInformation = userInformationDao.getCurrentUser(userSession.userId)
+
+        val res = productInventoryRepository.delete(
+            username = "${userInformation?.firstName} ${userInformation?.lastName}",
+            inventory.pid,
+            inventory.inventoryId,
+            inventory.size,
+            productName
+        )
+        if (res) {
+            _productChannel.send(ProductEvent.ShowSuccessMessage("Deleted size successfully!"))
+        } else {
+            _productChannel.send(ProductEvent.ShowErrorMessage("Deleting size failed. Please wait for a while."))
         }
     }
 

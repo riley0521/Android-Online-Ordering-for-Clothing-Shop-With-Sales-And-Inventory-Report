@@ -5,6 +5,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.models.Order
+import com.teampym.onlineclothingshopapplication.data.network.FCMService
+import com.teampym.onlineclothingshopapplication.data.network.NotificationData
+import com.teampym.onlineclothingshopapplication.data.network.NotificationSingle
+import com.teampym.onlineclothingshopapplication.data.repository.NotificationTokenRepository
 import com.teampym.onlineclothingshopapplication.data.repository.OrderRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
@@ -22,7 +26,9 @@ class CancelReasonViewModel @Inject constructor(
     private val orderRepository: OrderRepository,
     private val userInformationDao: UserInformationDao,
     private val state: SavedStateHandle,
-    private val preferencesManager: PreferencesManager
+    private val notificationTokenRepository: NotificationTokenRepository,
+    private val service: FCMService,
+    preferencesManager: PreferencesManager
 ) : ViewModel() {
 
     companion object {
@@ -56,13 +62,34 @@ class CancelReasonViewModel @Inject constructor(
 
             orderRepository.updateOrderStatus(
                 username = "${userInformation?.firstName} ${userInformation?.lastName}",
-                userId,
                 _userType.value!!,
                 order.id,
                 Status.CANCELED.name,
-                cancelReason,
+                false,
+                null,
                 null
             )
+
+            val data = NotificationData(
+                title = "Order (${order.id.take(order.id.length / 2)}...) is cancelled by admin.",
+                body = cancelReason,
+                orderId = order.id
+            )
+
+            val notificationTokenList = notificationTokenRepository.getAll(order.userId)
+
+            if (notificationTokenList.isNotEmpty()) {
+                val tokenList: List<String> = notificationTokenList.map {
+                    it.token
+                }
+
+                val notificationSingle = NotificationSingle(
+                    data = data,
+                    tokenList = tokenList
+                )
+
+                service.notifySingleUser(notificationSingle)
+            }
 
             _othersChannel.send(OtherDialogFragmentEvent.NavigateBack)
         }

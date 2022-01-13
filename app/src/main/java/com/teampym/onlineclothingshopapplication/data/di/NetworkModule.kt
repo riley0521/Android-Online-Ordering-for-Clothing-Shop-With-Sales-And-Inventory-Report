@@ -9,15 +9,15 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
+private const val BASE_URL = "https://fcm.googleapis.com/fcm/send/"
+
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "https://fcm.googleapis.com/fcm/send"
-
     @Provides
     @Singleton
-    fun provideRetrofitInstance() =
+    fun provideRetrofitInstance(): Retrofit =
         Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create())
             .baseUrl(BASE_URL)
@@ -27,5 +27,5 @@ object NetworkModule {
     @Singleton
     fun provideFCMService(
         retrofit: Retrofit
-    ) = retrofit.create(FCMService::class.java)
+    ): FCMService = retrofit.create(FCMService::class.java)
 }

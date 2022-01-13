@@ -73,7 +73,7 @@
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_news.xml" value="0.25" />
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_news_detail.xml" value="0.22535701846046674" />
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_order.xml" value="0.2764957264957265" />
-        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_order_detail_list.xml" value="0.2764957264957265" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_order_detail_list.xml" value="0.20972447325769855" />
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_order_list.xml" value="0.2764957264957265" />
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_product.xml" value="0.25" />
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_product_detail.xml" value="0.2541241162608013" />
@@ -89,6 +89,7 @@
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_splash.xml" value="0.19166666666666668" />
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_stock_in_modal.xml" value="0.2764957264957265" />
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_terms_and_condition.xml" value="0.2764957264957265" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_tracking_number_dialog.xml" value="0.2764957264957265" />
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/fragment_wish_list.xml" value="0.2764957264957265" />
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/history_log_item.xml" value="0.2764957264957265" />
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/image_item.xml" value="0.2764957264957265" />
@@ -106,6 +107,7 @@
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/size_chart_image_item.xml" value="0.2764957264957265" />
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/layout/wish_item.xml" value="0.2764957264957265" />
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/menu-v26/product_detail_action_menu.xml" value="0.33697916666666666" />
+        <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/menu/account_action_menu.xml" value="0.2764957264957265" />
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/menu/category_action_menu.xml" value="0.2764957264957265" />
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/menu/history_log_action_menu.xml" value="0.2764957264957265" />
         <entry key="..\:/Users/Riley/AndroidStudioProjects/OnlineClothingShop/app/src/main/res/menu/home_bottom_nav.xml" value="0.19166666666666668" />

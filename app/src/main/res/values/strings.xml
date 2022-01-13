@@ -26,7 +26,7 @@
     <string name="label_reviews">Reviews</string>
     <string name="label_no_reviews_yet">No Reviews Yet.</string>
     <string name="label_guest">Guest</string>
-    <string name="label_merchandise_total">Merchandise Total \n(Shipping fee not yet included)</string>
+    <string name="label_merchandise_total">Merchandise Total</string>
     <string name="label_shipping_total">Shipping Total</string>
     <string name="label_no_items_yet">No items yet.</string>
     <string name="label_payment_method">Payment Method</string>
@@ -192,6 +192,7 @@
     <string name="label_available_sizes">Available Sizes: %1$s</string>
     <string name="hint_input_size">Input Size</string>
     <string name="hint_input_available_stocks">Input Available Stocks</string>
+    <string name="hint_input_weight">Input Weight In Kilogram (Default: 0.20 kg)</string>
     <string name="btn_add_another_size">Add Another Size</string>
     <string name="hint_input_restock_level">Input Restock Level</string>
     <string name="btn_add_review">Add Review</string>
@@ -199,7 +200,7 @@
     <string name="hint_input_stock_to_add">Input Stock to Add</string>
     <string name="placeholder_variant_size">Variant/Size: %1$s</string>
     <string name="hint_input_description_of_your_feedback">Input Description of your feedback</string>
-    <string name="placeholder_cart_price">$ %1$.2f</string>
+    <string name="placeholder_cart_price">₱ %1$.2f</string>
     <string name="placeholder_cart_size">(%1$s)</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
@@ -252,5 +253,14 @@
     <string name="hint_input_additional_note_for_admins">Input Additional Note for Admins</string>
     <string name="sort_newest">NEWEST</string>
     <string name="sort_most_popular">MOST POPULAR</string>
+    <string name="placeholder_price">₱ %1$.2f</string>
+    <string name="placeholder_total">= ₱ %1$.2f</string>
+    <string name="btn_ship_item">SHIP ITEM</string>
+    <string name="btn_deliver_order">Deliver Order</string>
+    <string name="android_cancel">CANCEL</string>
+    <string name="placeholder_committed">Committed: %1$d</string>
+    <string name="hint_input_tracking_number">Input Tracking Number</string>
+    <string name="placeholder_courier_type">Courier Type: %1$s</string>
+    <string name="placeholder_tracking_number">Tracking Number: %1$s</string>
 
 </resources>

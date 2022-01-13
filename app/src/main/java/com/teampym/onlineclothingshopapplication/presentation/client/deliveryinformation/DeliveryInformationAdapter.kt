@@ -86,7 +86,7 @@ class DeliveryInformationAdapter(
                     deliveryInfo.postalCode
                 tvAddress.text = completeAddress
 
-                tvIsDefault.isVisible = deliveryInfo.isPrimary
+                tvIsDefault.isVisible = deliveryInfo.isDefaultAddress
             }
         }
     }

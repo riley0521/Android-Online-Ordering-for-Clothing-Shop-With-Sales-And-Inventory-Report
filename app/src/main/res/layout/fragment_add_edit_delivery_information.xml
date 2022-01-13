@@ -109,6 +109,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:background="@android:color/transparent"
+            android:gravity="end"
             android:hint="@string/hint_region_select"
             android:textAppearance="?attr/textAppearanceBody1"
             tools:ignore="RelativeOverlap" />
@@ -138,6 +139,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:background="@android:color/transparent"
+            android:gravity="end"
             android:hint="@string/hint_province_select"
             android:textAppearance="?attr/textAppearanceBody1"
             tools:ignore="RelativeOverlap" />
@@ -167,6 +169,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:background="@android:color/transparent"
+            android:gravity="end"
             android:hint="@string/hint_city_select"
             android:textAppearance="?attr/textAppearanceBody1"
             tools:ignore="RelativeOverlap" />
@@ -266,7 +269,8 @@
             android:id="@+id/switchDefaultAddress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true" />
+            android:layout_alignParentEnd="true"
+            android:checked="true" />
 
     </RelativeLayout>
 

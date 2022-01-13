@@ -33,7 +33,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.* // ktlint-disable no-wildcard-imports
 
 @AndroidEntryPoint
 class OrderDetailListFragment :
@@ -98,29 +98,15 @@ class OrderDetailListFragment :
                     tvOrderId.text = o.id
                     tvUsername.text = o.deliveryInformation.name
 
-                    val totalCostStr = "$" + o.totalCost
-                    tvTotalCost.text = totalCostStr
+                    tvTotalCost.text = getString(
+                        R.string.placeholder_price,
+                        o.totalCost
+                    )
 
-                    if (o.suggestedShippingFee > 0.0) {
-                        val shippingFee = "$" + o.suggestedShippingFee
-                        tvSuggestedSf.text = shippingFee
-
-                        val grandTotalStr = "$" + o.totalPaymentWithShippingFee
-                        tvGrandTotal.text = grandTotalStr
-                    } else {
-                        labelShippingFee.isVisible = false
-                        tvSuggestedSf.isVisible = false
-
-                        labelGrandTotal.isVisible = false
-                        tvGrandTotal.isVisible = false
-                    }
-
-                    if (o.isUserAgreedToShippingFee) {
-                        tvUserAgreedToSf.text = "Yes"
-                    } else {
-                        labelUserAgreedToSf.isVisible = false
-                        tvUserAgreedToSf.isVisible = false
-                    }
+                    tvGrandTotal.text = getString(
+                        R.string.placeholder_price,
+                        o.totalPaymentWithShippingFee
+                    )
 
                     val completeAddress = "${o.deliveryInformation.streetNumber} " +
                         "${o.deliveryInformation.city}, " +
@@ -130,6 +116,14 @@ class OrderDetailListFragment :
                     tvDeliveryAddress.text = completeAddress
 
                     tvStatus.text = o.status
+                    tvCourierType.text = getString(
+                        R.string.placeholder_courier_type,
+                        o.courierType
+                    )
+                    tvTrackingNumber.text = getString(
+                        R.string.placeholder_tracking_number,
+                        o.trackingNumber
+                    )
                     tvNumberOfItems.text = o.orderDetailList.count().toString()
 
                     val calendarDate = Calendar.getInstance()

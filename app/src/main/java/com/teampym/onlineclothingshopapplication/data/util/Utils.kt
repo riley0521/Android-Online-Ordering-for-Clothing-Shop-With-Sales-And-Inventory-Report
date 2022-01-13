@@ -41,15 +41,12 @@ const val FAQ_DATA = "Faqs"
 
 const val PREFIX = "https://midnightmares.page.link"
 
-const val CANCEL_BUTTON = "Cancel"
-const val SUGGEST_BUTTON = "Suggest Shipping Fee"
-const val CANCEL_OR_SUGGEST = "Cancel | Suggest Shipping Fee"
-const val AGREE_TO_SHIPPING_FEE = "Agree To Shipping Fee"
-const val DELIVER_ORDER = "Deliver Order"
-const val ORDER_COMPLETED = "Complete Order"
+const val RECEIVED_ORDER = "Received Order"
+const val ORDER_COMPLETED_OR_SHOULDERED_BY_ADMIN = "ORDER COMPLETED | SF SHOULDERED BY ADMIN"
 
 const val EDIT_BUTTON = "Edit"
-const val REMOVE_BUTTON = "Remove"
+const val REMOVE_PRODUCT_BUTTON = "Remove Product"
+const val REMOVE_SIZE_BUTTON = "Remove Size"
 
 const val SELECT_MULTIPLE_ADDITIONAL_IMAGES = "Select Multiple Additional Images"
 const val DELETE_ALL_ADDITIONAL_IMAGES = "Delete All And Upload New Images"
@@ -169,17 +166,6 @@ enum class LinkType {
     PRODUCT
 }
 
-enum class Status {
-    SHIPPING,
-    SHIPPED,
-    DELIVERY,
-    COMPLETED,
-    // When the item have defect
-    RETURNED,
-    // When the user canceled the order within 24 hours
-    CANCELED
-}
-
 enum class CartFlag {
     ADDING,
     REMOVING
@@ -193,6 +179,22 @@ enum class UserType {
 enum class UserStatus {
     ACTIVE,
     BANNED
+}
+
+enum class CourierType {
+    ADMINS,
+    JNT
+}
+
+enum class Status {
+    SHIPPING,
+    SHIPPED,
+    DELIVERY,
+    COMPLETED,
+    // When the item have defect
+    RETURNED,
+    // When the user canceled the order within 24 hours
+    CANCELED
 }
 
 enum class AuditType {

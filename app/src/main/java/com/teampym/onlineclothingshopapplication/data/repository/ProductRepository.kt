@@ -34,7 +34,6 @@ class ProductRepository @Inject constructor(
     private val reviewRepository: ReviewRepository,
     private val orderDetailRepository: OrderDetailRepository,
     private val auditTrailRepository: AuditTrailRepository,
-    private val notificationTokenRepository: NotificationTokenRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
@@ -91,7 +90,7 @@ class ProductRepository @Inject constructor(
                     productId = productDocument.id
                 )
 
-                foundProduct.productImageList = productImageList.await()
+                foundProduct.productImageList = productImageList.await() as MutableList<ProductImage>
                 foundProduct.inventoryList = inventoryList.await()
                 foundProduct.reviewList = reviewList.await()
             }
@@ -113,12 +112,6 @@ class ProductRepository @Inject constructor(
                         description = "$username CREATED product - ${product.name}",
                         type = AuditType.PRODUCT.name
                     )
-                )
-
-                notificationTokenRepository.submitToPostTopic(
-                    product.copy(productId = result.id),
-                    "New Product Available!",
-                    "Come and see!"
                 )
 
                 return@withContext product.copy(productId = result.id)
@@ -215,7 +208,7 @@ class ProductRepository @Inject constructor(
                 productImageRepository.deleteAll(productImages)
 
                 val productInventories = productInventoryRepository.getAll(product.productId)
-                productInventoryRepository.deleteAll(productInventories)
+                productInventoryRepository.deleteAll(username, productInventories, product.name)
 
                 productCollectionRef
                     .document(product.productId)

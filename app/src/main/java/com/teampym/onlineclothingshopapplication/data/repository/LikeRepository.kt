@@ -17,7 +17,6 @@ import javax.inject.Singleton
 @Singleton
 class LikeRepository @Inject constructor(
     db: FirebaseFirestore,
-    private val notificationTokenRepository: NotificationTokenRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
@@ -52,12 +51,6 @@ class LikeRepository @Inject constructor(
                     .document(like.userId)
                     .set(like, SetOptions.merge())
                     .await()
-
-                notificationTokenRepository.notifyAllAdmins(
-                    post,
-                    "${like.userId.take(like.userId.length / 2)} liked your post",
-                    "Post with id ${like.postId}"
-                )
 
                 return@withContext true
             } catch (ex: java.lang.Exception) {

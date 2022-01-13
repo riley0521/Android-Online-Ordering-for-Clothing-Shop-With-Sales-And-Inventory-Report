@@ -1,10 +1,9 @@
 package com.teampym.onlineclothingshopapplication.data.di
 
-import androidx.datastore.preferences.preferencesDataStore
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.teampym.onlineclothingshopapplication.data.repository.* // ktlint-disable no-wildcard-imports
+import com.teampym.onlineclothingshopapplication.data.repository.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -84,7 +83,6 @@ object RepositoryModule {
         reviewRepository: ReviewRepository,
         orderDetailRepository: OrderDetailRepository,
         auditTrailRepository: AuditTrailRepository,
-        notificationTokenRepository: NotificationTokenRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = ProductRepository(
         db,
@@ -93,7 +91,6 @@ object RepositoryModule {
         reviewRepository,
         orderDetailRepository,
         auditTrailRepository,
-        notificationTokenRepository,
         dispatcher
     )
 
@@ -121,7 +118,6 @@ object RepositoryModule {
         db: FirebaseFirestore,
         orderDetailRepository: OrderDetailRepository,
         productRepository: ProductRepository,
-        notificationTokenRepository: NotificationTokenRepository,
         auditTrailRepository: AuditTrailRepository,
         salesRepository: SalesRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
@@ -129,7 +125,6 @@ object RepositoryModule {
         db,
         orderDetailRepository,
         productRepository,
-        notificationTokenRepository,
         auditTrailRepository,
         salesRepository,
         dispatcher
@@ -158,11 +153,9 @@ object RepositoryModule {
     @Provides
     fun provideLikeRepository(
         db: FirebaseFirestore,
-        notificationTokenRepository: NotificationTokenRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = LikeRepository(
         db,
-        notificationTokenRepository,
         dispatcher
     )
 

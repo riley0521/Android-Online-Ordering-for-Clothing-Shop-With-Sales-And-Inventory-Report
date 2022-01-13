@@ -85,7 +85,7 @@
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toEndOf="@+id/layoutAddRemoveStock"
             app:layout_constraintTop_toBottomOf="@+id/tvSize"
-            tools:text="$29.98" />
+            android:text="@string/placeholder_price" />
 
         <TextView
             android:id="@+id/tv1"
@@ -131,7 +131,7 @@
             app:layout_constraintStart_toEndOf="@+id/tv1"
             app:layout_constraintTop_toBottomOf="@+id/tvProductName"
             app:layout_constraintVertical_bias="0.0"
-            tools:text="$14.99" />
+            android:text="@string/placeholder_price" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/layoutAddRemoveStock"

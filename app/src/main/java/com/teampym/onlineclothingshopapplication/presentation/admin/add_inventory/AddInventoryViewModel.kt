@@ -28,6 +28,7 @@ class AddInventoryViewModel @Inject constructor(
         private const val PRODUCT_NAME = "product_name"
         private const val INVENTORY_SIZE = "inventory_size"
         private const val INVENTORY_STOCK = "inventory_stock"
+        private const val WEIGHT_IN_KG = "weight_in_kg"
         private const val INVENTORY_AVAIL_SIZE_LIST = "inventory_avail_size_list"
     }
 
@@ -53,6 +54,12 @@ class AddInventoryViewModel @Inject constructor(
         set(value) {
             field = value
             state.set(INVENTORY_STOCK, value)
+        }
+
+    var weightInKg = state.get<Double>(WEIGHT_IN_KG) ?: 0.0
+        set(value) {
+            field = value
+            state.set(WEIGHT_IN_KG, value)
         }
 
     val availableInvList: MutableLiveData<List<String>> = state.getLiveData(
@@ -88,7 +95,8 @@ class AddInventoryViewModel @Inject constructor(
             val newInv = Inventory(
                 pid = productId,
                 size = inventorySize,
-                stock = inventoryStock.toLong()
+                stock = inventoryStock.toLong(),
+                weightInKg = if (weightInKg > 0.0) weightInKg else 0.20
             )
             val res = inventoryRepository.create(
                 username = "${userInformation?.firstName} ${userInformation?.lastName}",

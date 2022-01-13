@@ -12,6 +12,7 @@ data class Inventory(
     var pid: String,
     var size: String,
     var stock: Long,
+    var weightInKg: Double = 0.20,
     @PrimaryKey
     var inventoryId: String = "",
     @get:Exclude

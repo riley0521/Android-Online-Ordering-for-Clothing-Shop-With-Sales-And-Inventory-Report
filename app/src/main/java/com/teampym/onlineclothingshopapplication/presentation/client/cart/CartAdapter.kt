@@ -103,8 +103,10 @@ class CartAdapter(
                 tvPrice.text = context.getString(R.string.placeholder_cart_price, cart.product.price)
                 tvSize.text = context.getString(R.string.placeholder_cart_size, cart.inventory.size)
 
-                val totalStr = "$" + "%.2f".format(cart.calculatedTotalPrice)
-                tvTotal.text = totalStr
+                tvTotal.text = context.getString(
+                    R.string.placeholder_price,
+                    cart.calculatedTotalPrice
+                )
                 tvCount.text = cart.quantity.toString()
 
                 val isMax = cart.inventory.stock == cart.quantity || cart.quantity == 99.toLong()

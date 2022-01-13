@@ -19,6 +19,7 @@ import androidx.paging.PagingData
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
+import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.room.SessionPreferences
 import com.teampym.onlineclothingshopapplication.data.room.SortOrder
@@ -183,11 +184,16 @@ class ProductFragment :
         findNavController().navigate(action)
     }
 
-    override fun onDeleteClicked(product: Product) {
+    override fun onDeleteProductClicked(product: Product) {
         loadingDialog.show()
         viewModel.onDeleteProductClicked(
             product
         )
+    }
+
+    override fun onDeleteSizeClicked(inventory: Inventory, productName: String) {
+        loadingDialog.dismiss()
+        viewModel.deleteSize(inventory, productName)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

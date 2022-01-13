@@ -16,9 +16,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.teampym.onlineclothingshopapplication.R
+import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.util.EDIT_BUTTON
-import com.teampym.onlineclothingshopapplication.data.util.REMOVE_BUTTON
+import com.teampym.onlineclothingshopapplication.data.util.REMOVE_PRODUCT_BUTTON
+import com.teampym.onlineclothingshopapplication.data.util.REMOVE_SIZE_BUTTON
 import com.teampym.onlineclothingshopapplication.databinding.ProductItemAdminBinding
 
 class ProductAdminAdapter(
@@ -76,7 +78,8 @@ class ProductAdminAdapter(
                             )
 
                             showPopUpMenu.menu.add(Menu.NONE, 0, 0, EDIT_BUTTON)
-                            showPopUpMenu.menu.add(Menu.NONE, 1, 1, REMOVE_BUTTON)
+                            showPopUpMenu.menu.add(Menu.NONE, 1, 1, REMOVE_PRODUCT_BUTTON)
+                            showPopUpMenu.menu.add(Menu.NONE, 2, 2, REMOVE_SIZE_BUTTON)
 
                             showPopUpMenu.setOnMenuItemClickListener { menuItem ->
                                 when (menuItem.itemId) {
@@ -85,7 +88,11 @@ class ProductAdminAdapter(
                                         true
                                     }
                                     1 -> {
-                                        listener.onDeleteClicked(item)
+                                        listener.onDeleteProductClicked(item)
+                                        true
+                                    }
+                                    2 -> {
+                                        listener.onDeleteSizeClicked(item.inventoryList[0], item.name)
                                         true
                                     }
                                     else -> false
@@ -114,6 +121,10 @@ class ProductAdminAdapter(
                 tvSize.text = product.inventoryList[0].size
                 tvSoldCount.text = product.inventoryList[0].sold.toString()
                 tvRemainingStockCount.text = product.inventoryList[0].stock.toString()
+                tvCommitted.text = context.getString(
+                    R.string.placeholder_committed,
+                    product.inventoryList[0].committed
+                )
             }
         }
 
@@ -148,7 +159,7 @@ class ProductAdminAdapter(
                                         "All inventories and reviews of this product will also be deleted."
                                 )
                                 .setPositiveButton("Yes") { _, _ ->
-                                    listener.onDeleteClicked(product)
+                                    listener.onDeleteProductClicked(product)
                                 }.setNegativeButton("No") { dialog, _ ->
                                     dialog.dismiss()
                                 }.show()
@@ -164,6 +175,7 @@ class ProductAdminAdapter(
     interface OnProductAdminListener {
         fun onItemClicked(product: Product)
         fun onEditClicked(product: Product)
-        fun onDeleteClicked(product: Product)
+        fun onDeleteProductClicked(product: Product)
+        fun onDeleteSizeClicked(inventory: Inventory, productName: String)
     }
 }

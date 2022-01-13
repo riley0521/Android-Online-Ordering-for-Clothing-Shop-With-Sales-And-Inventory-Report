@@ -32,7 +32,6 @@ class OrderRepository @Inject constructor(
     val db: FirebaseFirestore,
     private val orderDetailRepository: OrderDetailRepository,
     private val productRepository: ProductRepository,
-    private val notificationTokenRepository: NotificationTokenRepository,
     private val auditTrailRepository: AuditTrailRepository,
     private val salesRepository: SalesRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
@@ -56,7 +55,7 @@ class OrderRepository @Inject constructor(
             )
         }
 
-    suspend fun getOne(orderId: String, userId: String): Order {
+    suspend fun getOne(orderId: String): Order {
         return withContext(dispatcher) {
             val orderDoc = orderCollectionRef.document(orderId)
                 .get()
@@ -64,8 +63,7 @@ class OrderRepository @Inject constructor(
 
             orderDoc?.let {
                 return@withContext orderDoc.toObject<Order>()!!.copy(
-                    id = orderDoc.id,
-                    userId = userId
+                    id = orderDoc.id
                 )
             }
 
@@ -82,7 +80,8 @@ class OrderRepository @Inject constructor(
         cartList: List<Cart>,
         deliveryInformation: DeliveryInformation,
         additionalNote: String,
-        paymentMethod: PaymentMethod
+        paymentMethod: PaymentMethod,
+        shippingFee: Double
     ): Order? {
         return withContext(dispatcher) {
 
@@ -92,7 +91,10 @@ class OrderRepository @Inject constructor(
                 deliveryInformation = deliveryInformation,
                 totalCost = cartList.sumOf { it.subTotal },
                 numberOfItems = cartList.size.toLong(),
-                paymentMethod = paymentMethod.name
+                paymentMethod = paymentMethod.name,
+                shippingFee = shippingFee,
+                courierType = "",
+                trackingNumber = ""
             )
 
             val result = orderCollectionRef
@@ -108,35 +110,55 @@ class OrderRepository @Inject constructor(
     }
 
     // Notify all admins about the items that the user wants to return.
-    suspend fun returnItems(
-        username: String,
-        orderDetailList: List<OrderDetail>
+    suspend fun returnItem(
+        orderItem: OrderDetail,
     ): Boolean {
         return withContext(dispatcher) {
-            val body = ""
-            var count = 1
 
-            // The output should like this
-            // John Doe wants to return:
-            // 1. Product1(S)
-            // 2. Product2(M)
-            // 3. Product3(L)
-            for (item in orderDetailList) {
-                body.plus("$count. ${item.product.name}(${item.size})\n")
-                count++
-            }
+            orderCollectionRef
+                .document(orderItem.orderId)
+                .collection(ORDER_DETAILS_SUB_COLLECTION)
+                .document(orderItem.id)
+                .set(
+                    mutableMapOf(
+                        "requestedToReturn" to true
+                    )
+                )
+                .await()
 
-            return@withContext notificationTokenRepository.notifyAllAdmins(
-                null,
-                "$username wish to return $count item/s:",
-                body
-            )
+//            notificationTokenRepository.notifyAllAdmins(
+//                null,
+//                "Return Item/s",
+//                "$username wish to return ${orderItem.product.name} (${orderItem.size})"
+//            )
+
+            true
+        }
+    }
+
+    suspend fun confirmReturnedItem(
+        orderItem: OrderDetail
+    ): Boolean {
+        return withContext(dispatcher) {
+
+            orderCollectionRef
+                .document(orderItem.orderId)
+                .collection(ORDER_DETAILS_SUB_COLLECTION)
+                .document(orderItem.id)
+                .set(
+                    mutableMapOf(
+                        "isReturned" to true
+                    ),
+                    SetOptions.merge()
+                )
+                .await()
+
+            true
         }
     }
 
     // Notify all admins about cancellation of order.
     suspend fun cancelOrder(
-        username: String,
         orderId: String,
         isCommitted: Boolean,
     ): Boolean {
@@ -145,54 +167,38 @@ class OrderRepository @Inject constructor(
             // Change Status to Canceled
             changeStatusToCancelled("", false, orderId, Status.CANCELED.name, isCommitted)
 
-            notificationTokenRepository.notifyAllAdmins(
-                null,
-                "Order (${orderId.take(orderId.length / 2)}...) is cancelled by $username",
-                "The user cancelled an order."
-            )
-
             return@withContext true
         }
     }
 
-    // This will notify all admins that the user agreed to suggested shipping fee.
-    suspend fun agreeToShippingFee(userId: String, orderId: String): Boolean {
+    suspend fun updateStatusToCompleted(
+        orderId: String
+    ): Boolean {
         return withContext(dispatcher) {
-            var isCompleted = true
-            val orderDocument = orderCollectionRef
-                .document(orderId)
-                .get()
-                .await()
-            if (orderDocument != null) {
-                val updatedOrder = orderDocument.toObject<Order>()!!.copy(id = orderDocument.id)
-                val agreeMap = mapOf<String, Any>(
-                    "isUserAgreedToShippingFee" to true
-                )
 
-                val result = orderDocument.reference.set(agreeMap, SetOptions.merge()).await()
-                if (result != null) {
-                    updatedOrder.isUserAgreedToShippingFee = true
-                    isCompleted = notifyUserAboutShippingFeeOrMadeADeal(
-                        userId,
-                        updatedOrder,
-                        null,
-                        true
-                    )
-                }
-            }
-            isCompleted
+            orderCollectionRef
+                .document(orderId)
+                .set(
+                    mutableMapOf(
+                        "status" to Status.COMPLETED.name
+                    ),
+                    SetOptions.merge()
+                )
+                .await()
+
+            true
         }
     }
 
     // This will be executed by admins only.
     suspend fun updateOrderStatus(
         username: String,
-        userId: String,
         userType: String,
         orderId: String,
         status: String,
-        cancelReason: String?,
-        suggestedShippingFee: Double?
+        isSfShoulderedByAdmin: Boolean = false,
+        trackingNumber: String?,
+        courierType: String?
     ): Boolean {
 
         // SHIPPED = Use Product Repository to update the deduct number of stock and add it to committed
@@ -208,7 +214,6 @@ class OrderRepository @Inject constructor(
                     // This is a nested method that will eventually notify the customer in the end.
                     changeStatusToShipped(
                         username,
-                        suggestedShippingFee,
                         orderId,
                         status,
                         userType
@@ -216,45 +221,33 @@ class OrderRepository @Inject constructor(
                     true
                 }
                 Status.DELIVERY.name -> {
-                    changeStatusToDelivery(username, status, orderId)
-                    notificationTokenRepository.notifyCustomer(
-                        obj = null,
-                        userId = userId,
-                        title = "Order (${orderId.take(orderId.length / 2)}...) is on it's way.",
-                        body = "Buckle up because your order is on it's way to your home!"
-                    )
+                    changeStatusToDelivery(username, status, orderId, trackingNumber, courierType)
                     true
                 }
                 Status.COMPLETED.name -> {
                     // Change the status to completed first
                     // Then deduct the committed to sold
-                    val salesOrderList =
-                        changeStatusToCompleted(username, userType, orderId, status)
-
-                    salesRepository.insert(salesOrderList)
-
-                    // Then notify the customer
-                    notificationTokenRepository.notifyCustomer(
-                        obj = null,
-                        userId = userId,
-                        title = "Order (${orderId.take(orderId.length / 2)}...) is completed!",
-                        body = "Yey! Now you can enjoy your newly bought items!"
+                    val salesOrderList = changeStatusToCompleted(
+                        username,
+                        userType,
+                        orderId,
+                        status,
+                        isSfShoulderedByAdmin
                     )
 
-                    true
-                }
-                Status.RETURNED.name -> {
-                    changeStatusToReturned(username, userType, orderId, status)
+                    val orderDoc = getOne(orderId)
+
+                    salesRepository.insert(salesOrderList, orderDoc.shippingFee)
                     true
                 }
                 Status.CANCELED.name -> {
                     changeStatusToCancelled(username, true, orderId, status, false)
-                    notificationTokenRepository.notifyCustomer(
-                        obj = null,
-                        userId = userId,
-                        title = "Order (${orderId.take(orderId.length / 2)}...) is cancelled by admin.",
-                        body = cancelReason ?: ""
-                    )
+//                    notificationTokenRepository.notifyCustomer(
+//                        obj = null,
+//                        userId = userId,
+//                        title = "Order (${orderId.take(orderId.length / 2)}...) is cancelled by admin.",
+//                        body = cancelReason ?: ""
+//                    )
                 }
                 else -> false
             }
@@ -269,7 +262,6 @@ class OrderRepository @Inject constructor(
         isCommitted: Boolean
     ): Boolean {
         return withContext(dispatcher) {
-            mutableListOf<OrderDetail>()
             val updateOrderStatus = mapOf<String, Any>(
                 "status" to status
             )
@@ -310,70 +302,24 @@ class OrderRepository @Inject constructor(
         }
     }
 
-    private suspend fun changeStatusToReturned(
-        username: String,
-        userType: String,
-        orderId: String,
-        status: String
-    ): Boolean {
-        return withContext(dispatcher) {
-            val orderDetailList = mutableListOf<OrderDetail>()
-            val updateOrderStatus = mapOf<String, Any>(
-                "status" to status
-            )
-
-            try {
-                orderCollectionRef
-                    .document(orderId)
-                    .set(updateOrderStatus, SetOptions.merge())
-                    .await()
-
-                auditTrailRepository.insert(
-                    AuditTrail(
-                        username = username,
-                        description = "$username UPDATED order - $orderId to $status",
-                        type = AuditType.ORDER.name
-                    )
-                )
-
-                val orderDoc = orderCollectionRef
-                    .document(orderId)
-                    .collection(ORDER_DETAILS_SUB_COLLECTION)
-                    .get()
-                    .await()
-
-                orderDoc?.let { order ->
-                    for (document in order.documents) {
-                        val orderDetailItem = document
-                            .toObject(OrderDetail::class.java)!!.copy(
-                            id = document.id,
-                            orderId = orderId
-                        )
-
-                        orderDetailList.add(orderDetailItem)
-                    }
-                    return@withContext productRepository.deductSoldToReturnedCount(
-                        userType,
-                        orderDetailList
-                    )
-                }
-            } catch (ex: java.lang.Exception) {
-                return@withContext false
-            }
-            return@withContext false
-        }
-    }
-
     private suspend fun changeStatusToCompleted(
         username: String,
         userType: String,
         orderId: String,
-        status: String
+        status: String,
+        isSfShoulderedByAdmin: Boolean
     ): List<OrderDetail> {
         return withContext(dispatcher) {
-            val updateOrderStatus = mapOf<String, Any>(
-                "status" to status
+            val orderDoc = getOne(orderId)
+
+            val updateOrderStatus = mutableMapOf<String, Any>(
+                "status" to status,
+                "shippingFee" to orderDoc.shippingFee
             )
+
+            if (isSfShoulderedByAdmin) {
+                updateOrderStatus["shippingFee"] = 0.0
+            }
 
             try {
                 orderCollectionRef
@@ -399,11 +345,26 @@ class OrderRepository @Inject constructor(
     private suspend fun changeStatusToDelivery(
         username: String,
         status: String,
-        orderId: String
+        orderId: String,
+        trackingNumber: String?,
+        courierType: String?
     ): Boolean {
         return withContext(dispatcher) {
+
+            var t = ""
+            trackingNumber?.let {
+                t = it
+            }
+
+            var c = ""
+            courierType?.let {
+                c = it
+            }
+
             val updateOrderStatus = mapOf<String, Any>(
-                "status" to status
+                "status" to status,
+                "courierType" to c,
+                "trackingNumber" to t
             )
 
             try {
@@ -429,17 +390,11 @@ class OrderRepository @Inject constructor(
 
     private suspend fun changeStatusToShipped(
         username: String,
-        suggestedShippingFee: Double?,
         orderId: String,
         status: String,
         userId: String
     ): Boolean {
         return withContext(dispatcher) {
-            var sf = 0.0
-            suggestedShippingFee?.let {
-                sf = it
-            }
-
             val orderDoc = orderCollectionRef
                 .document(orderId)
                 .get()
@@ -448,8 +403,7 @@ class OrderRepository @Inject constructor(
             orderDoc?.let { order ->
                 val updatedOrder = order.toObject<Order>()!!.copy(id = order.id)
                 val updateOrderStatus = mapOf<String, Any>(
-                    "status" to status,
-                    "suggestedShippingFee" to sf
+                    "status" to status
                 )
 
                 try {
@@ -466,7 +420,6 @@ class OrderRepository @Inject constructor(
                     )
 
                     updatedOrder.status = status
-                    updatedOrder.suggestedShippingFee = sf
 
                     val orderDetailDocuments = orderCollectionRef
                         .document(orderId)
@@ -477,8 +430,7 @@ class OrderRepository @Inject constructor(
                     return@withContext changeInventoryShipped(
                         orderDetailDocuments,
                         userId,
-                        updatedOrder,
-                        suggestedShippingFee
+                        updatedOrder
                     )
                 } catch (ex: Exception) {
                     return@withContext false
@@ -491,8 +443,7 @@ class OrderRepository @Inject constructor(
     private suspend fun changeInventoryShipped(
         orderDetailDocuments: QuerySnapshot,
         userId: String,
-        order: Order,
-        suggestedShippingFee: Double?
+        order: Order
     ): Boolean {
         return withContext(dispatcher) {
             val orderDetailList = mutableListOf<OrderDetail>()
@@ -503,48 +454,13 @@ class OrderRepository @Inject constructor(
                 )
                 orderDetailList.add(orderDetailItem)
             }
-            if (
-                productRepository.deductStockToCommittedCount(
-                    userId,
-                    orderDetailList
-                )
-            ) {
-                return@withContext notifyUserAboutShippingFeeOrMadeADeal(
-                    userId,
-                    order,
-                    suggestedShippingFee,
-                    null
-                )
-            }
 
-            return@withContext false
-        }
-    }
+            productRepository.deductStockToCommittedCount(
+                userId,
+                orderDetailList
+            )
 
-    private suspend fun notifyUserAboutShippingFeeOrMadeADeal(
-        userId: String,
-        order: Order,
-        suggestedShippingFee: Double?,
-        isUserAgreedToShippingFee: Boolean?
-    ): Boolean {
-        return withContext(dispatcher) {
-            if (suggestedShippingFee != null && suggestedShippingFee > 0.0) {
-                notificationTokenRepository.notifyCustomer(
-                    order,
-                    userId,
-                    "Order (${order.id.take(order.id.length / 2)}...)",
-                    "Admin suggests that the order fee should be $suggestedShippingFee"
-                )
-                return@withContext true
-            } else if (isUserAgreedToShippingFee != null && isUserAgreedToShippingFee) {
-                notificationTokenRepository.notifyAllAdmins(
-                    order,
-                    "Order (${order.id.take(order.id.length / 2)}...)",
-                    "User ($userId) has agreed to the suggested shipping fee."
-                )
-                return@withContext true
-            }
-            return@withContext false
+            return@withContext true
         }
     }
 

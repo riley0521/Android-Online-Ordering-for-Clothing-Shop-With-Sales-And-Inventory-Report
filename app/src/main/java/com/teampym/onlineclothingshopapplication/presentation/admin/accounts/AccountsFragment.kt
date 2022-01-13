@@ -1,7 +1,11 @@
 package com.teampym.onlineclothingshopapplication.presentation.admin.accounts
 
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -79,6 +83,39 @@ class AccountsFragment :
                     }
                 }
             }
+        }
+
+        setHasOptionsMenu(true)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.account_action_menu, menu)
+
+        val searchItem = menu.findItem(R.id.action_search)
+        val searchView = searchItem.actionView as SearchView
+
+        val pendingQuery = viewModel.searchQuery.value
+        if (pendingQuery != null && pendingQuery.isNotEmpty()) {
+            searchItem.expandActionView()
+            searchView.setQuery(pendingQuery, false)
+        }
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                // Nothing to do here
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                // Search
+                viewModel.searchQuery.value = newText
+                return true
+            }
+        })
+
+        searchView.setOnCloseListener {
+            viewModel.searchQuery.value = ""
+            true
         }
     }
 

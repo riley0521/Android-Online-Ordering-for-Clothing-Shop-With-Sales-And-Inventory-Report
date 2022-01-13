@@ -18,6 +18,7 @@ import androidx.navigation.fragment.navArgs
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
 import com.teampym.onlineclothingshopapplication.R
+import com.teampym.onlineclothingshopapplication.data.models.ProductImage
 import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.util.LinkType
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
@@ -110,9 +111,14 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
     private fun setupViews(product: Product) {
         binding.apply {
 
-            val priceStr = "$" + product.price
+
             tvProductName.text = product.name
-            tvPrice.text = priceStr
+
+            tvPrice.text = getString(
+                R.string.placeholder_price,
+                product.price
+            )
+
             val descStr = if (product.description.isBlank()) {
                 "No Available Description"
             } else {
@@ -145,6 +151,12 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
 
             // Attach viewPager and the tabLayout together so that they can work altogether
             TabLayoutMediator(indicatorTabLayout, viewPager) { _, _ -> }.attach()
+
+            product.productImageList.add(0, ProductImage(
+                product.productId,
+                product.fileName,
+                product.imageUrl
+            ))
 
             if (product.productImageList.isEmpty()) {
                 tvNoAvailableImages.isVisible = true

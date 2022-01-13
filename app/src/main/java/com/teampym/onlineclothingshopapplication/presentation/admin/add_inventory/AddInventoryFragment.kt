@@ -83,6 +83,9 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
             if (viewModel.inventoryStock > 0) {
                 etAvailableStocks.setText(viewModel.inventoryStock.toString())
             }
+            if (viewModel.weightInKg > 0.0) {
+                etWeightInKg.setText(viewModel.weightInKg.toString())
+            }
 
             etSize.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(
@@ -114,8 +117,29 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    if (s.toString().isNotEmpty()) {
+                    if (s.toString().isNotBlank()) {
                         viewModel.inventoryStock = s.toString().toInt()
+                    }
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    // Nothing
+                }
+            })
+
+            etWeightInKg.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                    // Nothing
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    if (s.toString().isNotBlank()) {
+                        viewModel.weightInKg = s.toString().toDouble()
                     }
                 }
 
@@ -207,6 +231,7 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
         binding.apply {
             etSize.setText(viewModel.inventorySize)
             etAvailableStocks.setText("")
+            etWeightInKg.setText("")
         }
     }
 

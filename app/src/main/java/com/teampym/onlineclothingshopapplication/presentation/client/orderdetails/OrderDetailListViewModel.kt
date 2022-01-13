@@ -21,8 +21,8 @@ class OrderDetailListViewModel @Inject constructor(
     private val orderRepository: OrderRepository,
     private val orderDetailRepository: OrderDetailRepository,
     private val userInformationDao: UserInformationDao,
-    private val preferencesManager: PreferencesManager,
-    private val state: SavedStateHandle
+    preferencesManager: PreferencesManager,
+    state: SavedStateHandle
 ) : ViewModel() {
 
     companion object {
@@ -47,8 +47,7 @@ class OrderDetailListViewModel @Inject constructor(
     ) = viewModelScope.launch {
 
         val order = orderRepository.getOne(
-            orderId,
-            userId
+            orderId
         )
 
         order.orderDetailList = orderDetailRepository.getByOrderId(

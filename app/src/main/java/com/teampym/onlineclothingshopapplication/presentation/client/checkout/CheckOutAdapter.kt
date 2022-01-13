@@ -1,5 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.checkout
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -11,7 +12,9 @@ import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.databinding.CartItemFinalBinding
 
-class CheckOutAdapter : ListAdapter<Cart, CheckOutAdapter.CheckOutViewHolder>(CART_COMPARATOR) {
+class CheckOutAdapter(
+    private val context: Context
+) : ListAdapter<Cart, CheckOutAdapter.CheckOutViewHolder>(CART_COMPARATOR) {
 
     companion object {
         private val CART_COMPARATOR = object : DiffUtil.ItemCallback<Cart>() {
@@ -51,9 +54,15 @@ class CheckOutAdapter : ListAdapter<Cart, CheckOutAdapter.CheckOutViewHolder>(CA
                     .error(R.drawable.ic_food)
                     .into(imgCartProduct)
 
-                val priceStr = "$" + String.format("%.2f", item.product.price)
-                val qtyStr = item.quantity.toString() + " pcs ="
-                val totalStr = "$" + String.format("%.2f", item.subTotal)
+                val priceStr = context.getString(
+                    R.string.placeholder_price,
+                    item.product.price
+                )
+                val qtyStr = "x${item.quantity} pcs"
+                val totalStr = context.getString(
+                    R.string.placeholder_total,
+                    item.subTotal
+                )
                 val sizeStr = "Size (${item.inventory.size})"
 
                 tvProductName.text = item.product.name

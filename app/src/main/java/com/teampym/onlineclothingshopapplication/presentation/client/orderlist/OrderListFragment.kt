@@ -19,20 +19,18 @@ import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.util.CANCELLED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.COMPLETED_ORDERS
+import com.teampym.onlineclothingshopapplication.data.util.CourierType
 import com.teampym.onlineclothingshopapplication.data.util.DELIVERY_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
-import com.teampym.onlineclothingshopapplication.data.util.RETURNED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.SHIPPED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.SHIPPING_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.Status
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentOrderListBinding
-import com.teampym.onlineclothingshopapplication.presentation.client.others.AGREE_TO_SF_REQUEST
-import com.teampym.onlineclothingshopapplication.presentation.client.others.AGREE_TO_SF_RESULT
 import com.teampym.onlineclothingshopapplication.presentation.client.others.CANCEL_REASON_REQUEST
 import com.teampym.onlineclothingshopapplication.presentation.client.others.CANCEL_REASON_RESULT
-import com.teampym.onlineclothingshopapplication.presentation.client.others.SHIPPING_FEE_REQUEST
-import com.teampym.onlineclothingshopapplication.presentation.client.others.SHIPPING_FEE_RESULT
+import com.teampym.onlineclothingshopapplication.presentation.client.others.TRACKING_NUMBER_REQUEST
+import com.teampym.onlineclothingshopapplication.presentation.client.others.TRACKING_NUMBER_RESULT
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import java.util.* // ktlint-disable no-wildcard-imports
@@ -200,67 +198,47 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
         }
     }
 
-    override fun onSuggestClicked(item: Order) {
-        showSuggestShipFeeModalForAdmin(item)
+    override fun onShipOrderClicked(item: Order) {
+        viewModel.shipOrder(item)
     }
 
-    override fun onAgreeToSfClicked(item: Order) {
-        setFragmentResultListener(AGREE_TO_SF_REQUEST) { _, bundle ->
-            val result = bundle.getString(AGREE_TO_SF_RESULT)
-            viewModel.onAgreeToSfResult(
-                result ?: "",
-                item
-            )
-        }
-
-        val action =
-            OrderListFragmentDirections.actionOrderListFragmentToAgreeToShippingFeeDialogFragment(
-                item
-            )
-        findNavController().navigate(action)
+    override fun onReceivedOrderClicked(item: Order) {
+        viewModel.receivedOrder(item)
     }
 
-    override fun onDeliverOrderClicked(item: Order) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("DELIVER ORDER")
-            .setMessage("Are you ready to delivery this order?")
-            .setPositiveButton("Yes") { _, _ ->
+    override fun onDeliverOrderClicked(item: Order, type: CourierType) {
+        when (type) {
+            CourierType.ADMINS -> {
                 loadingDialog.show()
                 viewModel.deliverOrder(
-                    item
+                    item,
+                    type,
+                    ""
                 )
-            }.setNegativeButton("No") { dialog, _ ->
-                dialog.dismiss()
-            }.show()
-    }
+            }
+            CourierType.JNT -> {
+                setFragmentResultListener(TRACKING_NUMBER_REQUEST) { _, bundle ->
+                    val trackingNumber = bundle.getString(TRACKING_NUMBER_RESULT)
 
-    override fun onCompleteOrderClicked(item: Order) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("COMPLETE ORDER")
-            .setMessage("Are you sure that this order is completed?")
-            .setPositiveButton("Yes") { _, _ ->
-                loadingDialog.show()
-                viewModel.completeOrder(
-                    item
-                )
-            }.setNegativeButton("No") { dialog, _ ->
-                dialog.dismiss()
-            }.show()
-    }
+                    loadingDialog.show()
+                    viewModel.deliverOrder(
+                        item,
+                        type,
+                        trackingNumber ?: ""
+                    )
+                }
 
-    private fun showSuggestShipFeeModalForAdmin(item: Order) {
-        setFragmentResultListener(SHIPPING_FEE_REQUEST) { _, bundle ->
-            val result = bundle.getString(SHIPPING_FEE_RESULT)
-
-            viewModel.onSuggestedShippingFeeResult(
-                result ?: "",
-                item
-            )
+                findNavController().navigate(R.id.action_orderListFragment_to_trackingNumberDialogFragment)
+            }
         }
+    }
 
-        val action =
-            OrderListFragmentDirections.actionOrderListFragmentToShippingFeeDialogFragment(item)
-        findNavController().navigate(action)
+    override fun onCompleteOrderClicked(item: Order, isSfShoulderedByAdmin: Boolean) {
+        loadingDialog.show()
+        viewModel.completeOrder(
+            item,
+            isSfShoulderedByAdmin
+        )
     }
 
     private fun showCancelModalForAdmin(item: Order) {
