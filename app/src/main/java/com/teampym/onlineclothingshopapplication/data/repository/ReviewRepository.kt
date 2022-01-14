@@ -8,14 +8,12 @@ import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
 import com.teampym.onlineclothingshopapplication.data.models.Review
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
-import com.teampym.onlineclothingshopapplication.data.room.Product
 import com.teampym.onlineclothingshopapplication.data.util.PRODUCTS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.REVIEWS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.presentation.client.reviews.ReviewPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -54,7 +52,10 @@ class ReviewRepository @Inject constructor(
 
             if (fiveReviewDocuments.documents.isNotEmpty()) {
                 for (document in fiveReviewDocuments.documents) {
-                    val review = document.toObject<Review>()!!.copy(id = document.id, productId = productId)
+                    val review = document.toObject<Review>()!!.copy(
+                        id = document.id,
+                        productId = productId
+                    )
                     reviewList.add(review)
                 }
             }

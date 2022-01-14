@@ -59,8 +59,8 @@ class OrderDetailListViewModel @Inject constructor(
         updateOrder(order)
     }
 
-    suspend fun checkItemIfExchangeable(item: OrderDetail): Boolean {
-        return orderDetailRepository.isExchangeable(item)
+    suspend fun checkItemIfCanReturn(item: OrderDetail): Boolean {
+        return orderDetailRepository.canReturnItem(item)
     }
 
     suspend fun checkItemIfCanAddReview(item: OrderDetail): Boolean {

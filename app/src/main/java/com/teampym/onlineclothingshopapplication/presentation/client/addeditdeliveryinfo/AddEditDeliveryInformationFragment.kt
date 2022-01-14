@@ -77,7 +77,7 @@ class AddEditDeliveryInformationFragment :
 
                 edtPostalCode.setText(it.postalCode)
                 edtDetailedAddress.setText(it.streetNumber)
-                if (it.isDefaultAddress) {
+                if (it.defaultAddress) {
                     switchDefaultAddress.isChecked = true
                     switchDefaultAddress.isEnabled = false
                 }
@@ -216,7 +216,7 @@ class AddEditDeliveryInformationFragment :
                         streetNumber = edtDetailedAddress.text.toString().trim(),
                         postalCode = edtPostalCode.text.toString().trim(),
                         userId = userId,
-                        isDefaultAddress = switchDefaultAddress.isChecked
+                        defaultAddress = switchDefaultAddress.isChecked
                     )
 
                     viewModel.onSubmitClicked(
@@ -232,7 +232,7 @@ class AddEditDeliveryInformationFragment :
                     editDeliveryInformation?.streetNumber = edtDetailedAddress.text.toString()
                     editDeliveryInformation?.postalCode = edtPostalCode.text.toString()
                     editDeliveryInformation?.userId = userId
-                    editDeliveryInformation?.isDefaultAddress = switchDefaultAddress.isChecked
+                    editDeliveryInformation?.defaultAddress = switchDefaultAddress.isChecked
                     editDeliveryInformation?.let { edited ->
                         viewModel.onSubmitClicked(
                             edited,

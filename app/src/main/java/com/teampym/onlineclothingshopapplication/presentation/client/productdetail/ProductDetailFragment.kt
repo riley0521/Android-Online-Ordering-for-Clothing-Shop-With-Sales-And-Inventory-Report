@@ -2,6 +2,7 @@ package com.teampym.onlineclothingshopapplication.presentation.client.productdet
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -15,6 +16,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayoutMediator
 import com.teampym.onlineclothingshopapplication.R
@@ -59,13 +61,13 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
         binding = FragmentProductDetailBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
 
-        adapter = ReviewAdapter()
+        adapter = ReviewAdapter(requireContext())
 
         if (args.product == null) {
             // Product ID Should not be null if Product Parcelable is null
             viewModel.getProductById(args.productId)
         } else {
-            viewModel.updateProduct(args.product!!)
+            setupViews(args.product!!)
         }
 
         // Re-assign product variable in-case if it's null and to survive process death
@@ -110,8 +112,6 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
     @SuppressLint("NotifyDataSetChanged")
     private fun setupViews(product: Product) {
         binding.apply {
-
-
             tvProductName.text = product.name
 
             tvPrice.text = getString(
@@ -134,11 +134,23 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                         )
                     findNavController().navigate(action)
                 } else {
-                    val action = ProductDetailFragmentDirections.actionProductDetailFragmentToProfileFragment(
-                        true
-                    )
+                    val action =
+                        ProductDetailFragmentDirections.actionProductDetailFragmentToProfileFragment(
+                            true
+                        )
                     findNavController().navigate(action)
                 }
+            }
+
+            if (product.productImageList.isEmpty()) {
+                product.productImageList.add(
+                    0,
+                    ProductImage(
+                        product.productId,
+                        product.fileName,
+                        product.imageUrl
+                    )
+                )
             }
 
             // submit list to the image adapter
@@ -152,19 +164,10 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
             // Attach viewPager and the tabLayout together so that they can work altogether
             TabLayoutMediator(indicatorTabLayout, viewPager) { _, _ -> }.attach()
 
-            product.productImageList.add(0, ProductImage(
-                product.productId,
-                product.fileName,
-                product.imageUrl
-            ))
-
-            if (product.productImageList.isEmpty()) {
-                tvNoAvailableImages.isVisible = true
-            }
-
             var rate = 0.0
             if (product.totalRate > 0.0 && product.numberOfReviews > 0L) {
-                rate = product.avgRate.toDouble()
+                rate = product.avgRate
+                Log.d(TAG, "setupViews: ${product.avgRate}")
             }
 
             val rateStr = "- $rate"
@@ -188,14 +191,19 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                 tvShowMoreReviews.isVisible = false
             }
 
-            if (rate == 0.0) {
+            if (product.reviewList.isEmpty()) {
                 labelNoReviews.isVisible = true
             } else {
+                labelNoReviews.isVisible = false
+
                 // submit list to the adapter if the reviewList is not empty.
                 adapter.submitList(product.reviewList)
 
                 // Show the items in the adapter in this recyclerViewReviews.
+                recyclerReviews.visibility = View.VISIBLE
+
                 recyclerReviews.setHasFixedSize(true)
+                recyclerReviews.layoutManager = LinearLayoutManager(requireContext())
                 recyclerReviews.adapter = adapter
             }
         }

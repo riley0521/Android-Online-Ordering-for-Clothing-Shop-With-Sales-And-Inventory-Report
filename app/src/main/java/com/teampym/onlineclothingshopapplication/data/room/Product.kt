@@ -7,8 +7,6 @@ import androidx.room.PrimaryKey
 import com.google.firebase.firestore.Exclude
 import com.teampym.onlineclothingshopapplication.data.models.ProductImage
 import com.teampym.onlineclothingshopapplication.data.models.Review
-import com.teampym.onlineclothingshopapplication.data.util.ProductType
-import com.teampym.onlineclothingshopapplication.data.util.Utils
 import kotlinx.android.parcel.Parcelize
 
 @Entity(tableName = "table_products")

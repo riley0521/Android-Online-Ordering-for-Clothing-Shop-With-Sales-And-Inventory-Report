@@ -130,13 +130,11 @@ class AddEditCategoryViewModel @Inject constructor(
                 imageUrl = uploadedImage.url
             }
         } else {
-            val res = categoryRepository.deleteImage(fileName)
-            if (res) {
-                if (selectedImage.value != null) {
-                    val uploadedImage = categoryRepository.uploadImage(selectedImage.value!!)
-                    fileName = uploadedImage.fileName
-                    imageUrl = uploadedImage.url
-                }
+            if (selectedImage.value != null) {
+                categoryRepository.deleteImage(fileName)
+                val uploadedImage = categoryRepository.uploadImage(selectedImage.value!!)
+                fileName = uploadedImage.fileName
+                imageUrl = uploadedImage.url
             }
         }
     }

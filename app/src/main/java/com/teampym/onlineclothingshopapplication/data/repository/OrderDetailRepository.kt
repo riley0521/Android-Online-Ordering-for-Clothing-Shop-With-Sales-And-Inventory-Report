@@ -121,7 +121,7 @@ class OrderDetailRepository @Inject constructor(
         }
     }
 
-    suspend fun isExchangeable(orderDetail: OrderDetail): Boolean {
+    suspend fun canReturnItem(orderDetail: OrderDetail): Boolean {
         return withContext(dispatcher) {
             val res = orderCollectionRef
                 .document(orderDetail.orderId)
@@ -131,7 +131,7 @@ class OrderDetailRepository @Inject constructor(
                 .await()
             if (res != null) {
                 val item = res.toObject<OrderDetail>()!!.copy(id = res.id)
-                return@withContext item.isExchangeable
+                return@withContext item.canReturn
             } else {
                 false
             }

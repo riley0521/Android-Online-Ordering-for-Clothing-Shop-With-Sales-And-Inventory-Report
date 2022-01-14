@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.widget.RatingBar
 import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
@@ -25,7 +26,8 @@ const val ADD_REVIEW_REQUEST = "add_review_request"
 const val ADD_REVIEW_RESULT = "add_review_result"
 
 @AndroidEntryPoint
-class AddReviewFragment : Fragment(R.layout.fragment_add_review) {
+class AddReviewFragment : Fragment(R.layout.fragment_add_review),
+    RatingBar.OnRatingBarChangeListener {
 
     private lateinit var binding: FragmentAddReviewBinding
 
@@ -66,9 +68,7 @@ class AddReviewFragment : Fragment(R.layout.fragment_add_review) {
                 }
             })
 
-            productRating.setOnRatingBarChangeListener { _, rating, _ ->
-                viewModel.ratingValue = rating
-            }
+            productRating.onRatingBarChangeListener = this@AddReviewFragment
 
             Glide.with(requireView())
                 .load(orderDetail.product.imageUrl)
@@ -79,13 +79,14 @@ class AddReviewFragment : Fragment(R.layout.fragment_add_review) {
 
             btnSubmit.setOnClickListener {
                 if (viewModel.ratingValue > 0) {
-                    viewModel.onSubmitClicked(orderDetail, args.userInfo)
-                    Toast.makeText(
-                        requireContext(),
-                        "Submitting review...",
-                        Toast.LENGTH_SHORT
-                    ).show()
                     loadingDialog.show()
+
+                    viewModel.onSubmitClicked(orderDetail, args.userInfo)
+                    Snackbar.make(
+                        requireView(),
+                        "Submitting review...",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
                 } else {
                     Snackbar.make(
                         requireView(),
@@ -120,5 +121,9 @@ class AddReviewFragment : Fragment(R.layout.fragment_add_review) {
                 }
             }
         }
+    }
+
+    override fun onRatingChanged(ratingBar: RatingBar?, rating: Float, fromUser: Boolean) {
+        viewModel.ratingValue = rating
     }
 }

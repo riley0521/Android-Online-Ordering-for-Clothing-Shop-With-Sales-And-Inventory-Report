@@ -22,7 +22,7 @@ import com.teampym.onlineclothingshopapplication.data.util.Status
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.OrderItemBinding
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.* // ktlint-disable no-wildcard-imports
 
 class OrderListAdapter(
     private val userType: String,
@@ -33,7 +33,9 @@ class OrderListAdapter(
     companion object {
         private val ORDER_COMPARATOR = object : DiffUtil.ItemCallback<Order>() {
             override fun areItemsTheSame(oldItem: Order, newItem: Order) =
-                oldItem.id == newItem.id
+                oldItem.id == newItem.id &&
+                    oldItem.status == newItem.status &&
+                    oldItem.recordedToSales == newItem.recordedToSales
 
             override fun areContentsTheSame(oldItem: Order, newItem: Order) =
                 oldItem == newItem
@@ -241,12 +243,6 @@ class OrderListAdapter(
                         tvSuggestedSf.isVisible = false
 
                         if (userType == UserType.CUSTOMER.name) {
-                            if (Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
-                                .minus(calendarDate.get(Calendar.DAY_OF_YEAR)) != 0
-                            ) {
-                                btnCancel.isVisible = false
-                            }
-
                             btnShipOrder.isVisible = false
                         }
 
@@ -272,7 +268,7 @@ class OrderListAdapter(
                         btnShipOrder.isVisible = false
                         btnDeliverOrder.isVisible = false
 
-                        if (userType == UserType.CUSTOMER.name && !item.isDeliveredSuccessfully) {
+                        if (userType == UserType.CUSTOMER.name && !item.receivedByUser) {
                             btnActionCompleted.text = RECEIVED_ORDER
                         } else {
                             btnActionCompleted.isVisible = false
@@ -284,7 +280,7 @@ class OrderListAdapter(
                         btnDeliverOrder.isVisible = false
 
                         if (userType == UserType.ADMIN.name) {
-                            if (!item.isRealCompleted) {
+                            if (!item.recordedToSales) {
                                 btnActionCompleted.text = ORDER_COMPLETED_OR_SHOULDERED_BY_ADMIN
                             } else {
                                 btnActionCompleted.isVisible = false

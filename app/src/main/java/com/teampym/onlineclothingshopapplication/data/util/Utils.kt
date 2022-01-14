@@ -35,6 +35,9 @@ const val SALES_COLLECTION = "Sales"
 const val MONTHS_SUB_COLLECTION = "months"
 const val DAYS_SUB_COLLECTION_OF_MONTHS = "days"
 
+const val RETURNS_COLLECTION = "Returns"
+const val IMAGES_SUB_COLLECTION = "images"
+
 const val TERMS_DATA = "Terms"
 const val SIZE_CHART_DATA = "SizeChart"
 const val FAQ_DATA = "Faqs"
@@ -62,6 +65,7 @@ const val ROOT_PATH = "public/"
 const val CATEGORY_PATH = "public/categories/"
 const val PRODUCT_PATH = "public/products/"
 const val POST_PATH = "public/posts/"
+const val PROOF_PATH = "public/proofs/"
 
 object Utils {
     fun getTimeInMillisUTC(): Long {

@@ -20,9 +20,9 @@ data class Order(
     var paymentMethod: String,
     var id: String = "",
     var status: String = Status.SHIPPING.toString(),
-    var isPaid: Boolean = false,
-    var isDeliveredSuccessfully: Boolean = false,
-    var isRealCompleted: Boolean = false,
+    var paid: Boolean = false,
+    var receivedByUser: Boolean = false,
+    var recordedToSales: Boolean = false,
     var dateOrdered: Long = Utils.getTimeInMillisUTC(),
 ) : Parcelable {
 

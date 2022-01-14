@@ -1,5 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.productdetail
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -12,7 +13,9 @@ import com.teampym.onlineclothingshopapplication.data.models.Review
 import com.teampym.onlineclothingshopapplication.data.models.getDate
 import com.teampym.onlineclothingshopapplication.databinding.ReviewItemBinding
 
-class ReviewAdapter : ListAdapter<Review, ReviewAdapter.ReviewViewHolder>(REVIEW_COMPARATOR) {
+class ReviewAdapter(
+    private val context: Context
+) : ListAdapter<Review, ReviewAdapter.ReviewViewHolder>(REVIEW_COMPARATOR) {
 
     companion object {
         private val REVIEW_COMPARATOR = object : DiffUtil.ItemCallback<Review>() {
@@ -32,7 +35,7 @@ class ReviewAdapter : ListAdapter<Review, ReviewAdapter.ReviewViewHolder>(REVIEW
     override fun onBindViewHolder(holder: ReviewViewHolder, position: Int) {
         val item = getItem(position)
 
-        if(item != null)
+        if (item != null)
             holder.bind(item)
     }
 
@@ -44,7 +47,7 @@ class ReviewAdapter : ListAdapter<Review, ReviewAdapter.ReviewViewHolder>(REVIEW
             binding.apply {
                 Glide.with(itemView)
                     .load(review.userAvatar)
-                    .centerCrop()
+                    .circleCrop()
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .error(R.drawable.ic_user)
                     .into(imgAvatar)
@@ -52,9 +55,13 @@ class ReviewAdapter : ListAdapter<Review, ReviewAdapter.ReviewViewHolder>(REVIEW
                 tvUsername.text = review.username
                 tvReview.text = review.description
                 tvDate.text = getDate(review.dateReview)
+                tvVariant.text = context.getString(
+                    R.string.placeholder_variant_size,
+                    review.productSize
+                )
+
+                productRating.rating = review.rate.toFloat()
             }
-
         }
-
     }
 }

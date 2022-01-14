@@ -153,7 +153,7 @@ class AddEditProductFragment :
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    viewModel.productName = s.toString()
+                    viewModel.productName = s.toString().lowercase()
                 }
 
                 override fun afterTextChanged(s: Editable?) {

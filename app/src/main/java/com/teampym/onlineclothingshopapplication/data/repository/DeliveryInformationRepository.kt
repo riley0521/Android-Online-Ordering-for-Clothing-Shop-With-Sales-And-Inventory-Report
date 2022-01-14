@@ -139,7 +139,7 @@ class DeliveryInformationRepository @Inject constructor(
             userCollectionRef
                 .document(userId)
                 .collection(DELIVERY_INFORMATION_SUB_COLLECTION)
-                .whereEqualTo("isDefaultAddress", true)
+                .whereEqualTo("defaultAddress", true)
                 .limit(1)
                 .get()
                 .addOnSuccessListener { querySnapshot ->
@@ -165,12 +165,12 @@ class DeliveryInformationRepository @Inject constructor(
         doc.let {
             it.reference.set(
                 mutableMapOf<String, Any>(
-                    "isDefaultAddress" to false
+                    "defaultAddress" to false
                 ),
                 SetOptions.merge()
             ).addOnSuccessListener {
                 val updateNewInfoMap = mapOf<String, Any>(
-                    "isDefaultAddress" to true
+                    "defaultAddress" to true
                 )
 
                 userCollectionRef

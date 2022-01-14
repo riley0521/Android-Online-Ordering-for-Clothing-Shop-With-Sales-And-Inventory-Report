@@ -122,15 +122,10 @@ class OrderRepository @Inject constructor(
                 .set(
                     mutableMapOf(
                         "requestedToReturn" to true
-                    )
+                    ),
+                    SetOptions.merge()
                 )
                 .await()
-
-//            notificationTokenRepository.notifyAllAdmins(
-//                null,
-//                "Return Item/s",
-//                "$username wish to return ${orderItem.product.name} (${orderItem.size})"
-//            )
 
             true
         }
@@ -180,7 +175,8 @@ class OrderRepository @Inject constructor(
                 .document(orderId)
                 .set(
                     mutableMapOf(
-                        "status" to Status.COMPLETED.name
+                        "status" to Status.COMPLETED.name,
+                        "receivedByUser" to true
                     ),
                     SetOptions.merge()
                 )
@@ -307,8 +303,7 @@ class OrderRepository @Inject constructor(
             val updateOrderStatus = mutableMapOf<String, Any>(
                 "status" to status,
                 "shippingFee" to orderDoc.shippingFee,
-                "realCompleted" to true,
-                "deliveredSuccessfully" to true
+                "recordedToSales" to true
             )
 
             if (isSfShoulderedByAdmin) {
@@ -477,7 +472,7 @@ class OrderRepository @Inject constructor(
                 )
 
                 orderDetailItem.dateSold = System.currentTimeMillis()
-                orderDetailItem.isExchangeable = true
+                orderDetailItem.canReturn = true
                 orderDetailItem.canAddReview = true
 
                 try {

@@ -247,6 +247,7 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
         setFragmentResultListener(CANCEL_REASON_REQUEST) { _, bundle ->
             val result = bundle.getString(CANCEL_REASON_RESULT)
 
+            loadingDialog.show()
             viewModel.onAdminCancelResult(
                 result ?: "",
                 item
@@ -263,6 +264,7 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
             .setTitle("CANCEL ORDER")
             .setMessage("Are you sure you want to cancel order?")
             .setPositiveButton("Yes") { _, _ ->
+                loadingDialog.show()
                 viewModel.cancelOrder(
                     item
                 )

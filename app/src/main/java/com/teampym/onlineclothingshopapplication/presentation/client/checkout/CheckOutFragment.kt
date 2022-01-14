@@ -162,10 +162,10 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                     finalUser = userWithDeliveryInfo.user
 
                     finalUser.defaultDeliveryAddress = userWithDeliveryInfo.deliveryInformation
-                        .firstOrNull { it.isDefaultAddress } ?: DeliveryInformation()
+                        .firstOrNull { it.defaultAddress } ?: DeliveryInformation()
 
                     selectedDeliveryInformation = userWithDeliveryInfo.deliveryInformation
-                        .firstOrNull { it.isDefaultAddress } ?: DeliveryInformation()
+                        .firstOrNull { it.defaultAddress } ?: DeliveryInformation()
 
                     binding.apply {
 

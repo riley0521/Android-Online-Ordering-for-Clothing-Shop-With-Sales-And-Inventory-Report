@@ -18,8 +18,8 @@ data class OrderDetail(
     var id: String = "",
     var dateSold: Long = 0,
     var requestedToReturn: Boolean = false,
-    var isReturned: Boolean = false,
-    var isExchangeable: Boolean = false,
+    var returned: Boolean = false,
+    var canReturn: Boolean = false,
     var canAddReview: Boolean = false,
     var hasAddedReview: Boolean = false
 ) : Parcelable {

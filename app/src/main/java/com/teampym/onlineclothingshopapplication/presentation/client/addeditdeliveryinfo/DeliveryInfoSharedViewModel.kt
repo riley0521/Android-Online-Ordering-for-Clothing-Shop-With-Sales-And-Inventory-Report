@@ -279,7 +279,7 @@ class DeliveryInfoSharedViewModel @Inject constructor(
         withContext(Dispatchers.IO) {
             deliveryInformationDao.insert(deliveryInfo)
             try {
-                if (deliveryInfo.isDefaultAddress) {
+                if (deliveryInfo.defaultAddress) {
                     deliveryInformationRepository.changeDefault(
                         deliveryInfo.userId,
                         deliveryInfo

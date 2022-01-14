@@ -5,6 +5,12 @@ import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 data class UploadedImage(
-    val url: String,
-    val fileName: String
-) : Parcelable
+    var url: String,
+    var fileName: String
+) : Parcelable {
+
+    constructor() : this(
+        "",
+        ""
+    )
+}

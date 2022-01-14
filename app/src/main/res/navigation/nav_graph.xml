@@ -319,6 +319,9 @@
         <argument
             android:name="orderId"
             app:argType="string" />
+        <action
+            android:id="@+id/action_orderDetailListFragment_to_requestReturnItemFragment"
+            app:destination="@id/requestReturnItemFragment" />
     </fragment><action android:id="@+id/action_global_categoryFragment" app:destination="@id/categoryFragment"/>
     <fragment
         android:id="@+id/addEditCategoryFragment"
@@ -496,4 +499,22 @@
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.others.TrackingNumberDialogFragment"
         android:label="fragment_tracking_number_dialog"
         tools:layout="@layout/fragment_tracking_number_dialog" />
+    <fragment
+        android:id="@+id/requestReturnItemFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.request_return_item.RequestReturnItemFragment"
+        android:label="fragment_request_return_item"
+        tools:layout="@layout/fragment_request_return_item" >
+        <argument
+            android:name="orderItem"
+            app:argType="com.teampym.onlineclothingshopapplication.data.models.OrderDetail"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="orderItemId"
+            app:argType="string" />
+        <argument
+            android:name="isViewing"
+            app:argType="boolean"
+            android:defaultValue="false" />
+    </fragment>
 </navigation>

@@ -260,13 +260,11 @@ class AddEditProductViewModel @Inject constructor(
                 imageUrl = uploadedImage.url
             }
         } else {
-            val res = productRepository.deleteImage(fileName)
-            if (res) {
-                if (selectedProductImage.value != null) {
-                    val uploadedImage = productRepository.uploadImage(selectedProductImage.value!!)
-                    fileName = uploadedImage.fileName
-                    imageUrl = uploadedImage.url
-                }
+            if (selectedProductImage.value != null) {
+                productRepository.deleteImage(fileName)
+                val uploadedImage = productRepository.uploadImage(selectedProductImage.value!!)
+                fileName = uploadedImage.fileName
+                imageUrl = uploadedImage.url
             }
         }
     }

@@ -43,7 +43,7 @@ class SalesRepository @Inject constructor(
                     totalSaleOfDay += it.subTotal
                 }
 
-                val dayRef = salesCollectionRef.document(year)
+                val dayDoc = salesCollectionRef.document(year)
                     .collection(MONTHS_SUB_COLLECTION)
                     .document(month)
                     .collection(DAYS_SUB_COLLECTION_OF_MONTHS)
@@ -53,10 +53,52 @@ class SalesRepository @Inject constructor(
 
                 // There is multiple transactions in a day rather than month or year
                 // That is why you need to reference it first instead of inserting it directly in db
-                dayRef?.let { doc ->
-                    val dayObj = doc.toObject<DaySale>()!!.copy(id = doc.id)
+                if (dayDoc.data != null) {
+                    val dayObj = dayDoc.toObject<DaySale>()!!.copy(id = dayDoc.id)
                     dayObj.totalSale += (totalSaleOfDay + shippingFee)
-                    doc.reference.set(dayObj, SetOptions.merge()).await()
+                    dayDoc.reference.set(dayObj, SetOptions.merge()).await()
+                } else {
+                    // If day doc is null. It means that year or month is not existing yet.
+                    // So we will create it here
+                    salesCollectionRef
+                        .document(year)
+                        .set(
+                            mapOf(
+                                "id" to year,
+                                "totalSale" to 0
+                            ),
+                            SetOptions.merge()
+                        )
+                        .await()
+
+                    salesCollectionRef
+                        .document(year)
+                        .collection(MONTHS_SUB_COLLECTION)
+                        .document(month)
+                        .set(
+                            mapOf(
+                                "id" to month,
+                                "totalSale" to 0
+                            ),
+                            SetOptions.merge()
+                        ).await()
+
+                    salesCollectionRef
+                        .document(year)
+                        .collection(MONTHS_SUB_COLLECTION)
+                        .document(month)
+                        .collection(DAYS_SUB_COLLECTION_OF_MONTHS)
+                        .document(day)
+                        .set(
+                            mapOf(
+                                "id" to day,
+                                "totalSale" to 0
+                            ),
+                            SetOptions.merge()
+                        ).await()
+
+                    // Recur by calling itself then this should not be called twice.
+                    insert(soldItems, shippingFee)
                 }
 
                 var totalSaleOfMonth = 0.0

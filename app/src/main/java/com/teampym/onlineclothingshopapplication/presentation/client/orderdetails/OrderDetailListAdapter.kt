@@ -59,12 +59,12 @@ class OrderDetailListAdapter(
 
         init {
             binding.apply {
-                btnExchangeItem.setOnClickListener {
+                btnReturnItem.setOnClickListener {
                     val pos = absoluteAdapterPosition
                     if (pos != RecyclerView.NO_POSITION) {
                         val item = getItem(pos)
                         if (item != null) {
-                            listener.onExchangeItemClicked(item)
+                            listener.onReturnItemClicked(item)
                         }
                     }
                 }
@@ -111,17 +111,14 @@ class OrderDetailListAdapter(
                 txtSubtotal.text = subTotalStr
 
                 if (user.userType == UserType.ADMIN.name) {
-                    btnExchangeItem.isVisible = false
+                    btnReturnItem.isVisible = false
                 }
 
                 if (item.dateSold == 0L) {
                     labelDateSold.isVisible = false
                     txtDateSold.isVisible = false
 
-                    labelIsExchangeable.isVisible = false
-                    txtIsExchangeable.isVisible = false
-
-                    btnExchangeItem.isVisible = false
+                    btnReturnItem.isVisible = false
                 } else {
                     val calendarDate = Calendar.getInstance()
                     calendarDate.timeInMillis = item.dateSold
@@ -130,13 +127,10 @@ class OrderDetailListAdapter(
                         SimpleDateFormat("MM/dd/yyyy hh:mm:ss a").format(calendarDate.time)
 
                     txtDateSold.text = formattedDate
-                    txtIsExchangeable.text = "Yes"
 
                     if (user.userType == UserType.CUSTOMER.name) {
-                        labelIsExchangeable.isVisible = false
-                        txtIsExchangeable.isVisible = false
-
                         btnAddReview.isVisible = !item.hasAddedReview
+                        btnReturnItem.isVisible = !item.requestedToReturn
                     }
                 }
             }
@@ -144,7 +138,7 @@ class OrderDetailListAdapter(
     }
 
     interface OrderDetailListener {
-        fun onExchangeItemClicked(item: OrderDetail): Job
+        fun onReturnItemClicked(item: OrderDetail): Job
         fun onAddReviewClicked(item: OrderDetail): Job
     }
 }

@@ -43,6 +43,20 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
                         )
                         .createPendingIntent()
                 }
+                notificationData["orderItemId"]?.isNotBlank()!! -> {
+                    val orderItemId = notificationData["orderItemId"]
+
+                    pendingIntent = NavDeepLinkBuilder(this)
+                        .setGraph(R.navigation.nav_graph)
+                        .setDestination(R.id.requestReturnItemFragment)
+                        .setArguments(
+                            bundleOf(
+                                "orderItemId" to orderItemId,
+                                "isViewing" to true
+                            )
+                        )
+                        .createPendingIntent()
+                }
                 notificationData["postId"]?.isNotBlank()!! -> {
                 }
                 notificationData["productId"]?.isNotBlank()!! -> {

@@ -174,33 +174,33 @@ class OrderDetailListFragment :
         ).show()
     }
 
-    override fun onExchangeItemClicked(item: OrderDetail) = CoroutineScope(Dispatchers.IO).launch {
+    override fun onReturnItemClicked(item: OrderDetail) = CoroutineScope(Dispatchers.IO).launch {
         withContext(Dispatchers.Main) {
             loadingDialog.show()
         }
 
-        val isExchangeable = viewModel.checkItemIfExchangeable(item)
+        val canReturnItem = viewModel.checkItemIfCanReturn(item)
 
         withContext(Dispatchers.Main) {
             loadingDialog.dismiss()
 
-            if (isExchangeable) {
-                Toast.makeText(
-                    requireContext(),
-                    "item ${item.product.productId} is exchangeable",
-                    Toast.LENGTH_SHORT
-                ).show()
+            if (canReturnItem) {
+                val action = OrderDetailListFragmentDirections.actionOrderDetailListFragmentToRequestReturnItemFragment(
+                    item,
+                    item.id,
+                    false
+                )
+                findNavController().navigate(action)
             } else {
-                Toast.makeText(
-                    requireContext(),
-                    "item ${item.product.productId} clicked",
-                    Toast.LENGTH_SHORT
+                Snackbar.make(
+                    requireView(),
+                    "You already request to return ${item.product.name} (${item.size})",
+                    Snackbar.LENGTH_SHORT
                 ).show()
             }
         }
     }
 
-    // TODO(Navigate to add review fragment)
     override fun onAddReviewClicked(item: OrderDetail) = CoroutineScope(Dispatchers.IO).launch {
         withContext(Dispatchers.Main) {
             loadingDialog.show()
@@ -237,7 +237,7 @@ class OrderDetailListFragment :
             } else {
                 Snackbar.make(
                     requireView(),
-                    "item ${item.product.productId} clicked",
+                    "Review for item ${item.product.name} (${item.size}) is submitted.",
                     Snackbar.LENGTH_SHORT
                 ).show()
             }

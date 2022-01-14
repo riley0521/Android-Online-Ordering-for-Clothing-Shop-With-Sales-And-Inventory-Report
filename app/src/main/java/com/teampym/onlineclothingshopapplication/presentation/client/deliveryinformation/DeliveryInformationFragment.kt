@@ -36,7 +36,7 @@ class DeliveryInformationFragment :
 
         viewModel.deliveryInformation.observe(viewLifecycleOwner) { deliveryInfoList ->
             if (deliveryInfoList.isNotEmpty()) {
-                val sortedList = deliveryInfoList.sortedByDescending { it.isDefaultAddress }
+                val sortedList = deliveryInfoList.sortedByDescending { it.defaultAddress }
                 adapter.submitList(sortedList)
                 binding.recyclerDeliveryInformation.setHasFixedSize(true)
                 binding.recyclerDeliveryInformation.visibility = View.VISIBLE

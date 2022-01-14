@@ -90,7 +90,11 @@ class OrderListViewModel @Inject constructor(
                 }
             }
 
-            orderRepository.getSome(queryProducts, user.userId, user.userType).flow.cachedIn(
+            orderRepository.getSome(
+                queryProducts,
+                user.userId,
+                user.userType
+            ).flow.cachedIn(
                 viewModelScope
             )
         }.asLiveData() as MutableLiveData<PagingData<Order>>
@@ -157,58 +161,59 @@ class OrderListViewModel @Inject constructor(
         }
     }
 
-    fun deliverOrder(order: Order, type: CourierType, trackingNumber: String) = viewModelScope.launch {
-        val session = _userSessionFlow.first()
-        val userInformation = userInformationDao.getCurrentUser(session.userId)
+    fun deliverOrder(order: Order, type: CourierType, trackingNumber: String) =
+        viewModelScope.launch {
+            val session = _userSessionFlow.first()
+            val userInformation = userInformationDao.getCurrentUser(session.userId)
 
-        userInformation?.let {
-            val res = orderRepository.updateOrderStatus(
-                username = "${userInformation.firstName} ${userInformation.lastName}",
-                userType = userInformation.userType,
-                orderId = order.id,
-                status = Status.DELIVERY.name,
-                false,
-                trackingNumber,
-                type.name
-            )
-
-            if (res) {
-
-                val data = NotificationData(
-                    title = "Order (${order.id.take(order.id.length / 2)}...) is on it's way.",
-                    body = "Buckle up because your order is on it's way to your home!",
-                    orderId = order.id
+            userInformation?.let {
+                val res = orderRepository.updateOrderStatus(
+                    username = "${userInformation.firstName} ${userInformation.lastName}",
+                    userType = userInformation.userType,
+                    orderId = order.id,
+                    status = Status.DELIVERY.name,
+                    false,
+                    trackingNumber,
+                    type.name
                 )
 
-                val notificationTokenList = notificationTokenRepository.getAll(order.userId)
+                if (res) {
 
-                if (notificationTokenList.isNotEmpty()) {
-                    val tokenList: List<String> = notificationTokenList.map {
-                        it.token
+                    val data = NotificationData(
+                        title = "Order (${order.id.take(order.id.length / 2)}...) is on it's way.",
+                        body = "Buckle up because your order is on it's way to your home!",
+                        orderId = order.id
+                    )
+
+                    val notificationTokenList = notificationTokenRepository.getAll(order.userId)
+
+                    if (notificationTokenList.isNotEmpty()) {
+                        val tokenList: List<String> = notificationTokenList.map {
+                            it.token
+                        }
+
+                        val notificationSingle = NotificationSingle(
+                            data = data,
+                            tokenList = tokenList
+                        )
+
+                        service.notifySingleUser(notificationSingle)
                     }
 
-                    val notificationSingle = NotificationSingle(
-                        data = data,
-                        tokenList = tokenList
+                    _orderListChannel.send(
+                        OrderListEvent.ShowSuccessMessage(
+                            "Changed Order status to 'For Delivery' successfully!"
+                        )
                     )
-
-                    service.notifySingleUser(notificationSingle)
+                } else {
+                    _orderListChannel.send(
+                        OrderListEvent.ShowErrorMessage(
+                            "Changing Order status to 'For Delivery' failed. Please try again."
+                        )
+                    )
                 }
-
-                _orderListChannel.send(
-                    OrderListEvent.ShowSuccessMessage(
-                        "Changed Order status to 'For Delivery' successfully!"
-                    )
-                )
-            } else {
-                _orderListChannel.send(
-                    OrderListEvent.ShowErrorMessage(
-                        "Changing Order status to 'For Delivery' failed. Please try again."
-                    )
-                )
             }
         }
-    }
 
     fun shipOrder(order: Order) = viewModelScope.launch {
         val session = _userSessionFlow.first()
@@ -264,11 +269,39 @@ class OrderListViewModel @Inject constructor(
 
     fun receivedOrder(order: Order) = viewModelScope.launch {
 
-        val res = orderRepository.updateStatusToCompleted(
+        val isUpdated = orderRepository.updateStatusToCompleted(
             orderId = order.id
         )
 
-        if (res) {
+        if (isUpdated) {
+
+            val res = db.collectionGroup(NOTIFICATION_TOKENS_SUB_COLLECTION)
+                .whereEqualTo("userType", UserType.ADMIN.name)
+                .get()
+                .await()
+
+            if (res != null && res.documents.isNotEmpty()) {
+                val tokenList = mutableListOf<String>()
+
+                for (doc in res.documents) {
+                    val token = doc.toObject<NotificationToken>()!!.copy(id = doc.id)
+                    tokenList.add(token.token)
+                }
+
+                val data = NotificationData(
+                    title = "${order.deliveryInformation.name} received your item/s.",
+                    body = "Order ${order.id}",
+                    orderId = order.id,
+                )
+
+                val notificationSingle = NotificationSingle(
+                    data = data,
+                    tokenList = tokenList
+                )
+
+                service.notifySingleUser(notificationSingle)
+            }
+
             _orderListChannel.send(
                 OrderListEvent.ShowSuccessMessage(
                     "Thanks for ordering to us. Please come back later!"
