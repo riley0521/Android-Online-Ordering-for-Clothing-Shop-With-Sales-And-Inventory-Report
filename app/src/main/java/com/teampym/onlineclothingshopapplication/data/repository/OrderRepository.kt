@@ -109,6 +109,26 @@ class OrderRepository @Inject constructor(
         }
     }
 
+    suspend fun updateOrderToPaid(orderId: String): Boolean {
+        return withContext(dispatcher) {
+
+            try {
+                orderCollectionRef
+                    .document(orderId)
+                    .set(
+                        mapOf(
+                            "paid" to true
+                        ),
+                        SetOptions.merge()
+                    ).await()
+
+                return@withContext true
+            } catch (ex: java.lang.Exception) {
+                return@withContext false
+            }
+        }
+    }
+
     // Notify all admins about the items that the user wants to return.
     suspend fun returnItem(
         orderItem: OrderDetail,

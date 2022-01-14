@@ -61,6 +61,8 @@ class CheckOutViewModel @Inject constructor(
         _selectedPaymentMethod.postValue(preferencesManager.preferencesFlow.first().paymentMethod)
     }
 
+    var orderId = ""
+
     fun placeOrder(
         userInformation: UserInformation,
         cartList: List<Cart>,
@@ -115,6 +117,7 @@ class CheckOutViewModel @Inject constructor(
                 service.notifySingleUser(notificationSingle)
             }
 
+            orderId = createdOrder.id
             _checkOutChannel.send(CheckOutEvent.ShowSuccessfulMessage("Thank you for placing your order!"))
         } else {
             _checkOutChannel.send(CheckOutEvent.ShowFailedMessage("Failed to place order. Please try again later."))

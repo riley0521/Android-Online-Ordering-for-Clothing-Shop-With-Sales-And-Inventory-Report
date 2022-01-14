@@ -34,7 +34,7 @@ class WishListFragment : Fragment(R.layout.fragment_wish_list), WishListAdapter.
         binding = FragmentWishListBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
 
-        adapter = WishListAdapter(this)
+        adapter = WishListAdapter(this, requireContext())
 
         fetchWishList()
 

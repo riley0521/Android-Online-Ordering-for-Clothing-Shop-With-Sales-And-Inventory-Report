@@ -16,7 +16,6 @@
         android:theme="@style/splashScreenTheme"
         android:usesCleartextTraffic="true"
         tools:targetApi="m">
-
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -24,12 +23,8 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-
-
             </intent-filter>
-
             <intent-filter>
-
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />

@@ -200,6 +200,9 @@
         <action
             android:id="@+id/action_checkOutFragment_to_selectPaymentMethodFragment"
             app:destination="@id/selectPaymentMethodFragment" />
+        <action
+            android:id="@+id/action_checkOutFragment_to_paymentFragment"
+            app:destination="@id/paymentFragment" />
     </fragment>
     <fragment
         android:id="@+id/deliveryInformationFragment"
@@ -516,5 +519,17 @@
             android:name="isViewing"
             app:argType="boolean"
             android:defaultValue="false" />
+    </fragment>
+    <fragment
+        android:id="@+id/paymentFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.payment.PaymentFragment"
+        android:label="fragment_payment"
+        tools:layout="@layout/fragment_payment" >
+        <argument
+            android:name="totalCost"
+            app:argType="float" />
+        <argument
+            android:name="orderId"
+            app:argType="string" />
     </fragment>
 </navigation>

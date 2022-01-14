@@ -224,6 +224,13 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
                             if (paymentMethodEnum == PaymentMethod.CREDIT_DEBIT) {
                                 Log.d(TAG, "Total Cost to pay: $totalCost")
+
+                                val action = CheckOutFragmentDirections.actionCheckOutFragmentToPaymentFragment(
+                                    totalCost.toFloat(),
+                                    viewModel.orderId
+                                )
+                                findNavController().navigate(action)
+                                return@collectLatest
                             }
 
                             Toast.makeText(requireContext(), event.msg, Toast.LENGTH_SHORT)
