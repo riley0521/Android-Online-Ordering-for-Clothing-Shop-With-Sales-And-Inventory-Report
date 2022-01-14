@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Order
+import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
 import com.teampym.onlineclothingshopapplication.data.util.CourierType
 import com.teampym.onlineclothingshopapplication.data.util.ORDER_COMPLETED_OR_SHOULDERED_BY_ADMIN
 import com.teampym.onlineclothingshopapplication.data.util.RECEIVED_ORDER
@@ -239,9 +240,6 @@ class OrderListAdapter(
 
                 when (item.status) {
                     Status.SHIPPING.name -> {
-                        labelShippingFee.isVisible = false
-                        tvSuggestedSf.isVisible = false
-
                         if (userType == UserType.CUSTOMER.name) {
                             btnShipOrder.isVisible = false
                         }
@@ -250,11 +248,6 @@ class OrderListAdapter(
                         btnDeliverOrder.isVisible = false
                     }
                     Status.SHIPPED.name -> {
-                        tvSuggestedSf.text = context.getString(
-                            R.string.placeholder_price,
-                            item.shippingFee
-                        )
-
                         if (userType == UserType.CUSTOMER.name) {
                             btnDeliverOrder.isVisible = false
                         }
@@ -289,14 +282,7 @@ class OrderListAdapter(
                             btnActionCompleted.isVisible = false
                         }
                     }
-                    Status.RETURNED.name -> {
-                        labelShippingFee.isVisible = false
-                        tvSuggestedSf.isVisible = false
-                    }
                     Status.CANCELED.name -> {
-                        labelShippingFee.isVisible = false
-                        tvSuggestedSf.isVisible = false
-
                         btnCancel.isVisible = false
                         btnShipOrder.isVisible = false
                         btnDeliverOrder.isVisible = false
@@ -315,6 +301,10 @@ class OrderListAdapter(
                     tvAdditionalNote.isVisible = false
                 }
 
+                tvSuggestedSf.text = context.getString(
+                    R.string.placeholder_price,
+                    item.shippingFee
+                )
                 tvOrderId.text = item.id
                 tvUsername.text = item.deliveryInformation.name
                 tvTotalCost.text = context.getString(
@@ -335,13 +325,32 @@ class OrderListAdapter(
                 tvDeliveryAddress.text = completeAddress
 
                 tvStatus.text = item.status
+
+                val paymentMethodStr = when(item.paymentMethod) {
+                    PaymentMethod.COD.name -> {
+                        "Cash On Delivery"
+                    }
+                    PaymentMethod.CREDIT_DEBIT.name -> {
+                        "Credit/Debit Card"
+                    }
+                    else -> ""
+                }
+
+                tvPaymentMethod.text = context.getString(
+                    R.string.placeholder_payment_method,
+                    paymentMethodStr
+                )
+                tvPaid.text = context.getString(
+                    R.string.placeholder_paid,
+                    if (item.paid) "Yes" else "No"
+                )
                 tvCourierType.text = context.getString(
                     R.string.placeholder_courier_type,
-                    item.courierType
+                    if (item.courierType.isNotBlank()) item.courierType else "Not available"
                 )
                 tvTrackingNumber.text = context.getString(
                     R.string.placeholder_tracking_number,
-                    item.trackingNumber
+                    if (item.trackingNumber.isNotBlank()) item.trackingNumber else "Not available"
                 )
                 tvNumberOfItems.text = item.numberOfItems.toString()
 

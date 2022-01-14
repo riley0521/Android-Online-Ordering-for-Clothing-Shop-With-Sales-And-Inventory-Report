@@ -264,5 +264,11 @@
     <string name="placeholder_tracking_number">Tracking Number: %1$s</string>
     <string name="hint_input_reason_for_returning_item">Input Reason for returning item</string>
     <string name="btn_add_photos_for_proof">ADD PHOTOS FOR PROOF</string>
+    <string name="placeholder_payment_method">Payment Method: %1$s</string>
+    <string name="placeholder_paid">Paid: %1$s</string>
+    <string name="action_show_requested_to_return_item_s">Show Requested To Return Item/s</string>
+    <string name="action_show_successful_returned_item_s">Show Successful Returned Item/s</string>
+    <string name="btn_view_reason">View Reason</string>
+    <string name="btn_confirm_return_item">Confirm Return Item</string>
 
 </resources>

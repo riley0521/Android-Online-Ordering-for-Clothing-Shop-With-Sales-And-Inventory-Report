@@ -1,6 +1,9 @@
 package com.teampym.onlineclothingshopapplication.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.di.IoDispatcher
@@ -9,10 +12,10 @@ import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.ORDER_DETAILS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
+import com.teampym.onlineclothingshopapplication.presentation.client.return_items.ReturnItemsPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -120,6 +123,17 @@ class OrderDetailRepository @Inject constructor(
             }
         }
     }
+
+    fun getAllRequestedToReturnItems(queryOrderItems: Query) =
+        Pager(
+            PagingConfig(
+                pageSize = 30,
+                prefetchDistance = 30,
+                enablePlaceholders = false
+            )
+        ) {
+            ReturnItemsPagingSource(queryOrderItems)
+        }
 
     suspend fun canReturnItem(orderDetail: OrderDetail): Boolean {
         return withContext(dispatcher) {

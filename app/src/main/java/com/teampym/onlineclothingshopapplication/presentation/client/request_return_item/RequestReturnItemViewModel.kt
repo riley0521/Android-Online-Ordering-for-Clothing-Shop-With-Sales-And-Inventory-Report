@@ -57,7 +57,6 @@ class RequestReturnItemViewModel @Inject constructor(
 
     fun fetchReturnItem(orderItemId: String) = viewModelScope.launch {
         returnItem.postValue(returnRepository.getByOrderItemId(orderItemId))
-        uploadImages.postValue(returnItem.value?.listOfImage)
     }
 
     fun updateImageListUri(list: MutableList<Uri>) {

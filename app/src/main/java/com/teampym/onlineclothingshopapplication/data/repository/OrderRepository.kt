@@ -34,6 +34,7 @@ class OrderRepository @Inject constructor(
     private val productRepository: ProductRepository,
     private val auditTrailRepository: AuditTrailRepository,
     private val salesRepository: SalesRepository,
+    private val returnRepository: ReturnRepository,
     @IoDispatcher val dispatcher: CoroutineDispatcher
 ) {
 
@@ -167,6 +168,8 @@ class OrderRepository @Inject constructor(
                     SetOptions.merge()
                 )
                 .await()
+
+            returnRepository.delete(orderItem.id)
 
             true
         }

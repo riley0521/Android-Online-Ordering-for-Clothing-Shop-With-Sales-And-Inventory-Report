@@ -47,16 +47,14 @@ class ReturnRepository @Inject constructor(
                     .await()
 
                 imageDocs?.let {
-                    for (item in imageDocs) {
-                        val imageObj = item.toObject<UploadedImage>()
+                    for (item in imageDocs.documents) {
+                        val imageObj = item.toObject<UploadedImage>()!!
 
                         imageList.add(imageObj)
                     }
                 }
 
-                returnObj.listOfImage = imageList
-
-                return@withContext returnObj
+                return@withContext returnObj.copy(listOfImage = imageList)
             }
             null
         }
@@ -84,6 +82,30 @@ class ReturnRepository @Inject constructor(
             } catch (ex: Exception) {
                 return@withContext false
             }
+        }
+    }
+
+    suspend fun delete(orderItemId: String): Boolean {
+        return withContext(dispatcher) {
+            val imageDocs = returnItemsCollectionRef
+                .document(orderItemId)
+                .collection(IMAGES_SUB_COLLECTION)
+                .get()
+                .await()
+
+            imageDocs?.let {
+                for (doc in imageDocs.documents) {
+                    doc.reference.delete().await()
+                }
+
+                returnItemsCollectionRef
+                    .document(orderItemId)
+                    .delete()
+                    .await()
+
+                return@withContext true
+            }
+            return@withContext false
         }
     }
 

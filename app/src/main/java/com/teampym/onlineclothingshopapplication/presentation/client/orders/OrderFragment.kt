@@ -66,11 +66,7 @@ class OrderFragment : Fragment(R.layout.fragment_order) {
             }
 
             btnViewReturnedOrders.setOnClickListener {
-                Snackbar.make(
-                    requireView(),
-                    "Gagawin pa lang",
-                    Snackbar.LENGTH_SHORT
-                ).show()
+                findNavController().navigate(R.id.action_orderFragment_to_returnItemsFragment)
             }
 
             btnViewCancelledOrders.setOnClickListener {

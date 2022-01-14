@@ -66,6 +66,9 @@
             app:destination="@id/profileFragment"
             app:popUpTo="@+id/orderFragment"
             app:popUpToInclusive="true"/>
+        <action
+            android:id="@+id/action_orderFragment_to_returnItemsFragment"
+            app:destination="@id/returnItemsFragment" />
     </fragment>
     <fragment
         android:id="@+id/productFragment"
@@ -531,5 +534,14 @@
         <argument
             android:name="orderId"
             app:argType="string" />
+    </fragment>
+    <fragment
+        android:id="@+id/returnItemsFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.client.return_items.ReturnItemsFragment"
+        android:label="fragment_return_items"
+        tools:layout="@layout/fragment_return_items" >
+        <action
+            android:id="@+id/action_returnItemsFragment_to_requestReturnItemFragment"
+            app:destination="@id/requestReturnItemFragment" />
     </fragment>
 </navigation>

@@ -49,7 +49,7 @@ class RequestReturnItemFragment :
 
         val orderItem: OrderDetail? = args.orderItem
 
-        if (args.isViewing && orderItem == null) {
+        if (args.isViewing || orderItem == null) {
             binding.btnAddPhotos.isVisible = false
             binding.btnSubmit.isVisible = false
             binding.etReturnReason.isEnabled = false
@@ -67,6 +67,7 @@ class RequestReturnItemFragment :
                 "Product ${it.productDetail}"
 
             binding.etReturnReason.setText(it.reason)
+            viewModel.uploadImages.postValue(it.listOfImage)
         }
 
         viewModel.imageListUri.observe(viewLifecycleOwner) {

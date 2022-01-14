@@ -102,13 +102,18 @@ class OrderDetailListAdapter(
                 tvProductName.text = item.product.name
                 tvSize.text = item.size
 
-                val priceStr = "$" + item.product.price
-                tvPrice.text = priceStr
+
+                tvPrice.text = context.getString(
+                    R.string.placeholder_price,
+                    item.product.price
+                )
 
                 txtQuantity.text = item.quantity.toString()
 
-                val subTotalStr = "$" + item.calculatedPrice
-                txtSubtotal.text = subTotalStr
+                txtSubtotal.text = context.getString(
+                    R.string.placeholder_price,
+                    item.subTotal
+                )
 
                 if (user.userType == UserType.ADMIN.name) {
                     btnReturnItem.isVisible = false

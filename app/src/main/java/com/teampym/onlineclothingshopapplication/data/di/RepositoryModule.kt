@@ -120,6 +120,7 @@ object RepositoryModule {
         productRepository: ProductRepository,
         auditTrailRepository: AuditTrailRepository,
         salesRepository: SalesRepository,
+        returnRepository: ReturnRepository,
         @IoDispatcher dispatcher: CoroutineDispatcher
     ) = OrderRepository(
         db,
@@ -127,6 +128,7 @@ object RepositoryModule {
         productRepository,
         auditTrailRepository,
         salesRepository,
+        returnRepository,
         dispatcher
     )
 

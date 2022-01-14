@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_sort"
+        android:icon="@drawable/ic_sort"
+        android:title="@string/action_sort"
+        android:visible="false"
+        app:showAsAction="ifRoom">
+
+        <menu>
+            <item
+                android:id="@+id/by_requested"
+                android:title="@string/action_show_requested_to_return_item_s" />
+
+            <item
+                android:id="@+id/by_returned"
+                android:title="@string/action_show_successful_returned_item_s" />
+        </menu>
+
+    </item>
+
+</menu>
