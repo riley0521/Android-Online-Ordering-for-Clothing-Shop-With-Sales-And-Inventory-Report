@@ -1,5 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.wishlist
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -12,7 +13,8 @@ import com.teampym.onlineclothingshopapplication.data.models.WishItem
 import com.teampym.onlineclothingshopapplication.databinding.WishItemBinding
 
 class WishListAdapter(
-    private val listener: WishListListener
+    private val listener: WishListListener,
+    private val context: Context
 ) : ListAdapter<WishItem, WishListAdapter.WishListViewHolder>(
     WISH_ITEM_COMPARATOR
 ) {
@@ -75,15 +77,10 @@ class WishListAdapter(
                     .into(imgProduct)
 
                 tvProductName.text = item.name
-
-                val priceStr = "$" + "%.2f".format(item.price)
-                tvPrice.text = priceStr
-
-                productRating.rating = item.avgRate.toFloat()
-
-                if (!item.avgRate.isNaN()) {
-                    labelRate.text = item.avgRate.toString()
-                }
+                tvPrice.text = context.getString(
+                    R.string.placeholder_price,
+                    item.price
+                )
             }
         }
     }

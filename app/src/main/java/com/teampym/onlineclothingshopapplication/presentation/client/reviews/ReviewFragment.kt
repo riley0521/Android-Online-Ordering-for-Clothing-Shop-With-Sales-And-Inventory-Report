@@ -4,15 +4,11 @@ import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.databinding.FragmentReviewBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class ReviewsFragment : Fragment(R.layout.fragment_review) {
@@ -32,14 +28,12 @@ class ReviewsFragment : Fragment(R.layout.fragment_review) {
 
         adapter = ReviewAdapter(requireContext())
 
-        lifecycleScope.launchWhenStarted {
-            viewModel.productId.postValue(args.productId)
+        viewModel.productId.postValue(args.productId)
 
-            setupViews()
-        }
+        setupViews()
     }
 
-    private fun setupViews() = CoroutineScope(Dispatchers.Main).launch {
+    private fun setupViews() {
         viewModel.reviews.observe(viewLifecycleOwner) {
             binding.refreshLayout.isRefreshing = false
 

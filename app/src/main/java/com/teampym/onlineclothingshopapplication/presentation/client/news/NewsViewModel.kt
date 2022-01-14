@@ -131,7 +131,7 @@ class NewsViewModel @Inject constructor(
 
                         val data = NotificationData(
                             title = "Someone liked your post",
-                            body = "Post with id ${post.id}",
+                            body = "Post with title '${post.title}'",
                             postId = post.id,
                         )
 

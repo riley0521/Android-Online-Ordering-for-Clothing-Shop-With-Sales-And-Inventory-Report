@@ -76,7 +76,7 @@ class NewsAdapter constructor(
                             binding.imgMenu
                         )
 
-                        showPopUpMenu.menu.add(Menu.NONE, 1, 1, REMOVE_PRODUCT_BUTTON)
+                        showPopUpMenu.menu.add(Menu.NONE, 1, 1, "Remove Post")
 
                         showPopUpMenu.setOnMenuItemClickListener { menuItem ->
                             when (menuItem.itemId) {
