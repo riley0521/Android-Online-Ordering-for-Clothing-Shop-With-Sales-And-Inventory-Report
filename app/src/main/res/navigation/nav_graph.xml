@@ -526,8 +526,8 @@
     <fragment
         android:id="@+id/paymentFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.payment.PaymentFragment"
-        android:label="fragment_payment"
-        tools:layout="@layout/fragment_payment" >
+        android:label="Payment"
+        tools:layout="@layout/fragment_payment">
         <argument
             android:name="totalCost"
             app:argType="float" />

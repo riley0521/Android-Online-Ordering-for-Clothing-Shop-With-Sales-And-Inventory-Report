@@ -38,6 +38,7 @@ class OrderListAdapter(
             override fun areItemsTheSame(oldItem: Order, newItem: Order) =
                 oldItem.id == newItem.id &&
                     oldItem.status == newItem.status &&
+                    oldItem.receivedByUser && newItem.receivedByUser &&
                     oldItem.recordedToSales == newItem.recordedToSales
 
             override fun areContentsTheSame(oldItem: Order, newItem: Order) =

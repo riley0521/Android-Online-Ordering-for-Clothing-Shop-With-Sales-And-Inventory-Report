@@ -266,14 +266,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 viewModel.sendVerificationAgain()
             }
 
-            tvFacebookLink.setOnClickListener {
-                val fbIntent = Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.link_https_www_facebook_com_midnightmares_ph)))
-                startActivity(fbIntent)
-            }
-
-            tvInstagramLink.setOnClickListener {
-                val instagramIntent = Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.link_https_www_instagram_com_midnightmares_ph)))
-                startActivity(instagramIntent)
+            tvGmail.setOnClickListener {
+                val gmailIntent = Intent(Intent.ACTION_SENDTO)
+                gmailIntent.putExtra(Intent.EXTRA_EMAIL, "12mn.clo@gmail.com")
+                startActivity(gmailIntent)
             }
 
             refreshLayout.setOnRefreshListener {

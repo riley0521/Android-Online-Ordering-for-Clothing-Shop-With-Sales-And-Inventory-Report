@@ -102,14 +102,14 @@ class AddEditProductViewModel @Inject constructor(
     val additionalImageList: MutableLiveData<MutableList<Uri>> =
         state.getLiveData(ADDITIONAL_IMAGES, mutableListOf())
 
-    var uploadedImageList = listOf<ProductImage>()
+    private var uploadedImageList = mutableListOf<ProductImage>()
 
     private val _addEditProductChannel = Channel<AddEditProductEvent>()
     val addEditProductEvent = _addEditProductChannel.receiveAsFlow()
 
     private fun updateImageList(list: List<ProductImage>) {
         imageList.postValue(list.toMutableList())
-        uploadedImageList = list
+        uploadedImageList = list.toMutableList()
     }
 
     fun updateAdditionalImages(list: List<Uri>) {
@@ -273,7 +273,7 @@ class AddEditProductViewModel @Inject constructor(
         if (additionalImageList.value!!.isNotEmpty()) {
             val productImageList = productImageRepository.uploadImages(additionalImageList.value!!)
 
-            uploadedImageList = productImageList
+            uploadedImageList = productImageList.toMutableList()
         }
     }
 
@@ -283,6 +283,7 @@ class AddEditProductViewModel @Inject constructor(
                 val res = productImageRepository.delete(imageList.value!![position])
                 if (res) {
                     imageList.value!!.removeAt(position)
+                    uploadedImageList.removeAt(position)
                     _addEditProductChannel.send(
                         AddEditProductEvent.NotifyAdapterWithMessage(
                             "Product image deleted successfully",

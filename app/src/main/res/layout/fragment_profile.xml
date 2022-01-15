@@ -287,28 +287,16 @@
                         app:layout_constraintTop_toTopOf="parent" />
 
                     <TextView
-                        android:id="@+id/tvFacebookLink"
+                        android:id="@+id/tvGmail"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/link_https_www_facebook_com_midnightmares_ph"
+                        android:text="@string/mail_12mn_clo_gmail_com"
                         android:textAppearance="?attr/textAppearanceBody1"
                         android:textStyle="bold"
                         android:layout_marginTop="8dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/tv4" />
-
-                    <TextView
-                        android:id="@+id/tvInstagramLink"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@string/link_https_www_instagram_com_midnightmares_ph"
-                        android:textAppearance="?attr/textAppearanceBody1"
-                        android:textStyle="bold"
-                        android:layout_marginTop="8dp"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/tvFacebookLink" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 

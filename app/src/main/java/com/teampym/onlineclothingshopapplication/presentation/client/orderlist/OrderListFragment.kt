@@ -199,24 +199,45 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
     }
 
     override fun onShipOrderClicked(item: Order) {
-        loadingDialog.show()
-        viewModel.shipOrder(item)
+        AlertDialog.Builder(requireContext())
+            .setTitle("SHIP ORDER")
+            .setMessage("Are you sure you want to ship this order?")
+            .setPositiveButton("Yes") { _, _ ->
+                loadingDialog.show()
+                viewModel.shipOrder(item)
+            }.setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }.show()
     }
 
     override fun onReceivedOrderClicked(item: Order) {
-        loadingDialog.show()
-        viewModel.receivedOrder(item)
+        AlertDialog.Builder(requireContext())
+            .setTitle("MARK ORDER AS RECEIVED")
+            .setMessage("Are you sure you want to mark this order as received? You cannot undo this action.")
+            .setPositiveButton("Yes") { _, _ ->
+                loadingDialog.show()
+                viewModel.receivedOrder(item)
+            }.setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }.show()
     }
 
     override fun onDeliverOrderClicked(item: Order, type: CourierType) {
         when (type) {
             CourierType.ADMINS -> {
-                loadingDialog.show()
-                viewModel.deliverOrder(
-                    item,
-                    type,
-                    ""
-                )
+                AlertDialog.Builder(requireContext())
+                    .setTitle("DELIVERY ORDER")
+                    .setMessage("Are you sure you want to deliver this order?")
+                    .setPositiveButton("Yes") { _, _ ->
+                        loadingDialog.show()
+                        viewModel.deliverOrder(
+                            item,
+                            type,
+                            ""
+                        )
+                    }.setNegativeButton("No") { dialog, _ ->
+                        dialog.dismiss()
+                    }.show()
             }
             CourierType.JNT -> {
                 setFragmentResultListener(TRACKING_NUMBER_REQUEST) { _, bundle ->

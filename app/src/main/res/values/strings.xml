@@ -270,11 +270,10 @@
     <string name="action_show_successful_returned_item_s">Show Successful Returned Item/s</string>
     <string name="btn_view_reason">View Reason</string>
     <string name="btn_confirm_return_item">Confirm Return Item</string>
-    <string name="link_https_www_facebook_com_midnightmares_ph">https://www.facebook.com/midnightmares.ph/</string>
     <string name="label_contact_us">Contact Us</string>
-    <string name="link_https_www_instagram_com_midnightmares_ph">https://www.instagram.com/midnightmares_ph/</string>
     <string name="btn_copy_tracking_no_and_go_to_jnt">Copy Tracking No. And Go to JNT</string>
     <string name="label_general_information">General Information</string>
     <string name="label_order_information">Order Information</string>
+    <string name="mail_12mn_clo_gmail_com">12mn.clo@gmail.com</string>
 
 </resources>
