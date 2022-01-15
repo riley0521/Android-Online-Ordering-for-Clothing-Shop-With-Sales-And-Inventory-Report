@@ -38,73 +38,25 @@ class SalesRepository @Inject constructor(
             val day = calendarDate.get(Calendar.DAY_OF_MONTH).toString()
 
             try {
-                var totalSaleOfDay = 0.0
-                soldItems.forEach {
-                    totalSaleOfDay += it.subTotal
-                }
+                val totalSaleOfDay = soldItems.sumOf { it.subTotal }
 
-                val dayDoc = salesCollectionRef.document(year)
+                getSalesForWholeYear(year)
+                getDailySalesForWholeMonth(year, month)
+                val dayObj = getDay(year, month, day)
+
+                // There is multiple transactions in a day rather than month or year
+                // That is why you need to reference it first instead of inserting it directly in db
+                dayObj.totalSale += (totalSaleOfDay + shippingFee)
+                salesCollectionRef.document(year)
                     .collection(MONTHS_SUB_COLLECTION)
                     .document(month)
                     .collection(DAYS_SUB_COLLECTION_OF_MONTHS)
                     .document(day)
-                    .get()
+                    .set(dayObj, SetOptions.merge())
                     .await()
 
-                // There is multiple transactions in a day rather than month or year
-                // That is why you need to reference it first instead of inserting it directly in db
-                if (dayDoc.data != null) {
-                    val dayObj = dayDoc.toObject<DaySale>()!!.copy(id = dayDoc.id)
-                    dayObj.totalSale += (totalSaleOfDay + shippingFee)
-                    dayDoc.reference.set(dayObj, SetOptions.merge()).await()
-                } else {
-                    // If day doc is null. It means that year, month, or day is not existing yet.
-                    // So we will create it here
-                    salesCollectionRef
-                        .document(year)
-                        .set(
-                            mapOf(
-                                "id" to year,
-                                "totalSale" to 0
-                            ),
-                            SetOptions.merge()
-                        )
-                        .await()
-
-                    salesCollectionRef
-                        .document(year)
-                        .collection(MONTHS_SUB_COLLECTION)
-                        .document(month)
-                        .set(
-                            mapOf(
-                                "id" to month,
-                                "totalSale" to 0
-                            ),
-                            SetOptions.merge()
-                        ).await()
-
-                    salesCollectionRef
-                        .document(year)
-                        .collection(MONTHS_SUB_COLLECTION)
-                        .document(month)
-                        .collection(DAYS_SUB_COLLECTION_OF_MONTHS)
-                        .document(day)
-                        .set(
-                            mapOf(
-                                "id" to day,
-                                "totalSale" to 0
-                            ),
-                            SetOptions.merge()
-                        ).await()
-
-                    // Recur by calling itself then this should not be called twice.
-                    insert(soldItems, shippingFee)
-                }
-
-                var totalSaleOfMonth = 0.0
-                getDailySalesForWholeMonth(year, month).let {
-                    totalSaleOfMonth += it.sumOf { it.totalSale }
-                }
+                val monthObj = getDailySalesForWholeMonth(year, month)
+                val totalSaleOfMonth = monthObj.listOfDays.sumOf { it.totalSale }
 
                 salesCollectionRef.document(year)
                     .collection(MONTHS_SUB_COLLECTION)
@@ -113,16 +65,11 @@ class SalesRepository @Inject constructor(
                     .await()
 
                 val yearObj = getSalesForWholeYear(year)
-                var totalSaleOfYear = 0.0
-                yearObj?.let {
-                    yearObj.listOfMonth.forEach {
-                        totalSaleOfYear += it.totalSale
-                    }
+                val totalSaleOfYear = yearObj.listOfMonth.sumOf { it.totalSale }
 
-                    salesCollectionRef.document(year)
-                        .set(mapOf("totalSale" to totalSaleOfYear), SetOptions.merge())
-                        .await()
-                }
+                salesCollectionRef.document(year)
+                    .set(mapOf("totalSale" to totalSaleOfYear), SetOptions.merge())
+                    .await()
 
                 return@withContext true
             } catch (ex: Exception) {
@@ -131,60 +78,44 @@ class SalesRepository @Inject constructor(
         }
     }
 
-    suspend fun getDay(day: String): DaySale? {
-        return withContext(dispatcher) {
-
-            val dayDoc = salesCollectionRef
-                .document("2022")
-                .collection(MONTHS_SUB_COLLECTION)
-                .document("JANUARY")
-                .collection(DAYS_SUB_COLLECTION_OF_MONTHS)
-                .document(day)
-                .get()
-                .await()
-
-            dayDoc?.let {
-
-                val obj = dayDoc.toObject<DaySale>()!!.copy(id = dayDoc.id)
-//                obj.totalSale = 344342.0
-//                dayDoc.reference.set(obj, SetOptions.merge()).await()
-                return@withContext obj
-            }
-
-            return@withContext null
-        }
-    }
-
     suspend fun getSalesForWholeYear(
         year: String
-    ): YearSale? {
+    ): YearSale {
         return withContext(dispatcher) {
 
             val yearDoc = salesCollectionRef.document(year)
                 .get()
                 .await()
 
-            try {
-                yearDoc?.let { docRef ->
-                    val yearObj = docRef.toObject<YearSale>()!!.copy(id = docRef.id)
+            if (yearDoc.data != null) {
+                val yearObj = yearDoc.toObject<YearSale>()!!.copy(id = yearDoc.id)
 
-                    val monthDocs = salesCollectionRef.document(year)
-                        .collection(MONTHS_SUB_COLLECTION)
-                        .get()
-                        .await()
+                val monthDocs = salesCollectionRef.document(year)
+                    .collection(MONTHS_SUB_COLLECTION)
+                    .get()
+                    .await()
 
-                    val listOfMonth = mutableListOf<MonthSale>()
-
-                    for (doc in monthDocs?.documents!!) {
-                        val monthObj = doc.toObject<MonthSale>()!!.copy(id = doc.id)
-                        listOfMonth.add(monthObj)
-                    }
-
-                    yearObj.listOfMonth = listOfMonth
-                    return@withContext yearObj
+                val listOfMonth = mutableListOf<MonthSale>()
+                for (doc in monthDocs.documents) {
+                    val monthObj = doc.toObject<MonthSale>()!!.copy(id = doc.id)
+                    listOfMonth.add(monthObj)
                 }
-            } catch (ex: Exception) {
-                return@withContext null
+
+                yearObj.listOfMonth = listOfMonth
+                return@withContext yearObj
+            } else {
+                salesCollectionRef
+                    .document(year)
+                    .set(
+                        mapOf(
+                            "id" to year,
+                            "totalSale" to 0
+                        ),
+                        SetOptions.merge()
+                    )
+                    .await()
+
+                return@withContext YearSale(id = year, totalSale = 0.0)
             }
         }
     }
@@ -192,25 +123,85 @@ class SalesRepository @Inject constructor(
     suspend fun getDailySalesForWholeMonth(
         year: String,
         monthName: String
-    ): List<DaySale> {
+    ): MonthSale {
         return withContext(dispatcher) {
 
-            val dayDocs = salesCollectionRef.document(year)
+            val monthDoc = salesCollectionRef.document(year)
                 .collection(MONTHS_SUB_COLLECTION)
                 .document(monthName)
-                .collection(DAYS_SUB_COLLECTION_OF_MONTHS)
                 .get()
                 .await()
 
-            val listOfDay = mutableListOf<DaySale>()
-            dayDocs?.let { days ->
-                for (doc in days.documents) {
-                    val dayObj = doc.toObject<DaySale>()!!.copy(id = doc.id)
-                    listOfDay.add(dayObj)
-                }
-            }
+            if (monthDoc.data != null) {
+                val monthObj = monthDoc.toObject<MonthSale>()!!.copy(id = monthDoc.id)
 
-            return@withContext listOfDay
+                val dayDocs = salesCollectionRef.document(year)
+                    .collection(MONTHS_SUB_COLLECTION)
+                    .document(monthName)
+                    .collection(DAYS_SUB_COLLECTION_OF_MONTHS)
+                    .get()
+                    .await()
+
+                if (dayDocs.documents.isNotEmpty()) {
+                    val listOfDay = mutableListOf<DaySale>()
+                    for (doc in dayDocs.documents) {
+                        val dayObj = doc.toObject<DaySale>()!!.copy(id = doc.id)
+                        listOfDay.add(dayObj)
+                    }
+
+                    return@withContext monthObj.copy(listOfDays = listOfDay)
+                }
+
+                return@withContext monthObj
+            } else {
+                salesCollectionRef
+                    .document(year)
+                    .collection(MONTHS_SUB_COLLECTION)
+                    .document(monthName)
+                    .set(
+                        mapOf(
+                            "id" to monthName,
+                            "totalSale" to 0
+                        ),
+                        SetOptions.merge()
+                    ).await()
+
+                return@withContext MonthSale(id = monthName, totalSale = 0.0)
+            }
+        }
+    }
+
+    private suspend fun getDay(year: String, monthName: String, day: String): DaySale {
+        return withContext(dispatcher) {
+
+            val dayDoc = salesCollectionRef
+                .document(year)
+                .collection(MONTHS_SUB_COLLECTION)
+                .document(monthName)
+                .collection(DAYS_SUB_COLLECTION_OF_MONTHS)
+                .document(day)
+                .get()
+                .await()
+
+            if (dayDoc.data != null) {
+                return@withContext dayDoc.toObject<DaySale>()!!.copy(id = dayDoc.id)
+            } else {
+                salesCollectionRef
+                    .document(year)
+                    .collection(MONTHS_SUB_COLLECTION)
+                    .document(monthName)
+                    .collection(DAYS_SUB_COLLECTION_OF_MONTHS)
+                    .document(day)
+                    .set(
+                        mapOf(
+                            "id" to day,
+                            "totalSale" to 0
+                        ),
+                        SetOptions.merge()
+                    ).await()
+
+                return@withContext DaySale(id = day, totalSale = 0.0)
+            }
         }
     }
 }

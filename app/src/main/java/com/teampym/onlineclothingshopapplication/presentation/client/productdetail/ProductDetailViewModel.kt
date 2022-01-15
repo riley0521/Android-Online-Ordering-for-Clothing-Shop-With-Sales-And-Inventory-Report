@@ -53,6 +53,8 @@ class ProductDetailViewModel @Inject constructor(
         val res = async { productRepository.getOne(productId) }.await()
         if (res != null) {
             updateProduct(res)
+        } else {
+            _productDetailChannel.send(ProductDetailEvent.NavigateBackProductNotFound)
         }
     }
 
@@ -101,5 +103,6 @@ class ProductDetailViewModel @Inject constructor(
     sealed class ProductDetailEvent {
         data class ShowSuccessMessage(val msg: String) : ProductDetailEvent()
         data class ShowErrorMessage(val msg: String) : ProductDetailEvent()
+        object NavigateBackProductNotFound : ProductDetailEvent()
     }
 }

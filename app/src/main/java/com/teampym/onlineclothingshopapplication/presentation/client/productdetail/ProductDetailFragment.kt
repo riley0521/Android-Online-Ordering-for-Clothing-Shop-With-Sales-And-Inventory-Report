@@ -7,6 +7,7 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
@@ -101,6 +102,16 @@ class ProductDetailFragment : Fragment(R.layout.fragment_product_detail) {
                             event.msg,
                             Snackbar.LENGTH_SHORT
                         ).show()
+                    }
+                    ProductDetailViewModel.ProductDetailEvent.NavigateBackProductNotFound -> {
+                        loadingDialog.dismiss()
+
+                        Toast.makeText(
+                            requireContext(),
+                            "Product not found. It might have been deleted by the admins.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        findNavController().popBackStack()
                     }
                 }
             }

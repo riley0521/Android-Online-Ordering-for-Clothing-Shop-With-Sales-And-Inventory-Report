@@ -252,9 +252,10 @@ class OrderListAdapter(
                     Status.SHIPPED.name -> {
                         if (userType == UserType.CUSTOMER.name) {
                             btnDeliverOrder.isVisible = false
+                        } else if (userType == UserType.ADMIN.name) {
+                            btnDeliverOrder.isVisible = true
                         }
 
-                        btnDeliverOrder.isVisible = true
                         btnCancel.isVisible = false
                         btnShipOrder.isVisible = false
                         btnActionCompleted.isVisible = false
@@ -288,7 +289,7 @@ class OrderListAdapter(
                         btnDeliverOrder.isVisible = false
 
                         if (userType == UserType.ADMIN.name) {
-                            if (!item.recordedToSales) {
+                            if (item.receivedByUser && !item.recordedToSales) {
                                 btnActionCompleted.text = ORDER_COMPLETED_OR_SHOULDERED_BY_ADMIN
                             } else {
                                 btnActionCompleted.isVisible = false

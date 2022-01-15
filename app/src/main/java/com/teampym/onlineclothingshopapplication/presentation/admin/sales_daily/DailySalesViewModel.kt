@@ -18,7 +18,7 @@ class DailySalesViewModel @Inject constructor(
 
     fun fetchDailySales(year: String, month: String) = viewModelScope.launch {
         dailySales.postValue(
-            salesRepository.getDailySalesForWholeMonth(year, month)
+            salesRepository.getDailySalesForWholeMonth(year, month)?.listOfDays
         )
     }
 }

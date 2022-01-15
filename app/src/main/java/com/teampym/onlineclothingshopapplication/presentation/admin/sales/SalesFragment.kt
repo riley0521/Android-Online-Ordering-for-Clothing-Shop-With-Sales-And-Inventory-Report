@@ -20,7 +20,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.* // ktlint-disable no-wildcard-imports
 
 private const val TAG = "SalesFragment"
@@ -56,52 +55,46 @@ class SalesFragment : Fragment(R.layout.fragment_sales), AdapterView.OnItemSelec
             viewModel.isFirstTime = false
         }
 
+        viewModel.year.observe(viewLifecycleOwner) {
+            binding.tvSelectedYear.text = getString(
+                R.string.placeholder_total_sale_for_year,
+                it ?: "2022"
+            )
+        }
+
+        viewModel.month.observe(viewLifecycleOwner) {
+            binding.tvSelectedMonth.text = getString(
+                R.string.placeholder_total_sale_for_month_of,
+                it ?: "JANUARY"
+            )
+        }
+
         lifecycleScope.launchWhenStarted {
             viewModel.salesForSelectedMonthAndYear.collectLatest { yearSale ->
                 loadingDialog.dismiss()
-
-                if (yearSale != null) {
-                    setupViews(yearSale)
-                } else {
-                    withContext(Dispatchers.Main) {
-                        setupSpinners()
-                        binding.btnViewSalesDaily.setOnClickListener {
-                            Snackbar.make(
-                                requireView(),
-                                "There is no sales for this month yet.",
-                                Snackbar.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-                }
+                setupViews(yearSale)
             }
         }
     }
 
-    private fun setupViews(yearSale: YearSale) = CoroutineScope(Dispatchers.Main).launch {
+    private fun setupViews(yearSale: YearSale?) = CoroutineScope(Dispatchers.Main).launch {
         binding.apply {
             setupSpinners()
 
-            val selectedMonth = yearSale.listOfMonth.firstOrNull { it.id == viewModel.month.value }
+            val selectedMonth = yearSale?.listOfMonth?.firstOrNull { it.id == viewModel.month.value }
 
-            tvSelectedYear.text = getString(
-                R.string.placeholder_total_sale_for_year,
-                yearSale.id
+            tvYearlySale.text = getString(
+                R.string.placeholder_price,
+                yearSale?.totalSale ?: 0.0
             )
 
-            tvSelectedMonth.text = getString(
-                R.string.placeholder_total_sale_for_month_of,
-                selectedMonth?.id
+            tvMonthlySale.text = getString(
+                R.string.placeholder_price,
+                selectedMonth?.totalSale ?: 0.0
             )
-
-            val yearSaleStr = "₱" + yearSale.totalSale
-            tvYearlySale.text = yearSaleStr
-
-            val monthSaleStr = "₱${selectedMonth?.totalSale}"
-            tvMonthlySale.text = monthSaleStr
 
             btnViewSalesDaily.setOnClickListener {
-                if (selectedMonth?.totalSale ?: 0.0 > 0.0 && yearSale.listOfMonth.isNotEmpty()) {
+                if (selectedMonth?.totalSale ?: 0.0 > 0.0 && yearSale?.listOfMonth?.isNotEmpty()!!) {
                     val action = SalesFragmentDirections.actionSalesFragmentToDailySalesFragment(
                         viewModel.year.value!!,
                         viewModel.month.value!!

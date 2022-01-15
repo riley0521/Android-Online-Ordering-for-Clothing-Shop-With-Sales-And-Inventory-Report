@@ -65,10 +65,17 @@ class ProductFragment :
         adminAdapter.addLoadStateListener {
             if (it.source.refresh is LoadState.NotLoading && it.append.endOfPaginationReached) {
                 if (adminAdapter.itemCount < 1) {
-                    binding.recyclerProducts.visibility = View.INVISIBLE
-                    binding.tvNoProducts.visibility = View.VISIBLE
-                    binding.tvNoProducts.text =
-                        getString(R.string.label_no_products_yet_for_this_category_come_back_later)
+                    if (!searchView.isIconified) {
+                        binding.recyclerProducts.visibility = View.INVISIBLE
+                        binding.tvNoProducts.visibility = View.VISIBLE
+                        binding.tvNoProducts.text =
+                            "We could not find any products for '${viewModel.searchQuery.value}'"
+                    } else {
+                        binding.recyclerProducts.visibility = View.INVISIBLE
+                        binding.tvNoProducts.visibility = View.VISIBLE
+                        binding.tvNoProducts.text =
+                            getString(R.string.label_no_products_yet_for_this_category_come_back_later)
+                    }
                 } else {
                     binding.recyclerProducts.visibility = View.VISIBLE
                     binding.tvNoProducts.isVisible = false
@@ -125,7 +132,7 @@ class ProductFragment :
                         binding.recyclerProducts.visibility = View.INVISIBLE
                         binding.tvNoProducts.visibility = View.VISIBLE
                         binding.tvNoProducts.text =
-                            "We could not find any products for ${viewModel.searchQuery.value}"
+                            "We could not find any products for '${viewModel.searchQuery.value}'"
                     } else {
                         binding.recyclerProducts.visibility = View.INVISIBLE
                         binding.tvNoProducts.visibility = View.VISIBLE

@@ -7,11 +7,10 @@ import kotlinx.android.parcel.Parcelize
 @Parcelize
 data class MonthSale(
     var totalSale: Double = 0.0,
-    var id: String = ""
+    var id: String = "",
+    @get:Exclude
+    var listOfDays: List<DaySale> = emptyList()
 ) : Parcelable {
 
     constructor() : this(0.0)
-
-    @get:Exclude
-    var listOfDays: List<DaySale> = emptyList()
 }
