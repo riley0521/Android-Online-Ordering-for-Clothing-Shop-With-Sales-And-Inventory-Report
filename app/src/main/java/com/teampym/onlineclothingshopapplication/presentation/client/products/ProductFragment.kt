@@ -7,6 +7,7 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -192,15 +193,31 @@ class ProductFragment :
     }
 
     override fun onDeleteProductClicked(product: Product) {
-        loadingDialog.show()
-        viewModel.onDeleteProductClicked(
-            product
-        )
+        AlertDialog.Builder(requireContext())
+            .setTitle("DELETE PRODUCT")
+            .setMessage("Are you sure you want to delete this product?\n" +
+                                "All additional images and inventories will be deleted.\n" +
+                                "You cannot reverse this action.")
+            .setPositiveButton("Yes") { _, _ ->
+                loadingDialog.show()
+                viewModel.onDeleteProductClicked(
+                    product
+                )
+            }.setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }.show()
     }
 
     override fun onDeleteSizeClicked(inventory: Inventory, productName: String) {
-        loadingDialog.dismiss()
-        viewModel.deleteSize(inventory, productName)
+        AlertDialog.Builder(requireContext())
+            .setTitle("DELETE SIZE")
+            .setMessage("Are you sure you want to delete this size? You cannot reverse this action.")
+            .setPositiveButton("Yes") { _, _ ->
+                loadingDialog.dismiss()
+                viewModel.deleteSize(inventory, productName)
+            }.setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }.show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

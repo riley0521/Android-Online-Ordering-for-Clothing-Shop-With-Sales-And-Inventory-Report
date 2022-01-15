@@ -60,8 +60,6 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
             loadingDialog.dismiss()
 
             if (listOfSizes.isNotEmpty()) {
-                availableSizeList = listOfSizes
-
                 val sizes = StringBuilder()
                 sizes.append("[")
                 for (i in listOfSizes.indices) {
@@ -72,8 +70,11 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
                     }
                 }
 
-                binding.tvAvailableSizes.text =
-                    getString(R.string.label_available_sizes, sizes.toString())
+                availableSizeList = listOfSizes.map { it.lowercase().trim() }
+                binding.tvAvailableSizes.text = getString(
+                    R.string.label_available_sizes,
+                    sizes.toString()
+                )
                 binding.tvAvailableSizes.isVisible = true
             }
         }
@@ -98,7 +99,7 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    viewModel.inventorySize = s.toString()
+                    viewModel.inventorySize = s.toString().trim()
                 }
 
                 override fun afterTextChanged(s: Editable?) {
