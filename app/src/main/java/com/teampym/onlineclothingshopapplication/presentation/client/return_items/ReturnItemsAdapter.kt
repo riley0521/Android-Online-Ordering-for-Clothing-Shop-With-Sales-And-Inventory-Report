@@ -1,5 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.return_items
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -14,7 +15,7 @@ import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.ReturnItemBinding
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.* // ktlint-disable no-wildcard-imports
 
 class ReturnItemsAdapter(
     private val listener: ReturnItemsListener,
@@ -75,6 +76,7 @@ class ReturnItemsAdapter(
             }
         }
 
+        @SuppressLint("SimpleDateFormat")
         fun bind(item: OrderDetail) {
             binding.apply {
                 Glide.with(itemView)
@@ -101,6 +103,9 @@ class ReturnItemsAdapter(
 
                 if (userType == UserType.CUSTOMER.name) {
                     btnConfirmReturnItem.isVisible = false
+                } else if (userType == UserType.ADMIN.name) {
+                    btnConfirmReturnItem.isVisible = !item.returned
+                    btnViewReason.isVisible = !item.returned
                 }
 
                 if (item.dateSold == 0L) {

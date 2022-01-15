@@ -21,6 +21,7 @@ import com.teampym.onlineclothingshopapplication.data.util.Status
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.presentation.client.orderlist.OrderListPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.async
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.util.* // ktlint-disable no-wildcard-imports
@@ -170,6 +171,14 @@ class OrderRepository @Inject constructor(
                 .await()
 
             returnRepository.delete(orderItem.id)
+
+            // Add negative values to sales to deduct sales
+            // Having faulty product is a liability
+            orderItem.subTotal = -Math.abs(orderItem.subTotal)
+            salesRepository.insert(listOf(orderItem), 0.0)
+
+            // Then deduct this order item from product's sold to returned
+            productRepository.deductSoldToReturnedCount(UserType.ADMIN.name, listOf(orderItem))
 
             true
         }
@@ -499,7 +508,8 @@ class OrderRepository @Inject constructor(
                 orderDetailItem.canAddReview = true
 
                 try {
-                    orderCollectionRef.document(orderId)
+                    orderCollectionRef
+                        .document(orderId)
                         .collection(ORDER_DETAILS_SUB_COLLECTION)
                         .document(orderDetailItem.id)
                         .set(orderDetailItem, SetOptions.merge())
@@ -510,9 +520,11 @@ class OrderRepository @Inject constructor(
                     return@withContext emptyList()
                 }
             }
-            productRepository.deductCommittedToSoldCount(
-                orderDetailList
-            )
+            async {
+                productRepository.deductCommittedToSoldCount(
+                    orderDetailList
+                )
+            }.await()
 
             return@withContext orderDetailList
         }

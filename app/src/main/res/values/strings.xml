@@ -176,7 +176,7 @@
     <string name="hint_first_name">First Name</string>
     <string name="hint_last_name">Last Name (Optional)</string>
 
-    <string name="btn_select_image_from_gallery">Select Image From Gallery</string>
+    <string name="btn_select_thumbnail_from_gallery">Select Thumbnail From Gallery</string>
     <string name="btn_return_item">Return Item</string>
     <string name="btn_agree">Agree</string>
     <string name="btn_disagree_cancel_the_order_immediately">Disagree (Cancel The Order Immediately)</string>
@@ -260,15 +260,21 @@
     <string name="android_cancel">CANCEL</string>
     <string name="placeholder_committed">Committed: %1$d</string>
     <string name="hint_input_tracking_number">Input Tracking Number</string>
-    <string name="placeholder_courier_type">Courier Type: %1$s</string>
-    <string name="placeholder_tracking_number">Tracking Number: %1$s</string>
+    <string name="placeholder_courier_type">Courier Type:</string>
+    <string name="placeholder_tracking_number">Tracking Number:</string>
     <string name="hint_input_reason_for_returning_item">Input Reason for returning item</string>
     <string name="btn_add_photos_for_proof">ADD PHOTOS FOR PROOF</string>
-    <string name="placeholder_payment_method">Payment Method: %1$s</string>
-    <string name="placeholder_paid">Paid: %1$s</string>
+    <string name="placeholder_payment_method">Payment Method:</string>
+    <string name="placeholder_paid">Paid:</string>
     <string name="action_show_requested_to_return_item_s">Show Requested To Return Item/s</string>
     <string name="action_show_successful_returned_item_s">Show Successful Returned Item/s</string>
     <string name="btn_view_reason">View Reason</string>
     <string name="btn_confirm_return_item">Confirm Return Item</string>
+    <string name="link_https_www_facebook_com_midnightmares_ph">https://www.facebook.com/midnightmares.ph/</string>
+    <string name="label_contact_us">Contact Us</string>
+    <string name="link_https_www_instagram_com_midnightmares_ph">https://www.instagram.com/midnightmares_ph/</string>
+    <string name="btn_copy_tracking_no_and_go_to_jnt">Copy Tracking No. And Go to JNT</string>
+    <string name="label_general_information">General Information</string>
+    <string name="label_order_information">Order Information</string>
 
 </resources>

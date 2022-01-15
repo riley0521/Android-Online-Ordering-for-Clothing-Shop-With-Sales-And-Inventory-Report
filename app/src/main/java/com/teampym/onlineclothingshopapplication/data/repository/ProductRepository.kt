@@ -90,7 +90,8 @@ class ProductRepository @Inject constructor(
                     productId = productDocument.id
                 )
 
-                foundProduct.productImageList = productImageList.await() as MutableList<ProductImage>
+                foundProduct.productImageList =
+                    productImageList.await() as MutableList<ProductImage>
                 foundProduct.inventoryList = inventoryList.await()
                 foundProduct.reviewList = reviewList
             }
@@ -252,8 +253,6 @@ class ProductRepository @Inject constructor(
         orderDetailList: List<OrderDetail>
     ): Boolean {
         return withContext(dispatcher) {
-            var isSuccessful = true
-
             if (userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryDocument =
@@ -278,14 +277,14 @@ class ProductRepository @Inject constructor(
                                 .set(inventory, SetOptions.merge())
                                 .await()
                         } catch (ex: JavaLangException) {
-                            isSuccessful = false
+                            return@withContext false
                         }
                     } else {
-                        isSuccessful = false
+                        return@withContext false
                     }
                 }
             }
-            isSuccessful
+            true
         }
     }
 
@@ -295,7 +294,6 @@ class ProductRepository @Inject constructor(
         orderDetailList: List<OrderDetail>
     ): Boolean {
         return withContext(dispatcher) {
-            var isSuccessful = true
             for (orderDetail in orderDetailList) {
                 val inventoryDocument =
                     productCollectionRef
@@ -319,14 +317,13 @@ class ProductRepository @Inject constructor(
                             .set(inventory, SetOptions.merge())
                             .await()
                     } catch (ex: JavaLangException) {
-                        isSuccessful = false
+                        return@withContext false
                     }
                 } else {
-                    isSuccessful = false
+                    return@withContext false
                 }
             }
-
-            isSuccessful
+            true
         }
     }
 
@@ -337,13 +334,12 @@ class ProductRepository @Inject constructor(
         return withContext(dispatcher) {
 
             for (orderDetail in orderDetailList) {
-                val inventoryDocument =
-                    productCollectionRef
-                        .document(orderDetail.product.productId)
-                        .collection(INVENTORIES_SUB_COLLECTION)
-                        .document(orderDetail.inventoryId)
-                        .get()
-                        .await()
+                val inventoryDocument = productCollectionRef
+                    .document(orderDetail.product.productId)
+                    .collection(INVENTORIES_SUB_COLLECTION)
+                    .document(orderDetail.inventoryId)
+                    .get()
+                    .await()
 
                 if (inventoryDocument != null) {
                     val inventory = inventoryDocument.toObject<Inventory>()!!.copy(
@@ -353,20 +349,15 @@ class ProductRepository @Inject constructor(
                     inventory.sold += orderDetail.quantity
 
                     try {
-                        productCollectionRef
-                            .document(orderDetail.product.productId)
-                            .collection(INVENTORIES_SUB_COLLECTION)
-                            .document(orderDetail.inventoryId)
+                        inventoryDocument.reference
                             .set(inventory, SetOptions.merge())
                             .await()
-
-                        return@withContext true
                     } catch (ex: JavaLangException) {
                         return@withContext false
                     }
                 }
             }
-            return@withContext false
+            return@withContext true
         }
     }
 
@@ -376,8 +367,6 @@ class ProductRepository @Inject constructor(
         orderDetailList: List<OrderDetail>
     ): Boolean {
         return withContext(dispatcher) {
-            var isSuccessful = true
-
             if (userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryDocument =
@@ -402,14 +391,15 @@ class ProductRepository @Inject constructor(
                                 .set(inventory, SetOptions.merge())
                                 .await()
                         } catch (ex: JavaLangException) {
-                            isSuccessful = false
+                            return@withContext false
                         }
                     } else {
-                        isSuccessful = false
+                        return@withContext false
                     }
                 }
+                return@withContext true
             }
-            isSuccessful
+            false
         }
     }
 }

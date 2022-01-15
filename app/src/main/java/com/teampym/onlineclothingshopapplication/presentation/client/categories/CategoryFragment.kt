@@ -1,7 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.categories
 
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -15,14 +14,12 @@ import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Category
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
-import com.teampym.onlineclothingshopapplication.data.util.UserStatus
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentCategoryBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 private const val TAG = "CategoryFragment"
@@ -45,18 +42,17 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
         loadingDialog = LoadingDialog(requireActivity())
         binding.refreshLayout.isRefreshing = true
 
+        setupViews(viewModel.userType)
+
         lifecycleScope.launchWhenStarted {
-            val session = viewModel.session.first()
-            val userInfo = viewModel.getUserInformation(session.userId)
-            if (userInfo?.userStatus == UserStatus.BANNED.name) {
+            val isBanned = viewModel.checkIfUserIsBanned(viewModel.userId)
+            if (isBanned) {
                 val action = CategoryFragmentDirections.actionCategoryFragmentToProfileFragment(
-                    false,
-                    true
+                    isSigningIn = false,
+                    isBanned = true
                 )
                 findNavController().navigate(action)
             }
-
-            setupViews(session.userType)
 
             viewModel.categoryEvent.collectLatest { event ->
                 when (event) {
@@ -161,20 +157,15 @@ class CategoryFragment : Fragment(R.layout.fragment_category), CategoryAdapter.O
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.category_action_menu, menu)
 
-        viewModel.getUserSession().observe(viewLifecycleOwner) { session ->
-
-            Log.d(TAG, "showAvailableMenus: $session")
-
-            when (session.userType) {
-                UserType.CUSTOMER.name -> {
-                    menu.findItem(R.id.action_add).isVisible = false
-                }
-                UserType.ADMIN.name -> {
-                    menu.findItem(R.id.action_add).isVisible = true
-                }
-                else -> {
-                    menu.findItem(R.id.action_add).isVisible = false
-                }
+        when (viewModel.userType) {
+            UserType.CUSTOMER.name -> {
+                menu.findItem(R.id.action_add).isVisible = false
+            }
+            UserType.ADMIN.name -> {
+                menu.findItem(R.id.action_add).isVisible = true
+            }
+            else -> {
+                menu.findItem(R.id.action_add).isVisible = false
             }
         }
     }

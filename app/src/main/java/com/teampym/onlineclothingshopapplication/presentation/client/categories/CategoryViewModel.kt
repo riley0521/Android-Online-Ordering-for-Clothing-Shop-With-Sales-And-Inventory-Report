@@ -3,13 +3,11 @@ package com.teampym.onlineclothingshopapplication.presentation.client.categories
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.teampym.onlineclothingshopapplication.data.models.Category
-import com.teampym.onlineclothingshopapplication.data.models.UserInformation
+import com.teampym.onlineclothingshopapplication.data.repository.AccountRepository
 import com.teampym.onlineclothingshopapplication.data.repository.CategoryRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
-import com.teampym.onlineclothingshopapplication.data.room.SessionPreferences
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -24,9 +22,21 @@ import javax.inject.Inject
 @HiltViewModel
 class CategoryViewModel @Inject constructor(
     private val categoryRepository: CategoryRepository,
+    private val accountRepository: AccountRepository,
     private val userInformationDao: UserInformationDao,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
+
+    var userId = ""
+    var userType = ""
+
+    init {
+        viewModelScope.launch {
+            val s = preferencesManager.preferencesFlow.first()
+            userId = s.userId
+            userType = s.userType
+        }
+    }
 
     private val _categories = MutableLiveData<List<Category>>()
     val categories: LiveData<List<Category>> get() = _categories
@@ -38,15 +48,13 @@ class CategoryViewModel @Inject constructor(
         _categories.value = categoryRepository.getAll()
     }
 
-    val session = preferencesManager.preferencesFlow
-
-    fun getUserSession(): LiveData<SessionPreferences> {
-        return session.asLiveData()
-    }
-
-    suspend fun getUserInformation(userId: String) : UserInformation? {
+    suspend fun checkIfUserIsBanned(userId: String): Boolean {
         return withContext(Dispatchers.IO) {
-            userInformationDao.getCurrentUser(userId)
+            if (userId.isNotBlank()) {
+                accountRepository.checkIfUserIsBanned(userId)
+            } else {
+                return@withContext false
+            }
         }
     }
 

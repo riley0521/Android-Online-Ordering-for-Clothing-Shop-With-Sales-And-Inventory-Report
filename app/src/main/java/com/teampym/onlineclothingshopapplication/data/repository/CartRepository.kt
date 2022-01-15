@@ -272,12 +272,8 @@ class CartRepository @Inject constructor(
 
             if (cartDocuments.documents.isNotEmpty()) {
                 for (item in cartDocuments.documents) {
-
                     try {
-                        userCartCollectionRef
-                            .document(userId)
-                            .collection(CART_SUB_COLLECTION)
-                            .document(item.id)
+                        item.reference
                             .delete()
                             .await()
                     } catch (ex: Exception) {

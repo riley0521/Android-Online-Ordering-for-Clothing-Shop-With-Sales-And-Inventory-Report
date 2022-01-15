@@ -3,6 +3,7 @@ package com.teampym.onlineclothingshopapplication.presentation.client.profile
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -263,6 +264,16 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             btnSendVerification.setOnClickListener {
                 getFirebaseUser()?.sendEmailVerification()
                 viewModel.sendVerificationAgain()
+            }
+
+            tvFacebookLink.setOnClickListener {
+                val fbIntent = Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.link_https_www_facebook_com_midnightmares_ph)))
+                startActivity(fbIntent)
+            }
+
+            tvInstagramLink.setOnClickListener {
+                val instagramIntent = Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.link_https_www_instagram_com_midnightmares_ph)))
+                startActivity(instagramIntent)
             }
 
             refreshLayout.setOnRefreshListener {

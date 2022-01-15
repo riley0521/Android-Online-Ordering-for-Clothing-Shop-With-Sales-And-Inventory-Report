@@ -125,8 +125,10 @@ class CartFragment : Fragment(R.layout.fragment_cart), CartAdapter.OnItemCartLis
     private fun setTotalPrice(totalPrice: Double) {
         if (totalPrice > 0.0) {
             total = totalPrice
-            val totalText = "$" + String.format("%.2f", total)
-            binding.tvMerchandiseTotal.text = totalText
+            binding.tvMerchandiseTotal.text = getString(
+                R.string.placeholder_price,
+                total
+            )
         } else {
             binding.btnCheckOut.isEnabled = false
         }

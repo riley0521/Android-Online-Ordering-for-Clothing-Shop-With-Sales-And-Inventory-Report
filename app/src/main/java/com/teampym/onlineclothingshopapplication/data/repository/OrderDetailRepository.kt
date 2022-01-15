@@ -75,6 +75,8 @@ class OrderDetailRepository @Inject constructor(
         }
     }
 
+    // TODO
+    // Make individual order detail item per quantity of cart item.
     suspend fun insertAll(
         orderId: String,
         userId: String,

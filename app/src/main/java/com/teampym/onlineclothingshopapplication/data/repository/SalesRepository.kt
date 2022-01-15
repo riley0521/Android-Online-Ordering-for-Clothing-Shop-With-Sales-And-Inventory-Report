@@ -58,7 +58,7 @@ class SalesRepository @Inject constructor(
                     dayObj.totalSale += (totalSaleOfDay + shippingFee)
                     dayDoc.reference.set(dayObj, SetOptions.merge()).await()
                 } else {
-                    // If day doc is null. It means that year or month is not existing yet.
+                    // If day doc is null. It means that year, month, or day is not existing yet.
                     // So we will create it here
                     salesCollectionRef
                         .document(year)

@@ -22,6 +22,7 @@ import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.NOTIFICATION_TOKENS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -87,7 +88,7 @@ class CheckOutViewModel @Inject constructor(
             )
 
             // Delete all items from cart in remote and local db
-            cartRepository.deleteAll(userInformation.userId)
+            async { cartRepository.deleteAll(userInformation.userId) }.await()
             cartDao.deleteAll(userInformation.userId)
 
             val res = db.collectionGroup(NOTIFICATION_TOKENS_SUB_COLLECTION)

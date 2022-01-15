@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.ViewGroup
@@ -252,6 +254,7 @@ class OrderListAdapter(
                             btnDeliverOrder.isVisible = false
                         }
 
+                        btnDeliverOrder.isVisible = true
                         btnCancel.isVisible = false
                         btnShipOrder.isVisible = false
                         btnActionCompleted.isVisible = false
@@ -263,6 +266,18 @@ class OrderListAdapter(
 
                         if (userType == UserType.CUSTOMER.name && !item.receivedByUser) {
                             btnActionCompleted.text = RECEIVED_ORDER
+
+                            if (item.trackingNumber.isNotBlank()) {
+                                btnGoToJntSite.isVisible = true
+                                btnGoToJntSite.setOnClickListener {
+                                    copyToClipboard(item.trackingNumber)
+                                    val jntIntent = Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse("https://www.jtexpress.ph/index/query/gzquery.html")
+                                    )
+                                    context.startActivity(jntIntent)
+                                }
+                            }
                         } else {
                             btnActionCompleted.isVisible = false
                         }
@@ -326,7 +341,7 @@ class OrderListAdapter(
 
                 tvStatus.text = item.status
 
-                val paymentMethodStr = when(item.paymentMethod) {
+                val paymentMethodStr = when (item.paymentMethod) {
                     PaymentMethod.COD.name -> {
                         "Cash On Delivery"
                     }
@@ -336,22 +351,15 @@ class OrderListAdapter(
                     else -> ""
                 }
 
-                tvPaymentMethod.text = context.getString(
-                    R.string.placeholder_payment_method,
-                    paymentMethodStr
-                )
-                tvPaid.text = context.getString(
-                    R.string.placeholder_paid,
-                    if (item.paid) "Yes" else "No"
-                )
-                tvCourierType.text = context.getString(
-                    R.string.placeholder_courier_type,
+                tvPaymentMethod.text = paymentMethodStr
+
+                tvPaid.text = if (item.paid) "Yes" else "No"
+
+                tvCourierType.text =
                     if (item.courierType.isNotBlank()) item.courierType else "Not available"
-                )
-                tvTrackingNumber.text = context.getString(
-                    R.string.placeholder_tracking_number,
+                tvTrackingNumber.text =
                     if (item.trackingNumber.isNotBlank()) item.trackingNumber else "Not available"
-                )
+
                 tvNumberOfItems.text = item.numberOfItems.toString()
 
                 tvAdditionalNote.text = item.additionalNote

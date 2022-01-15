@@ -47,6 +47,17 @@ class AccountRepository @Inject constructor(
         }
     }
 
+    suspend fun checkIfUserIsBanned(userId: String): Boolean {
+        return withContext(dispatcher) {
+            val userInfo = get(userId)
+
+            userInfo?.let {
+                return@withContext userInfo.userStatus == UserStatus.BANNED.name
+            }
+            false
+        }
+    }
+
     fun getAll(queryAccounts: Query) =
         Pager(
             PagingConfig(

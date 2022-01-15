@@ -169,6 +169,8 @@ class PostRepository @Inject constructor(
                     .delete()
                     .await()
 
+                // TODO(Delete post image here to save space)
+
                 return@withContext true
             } catch (ex: java.lang.Exception) {
                 return@withContext false
