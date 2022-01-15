@@ -52,6 +52,7 @@ class ProductFragment :
 
     private lateinit var loadingDialog: LoadingDialog
 
+    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -117,6 +118,7 @@ class ProductFragment :
         adapter.submitData(viewLifecycleOwner.lifecycle, pagingData)
     }
 
+    @SuppressLint("SetTextI18n")
     private fun instantiateProductAdapterForCustomer() {
         Log.d(TAG, "instantiateProductAdapterForCustomer: here")
 
@@ -195,9 +197,11 @@ class ProductFragment :
     override fun onDeleteProductClicked(product: Product) {
         AlertDialog.Builder(requireContext())
             .setTitle("DELETE PRODUCT")
-            .setMessage("Are you sure you want to delete this product?\n" +
-                                "All additional images and inventories will be deleted.\n" +
-                                "You cannot reverse this action.")
+            .setMessage(
+                "Are you sure you want to delete this product?\n" +
+                    "All additional images and inventories will be deleted.\n" +
+                    "You cannot reverse this action."
+            )
             .setPositiveButton("Yes") { _, _ ->
                 loadingDialog.show()
                 viewModel.onDeleteProductClicked(
