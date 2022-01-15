@@ -538,8 +538,8 @@
     <fragment
         android:id="@+id/returnItemsFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.return_items.ReturnItemsFragment"
-        android:label="fragment_return_items"
-        tools:layout="@layout/fragment_return_items" >
+        android:label="REQUESTED TO RETURN ITEM/S"
+        tools:layout="@layout/fragment_return_items">
         <action
             android:id="@+id/action_returnItemsFragment_to_requestReturnItemFragment"
             app:destination="@id/requestReturnItemFragment" />
