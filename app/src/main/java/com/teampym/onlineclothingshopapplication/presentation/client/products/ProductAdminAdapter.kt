@@ -125,6 +125,10 @@ class ProductAdminAdapter(
                     R.string.placeholder_committed,
                     product.inventoryList[0].committed
                 )
+                tvReturned.text = context.getString(
+                    R.string.placeholder_returned,
+                    product.inventoryList[0].returned
+                )
             }
         }
 

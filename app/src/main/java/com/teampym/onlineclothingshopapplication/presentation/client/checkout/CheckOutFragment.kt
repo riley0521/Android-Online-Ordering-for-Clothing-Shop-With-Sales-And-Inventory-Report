@@ -185,7 +185,7 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
                             val completeAddress = "${del.streetNumber} " +
                                 "${del.city}, " +
                                 "${del.province}, " +
-                                "${del.province}, " +
+                                "${del.region}, " +
                                 del.postalCode
                             tvCompleteAddress.visibility = View.VISIBLE
                             tvCompleteAddress.text = completeAddress

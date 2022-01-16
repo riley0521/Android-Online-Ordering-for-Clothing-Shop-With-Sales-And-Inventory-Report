@@ -44,6 +44,7 @@ class AddEditProductViewModel @Inject constructor(
         private const val PRODUCT_IMAGE_LIST = "product_image_list"
         private const val SELECTED_PRODUCT_IMAGE = "selected_product_image"
         private const val ADDITIONAL_IMAGES = "additional_images"
+        private const val IS_EDITING = "is_editing"
     }
 
     var categoryId = state.get(CATEGORY_ID) ?: ""
@@ -96,6 +97,12 @@ class AddEditProductViewModel @Inject constructor(
             state.set(PRODUCT_IMAGE_URL, value)
         }
 
+    private var isEditingProductImages = state.get(IS_EDITING) ?: false
+        set(value) {
+            field = value
+            state.set(IS_EDITING, value)
+        }
+
     val imageList: MutableLiveData<MutableList<ProductImage>> =
         state.getLiveData(PRODUCT_IMAGE_LIST, mutableListOf())
 
@@ -124,6 +131,7 @@ class AddEditProductViewModel @Inject constructor(
         selectedProductImage.postValue(null)
         fileName = ""
         imageUrl = ""
+        isEditingProductImages = false
         updateImageList(listOf())
         updateAdditionalImages(listOf())
     }
@@ -169,17 +177,17 @@ class AddEditProductViewModel @Inject constructor(
                     updatedProduct
                 )
                 if (res) {
-                    val updatedProductImages = productImageRepository.updateAll(uploadedImageList)
-
-                    if (updatedProductImages) {
-                        resetAllUiState()
-
-                        _addEditProductChannel.send(
-                            AddEditProductEvent.NavigateBackWithMessage(
-                                "Product Updated Successfully!"
-                            )
-                        )
+                    if (isEditingProductImages) {
+                        productImageRepository.insertAll(uploadedImageList)
                     }
+
+                    resetAllUiState()
+
+                    _addEditProductChannel.send(
+                        AddEditProductEvent.NavigateBackWithMessage(
+                            "Product Updated Successfully!"
+                        )
+                    )
                 }
             } else {
                 _addEditProductChannel.send(
@@ -274,6 +282,7 @@ class AddEditProductViewModel @Inject constructor(
             val productImageList = productImageRepository.uploadImages(additionalImageList.value!!)
 
             uploadedImageList = productImageList.toMutableList()
+            isEditingProductImages = true
         }
     }
 

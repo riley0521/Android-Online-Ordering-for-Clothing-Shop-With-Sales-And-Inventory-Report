@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
+import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
 import com.teampym.onlineclothingshopapplication.data.util.LoadingDialog
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.FragmentOrderDetailListBinding
@@ -77,7 +78,8 @@ class OrderDetailListFragment :
                 )
 
                 if (user.userType == UserType.ADMIN.name) {
-                    binding.orderBanner.isVisible = true
+                    binding.generalInfoView.isVisible = true
+                    binding.orderInfoView.isVisible = true
                 }
 
                 setupViews()
@@ -96,11 +98,24 @@ class OrderDetailListFragment :
 
                     // Set details of the order object again here
                     tvOrderId.text = o.id
+                    tvUserID.text = o.userId
+                    labelUserID.setOnClickListener {
+                        copyToClipboard(o.userId)
+                    }
+                    tvUserID.setOnClickListener {
+                        copyToClipboard(o.userId)
+                    }
+
                     tvUsername.text = o.deliveryInformation.name
 
                     tvTotalCost.text = getString(
                         R.string.placeholder_price,
                         o.totalCost
+                    )
+
+                    tvSuggestedSf.text = getString(
+                        R.string.placeholder_price,
+                        o.shippingFee
                     )
 
                     tvGrandTotal.text = getString(
@@ -116,15 +131,22 @@ class OrderDetailListFragment :
                     tvDeliveryAddress.text = completeAddress
 
                     tvStatus.text = o.status
-                    tvCourierType.text = getString(
-                        R.string.placeholder_courier_type,
-                        o.courierType
-                    )
-                    tvTrackingNumber.text = getString(
-                        R.string.placeholder_tracking_number,
-                        o.trackingNumber
-                    )
+                    tvCourierType.text = o.courierType
+                    tvTrackingNumber.text = o.trackingNumber
                     tvNumberOfItems.text = o.orderDetailList.count().toString()
+
+                    val paymentMethodStr = when (o.paymentMethod) {
+                        PaymentMethod.COD.name -> {
+                            "Cash On Delivery"
+                        }
+                        PaymentMethod.CREDIT_DEBIT.name -> {
+                            "Credit/Debit Card / Paypal"
+                        }
+                        else -> ""
+                    }
+
+                    tvPaymentMethod.text = paymentMethodStr
+                    tvPaid.text = if (o.paid) "Yes" else "No"
 
                     val calendarDate = Calendar.getInstance()
                     calendarDate.timeInMillis = o.dateOrdered
@@ -185,11 +207,12 @@ class OrderDetailListFragment :
             loadingDialog.dismiss()
 
             if (canReturnItem) {
-                val action = OrderDetailListFragmentDirections.actionOrderDetailListFragmentToRequestReturnItemFragment(
-                    item,
-                    item.id,
-                    false
-                )
+                val action =
+                    OrderDetailListFragmentDirections.actionOrderDetailListFragmentToRequestReturnItemFragment(
+                        item,
+                        item.id,
+                        false
+                    )
                 findNavController().navigate(action)
             } else {
                 Snackbar.make(

@@ -102,7 +102,7 @@
     <string name="action_sort_name">Sort By Name</string>
     <string name="action_sort_new">Sort By Date (newest-oldest)</string>
 
-    <string name="rb_credit_debit_card">Credit/Debit Card</string>
+    <string name="rb_credit_debit_card">Credit/Debit Card / Paypal</string>
     <string name="rb_cod">Cash On Delivery (COD)</string>
     <string name="rb_gcash">G-Cash</string>
     <string name="rb_paymaya">Paymaya</string>
@@ -275,5 +275,7 @@
     <string name="label_general_information">General Information</string>
     <string name="label_order_information">Order Information</string>
     <string name="mail_12mn_clo_gmail_com">12mn.clo@gmail.com</string>
+    <string name="placeholder_returned">Returned: %1$d</string>
+    <string name="label_user_id">User ID:</string>
 
 </resources>

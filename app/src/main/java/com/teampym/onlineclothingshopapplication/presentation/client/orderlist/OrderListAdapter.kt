@@ -68,12 +68,32 @@ class OrderListAdapter(
                     if (position != RecyclerView.NO_POSITION) {
                         val item = getItem(position)
                         if (item != null) {
-                            copyToClipboard(item.userId)
+                            copyToClipboard(item.deliveryInformation.name)
                         }
                     }
                 }
 
                 tvUsername.setOnClickListener {
+                    val position = absoluteAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+                        if (item != null) {
+                            copyToClipboard(item.deliveryInformation.name)
+                        }
+                    }
+                }
+
+                labelUserID.setOnClickListener {
+                    val position = absoluteAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+                        if (item != null) {
+                            copyToClipboard(item.userId)
+                        }
+                    }
+                }
+
+                tvUserID.setOnClickListener {
                     val position = absoluteAdapterPosition
                     if (position != RecyclerView.NO_POSITION) {
                         val item = getItem(position)
@@ -311,6 +331,9 @@ class OrderListAdapter(
                     labelUsername.isVisible = false
                     tvUsername.isVisible = false
 
+                    labelUserID.isVisible = false
+                    tvUserID.isVisible = false
+
                     labelNumberOfItems.isVisible = false
                     tvNumberOfItems.isVisible = false
 
@@ -323,6 +346,7 @@ class OrderListAdapter(
                     item.shippingFee
                 )
                 tvOrderId.text = item.id
+                tvUserID.text = item.userId
                 tvUsername.text = item.deliveryInformation.name
                 tvTotalCost.text = context.getString(
                     R.string.placeholder_price,
@@ -348,7 +372,7 @@ class OrderListAdapter(
                         "Cash On Delivery"
                     }
                     PaymentMethod.CREDIT_DEBIT.name -> {
-                        "Credit/Debit Card"
+                        "Credit/Debit Card / Paypal"
                     }
                     else -> ""
                 }

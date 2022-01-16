@@ -267,9 +267,13 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             }
 
             tvGmail.setOnClickListener {
-                val gmailIntent = Intent(Intent.ACTION_SENDTO)
-                gmailIntent.putExtra(Intent.EXTRA_EMAIL, "12mn.clo@gmail.com")
-                startActivity(gmailIntent)
+                val gmailIntent = Intent(Intent.ACTION_SEND)
+                gmailIntent.data = Uri.parse("mailto:")
+                gmailIntent.type = "text/plain"
+                gmailIntent.putExtra(Intent.EXTRA_EMAIL, arrayOf("12mn.clo@gmail.com"))
+                gmailIntent.putExtra(Intent.EXTRA_SUBJECT, "")
+                gmailIntent.putExtra(Intent.EXTRA_TEXT, "")
+                startActivity(Intent.createChooser(gmailIntent, "Choose email"))
             }
 
             refreshLayout.setOnRefreshListener {

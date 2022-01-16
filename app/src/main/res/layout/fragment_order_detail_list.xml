@@ -11,20 +11,31 @@
         android:layout_height="wrap_content">
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/orderBanner"
+            android:id="@+id/generalInfoView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingBottom="8dp"
-            android:visibility="gone"
+            android:layout_margin="8dp"
+            app:cardCornerRadius="16dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:visibility="visible">
+            app:layout_constraintTop_toTopOf="parent">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingBottom="8dp">
+
+                <TextView
+                    android:id="@+id/tv1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/label_general_information"
+                    android:textAppearance="?attr/textAppearanceHeadline6"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <TextView
                     android:id="@+id/labelOrderId"
@@ -36,7 +47,7 @@
                     android:textAppearance="?attr/textAppearanceBody1"
                     android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toBottomOf="@id/tv1" />
 
                 <TextView
                     android:id="@+id/tvOrderId"
@@ -48,7 +59,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toEndOf="@+id/labelOrderId"
-                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/tv1"
                     tools:text="123456789" />
 
                 <TextView
@@ -56,11 +67,24 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
+                    android:layout_marginTop="36dp"
+                    android:textAppearance="?attr/textAppearanceBody1"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.004"
+                    app:layout_constraintStart_toEndOf="@+id/labelUsername"
+                    app:layout_constraintTop_toBottomOf="@+id/tvOrderId"
+                    tools:text="John Doe" />
+
+                <TextView
+                    android:id="@+id/tvUserID"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
                     android:textAppearance="?attr/textAppearanceBody1"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintStart_toEndOf="@+id/labelUsername"
+                    app:layout_constraintStart_toEndOf="@+id/labelUserID"
                     app:layout_constraintTop_toBottomOf="@+id/tvOrderId"
                     tools:text="John Doe" />
 
@@ -70,12 +94,12 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
+                    android:text="@string/placeholder_price"
                     android:textAppearance="?attr/textAppearanceBody1"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toEndOf="@+id/labelTotalCost"
-                    app:layout_constraintTop_toBottomOf="@+id/tvUsername"
-                    android:text="@string/placeholder_price" />
+                    app:layout_constraintTop_toBottomOf="@+id/tvUsername" />
 
                 <TextView
                     android:id="@+id/tvSuggestedSf"
@@ -83,12 +107,12 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
+                    android:text="@string/placeholder_price"
                     android:textAppearance="?attr/textAppearanceBody1"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toEndOf="@+id/labelShippingFee"
-                    app:layout_constraintTop_toBottomOf="@+id/tvTotalCost"
-                    android:text="@string/placeholder_price" />
+                    app:layout_constraintTop_toBottomOf="@+id/tvTotalCost" />
 
                 <TextView
                     android:id="@+id/tvGrandTotal"
@@ -96,12 +120,12 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
+                    android:text="@string/placeholder_price"
                     android:textAppearance="?attr/textAppearanceBody1"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toEndOf="@+id/labelGrandTotal"
-                    app:layout_constraintTop_toBottomOf="@+id/tvSuggestedSf"
-                    android:text="@string/placeholder_price" />
+                    app:layout_constraintTop_toBottomOf="@+id/tvSuggestedSf" />
 
                 <TextView
                     android:id="@+id/tvDeliveryAddress"
@@ -122,8 +146,20 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="36dp"
                     android:text="@string/label_username"
+                    android:textAppearance="?attr/textAppearanceBody1"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/labelOrderId" />
+
+                <TextView
+                    android:id="@+id/labelUserID"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/label_user_id"
                     android:textAppearance="?attr/textAppearanceBody1"
                     android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
@@ -177,6 +213,27 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/labelGrandTotal" />
 
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/orderInfoView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:visibility="gone"
+            app:cardCornerRadius="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/generalInfoView"
+            tools:visibility="visible">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="8dp">
+
                 <TextView
                     android:id="@+id/labelNumberOfItems"
                     android:layout_width="wrap_content"
@@ -187,7 +244,7 @@
                     android:textAppearance="?attr/textAppearanceBody1"
                     android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/tvTrackingNumber" />
+                    app:layout_constraintTop_toBottomOf="@+id/lbTrackingNumber" />
 
                 <TextView
                     android:id="@+id/tvNumberOfItems"
@@ -199,7 +256,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.008"
                     app:layout_constraintStart_toEndOf="@+id/labelNumberOfItems"
-                    app:layout_constraintTop_toBottomOf="@+id/tvTrackingNumber"
+                    app:layout_constraintTop_toBottomOf="@+id/lbTrackingNumber"
                     tools:text="5" />
 
                 <TextView
@@ -242,6 +299,21 @@
                     tools:text="11/27/2021 11:11:11 AM" />
 
                 <TextView
+                    android:id="@+id/tv2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:text="@string/label_order_information"
+                    android:textAppearance="?attr/textAppearanceHeadline6"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
                     android:id="@+id/labelStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -254,36 +326,108 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/tvDeliveryAddress" />
+                    app:layout_constraintTop_toBottomOf="@id/tv2" />
 
                 <TextView
-                    android:id="@+id/tvTrackingNumber"
-                    android:layout_width="0dp"
+                    android:id="@+id/lbTrackingNumber"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
-                    android:layout_marginEnd="8dp"
                     android:text="@string/placeholder_tracking_number"
                     android:textAppearance="?attr/textAppearanceBody1"
                     android:textStyle="bold"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/tvCourierType" />
 
                 <TextView
+                    android:id="@+id/tvTrackingNumber"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:textAppearance="?attr/textAppearanceBody1"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toEndOf="@+id/lbTrackingNumber"
+                    app:layout_constraintTop_toBottomOf="@+id/tvCourierType"
+                    tools:text="%1$s" />
+
+                <TextView
                     android:id="@+id/tvCourierType"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:textAppearance="?attr/textAppearanceBody1"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toEndOf="@+id/lbCourierType"
+                    app:layout_constraintTop_toBottomOf="@+id/tvPaid"
+                    tools:text="%1$s" />
+
+                <TextView
+                    android:id="@+id/lbCourierType"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/placeholder_courier_type"
+                    android:textAppearance="?attr/textAppearanceBody1"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/tvPaid" />
+
+                <TextView
+                    android:id="@+id/tvPaid"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:textAppearance="?attr/textAppearanceBody1"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toEndOf="@+id/lbPaid"
+                    app:layout_constraintTop_toBottomOf="@+id/lbPaymentMethod"
+                    tools:text="%1$s" />
+
+                <TextView
+                    android:id="@+id/lbPaid"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/placeholder_paid"
+                    android:textAppearance="?attr/textAppearanceBody1"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/lbPaymentMethod" />
+
+                <TextView
+                    android:id="@+id/lbPaymentMethod"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/placeholder_payment_method"
+                    android:textAppearance="?attr/textAppearanceBody1"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/labelStatus" />
+
+                <TextView
+                    android:id="@+id/tvPaymentMethod"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_marginTop="8dp"
                     android:layout_marginEnd="8dp"
-                    android:text="@string/placeholder_courier_type"
                     android:textAppearance="?attr/textAppearanceBody1"
-                    android:textStyle="bold"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/labelStatus" />
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toEndOf="@+id/lbPaymentMethod"
+                    app:layout_constraintTop_toBottomOf="@+id/labelStatus"
+                    tools:text="%1$s" />
 
                 <TextView
                     android:id="@+id/tvStatus"
@@ -295,7 +439,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toEndOf="@+id/labelStatus"
-                    app:layout_constraintTop_toBottomOf="@+id/tvDeliveryAddress"
+                    app:layout_constraintTop_toBottomOf="@+id/tv2"
                     tools:text="SHIPPED" />
 
                 <TextView
@@ -342,7 +486,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/orderBanner" />
+            app:layout_constraintTop_toBottomOf="@+id/orderInfoView" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

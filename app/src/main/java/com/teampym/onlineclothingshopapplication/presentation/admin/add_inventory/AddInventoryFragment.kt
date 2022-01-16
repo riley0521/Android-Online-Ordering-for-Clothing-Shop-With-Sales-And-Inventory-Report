@@ -238,7 +238,7 @@ class AddInventoryFragment : Fragment(R.layout.fragment_add_inventory) {
 
     private fun isSizeExisting(): Boolean {
         if (availableSizeList.isNotEmpty()) {
-            return availableSizeList.contains(viewModel.inventorySize)
+            return availableSizeList.contains(viewModel.inventorySize.lowercase())
         }
         return false
     }

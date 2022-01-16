@@ -17,11 +17,10 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.models.Post
-import com.teampym.onlineclothingshopapplication.data.util.REMOVE_PRODUCT_BUTTON
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.NewsItemBinding
 import java.text.SimpleDateFormat
-import java.util.* // ktlint-disable no-wildcard-imports
+import java.util.*
 
 class NewsAdapter constructor(
     private val listener: NewsListener,
@@ -137,12 +136,16 @@ class NewsAdapter constructor(
         @SuppressLint("SimpleDateFormat", "SetTextI18n")
         fun bind(item: Post) {
             binding.apply {
-                Glide.with(itemView)
-                    .load(item.imageUrl)
-                    .centerCrop()
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .error(R.drawable.ic_food)
-                    .into(imgAddedImage)
+                if (item.imageUrl.isNotBlank()) {
+                    Glide.with(itemView)
+                        .load(item.imageUrl)
+                        .centerCrop()
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .error(R.drawable.ic_food)
+                        .into(imgAddedImage)
+                } else {
+                    imgAddedImage.isVisible = false
+                }
 
                 Glide.with(itemView)
                     .load(item.avatarUrl)

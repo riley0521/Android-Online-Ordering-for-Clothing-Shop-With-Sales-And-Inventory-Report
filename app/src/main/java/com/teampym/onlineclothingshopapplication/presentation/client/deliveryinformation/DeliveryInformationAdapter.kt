@@ -82,7 +82,7 @@ class DeliveryInformationAdapter(
                 val completeAddress = "${deliveryInfo.streetNumber} " +
                     "${deliveryInfo.city}, " +
                     "${deliveryInfo.province}, " +
-                    "${deliveryInfo.province}, " +
+                    "${deliveryInfo.region}, " +
                     deliveryInfo.postalCode
                 tvAddress.text = completeAddress
 

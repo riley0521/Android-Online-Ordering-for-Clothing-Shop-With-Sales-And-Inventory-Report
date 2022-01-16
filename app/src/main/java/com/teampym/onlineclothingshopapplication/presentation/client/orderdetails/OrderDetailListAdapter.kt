@@ -31,7 +31,9 @@ class OrderDetailListAdapter(
     companion object {
         private val ORDER_DETAIL_COMPARATOR = object : DiffUtil.ItemCallback<OrderDetail>() {
             override fun areItemsTheSame(oldItem: OrderDetail, newItem: OrderDetail): Boolean {
-                return oldItem.id == newItem.id
+                return oldItem.id == newItem.id &&
+                    oldItem.canReturn == newItem.canReturn &&
+                    oldItem.canAddReview == newItem.canAddReview
             }
 
             override fun areContentsTheSame(oldItem: OrderDetail, newItem: OrderDetail): Boolean {
@@ -101,7 +103,6 @@ class OrderDetailListAdapter(
 
                 tvProductName.text = item.product.name
                 tvSize.text = item.size
-
 
                 tvPrice.text = context.getString(
                     R.string.placeholder_price,
