@@ -46,7 +46,11 @@ class ProductInventoryRepository @Inject constructor(
         }
     }
 
-    suspend fun create(username: String, productName: String, inventory: Inventory): Inventory? {
+    suspend fun create(
+        username: String,
+        productName: String,
+        inventory: Inventory
+    ): Inventory? {
         return withContext(dispatcher) {
             val result = productCollectionRef
                 .document(inventory.pid)
@@ -63,7 +67,7 @@ class ProductInventoryRepository @Inject constructor(
                     )
                 )
 
-                return@withContext inventory.copy(inventoryId = result.id)
+                return@withContext inventory.copy(inventoryId = result.id, productName = productName)
             } else {
                 return@withContext null
             }
@@ -76,10 +80,8 @@ class ProductInventoryRepository @Inject constructor(
         productId: String,
         inventoryId: String,
         stockToAdd: Long
-    ): Boolean {
+    ): Inventory? {
         return withContext(dispatcher) {
-            var isSuccessful = true
-
             val inventoryDocument = productCollectionRef
                 .document(productId)
                 .collection(INVENTORIES_SUB_COLLECTION)
@@ -107,11 +109,15 @@ class ProductInventoryRepository @Inject constructor(
                             type = AuditType.INVENTORY.name
                         )
                     )
+
+                    inventory.productName = productName
+
+                    return@withContext inventory
                 } catch (ex: Exception) {
-                    isSuccessful = false
+                    return@withContext null
                 }
             }
-            isSuccessful
+            null
         }
     }
 

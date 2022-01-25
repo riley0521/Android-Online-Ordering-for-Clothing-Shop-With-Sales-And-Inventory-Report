@@ -251,8 +251,10 @@ class ProductRepository @Inject constructor(
     suspend fun deductStockToCommittedCount(
         userType: String,
         orderDetailList: List<OrderDetail>
-    ): Boolean {
+    ): List<Inventory> {
         return withContext(dispatcher) {
+            val updateInventories = mutableListOf<Inventory>()
+
             if (userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryDocument =
@@ -276,24 +278,29 @@ class ProductRepository @Inject constructor(
                                 .document(orderDetail.inventoryId)
                                 .set(inventory, SetOptions.merge())
                                 .await()
+
+                            inventory.productName = orderDetail.product.name
+
+                            updateInventories.add(inventory)
                         } catch (ex: JavaLangException) {
-                            return@withContext false
+                            return@withContext updateInventories
                         }
                     } else {
-                        return@withContext false
+                        return@withContext updateInventories
                     }
                 }
             }
-            true
+            updateInventories
         }
     }
 
     // CANCELED
-    // TODO("I think I should remove this because this is unnecessary.")
     suspend fun deductCommittedToStockCount(
         orderDetailList: List<OrderDetail>
-    ): Boolean {
+    ): List<Inventory> {
         return withContext(dispatcher) {
+            val updatedInventories = mutableListOf<Inventory>()
+
             for (orderDetail in orderDetailList) {
                 val inventoryDocument =
                     productCollectionRef
@@ -316,22 +323,28 @@ class ProductRepository @Inject constructor(
                             .document(orderDetail.inventoryId)
                             .set(inventory, SetOptions.merge())
                             .await()
+
+                        inventory.productName = orderDetail.product.name
+
+                        updatedInventories.add(inventory)
                     } catch (ex: JavaLangException) {
-                        return@withContext false
+                        return@withContext updatedInventories
                     }
                 } else {
-                    return@withContext false
+                    return@withContext updatedInventories
                 }
             }
-            true
+            updatedInventories
         }
     }
 
     // COMPLETED
     suspend fun deductCommittedToSoldCount(
-        orderDetailList: List<OrderDetail>
-    ): Boolean {
+        orderDetailList: List<OrderDetail>,
+        onComplete: (List<OrderDetail>) -> Unit = {}
+    ): List<Inventory> {
         return withContext(dispatcher) {
+            val updatedInventories = mutableListOf<Inventory>()
 
             for (orderDetail in orderDetailList) {
                 val inventoryDocument = productCollectionRef
@@ -352,12 +365,17 @@ class ProductRepository @Inject constructor(
                         inventoryDocument.reference
                             .set(inventory, SetOptions.merge())
                             .await()
+
+                        inventory.productName = orderDetail.product.name
+
+                        updatedInventories.add(inventory)
                     } catch (ex: JavaLangException) {
-                        return@withContext false
+                        return@withContext updatedInventories
                     }
                 }
             }
-            return@withContext true
+            onComplete.invoke(orderDetailList)
+            updatedInventories
         }
     }
 
@@ -365,8 +383,10 @@ class ProductRepository @Inject constructor(
     suspend fun deductSoldToReturnedCount(
         userType: String,
         orderDetailList: List<OrderDetail>
-    ): Boolean {
+    ): List<Inventory> {
         return withContext(dispatcher) {
+            val updatedInventories = mutableListOf<Inventory>()
+
             if (userType == UserType.ADMIN.toString()) {
                 for (orderDetail in orderDetailList) {
                     val inventoryDocument =
@@ -390,16 +410,20 @@ class ProductRepository @Inject constructor(
                                 .document(orderDetail.inventoryId)
                                 .set(inventory, SetOptions.merge())
                                 .await()
+
+                            inventory.productName = orderDetail.product.name
+
+                            updatedInventories.add(inventory)
                         } catch (ex: JavaLangException) {
-                            return@withContext false
+                            return@withContext updatedInventories
                         }
                     } else {
-                        return@withContext false
+                        return@withContext updatedInventories
                     }
                 }
-                return@withContext true
+                return@withContext updatedInventories
             }
-            false
+            updatedInventories
         }
     }
 }

@@ -225,6 +225,15 @@ object RepositoryModule {
         db,
         dispatcher
     )
+
+    @Provides
+    fun provideShippingFeesRepository(
+        db: FirebaseFirestore,
+        @IoDispatcher dispatcher: CoroutineDispatcher
+    ) = ShippingFeesRepository(
+        db,
+        dispatcher
+    )
 }
 
 @Retention(AnnotationRetention.RUNTIME)

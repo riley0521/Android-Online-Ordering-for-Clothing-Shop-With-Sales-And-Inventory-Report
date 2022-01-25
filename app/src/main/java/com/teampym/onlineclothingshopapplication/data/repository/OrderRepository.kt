@@ -13,6 +13,7 @@ import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
 import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.room.DeliveryInformation
+import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
 import com.teampym.onlineclothingshopapplication.data.util.AuditType
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
@@ -21,10 +22,11 @@ import com.teampym.onlineclothingshopapplication.data.util.Status
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.presentation.client.orderlist.OrderListPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.async
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.util.* // ktlint-disable no-wildcard-imports
+import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -227,7 +229,7 @@ class OrderRepository @Inject constructor(
         isSfShoulderedByAdmin: Boolean = false,
         trackingNumber: String?,
         courierType: String?
-    ): Boolean {
+    ): List<Inventory> {
 
         // SHIPPED = Use Product Repository to update the deduct number of stock and add it to committed
         // DELIVERY = Simply update the status field in db and notify specific user with notificationToken
@@ -246,31 +248,24 @@ class OrderRepository @Inject constructor(
                         status,
                         userType
                     )
-                    true
                 }
                 Status.DELIVERY.name -> {
                     changeStatusToDelivery(username, status, orderId, trackingNumber, courierType)
-                    true
                 }
                 Status.COMPLETED.name -> {
                     // Change the status to completed first
                     // Then deduct the committed to sold
-                    val salesOrderList = changeStatusToCompleted(
+                    changeStatusToCompleted(
                         username,
                         orderId,
                         status,
                         isSfShoulderedByAdmin
                     )
-
-                    val orderDoc = getOne(orderId)
-
-                    salesRepository.insert(salesOrderList, orderDoc.shippingFee)
-                    true
                 }
                 Status.CANCELED.name -> {
                     changeStatusToCancelled(username, true, orderId, status, false)
                 }
-                else -> false
+                else -> listOf()
             }
         }
     }
@@ -281,7 +276,7 @@ class OrderRepository @Inject constructor(
         orderId: String,
         status: String,
         isCommitted: Boolean
-    ): Boolean {
+    ): List<Inventory> {
         return withContext(dispatcher) {
             val updateOrderStatus = mapOf<String, Any>(
                 "status" to status
@@ -316,9 +311,9 @@ class OrderRepository @Inject constructor(
                     }
                 }
 
-                return@withContext true
+                return@withContext listOf()
             } catch (ex: Exception) {
-                return@withContext false
+                return@withContext listOf()
             }
         }
     }
@@ -328,7 +323,7 @@ class OrderRepository @Inject constructor(
         orderId: String,
         status: String,
         isSfShoulderedByAdmin: Boolean
-    ): List<OrderDetail> {
+    ): List<Inventory> {
         return withContext(dispatcher) {
             val orderDoc = getOne(orderId)
 
@@ -369,7 +364,7 @@ class OrderRepository @Inject constructor(
         orderId: String,
         trackingNumber: String?,
         courierType: String?
-    ): Boolean {
+    ): List<Inventory> {
         return withContext(dispatcher) {
 
             var t = ""
@@ -402,9 +397,9 @@ class OrderRepository @Inject constructor(
                     )
                 )
 
-                return@withContext true
+                return@withContext listOf()
             } catch (ex: java.lang.Exception) {
-                return@withContext false
+                return@withContext listOf()
             }
         }
     }
@@ -414,7 +409,7 @@ class OrderRepository @Inject constructor(
         orderId: String,
         status: String,
         userId: String
-    ): Boolean {
+    ): List<Inventory> {
         return withContext(dispatcher) {
             val orderDoc = orderCollectionRef
                 .document(orderId)
@@ -454,10 +449,10 @@ class OrderRepository @Inject constructor(
                         updatedOrder
                     )
                 } catch (ex: Exception) {
-                    return@withContext false
+                    return@withContext listOf()
                 }
             }
-            return@withContext false
+            return@withContext listOf()
         }
     }
 
@@ -465,7 +460,7 @@ class OrderRepository @Inject constructor(
         orderDetailDocuments: QuerySnapshot,
         userId: String,
         order: Order
-    ): Boolean {
+    ): List<Inventory> {
         return withContext(dispatcher) {
             val orderDetailList = mutableListOf<OrderDetail>()
             for (document in orderDetailDocuments.documents) {
@@ -480,14 +475,10 @@ class OrderRepository @Inject constructor(
                 userId,
                 orderDetailList
             )
-
-            return@withContext true
         }
     }
 
-    private suspend fun updateOrderDetailsToSold(
-        orderId: String
-    ): List<OrderDetail> {
+    private suspend fun updateOrderDetailsToSold(orderId: String): List<Inventory> {
         return withContext(dispatcher) {
             val orderDetailList = mutableListOf<OrderDetail>()
 
@@ -520,13 +511,14 @@ class OrderRepository @Inject constructor(
                     return@withContext emptyList()
                 }
             }
-            async {
-                productRepository.deductCommittedToSoldCount(
-                    orderDetailList
-                )
-            }.await()
-
-            return@withContext orderDetailList
+            return@withContext productRepository.deductCommittedToSoldCount(
+                orderDetailList
+            ) {
+                CoroutineScope(dispatcher).launch {
+                    val orderDoc = getOne(orderId)
+                    salesRepository.insert(it, orderDoc.shippingFee)
+                }
+            }
         }
     }
 }

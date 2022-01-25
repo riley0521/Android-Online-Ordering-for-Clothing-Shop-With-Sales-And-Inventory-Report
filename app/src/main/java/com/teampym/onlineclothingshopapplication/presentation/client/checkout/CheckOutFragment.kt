@@ -55,6 +55,8 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
         binding = FragmentCheckOutBinding.bind(view)
         loadingDialog = LoadingDialog(requireActivity())
 
+        loadingDialog.show()
+
         adapter = CheckOutAdapter(requireContext())
         adapter.submitList(args.cart.cart)
 
@@ -192,25 +194,29 @@ class CheckOutFragment : Fragment(R.layout.fragment_check_out) {
 
                             tvNoAddressYet.visibility = View.INVISIBLE
 
-                            shippingFee = when (del.region.lowercase()) {
-                                "metro manila" -> 80.0
-                                "mindanao" -> 175.0
-                                "north luzon" -> 120.0
-                                "south luzon" -> 120.0
-                                "visayas" -> 150.0
-                                else -> 0.0
+                            viewModel.loadShippingFees {
+                                loadingDialog.dismiss()
+                                viewModel.shippingFee = it
+
+                                shippingFee = when (del.region.lowercase()) {
+                                    "metro manila" -> viewModel.shippingFee.metroManila.toDouble()
+                                    "mindanao" -> viewModel.shippingFee.mindanao.toDouble()
+                                    "north luzon" -> viewModel.shippingFee.northLuzon.toDouble()
+                                    "south luzon" -> viewModel.shippingFee.southLuzon.toDouble()
+                                    "visayas" -> viewModel.shippingFee.visayas.toDouble()
+                                    else -> 0.0
+                                }
+
+                                tvShippingFee.text = getString(
+                                    R.string.placeholder_price,
+                                    shippingFee
+                                )
+                                totalCost = args.cart.totalCost + shippingFee
+                                tvTotalPaymentAgain.text = getString(
+                                    R.string.placeholder_price,
+                                    totalCost
+                                )
                             }
-
-                            tvShippingFee.text = getString(
-                                R.string.placeholder_price,
-                                shippingFee
-                            )
-
-                            totalCost = args.cart.totalCost + shippingFee
-                            tvTotalPaymentAgain.text = getString(
-                                R.string.placeholder_price,
-                                totalCost
-                            )
                         }
                     }
                 }

@@ -1,5 +1,6 @@
 package com.teampym.onlineclothingshopapplication.presentation.client.orderlist
 
+import android.annotation.SuppressLint
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
@@ -14,6 +15,7 @@ import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.models.NotificationToken
 import com.teampym.onlineclothingshopapplication.data.models.Order
 import com.teampym.onlineclothingshopapplication.data.network.FCMService
+import com.teampym.onlineclothingshopapplication.data.network.GoogleSheetService
 import com.teampym.onlineclothingshopapplication.data.network.NotificationData
 import com.teampym.onlineclothingshopapplication.data.network.NotificationSingle
 import com.teampym.onlineclothingshopapplication.data.repository.NotificationTokenRepository
@@ -25,6 +27,7 @@ import com.teampym.onlineclothingshopapplication.data.util.NOTIFICATION_TOKENS_S
 import com.teampym.onlineclothingshopapplication.data.util.ORDERS_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.Status
 import com.teampym.onlineclothingshopapplication.data.util.UserType
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.combine
@@ -33,6 +36,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
 import java.util.* // ktlint-disable no-wildcard-imports
 import javax.inject.Inject
 
@@ -43,6 +47,7 @@ class OrderListViewModel @Inject constructor(
     private val userInformationDao: UserInformationDao,
     private val notificationTokenRepository: NotificationTokenRepository,
     private val service: FCMService,
+    private val googleSheetService: GoogleSheetService,
     preferencesManager: PreferencesManager
 ) : ViewModel() {
 
@@ -161,13 +166,14 @@ class OrderListViewModel @Inject constructor(
         }
     }
 
+    @SuppressLint("SimpleDateFormat")
     fun deliverOrder(order: Order, type: CourierType, trackingNumber: String) =
         viewModelScope.launch {
             val session = _userSessionFlow.first()
             val userInformation = userInformationDao.getCurrentUser(session.userId)
 
             userInformation?.let {
-                val res = orderRepository.updateOrderStatus(
+                orderRepository.updateOrderStatus(
                     username = "${userInformation.firstName} ${userInformation.lastName}",
                     userType = userInformation.userType,
                     orderId = order.id,
@@ -177,50 +183,42 @@ class OrderListViewModel @Inject constructor(
                     type.name
                 )
 
-                if (res) {
+                val data = NotificationData(
+                    title = "Order (${order.id.take(order.id.length / 2)}...) is on it's way.",
+                    body = "Buckle up because your order is on it's way to your home!",
+                    orderId = order.id
+                )
 
-                    val data = NotificationData(
-                        title = "Order (${order.id.take(order.id.length / 2)}...) is on it's way.",
-                        body = "Buckle up because your order is on it's way to your home!",
-                        orderId = order.id
-                    )
+                val notificationTokenList = notificationTokenRepository.getAll(order.userId)
 
-                    val notificationTokenList = notificationTokenRepository.getAll(order.userId)
-
-                    if (notificationTokenList.isNotEmpty()) {
-                        val tokenList: List<String> = notificationTokenList.map {
-                            it.token
-                        }
-
-                        val notificationSingle = NotificationSingle(
-                            data = data,
-                            tokenList = tokenList
-                        )
-
-                        service.notifySingleUser(notificationSingle)
+                if (notificationTokenList.isNotEmpty()) {
+                    val tokenList: List<String> = notificationTokenList.map {
+                        it.token
                     }
 
-                    _orderListChannel.send(
-                        OrderListEvent.ShowSuccessMessage(
-                            "Changed Order status to 'For Delivery' successfully!"
-                        )
+                    val notificationSingle = NotificationSingle(
+                        data = data,
+                        tokenList = tokenList
                     )
-                } else {
-                    _orderListChannel.send(
-                        OrderListEvent.ShowErrorMessage(
-                            "Changing Order status to 'For Delivery' failed. Please try again."
-                        )
-                    )
+
+                    service.notifySingleUser(notificationSingle)
                 }
+
+                _orderListChannel.send(
+                    OrderListEvent.ShowSuccessMessage(
+                        "Changed Order status to 'For Delivery' successfully!"
+                    )
+                )
             }
         }
 
+    @SuppressLint("SimpleDateFormat")
     fun shipOrder(order: Order) = viewModelScope.launch {
         val session = _userSessionFlow.first()
         val userInformation = userInformationDao.getCurrentUser(session.userId)
 
         userInformation?.let {
-            val res = orderRepository.updateOrderStatus(
+            val updatedInventories = orderRepository.updateOrderStatus(
                 username = "${userInformation.firstName} ${userInformation.lastName}",
                 userType = userInformation.userType,
                 orderId = order.id,
@@ -230,7 +228,27 @@ class OrderListViewModel @Inject constructor(
                 null
             )
 
-            if (res) {
+            if (updatedInventories.isNotEmpty()) {
+
+                val calendarDate = Calendar.getInstance()
+                calendarDate.timeInMillis = Utils.getTimeInMillisUTC()
+                val formattedDate = SimpleDateFormat("MM/dd/yyyy").format(calendarDate.time)
+
+                for (inv in updatedInventories) {
+                    googleSheetService.insertInventory(
+                        date = formattedDate,
+                        productId = inv.pid,
+                        inventoryId = inv.inventoryId,
+                        productName = inv.productName,
+                        size = inv.size,
+                        stock = inv.stock.toString(),
+                        committed = inv.committed.toString(),
+                        sold = inv.sold.toString(),
+                        returned = inv.returned.toString(),
+                        weightInKg = inv.weightInKg.toString() + " Kilogram"
+                    )
+                }
+
                 val data = NotificationData(
                     title = "Order (${order.id.take(order.id.length / 2)}...) is shipped.",
                     body = "Order is shipped.",
@@ -316,12 +334,13 @@ class OrderListViewModel @Inject constructor(
         }
     }
 
+    @SuppressLint("SimpleDateFormat")
     fun completeOrder(order: Order, isSfShoulderedByAdmin: Boolean) = viewModelScope.launch {
         val session = _userSessionFlow.first()
         val userInformation = userInformationDao.getCurrentUser(session.userId)
 
         userInformation?.let {
-            val res = orderRepository.updateOrderStatus(
+            val updatedInventories = orderRepository.updateOrderStatus(
                 username = "${userInformation.firstName} ${userInformation.lastName}",
                 userType = userInformation.userType,
                 orderId = order.id,
@@ -331,7 +350,27 @@ class OrderListViewModel @Inject constructor(
                 null
             )
 
-            if (res) {
+            if (updatedInventories.isNotEmpty()) {
+
+                val calendarDate = Calendar.getInstance()
+                calendarDate.timeInMillis = Utils.getTimeInMillisUTC()
+                val formattedDate = SimpleDateFormat("MM/dd/yyyy").format(calendarDate.time)
+
+                for (inv in updatedInventories) {
+                    googleSheetService.insertInventory(
+                        date = formattedDate,
+                        productId = inv.pid,
+                        inventoryId = inv.inventoryId,
+                        productName = inv.productName,
+                        size = inv.size,
+                        stock = inv.stock.toString(),
+                        committed = inv.committed.toString(),
+                        sold = inv.sold.toString(),
+                        returned = inv.returned.toString(),
+                        weightInKg = inv.weightInKg.toString() + " Kilogram"
+                    )
+                }
+
                 _orderListChannel.send(
                     OrderListEvent.ShowSuccessMessage(
                         "Changed Order status to Completed successfully!"
@@ -348,20 +387,6 @@ class OrderListViewModel @Inject constructor(
     }
 
     fun onAdminCancelResult(
-        result: String,
-        order: Order
-    ) = viewModelScope.launch {
-        _orderListChannel.send(OrderListEvent.ShowSuccessMessage("$result - ${order.id}"))
-    }
-
-    fun onSuggestedShippingFeeResult(
-        result: String,
-        order: Order
-    ) = viewModelScope.launch {
-        _orderListChannel.send(OrderListEvent.ShowSuccessMessage("$result - ${order.id}"))
-    }
-
-    fun onAgreeToSfResult(
         result: String,
         order: Order
     ) = viewModelScope.launch {

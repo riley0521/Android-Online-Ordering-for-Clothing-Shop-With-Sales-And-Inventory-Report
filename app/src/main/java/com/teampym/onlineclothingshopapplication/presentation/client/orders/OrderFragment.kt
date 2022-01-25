@@ -7,12 +7,10 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.snackbar.Snackbar
 import com.teampym.onlineclothingshopapplication.R
 import com.teampym.onlineclothingshopapplication.data.util.CANCELLED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.COMPLETED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.DELIVERY_ORDERS
-import com.teampym.onlineclothingshopapplication.data.util.RETURNED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.SHIPPED_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.SHIPPING_ORDERS
 import com.teampym.onlineclothingshopapplication.data.util.Status

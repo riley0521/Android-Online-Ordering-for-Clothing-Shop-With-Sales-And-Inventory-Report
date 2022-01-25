@@ -1,6 +1,7 @@
 package com.teampym.onlineclothingshopapplication.data.di
 
 import com.teampym.onlineclothingshopapplication.data.network.FCMService
+import com.teampym.onlineclothingshopapplication.data.network.GoogleSheetService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,4 +29,15 @@ object NetworkModule {
     fun provideFCMService(
         retrofit: Retrofit
     ): FCMService = retrofit.create(FCMService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideGoogleSheetService(): GoogleSheetService {
+        val retrofit = Retrofit.Builder()
+            .addConverterFactory(GsonConverterFactory.create())
+            .baseUrl("https://script.google.com/macros/s/AKfycbzO4KxLqmqRBqb5ymAOxk0qURUUOETKHid_LTBDlFBjl6INPOPX1Q5WwQ8mm2dbTHgVQA/")
+            .build()
+
+        return retrofit.create(GoogleSheetService::class.java)
+    }
 }

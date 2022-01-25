@@ -42,6 +42,9 @@ const val TERMS_DATA = "Terms"
 const val SIZE_CHART_DATA = "SizeChart"
 const val FAQ_DATA = "Faqs"
 
+const val SHIPPING_FEES_DATA = "ShippingFees"
+const val SHIPPING_ID = "K54UYHdL0y0RSc6jOjLJ"
+
 const val PREFIX = "https://midnightmares.page.link"
 
 const val RECEIVED_ORDER = "Received Order"
@@ -58,7 +61,6 @@ const val SHIPPING_ORDERS = "Shipping Orders"
 const val SHIPPED_ORDERS = "Shipped Orders"
 const val DELIVERY_ORDERS = "For Delivery Orders"
 const val COMPLETED_ORDERS = "Completed Orders"
-const val RETURNED_ORDERS = "Returned Orders"
 const val CANCELLED_ORDERS = "Cancelled Orders"
 
 const val ROOT_PATH = "public/"

@@ -135,6 +135,9 @@
             android:name="isBanned"
             app:argType="boolean"
             android:defaultValue="false" />
+        <action
+            android:id="@+id/action_profileFragment_to_shippingFeesFragment"
+            app:destination="@id/shippingFeesFragment" />
     </fragment>
     <action
         android:id="@+id/action_global_profileFragment"
@@ -544,4 +547,9 @@
             android:id="@+id/action_returnItemsFragment_to_requestReturnItemFragment"
             app:destination="@id/requestReturnItemFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/shippingFeesFragment"
+        android:name="com.teampym.onlineclothingshopapplication.presentation.admin.shipping_fees.ShippingFeesFragment"
+        android:label="Shipping Fees"
+        tools:layout="@layout/fragment_shipping_fees" />
 </navigation>

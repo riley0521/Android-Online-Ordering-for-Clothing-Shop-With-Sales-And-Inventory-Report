@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.toObject
 import com.teampym.onlineclothingshopapplication.data.models.NotificationToken
+import com.teampym.onlineclothingshopapplication.data.models.ShippingFee
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
 import com.teampym.onlineclothingshopapplication.data.network.FCMService
 import com.teampym.onlineclothingshopapplication.data.network.NotificationData
@@ -14,6 +15,7 @@ import com.teampym.onlineclothingshopapplication.data.network.NotificationSingle
 import com.teampym.onlineclothingshopapplication.data.repository.CartRepository
 import com.teampym.onlineclothingshopapplication.data.repository.OrderDetailRepository
 import com.teampym.onlineclothingshopapplication.data.repository.OrderRepository
+import com.teampym.onlineclothingshopapplication.data.repository.ShippingFeesRepository
 import com.teampym.onlineclothingshopapplication.data.room.Cart
 import com.teampym.onlineclothingshopapplication.data.room.CartDao
 import com.teampym.onlineclothingshopapplication.data.room.PaymentMethod
@@ -39,10 +41,21 @@ class CheckOutViewModel @Inject constructor(
     private val cartDao: CartDao,
     private val orderRepository: OrderRepository,
     private val orderDetailRepository: OrderDetailRepository,
-    private val service: FCMService,
     private val cartRepository: CartRepository,
+    private val shippingFeesRepository: ShippingFeesRepository,
+    private val service: FCMService,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
+
+    var shippingFee: ShippingFee = ShippingFee()
+
+    fun loadShippingFees(onLoad: (ShippingFee) -> Unit) {
+        viewModelScope.launch {
+            shippingFeesRepository.get()?.let {
+                onLoad.invoke(it)
+            }
+        }
+    }
 
     private val _checkOutChannel = Channel<CheckOutEvent>()
     val checkOutEvent = _checkOutChannel.receiveAsFlow()

@@ -4,21 +4,26 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.teampym.onlineclothingshopapplication.data.network.GoogleSheetService
 import com.teampym.onlineclothingshopapplication.data.repository.ProductInventoryRepository
 import com.teampym.onlineclothingshopapplication.data.room.Inventory
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
 class AddInventoryViewModel @Inject constructor(
     private val inventoryRepository: ProductInventoryRepository,
     private val userInformationDao: UserInformationDao,
+    private val googleSheetService: GoogleSheetService,
     preferencesManager: PreferencesManager,
     private val state: SavedStateHandle
 ) : ViewModel() {
@@ -104,6 +109,24 @@ class AddInventoryViewModel @Inject constructor(
                 newInv
             )
             if (res != null) {
+
+                val calendarDate = Calendar.getInstance()
+                calendarDate.timeInMillis = Utils.getTimeInMillisUTC()
+                val formattedDate = SimpleDateFormat("MM/dd/yyyy").format(calendarDate.time)
+
+                googleSheetService.insertInventory(
+                    date = formattedDate,
+                    productId = productId,
+                    inventoryId = res.inventoryId,
+                    productName = productName,
+                    size = inventorySize,
+                    stock = inventoryStock.toString(),
+                    committed = "0",
+                    sold = "0",
+                    returned = "0",
+                    weightInKg = if (weightInKg > 0.0) "$weightInKg Kilogram" else "0.20 Kilogram"
+                )
+
                 resetAllUiState()
                 if (isAddingAnother) {
                     _addInventoryChannel.send(

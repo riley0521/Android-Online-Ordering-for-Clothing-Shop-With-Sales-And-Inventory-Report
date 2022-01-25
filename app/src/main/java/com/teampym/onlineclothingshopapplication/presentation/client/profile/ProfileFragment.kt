@@ -160,6 +160,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                                             cardViewBanner.isVisible = !currentUser.isEmailVerified
                                         }
                                     } else if (event.userInfo.userType == UserType.ADMIN.name) {
+                                        tvShippingFees.isVisible = true
                                         tvAccounts.isVisible = true
                                         tvOrders.isVisible = true
                                         tvHistoryLog.isVisible = true
@@ -235,6 +236,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
             tvWishList.setOnClickListener {
                 findNavController().navigate(R.id.action_profileFragment_to_wishListFragment)
+            }
+
+            tvShippingFees.setOnClickListener {
+                findNavController().navigate(R.id.action_profileFragment_to_shippingFeesFragment)
             }
 
             tvAccounts.setOnClickListener {
@@ -333,6 +338,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             tvProfile.isVisible = false
             tvWishList.isVisible = false
 
+            tvShippingFees.isVisible = false
             tvAccounts.isVisible = false
             tvHistoryLog.isVisible = false
             tvSales.isVisible = false

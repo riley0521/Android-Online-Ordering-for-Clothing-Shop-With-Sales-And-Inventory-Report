@@ -277,5 +277,11 @@
     <string name="mail_12mn_clo_gmail_com">12mn.clo@gmail.com</string>
     <string name="placeholder_returned">Returned: %1$d</string>
     <string name="label_user_id">User ID:</string>
+    <string name="label_shipping_fees">Shipping Fees</string>
+    <string name="hint_metro_manila_sf">Metro Manila SF</string>
+    <string name="hint_mindanao_sf">Mindanao SF</string>
+    <string name="hint_north_luzon_sf">North Luzon SF</string>
+    <string name="hint_south_luzon_sf">South Luzon SF</string>
+    <string name="hint_visayas_sf">Visayas SF</string>
 
 </resources>

@@ -19,7 +19,9 @@ data class Inventory(
     var pCartId: String = "",
     var committed: Long = 0,
     var sold: Long = 0,
-    var returned: Long = 0
+    var returned: Long = 0,
+    @get:Exclude
+    var productName: String = ""
 ) : Parcelable {
 
     constructor() : this(
