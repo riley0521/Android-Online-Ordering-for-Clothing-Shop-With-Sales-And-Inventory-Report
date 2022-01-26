@@ -196,7 +196,7 @@ class ShippingFeesFragment : Fragment(R.layout.fragment_shipping_fees) {
             }
         }
 
-        lifecycleScope.launchWhenResumed {
+        lifecycleScope.launchWhenStarted {
             viewModel.shippingFeesEvent.collectLatest { event ->
                 when (event) {
                     is ShippingFeesViewModel.ShippingFeesEvent.ShowErrorMessage -> {
