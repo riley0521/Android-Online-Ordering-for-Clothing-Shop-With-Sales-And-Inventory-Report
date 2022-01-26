@@ -27,6 +27,7 @@
     <string name="label_no_reviews_yet">No Reviews Yet.</string>
     <string name="label_guest">Guest</string>
     <string name="label_merchandise_total">Merchandise Total</string>
+    <string name="label_merchandise_total_w_colon">Merchandise Total:</string>
     <string name="label_shipping_total">Shipping Total</string>
     <string name="label_no_items_yet">No items yet.</string>
     <string name="label_payment_method">Payment Method</string>
@@ -74,7 +75,7 @@
     <string name="label_date_ordered">Date Ordered:</string>
     <string name="label_additional_note_for_admins">Additional Note For Admins:</string>
     <string name="label_view_completed_orders">View Completed Orders</string>
-    <string name="label_view_items">View Items</string>
+    <string name="btn_view_items">View Items</string>
     <string name="label_add_new_category">Add New Category</string>
     <string name="label_grand_total">Grand Total:</string>
     <string name="label_delivery_address">Delivery Address</string>
@@ -283,5 +284,10 @@
     <string name="hint_north_luzon_sf">North Luzon SF</string>
     <string name="hint_south_luzon_sf">South Luzon SF</string>
     <string name="hint_visayas_sf">Visayas SF</string>
+    <string name="btn_view_receipt">View Receipt</string>
+    <string name="btn_mark_order_as_received">Mark Order As Received</string>
+    <string name="label_item_s">Item/s:</string>
+    <string name="label_date">Date:</string>
+    <string name="action_save_receipt">Save Receipt</string>
 
 </resources>

@@ -23,9 +23,10 @@ import com.teampym.onlineclothingshopapplication.data.util.ORDER_COMPLETED_OR_SH
 import com.teampym.onlineclothingshopapplication.data.util.RECEIVED_ORDER
 import com.teampym.onlineclothingshopapplication.data.util.Status
 import com.teampym.onlineclothingshopapplication.data.util.UserType
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import com.teampym.onlineclothingshopapplication.databinding.OrderItemBinding
 import java.text.SimpleDateFormat
-import java.util.* // ktlint-disable no-wildcard-imports
+import java.util.*
 
 class OrderListAdapter(
     private val userType: String,
@@ -128,7 +129,17 @@ class OrderListAdapter(
                     if (position != RecyclerView.NO_POSITION) {
                         val item = getItem(position)
                         if (item != null) {
-                            listener.onItemClicked(item)
+                            listener.onViewItemClicked(item)
+                        }
+                    }
+                }
+
+                btnViewReceipt.setOnClickListener {
+                    val position = absoluteAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+                        if (item != null) {
+                            listener.onViewReceiptClicked(item)
                         }
                     }
                 }
@@ -187,6 +198,16 @@ class OrderListAdapter(
                         }
 
                         showPopUpMenu.show()
+                    }
+                }
+
+                btnMarkOrderAsReceived.setOnClickListener {
+                    val position = absoluteAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+                        if (item != null) {
+                            listener.onMarkOrderAsReceivedClicked(item)
+                        }
                     }
                 }
 
@@ -286,6 +307,15 @@ class OrderListAdapter(
                         btnShipOrder.isVisible = false
                         btnDeliverOrder.isVisible = false
 
+                        val today = Calendar.getInstance()
+                        today.timeInMillis = Utils.getTimeInMillisUTC()
+
+                        if (today.get(Calendar.DAY_OF_YEAR)
+                            .minus(calendarDate.get(Calendar.DAY_OF_YEAR)) >= 3
+                        ) {
+                            btnMarkOrderAsReceived.isVisible = true
+                        }
+
                         if (userType == UserType.CUSTOMER.name && !item.receivedByUser) {
                             btnActionCompleted.text = RECEIVED_ORDER
 
@@ -317,6 +347,7 @@ class OrderListAdapter(
                             }
                         } else {
                             btnActionCompleted.isVisible = false
+                            btnViewReceipt.isVisible = true
                         }
                     }
                     Status.CANCELED.name -> {
@@ -394,7 +425,9 @@ class OrderListAdapter(
     }
 
     interface OnOrderListener {
-        fun onItemClicked(item: Order)
+        fun onViewItemClicked(item: Order)
+        fun onViewReceiptClicked(item: Order)
+        fun onMarkOrderAsReceivedClicked(item: Order)
         fun onCancelClicked(item: Order, userType: String)
         fun onShipOrderClicked(item: Order)
         fun onDeliverOrderClicked(item: Order, type: CourierType)

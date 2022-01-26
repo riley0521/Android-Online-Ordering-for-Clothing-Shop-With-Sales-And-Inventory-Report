@@ -285,39 +285,64 @@ class OrderListViewModel @Inject constructor(
         }
     }
 
-    fun receivedOrder(order: Order) = viewModelScope.launch {
+    fun receivedOrder(
+        order: Order,
+        isMarkReceivedByAdmin: Boolean = false
+    ) = viewModelScope.launch {
 
         val isUpdated = orderRepository.updateStatusToCompleted(
             orderId = order.id
         )
 
         if (isUpdated) {
-
-            val res = db.collectionGroup(NOTIFICATION_TOKENS_SUB_COLLECTION)
-                .whereEqualTo("userType", UserType.ADMIN.name)
-                .get()
-                .await()
-
-            if (res != null && res.documents.isNotEmpty()) {
-                val tokenList = mutableListOf<String>()
-
-                for (doc in res.documents) {
-                    val token = doc.toObject<NotificationToken>()!!.copy(id = doc.id)
-                    tokenList.add(token.token)
-                }
-
+            if (isMarkReceivedByAdmin) {
                 val data = NotificationData(
-                    title = "${order.deliveryInformation.name} received your item/s.",
-                    body = "Order ${order.id}",
-                    orderId = order.id,
+                    title = "Order (${order.id.take(order.id.length / 2)}...)",
+                    body = "Order is marked as received by admin.",
+                    orderId = order.id
                 )
 
-                val notificationSingle = NotificationSingle(
-                    data = data,
-                    tokenList = tokenList
-                )
+                val notificationTokenList = notificationTokenRepository.getAll(order.userId)
 
-                service.notifySingleUser(notificationSingle)
+                if (notificationTokenList.isNotEmpty()) {
+                    val tokenList: List<String> = notificationTokenList.map {
+                        it.token
+                    }
+
+                    val notificationSingle = NotificationSingle(
+                        data = data,
+                        tokenList = tokenList
+                    )
+
+                    service.notifySingleUser(notificationSingle)
+                }
+            } else {
+                val res = db.collectionGroup(NOTIFICATION_TOKENS_SUB_COLLECTION)
+                    .whereEqualTo("userType", UserType.ADMIN.name)
+                    .get()
+                    .await()
+
+                if (res != null && res.documents.isNotEmpty()) {
+                    val tokenList = mutableListOf<String>()
+
+                    for (doc in res.documents) {
+                        val token = doc.toObject<NotificationToken>()!!.copy(id = doc.id)
+                        tokenList.add(token.token)
+                    }
+
+                    val data = NotificationData(
+                        title = "${order.deliveryInformation.name} received your item/s.",
+                        body = "Order ${order.id}",
+                        orderId = order.id,
+                    )
+
+                    val notificationSingle = NotificationSingle(
+                        data = data,
+                        tokenList = tokenList
+                    )
+
+                    service.notifySingleUser(notificationSingle)
+                }
             }
 
             _orderListChannel.send(
@@ -370,6 +395,25 @@ class OrderListViewModel @Inject constructor(
                         weightInKg = inv.weightInKg.toString() + " Kilogram"
                     )
                 }
+
+                val completeAddress = "${order.deliveryInformation.streetNumber} " +
+                    "${order.deliveryInformation.city}, " +
+                    "${order.deliveryInformation.province}, " +
+                    "${order.deliveryInformation.region}, " +
+                    order.deliveryInformation.postalCode
+
+                // Modify shipping fee to 0.0 if Shipping fee is shouldered by admin.
+                order.shippingFee = if (isSfShoulderedByAdmin.not()) order.shippingFee else 0.0
+
+                googleSheetService.insertOrder(
+                    date = formattedDate,
+                    name = order.deliveryInformation.name,
+                    address = completeAddress,
+                    contactNumber = order.deliveryInformation.contactNo,
+                    totalWithShippingFee = order.totalPaymentWithShippingFee.toString(),
+                    paymentMethod = order.paymentMethod,
+                    userId = order.userId
+                )
 
                 _orderListChannel.send(
                     OrderListEvent.ShowSuccessMessage(

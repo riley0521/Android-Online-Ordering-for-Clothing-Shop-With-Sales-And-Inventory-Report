@@ -171,13 +171,20 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
         }
     }
 
-    override fun onItemClicked(item: Order) {
+    override fun onViewItemClicked(item: Order) {
         val action =
             OrderListFragmentDirections.actionOrderListFragmentToOrderDetailListFragment(
                 title = "Order ${item.id}",
                 order = item,
                 orderId = item.id
             )
+        findNavController().navigate(action)
+    }
+
+    override fun onViewReceiptClicked(item: Order) {
+        val action = OrderListFragmentDirections.actionOrderListFragmentToReceiptFragment(
+            order = item
+        )
         findNavController().navigate(action)
     }
 
@@ -262,6 +269,18 @@ class OrderListFragment : Fragment(R.layout.fragment_order_list), OrderListAdapt
             item,
             isSfShoulderedByAdmin
         )
+    }
+
+    override fun onMarkOrderAsReceivedClicked(item: Order) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("MARK ORDER AS RECEIVED")
+            .setMessage("Are you sure you want to mark this order as received? You cannot undo this action.")
+            .setPositiveButton("Yes") { _, _ ->
+                loadingDialog.show()
+                viewModel.receivedOrder(item, true)
+            }.setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+            }.show()
     }
 
     private fun showCancelModalForAdmin(item: Order) {
