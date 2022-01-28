@@ -79,7 +79,7 @@
     <string name="label_add_new_category">Add New Category</string>
     <string name="label_grand_total">Grand Total:</string>
     <string name="label_delivery_address">Delivery Address</string>
-    <string name="label_terms_and_condition">Terms And Condition</string>
+    <string name="label_terms_and_condition">Terms And Conditions</string>
     <string name="label_size_chart">Size Chart</string>
     <string name="label_cancel_reason">Cancel Reason</string>
     <string name="label_agree_to_suggested_shipping_fee">Agree To Suggested Shipping Fee</string>
@@ -218,7 +218,8 @@
     <string name="hint_title_of_your_post">Title Of Your Post</string>
     <string name="btn_remove_image">Remove Image</string>
     <string name="label_history_logs">History Logs</string>
-    <string name="label_sales">Sales</string>
+    <string name="label_sales">View Sales</string>
+    <string name="label_sales_and_inventory_report">Sales / Inventory Report</string>
     <string name="placeholder_username">Username: %1$s</string>
     <string name="placeholder_user_id">User ID: %1$s</string>
     <string name="placeholder_user_status">User Status: %1$s</string>
@@ -241,7 +242,7 @@
     <string name="btn_view_size_chart">View Size Chart</string>
     <string name="label_no_products_yet_for_this_category_come_back_later">No Products yet for this Category. Come back later!</string>
     <string name="label_no_category">No Categories yet. Come back later!</string>
-    <string name="label_faqs_frequently_ask_questions">FAQs (Frequently Ask Questions)</string>
+    <string name="label_faqs_frequently_ask_questions">FAQs (Frequently Asked Questions)</string>
     <string name="label_no_available_images">No available images.</string>
     <string name="label_accounts">Accounts</string>
     <string name="label_default">[Default]</string>

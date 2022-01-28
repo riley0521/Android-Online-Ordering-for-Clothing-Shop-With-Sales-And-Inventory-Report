@@ -165,6 +165,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                                         tvOrders.isVisible = true
                                         tvHistoryLog.isVisible = true
                                         tvSales.isVisible = true
+                                        tvSalesAndInventoryReport.isVisible = true
                                         tvSizeChart.isVisible = true
                                     }
 
@@ -252,6 +253,14 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
             tvSales.setOnClickListener {
                 findNavController().navigate(R.id.action_profileFragment_to_salesFragment)
+            }
+
+            tvSalesAndInventoryReport.setOnClickListener {
+                val reportsIntent = Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("https://docs.google.com/spreadsheets/d/1qu4JbTsNmMXfNLMZFfrROCIUqRKORWKw6Twn2LI9LHc/edit?usp=sharing")
+                )
+                startActivity(reportsIntent)
             }
 
             tvToc.setOnClickListener {
@@ -342,6 +351,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             tvAccounts.isVisible = false
             tvHistoryLog.isVisible = false
             tvSales.isVisible = false
+            tvSalesAndInventoryReport.isVisible = false
             tvSizeChart.isVisible = false
 
             requireActivity().finish()

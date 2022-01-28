@@ -208,6 +208,26 @@
                     tools:visibility="visible" />
 
                 <TextView
+                    android:id="@+id/tvSalesAndInventoryReport"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/tv_border"
+                    android:gravity="center_vertical"
+                    android:paddingStart="32dp"
+                    android:paddingTop="16dp"
+                    android:paddingEnd="32dp"
+                    android:paddingBottom="16dp"
+                    android:text="@string/label_sales_and_inventory_report"
+                    android:textAppearance="?attr/textAppearanceBody2"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/tvSales"
+                    tools:visibility="visible" />
+
+                <TextView
                     android:id="@+id/tvToc"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -223,7 +243,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/tvSales" />
+                    app:layout_constraintTop_toBottomOf="@+id/tvSalesAndInventoryReport" />
 
                 <TextView
                     android:id="@+id/tvSizeChart"

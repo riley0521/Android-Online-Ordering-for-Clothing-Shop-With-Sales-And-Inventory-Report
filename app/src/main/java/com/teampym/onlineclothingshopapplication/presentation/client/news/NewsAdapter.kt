@@ -20,7 +20,7 @@ import com.teampym.onlineclothingshopapplication.data.models.Post
 import com.teampym.onlineclothingshopapplication.data.util.UserType
 import com.teampym.onlineclothingshopapplication.databinding.NewsItemBinding
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.* // ktlint-disable no-wildcard-imports
 
 class NewsAdapter constructor(
     private val listener: NewsListener,
@@ -169,6 +169,12 @@ class NewsAdapter constructor(
                 if (viewModel.userType == UserType.ADMIN.name) {
                     imgMenu.isVisible = item.userId == viewModel.userId
 
+                    imgLike.isVisible = false
+                    tvLike.isVisible = false
+
+                    imgComment.isVisible = false
+                    tvComment.isVisible = false
+                } else if (viewModel.userType.isBlank()) {
                     imgLike.isVisible = false
                     tvLike.isVisible = false
 
