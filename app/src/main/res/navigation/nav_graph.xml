@@ -558,8 +558,8 @@
     <fragment
         android:id="@+id/receiptFragment"
         android:name="com.teampym.onlineclothingshopapplication.presentation.client.receipt.ReceiptFragment"
-        android:label="Receipt"
-        tools:layout="@layout/fragment_receipt" >
+        android:label="Invoice"
+        tools:layout="@layout/fragment_receipt">
         <argument
             android:name="order"
             app:argType="com.teampym.onlineclothingshopapplication.data.models.Order" />

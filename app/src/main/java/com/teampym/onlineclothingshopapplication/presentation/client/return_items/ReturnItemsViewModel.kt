@@ -8,12 +8,14 @@ import androidx.paging.cachedIn
 import com.google.firebase.firestore.FirebaseFirestore
 import com.teampym.onlineclothingshopapplication.data.models.OrderDetail
 import com.teampym.onlineclothingshopapplication.data.models.UserInformation
+import com.teampym.onlineclothingshopapplication.data.network.GoogleSheetService
 import com.teampym.onlineclothingshopapplication.data.repository.OrderDetailRepository
 import com.teampym.onlineclothingshopapplication.data.repository.OrderRepository
 import com.teampym.onlineclothingshopapplication.data.room.PreferencesManager
 import com.teampym.onlineclothingshopapplication.data.room.UserInformationDao
 import com.teampym.onlineclothingshopapplication.data.util.ORDER_DETAILS_SUB_COLLECTION
 import com.teampym.onlineclothingshopapplication.data.util.UserType
+import com.teampym.onlineclothingshopapplication.data.util.Utils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.combine
@@ -21,6 +23,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.inject.Inject
 
 enum class ReturnItemsSort {
@@ -34,6 +38,7 @@ class ReturnItemsViewModel @Inject constructor(
     private val orderRepository: OrderRepository,
     private val orderDetailRepository: OrderDetailRepository,
     private val userInformationDao: UserInformationDao,
+    private val googleSheetService: GoogleSheetService,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
 
@@ -101,8 +106,28 @@ class ReturnItemsViewModel @Inject constructor(
     }
 
     fun confirmOrder(orderItem: OrderDetail) = viewModelScope.launch {
-        val res = orderRepository.confirmReturnedItem(orderItem)
-        if (res) {
+        val updatedInventory = orderRepository.confirmReturnedItem(orderItem)
+        if (updatedInventory.isNotEmpty()) {
+
+            val calendarDate = Calendar.getInstance()
+            calendarDate.timeInMillis = Utils.getTimeInMillisUTC()
+            val formattedDate = SimpleDateFormat("MM/dd/yyyy").format(calendarDate.time)
+
+            val inv = updatedInventory[0]
+
+            googleSheetService.insertInventory(
+                date = formattedDate,
+                productId = inv.pid,
+                inventoryId = inv.inventoryId,
+                productName = inv.productName,
+                size = inv.size,
+                stock = inv.stock.toString(),
+                committed = inv.committed.toString(),
+                sold = inv.sold.toString(),
+                returned = inv.returned.toString(),
+                weightInKg = inv.weightInKg.toString() + " Kilogram"
+            )
+
             _returnItemsChannel.send(ReturnItemsEvent.ShowSuccessMessage("Confirmed return item successfully!"))
         } else {
             _returnItemsChannel.send(ReturnItemsEvent.ShowErrorMessage("Confirmed return item failed. Please try again."))

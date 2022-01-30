@@ -111,25 +111,29 @@ class InventoryModalFragment : BottomSheetDialogFragment() {
                         tvCount.text = count.toString()
 
                         btnAdd.setOnClickListener {
-                            if (count++ > inventory.stock) {
+                            val isMax = count + 1 > inventory.stock
+                            if (isMax) {
                                 Toast.makeText(
                                     requireContext(),
                                     "You reached the maximum number of stocks available.",
                                     Toast.LENGTH_SHORT
                                 ).show()
                             } else {
+                                count++
                                 tvCount.text = count.toString()
                             }
                         }
 
                         btnRemove.setOnClickListener {
-                            if (count-- < 1) {
+                            val isMin = count - 1 < 1
+                            if (isMin) {
                                 Toast.makeText(
                                     requireContext(),
                                     "1 is the minimum quantity.",
                                     Toast.LENGTH_SHORT
                                 ).show()
                             } else {
+                                count--
                                 tvCount.text = count.toString()
                             }
                         }

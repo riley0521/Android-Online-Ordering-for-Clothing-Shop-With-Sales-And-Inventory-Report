@@ -157,33 +157,29 @@ class OrderRepository @Inject constructor(
 
     suspend fun confirmReturnedItem(
         orderItem: OrderDetail
-    ): Boolean {
-        return withContext(dispatcher) {
+    ): List<Inventory> {
 
-            orderCollectionRef
-                .document(orderItem.orderId)
-                .collection(ORDER_DETAILS_SUB_COLLECTION)
-                .document(orderItem.id)
-                .set(
-                    mutableMapOf(
-                        "returned" to true
-                    ),
-                    SetOptions.merge()
-                )
-                .await()
+        orderCollectionRef
+            .document(orderItem.orderId)
+            .collection(ORDER_DETAILS_SUB_COLLECTION)
+            .document(orderItem.id)
+            .set(
+                mutableMapOf(
+                    "returned" to true
+                ),
+                SetOptions.merge()
+            )
+            .await()
 
-            returnRepository.delete(orderItem.id)
+        returnRepository.delete(orderItem.id)
 
-            // Add negative values to sales to deduct sales
-            // Having faulty product is a liability
-            orderItem.subTotal = -Math.abs(orderItem.subTotal)
-            salesRepository.insert(listOf(orderItem), 0.0)
+        // Add negative values to sales to deduct sales
+        // Having faulty product is a liability
+        orderItem.subTotal = -Math.abs(orderItem.subTotal)
+        salesRepository.insert(listOf(orderItem), 0.0)
 
-            // Then deduct this order item from product's sold to returned
-            productRepository.deductSoldToReturnedCount(UserType.ADMIN.name, listOf(orderItem))
-
-            true
-        }
+        // Then deduct this order item from product's sold to returned
+        return productRepository.deductSoldToReturnedCount(UserType.ADMIN.name, listOf(orderItem))
     }
 
     // Notify all admins about cancellation of order.
