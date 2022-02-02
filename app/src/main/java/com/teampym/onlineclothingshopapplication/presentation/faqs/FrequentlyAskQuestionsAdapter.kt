@@ -51,22 +51,24 @@ class FrequentlyAskQuestionsAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         init {
-            binding.root.setOnClickListener {
-                val position = absoluteAdapterPosition
-                if (position != RecyclerView.NO_POSITION) {
-                    val item = getItem(position)
-                    if (item != null) {
-                        listener.onItemClicked(item)
+            if (viewModel.userType == UserType.ADMIN.name) {
+                binding.root.setOnClickListener {
+                    val position = absoluteAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+                        if (item != null) {
+                            listener.onItemClicked(item)
+                        }
                     }
                 }
-            }
 
-            binding.imgDelete.setOnClickListener {
-                val position = absoluteAdapterPosition
-                if (position != RecyclerView.NO_POSITION) {
-                    val item = getItem(position)
-                    if (item != null) {
-                        listener.onDeleteClicked(item, position)
+                binding.imgDelete.setOnClickListener {
+                    val position = absoluteAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val item = getItem(position)
+                        if (item != null) {
+                            listener.onDeleteClicked(item, position)
+                        }
                     }
                 }
             }
