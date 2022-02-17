@@ -9,6 +9,7 @@
   6. Dagger Hilt
   7. Room Database
   8. Kotlin Coroutines and Flow
+  9. Firebase Cloud Messaging for push notifications.
 
 **Remote database used:** Firebase Firestore
 
@@ -17,6 +18,8 @@
 Demonstration: [Click here](https://www.youtube.com)
 
 **Screenshots:**
+
+I used **Google Sheet** to integrate my android application to generate better reports. **Note:** Those data are just samples.
 
 **Sales Report:**
 
