@@ -1,2 +1,14 @@
-# Android-Online-Ordering-for-Clothing-Shop-With-Sales-And-Inventory-Report
-A shop where you can order online at the touch of your finger tips. Stack used: Navigation Architecture, Retrofit, GSON, Firebase BOM, Paging 3, Glide, Dagger Hilt, Room Database, Coroutines, Paypal SDK
+# Android Application about "Online Ordering for Clothing Shop With Sales And Inventory Report"
+
+Tech Stack:
+  1. Navigation Architecture
+  2. Retrofit
+  3. GSON
+  4. Paging 3
+  5. Glide
+  6. Dagger Hilt
+  7. Room Database
+  8. Kotlin Coroutines and Flow
+
+Remote database used: Firebase Firestore
+Online Payment SDK used: Paypal SDK
