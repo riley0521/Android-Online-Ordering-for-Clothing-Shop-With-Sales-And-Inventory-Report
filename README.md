@@ -17,3 +17,11 @@
 Demonstration: [Click here](https://www.youtube.com)
 
 **Screenshots:**
+
+**Sales Report:**
+
+![Screenshot 2022-02-17 211946](https://user-images.githubusercontent.com/23002188/154490248-2feac44e-9c9c-40d9-959a-8d485232d60e.png)
+
+**Inventory Report:**
+
+![Screenshot 2022-02-17 211957](https://user-images.githubusercontent.com/23002188/154490314-aac2ff49-c382-485f-8fea-bc56d0c9615c.png)
